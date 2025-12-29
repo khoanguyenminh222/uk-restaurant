@@ -5,31 +5,44 @@ const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin", "vietnamese"],
   display: "swap",
+  preload: true,
 });
 
 const poppins = Poppins({
   variable: "--font-poppins",
   subsets: ["latin", "vietnamese"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
+  preload: true,
 });
 
 export const metadata = {
   title: "UK Restaurant - Ăn no khỏi 'bàn'",
-  description: "Website đặt món online UK Restaurant - Đặt món nhanh chóng, tiện lợi",
-  keywords: "nhà hàng, đặt món online, UK Restaurant, đồ ăn, giao hàng",
+  description: "Website đặt món online UK Restaurant - Đặt món nhanh chóng, tiện lợi. Khám phá hương vị đặc biệt với thực đơn đa dạng, nguyên liệu tươi ngon và dịch vụ tận tâm",
+  keywords: "nhà hàng, đặt món online, UK Restaurant, đồ ăn, giao hàng, thực phẩm tươi ngon",
   authors: [{ name: "UK Restaurant" }],
+  creator: "UK Restaurant",
+  publisher: "UK Restaurant",
   openGraph: {
     title: "UK Restaurant - Ăn no khỏi 'bàn'",
     description: "Website đặt món online UK Restaurant - Đặt món nhanh chóng, tiện lợi",
     type: "website",
     locale: "vi_VN",
     siteName: "UK Restaurant",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "UK Restaurant",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "UK Restaurant - Ăn no khỏi 'bàn'",
     description: "Website đặt món online UK Restaurant",
+    images: ["/og-image.jpg"],
   },
   viewport: {
     width: "device-width",
@@ -39,17 +52,29 @@ export const metadata = {
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-icon.png",
   },
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="vi">
+    <html lang="vi" className="dark scroll-smooth">
       <head>
         <link rel="icon" href="/favicon.ico" />
+        <meta name="theme-color" content="#0a0a0a" />
       </head>
       <body
-        className={`${inter.variable} ${poppins.variable} antialiased`}
+        className={`${inter.variable} ${poppins.variable} font-sans antialiased`}
       >
         {children}
       </body>
