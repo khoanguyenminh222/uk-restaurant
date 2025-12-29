@@ -1,21 +1,35 @@
+"use client"
+
 import { CheckCircle2, Zap, Heart } from "lucide-react"
+import { useScrollAnimation } from "@/hooks/useScrollAnimation"
 
 export default function About() {
+  const [headerRef, isHeaderVisible] = useScrollAnimation({ threshold: 0.2 })
+  const [card1Ref, isCard1Visible] = useScrollAnimation({ threshold: 0.2 })
+  const [card2Ref, isCard2Visible] = useScrollAnimation({ threshold: 0.2 })
+  const [card3Ref, isCard3Visible] = useScrollAnimation({ threshold: 0.2 })
+
   const features = [
     {
       icon: CheckCircle2,
       title: "Chất lượng",
       description: "Nguyên liệu tươi ngon, được chọn lọc kỹ càng từ những nhà cung cấp uy tín",
+      ref: card1Ref,
+      isVisible: isCard1Visible,
     },
     {
       icon: Zap,
       title: "Nhanh chóng",
       description: "Giao hàng nhanh chóng, đúng giờ như đã hứa với dịch vụ chuyên nghiệp",
+      ref: card2Ref,
+      isVisible: isCard2Visible,
     },
     {
       icon: Heart,
       title: "Tận tâm",
       description: "Phục vụ với sự nhiệt tình và chuyên nghiệp, luôn đặt khách hàng lên hàng đầu",
+      ref: card3Ref,
+      isVisible: isCard3Visible,
     },
   ]
 
@@ -23,7 +37,10 @@ export default function About() {
     <section id="about" className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-gray-900">
       <div className="max-w-7xl mx-auto">
         {/* Section Header */}
-        <div className="text-center mb-12">
+        <div
+          ref={headerRef}
+          className={`text-center mb-12 scroll-fade-in ${isHeaderVisible ? "visible" : ""}`}
+        >
           <h2 className="text-3xl md:text-4xl font-bold font-display text-gray-50 mb-4">Giới thiệu</h2>
           <div className="w-16 h-1 bg-green-500 mx-auto mb-6 rounded-full"></div>
           <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed">
@@ -38,7 +55,10 @@ export default function About() {
             return (
               <div
                 key={index}
-                className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center hover:shadow-md hover:shadow-black/50 hover:border-green-500/50 transition-all duration-300 group"
+                ref={feature.ref}
+                className={`bg-gray-800 border border-gray-700 rounded-lg p-6 text-center hover:shadow-md hover:shadow-black/50 hover:border-green-500/50 transition-all duration-300 group scroll-fade-in ${
+                  index === 0 ? "scroll-delay-100" : index === 1 ? "scroll-delay-200" : "scroll-delay-300"
+                } ${feature.isVisible ? "visible" : ""}`}
               >
                 {/* Icon */}
                 <div className="w-16 h-16 mx-auto mb-4 bg-green-950/50 rounded-full flex items-center justify-center text-green-400 group-hover:scale-110 transition-transform duration-300">
