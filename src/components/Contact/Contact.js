@@ -80,7 +80,7 @@ export default function Contact() {
   const mapEmbedUrl = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.1234567890!2d106.6297!3d10.8231!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTDCsDQ5JzIzLjIiTiAxMDbCsDM3JzQ2LjkiRQ!5e0!3m2!1svi!2s!4v1234567890123!5m2!1svi!2s"
 
   return (
-    <section id="contact" className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-gray-950">
+    <section id="contact" className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-gray-900">
       <div className="max-w-7xl mx-auto">
         {/* Section Header */}
         <div
@@ -97,7 +97,7 @@ export default function Contact() {
         {/* Contact Card */}
         <div
           ref={contactCardRef}
-          className={`max-w-2xl mx-auto bg-gray-900 border border-gray-800 rounded-lg p-8 shadow-sm hover:shadow-md hover:shadow-black/50 transition-all duration-300 mb-12 scroll-fade-in ${isContactCardVisible ? "visible" : ""}`}
+          className={`max-w-2xl mx-auto bg-gray-950 border border-green-700 rounded-lg p-8 shadow-sm hover:shadow-md hover:shadow-black/50 transition-all duration-300 mb-12 scroll-fade-in ${isContactCardVisible ? "visible" : ""}`}
         >
           <div className="space-y-6">
             {contactInfo.map((item, index) => {
@@ -134,9 +134,9 @@ export default function Contact() {
           {/* Google Maps */}
           <div
             ref={mapRef}
-            className={`bg-gray-900 border border-gray-800 rounded-lg overflow-hidden shadow-sm hover:shadow-md hover:shadow-black/50 transition-all duration-300 scroll-fade-in-left scroll-delay-100 ${isMapVisible ? "visible" : ""}`}
+            className={`bg-gray-950 border border-green-700 rounded-lg overflow-hidden shadow-sm hover:shadow-md hover:shadow-black/50 transition-all duration-300 scroll-fade-in-left scroll-delay-100 ${isMapVisible ? "visible" : ""}`}
           >
-            <div className="p-4 border-b border-gray-800">
+            <div className="p-4 border-b border-green-700">
               <h3 className="text-lg font-semibold text-gray-50 flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-green-400" />
                 Vị trí của chúng tôi
@@ -160,7 +160,7 @@ export default function Contact() {
           {/* Social Media */}
           <div
             ref={socialRef}
-            className={`bg-gray-900 border border-gray-800 rounded-lg p-8 shadow-sm hover:shadow-md hover:shadow-black/50 transition-all duration-300 scroll-fade-in-right scroll-delay-200 ${isSocialVisible ? "visible" : ""}`}
+            className={`bg-gray-950 border border-green-700 rounded-lg p-8 shadow-sm hover:shadow-md hover:shadow-black/50 transition-all duration-300 scroll-fade-in-right scroll-delay-200 ${isSocialVisible ? "visible" : ""}`}
           >
             <h3 className="text-lg font-semibold text-gray-50 mb-6 flex items-center gap-2">
               <MessageCircle className="w-5 h-5 text-green-400" />
@@ -175,7 +175,7 @@ export default function Contact() {
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-4 p-4 bg-gray-800 border border-gray-700 rounded-lg hover:border-green-500/50 hover:bg-gray-800/80 transition-all duration-300 group"
+                    className="flex items-center gap-4 p-4 bg-gray-700/50 border border-gray-600 rounded-lg hover:border-green-500/50 hover:bg-gray-700 transition-all duration-300 group"
                   >
                     <div className={`shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${social.color} group-hover:scale-110 transition-transform duration-300`}>
                       <IconComponent className="w-6 h-6" />
@@ -207,8 +207,8 @@ export default function Contact() {
         </div>
 
         {/* Footer */}
-        <div className="mt-12 text-center">
-          <p className="text-gray-500 text-sm">© 2025 UK Restaurant. Ăn no khỏi &ldquo;bàn&rdquo;</p>
+        <div className="mt-20 pt-8 border-t border-gray-700 text-center">
+          <p className="text-gray-400 text-sm">© 2025 UK Restaurant. Ăn no khỏi &ldquo;bàn&rdquo;</p>
         </div>
       </div>
     </section>

@@ -8,7 +8,7 @@ export default function Menu() {
   const [contentRef, isContentVisible] = useScrollAnimation({ threshold: 0.2 })
 
   return (
-    <section id="menu" className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-gray-950">
+    <section id="menu" className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-gray-900">
       <div className="max-w-7xl mx-auto">
         {/* Section Header */}
         <div
