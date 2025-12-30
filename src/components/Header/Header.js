@@ -1,13 +1,18 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Utensils, Home, BookOpen, Phone, ShoppingCart, User, Menu as MenuIcon, X } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import { Utensils, Home, BookOpen, Phone, ShoppingCart, User, Menu as MenuIcon, X, LogOut, UserCircle, History } from "lucide-react"
+import { getCartItemCount } from "@/utils/cart"
+import { getUser, clearUser } from "@/utils/user"
 
-export default function Header({ onCartClick, onLoginClick }) {
+export default function Header({ onCartClick, onLoginClick, onProfileClick, onOrderHistoryClick }) {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [activeSection, setActiveSection] = useState("home")
   const [cartCount, setCartCount] = useState(0)
+  const [user, setUser] = useState(null)
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const userMenuRef = useRef(null)
 
   useEffect(() => {
     let lastScrollY = window.scrollY
@@ -42,6 +47,55 @@ export default function Header({ onCartClick, onLoginClick }) {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
+  // Update cart count
+  useEffect(() => {
+    const updateCartCount = () => {
+      setCartCount(getCartItemCount())
+    }
+
+    updateCartCount()
+    // Listen for cart changes
+    window.addEventListener("storage", updateCartCount)
+    window.addEventListener("cartUpdated", updateCartCount)
+
+    return () => {
+      window.removeEventListener("storage", updateCartCount)
+      window.removeEventListener("cartUpdated", updateCartCount)
+    }
+  }, [])
+
+  // Update user info
+  useEffect(() => {
+    const updateUser = () => {
+      setUser(getUser())
+    }
+
+    updateUser()
+    // Listen for user changes
+    window.addEventListener("userUpdated", updateUser)
+
+    return () => {
+      window.removeEventListener("userUpdated", updateUser)
+    }
+  }, [])
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setIsUserMenuOpen(false)
+      }
+    }
+
+    if (isUserMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [isUserMenuOpen])
+
   // Prevent body scroll when menu is open
   useEffect(() => {
     if (isMenuOpen) {
@@ -65,6 +119,12 @@ export default function Header({ onCartClick, onLoginClick }) {
     }
     setIsMenuOpen(false)
     setActiveSection(sectionId)
+  }
+
+  const handleLogout = () => {
+    clearUser()
+    setIsUserMenuOpen(false)
+    // Optional: redirect or refresh
   }
 
   const menuItems = [
@@ -132,16 +192,80 @@ export default function Header({ onCartClick, onLoginClick }) {
               )}
             </button>
 
-            {/* Login Button (hidden on mobile) */}
-            {onLoginClick && (
-              <button
-                onClick={onLoginClick}
-                className="hidden md:flex items-center gap-2 px-4 py-2 cursor-pointer text-gray-300 hover:text-green-400 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-950 rounded-lg"
-                aria-label="Đăng nhập"
-              >
-                <User className="w-5 h-5" />
-                <span>Đăng nhập</span>
-              </button>
+            {/* User Menu or Login Button */}
+            {user ? (
+              <div className="relative hidden md:block" ref={userMenuRef}>
+                <button
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="flex items-center gap-2 px-4 py-2 cursor-pointer text-gray-300 hover:text-green-400 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-950 rounded-lg"
+                  aria-label="Menu người dùng"
+                  aria-expanded={isUserMenuOpen}
+                >
+                  <UserCircle className="w-5 h-5" />
+                  <span className="max-w-[120px] truncate">{user.name || user.phone}</span>
+                </button>
+
+                {/* User Dropdown Menu */}
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-gray-900 border border-gray-800 rounded-lg shadow-lg z-50">
+                    <div className="py-2">
+                      <div className="px-4 py-2 border-b border-gray-800">
+                        <p className="text-sm font-medium text-gray-300">{user.name}</p>
+                        {user.phone && (
+                          <p className="text-xs text-gray-500">{user.phone}</p>
+                        )}
+                      </div>
+                      
+                      {onProfileClick && (
+                        <button
+                          onClick={() => {
+                            setIsUserMenuOpen(false)
+                            onProfileClick()
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:text-green-400 hover:bg-green-950/20 transition-colors"
+                        >
+                          <UserCircle className="w-4 h-4" />
+                          Thông tin tài khoản
+                        </button>
+                      )}
+                      
+                      {onOrderHistoryClick && (
+                        <button
+                          onClick={() => {
+                            setIsUserMenuOpen(false)
+                            onOrderHistoryClick()
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:text-green-400 hover:bg-green-950/20 transition-colors"
+                        >
+                          <History className="w-4 h-4" />
+                          Lịch sử đơn hàng
+                        </button>
+                      )}
+                      
+                      <div className="border-t border-gray-800 mt-2 pt-2">
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-950/20 transition-colors"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Đăng xuất
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              onLoginClick && (
+                <button
+                  onClick={onLoginClick}
+                  className="hidden md:flex items-center gap-2 px-4 py-2 cursor-pointer text-gray-300 hover:text-green-400 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-950 rounded-lg"
+                  aria-label="Đăng nhập"
+                >
+                  <User className="w-5 h-5" />
+                  <span>Đăng nhập</span>
+                </button>
+              )
             )}
 
             {/* Mobile Menu Button */}
@@ -184,6 +308,59 @@ export default function Header({ onCartClick, onLoginClick }) {
               </button>
             )
           })}
+          
+          {/* Mobile User Menu */}
+          {user ? (
+            <>
+              {onProfileClick && (
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false)
+                    onProfileClick()
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-gray-300 hover:text-green-400 hover:bg-green-950/20 transition-all duration-300"
+                >
+                  <UserCircle className="w-5 h-5" />
+                  <span>Thông tin tài khoản</span>
+                </button>
+              )}
+              {onOrderHistoryClick && (
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false)
+                    onOrderHistoryClick()
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-gray-300 hover:text-green-400 hover:bg-green-950/20 transition-all duration-300"
+                >
+                  <History className="w-5 h-5" />
+                  <span>Lịch sử đơn hàng</span>
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  handleLogout()
+                  setIsMenuOpen(false)
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-red-400 hover:text-red-300 hover:bg-red-950/20 transition-all duration-300"
+              >
+                <LogOut className="w-5 h-5" />
+                <span>Đăng xuất</span>
+              </button>
+            </>
+          ) : (
+            onLoginClick && (
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false)
+                  onLoginClick()
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-gray-300 hover:text-green-400 hover:bg-green-950/20 transition-all duration-300"
+              >
+                <User className="w-5 h-5" />
+                <span>Đăng nhập</span>
+              </button>
+            )
+          )}
         </nav>
       </div>
     </header>

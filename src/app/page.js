@@ -18,9 +18,24 @@ export default function Home() {
     console.log("Login clicked")
   }
 
+  const handleProfileClick = () => {
+    // Handle profile click
+    console.log("Profile clicked")
+  }
+
+  const handleOrderHistoryClick = () => {
+    // Handle order history click
+    console.log("Order history clicked")
+  }
+
   return (
     <div className="min-h-screen bg-gray-950">
-      <Header onCartClick={handleCartClick} onLoginClick={handleLoginClick} />
+      <Header 
+        onCartClick={handleCartClick} 
+        onLoginClick={handleLoginClick}
+        onProfileClick={handleProfileClick}
+        onOrderHistoryClick={handleOrderHistoryClick}
+      />
       <main>
         <Hero />
         {/* Scroll Indicator */}
