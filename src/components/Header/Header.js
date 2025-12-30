@@ -85,7 +85,7 @@ export default function Header({ onCartClick, onLoginClick }) {
           {/* Logo */}
           <button
             onClick={() => scrollToSection("home")}
-            className="flex items-center gap-2 text-2xl md:text-3xl font-bold font-display text-green-600 hover:text-green-500 hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-950 rounded-lg px-2"
+            className="flex cursor-pointer items-center gap-2 text-2xl md:text-3xl font-bold font-display text-green-600 hover:text-green-500 hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-950 rounded-lg px-2"
             aria-label="UK Restaurant - Về trang chủ"
           >
             <Utensils className="w-8 h-8 text-green-600" />
@@ -95,14 +95,14 @@ export default function Header({ onCartClick, onLoginClick }) {
           </button>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1" aria-label="Điều hướng chính">
+          <nav className="hidden md:flex items-center gap-1 cursor-pointer" aria-label="Điều hướng chính">
             {menuItems.map((item) => {
               const IconComponent = item.icon
               return (
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
-                  className={`px-4 py-2.5 rounded-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-950 flex items-center gap-2 ${
+                  className={`px-4 py-2.5 rounded-lg font-medium cursor-pointer transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-950 flex items-center gap-2 ${
                     activeSection === item.id
                       ? "text-green-400 bg-green-950/30 relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-linear-to-r after:from-green-500 after:to-green-400"
                       : "text-gray-300 hover:text-green-400 hover:bg-green-950/20"
@@ -121,7 +121,7 @@ export default function Header({ onCartClick, onLoginClick }) {
             {/* Cart Icon */}
             <button
               onClick={onCartClick}
-              className="relative p-2 rounded-lg text-gray-300 hover:text-green-400 hover:bg-green-950/30 hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-950"
+              className="relative p-2 rounded-lg cursor-pointer text-gray-300 hover:text-green-400 hover:bg-green-950/30 hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-950"
               aria-label={`Giỏ hàng (${cartCount} sản phẩm)`}
             >
               <ShoppingCart className="w-6 h-6" />
@@ -136,7 +136,7 @@ export default function Header({ onCartClick, onLoginClick }) {
             {onLoginClick && (
               <button
                 onClick={onLoginClick}
-                className="hidden md:flex items-center gap-2 px-4 py-2 text-gray-300 hover:text-green-400 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-950 rounded-lg"
+                className="hidden md:flex items-center gap-2 px-4 py-2 cursor-pointer text-gray-300 hover:text-green-400 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-950 rounded-lg"
                 aria-label="Đăng nhập"
               >
                 <User className="w-5 h-5" />
@@ -147,12 +147,12 @@ export default function Header({ onCartClick, onLoginClick }) {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 rounded-lg text-gray-200 hover:text-green-400 hover:bg-green-950/30 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-950"
+              className="md:hidden p-2 rounded-lg cursor-pointer text-gray-200 hover:text-green-400 hover:bg-green-950/30 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-950"
               aria-label={isMenuOpen ? "Đóng menu" : "Mở menu"}
               aria-expanded={isMenuOpen}
               aria-controls="mobile-menu"
             >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
+              {isMenuOpen ? <X className="w-6 h-6 cursor-pointer" /> : <MenuIcon className="w-6 h-6 cursor-pointer" />}
             </button>
           </div>
         </div>
@@ -161,18 +161,18 @@ export default function Header({ onCartClick, onLoginClick }) {
       {/* Mobile Menu */}
       <div
         id="mobile-menu"
-        className={`md:hidden bg-gray-900 border-t border-gray-800 transition-all duration-300 ease-in-out overflow-hidden ${
+        className={`md:hidden cursor-pointer bg-gray-900 border-t border-gray-800 transition-all duration-300 ease-in-out overflow-hidden ${
           isMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
         }`}
       >
-        <nav className="px-4 py-4 space-y-2" aria-label="Mobile navigation">
+        <nav className="px-4 py-4 space-y-2 cursor-pointer" aria-label="Mobile navigation">
           {menuItems.map((item) => {
             const IconComponent = item.icon
             return (
               <button
                 key={item.id}
                 onClick={() => scrollToSection(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900 ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium cursor-pointer transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900 ${
                   activeSection === item.id
                     ? "text-green-400 bg-green-950/30"
                     : "text-gray-300 hover:text-green-400 hover:bg-green-950/20"

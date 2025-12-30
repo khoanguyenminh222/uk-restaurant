@@ -32,7 +32,7 @@ export default function Hero() {
   return (
     <section
       id="home"
-      className="relative pt-24 md:pt-32 pb-16 md:pb-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-green-950/50 via-gray-950 to-gray-950"
+      className="relative pt-24 md:pt-32 pb-16 md:pb-24 px-4 sm:px-6 lg:px-8 bg-linear-to-b from-green-950/50 via-gray-950 to-gray-950"
     >
       <div className="max-w-7xl mx-auto">
         <div className="max-w-4xl mx-auto text-center">
@@ -55,13 +55,13 @@ export default function Hero() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up animation-delay-300">
             <button
               onClick={scrollToMenu}
-              className="w-full sm:w-auto px-8 py-3 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg shadow-md hover:shadow-lg shadow-green-500/20 hover:shadow-green-500/30 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-950"
+              className="w-full sm:w-auto px-8 py-3 cursor-pointer bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg shadow-md hover:shadow-lg shadow-green-500/20 hover:shadow-green-500/30 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-950"
             >
               Xem thực đơn
             </button>
             <button
               onClick={scrollToContact}
-              className="w-full sm:w-auto px-8 py-3 bg-transparent hover:bg-green-950/30 text-green-400 font-semibold rounded-lg border-2 border-green-500 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-950"
+              className="w-full sm:w-auto px-8 py-3 cursor-pointer bg-transparent hover:bg-green-950/30 text-green-400 font-semibold rounded-lg border-2 border-green-500 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-950"
             >
               Liên hệ
             </button>
