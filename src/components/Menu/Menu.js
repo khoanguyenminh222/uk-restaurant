@@ -11,6 +11,8 @@ export default function Menu() {
   const [selectedCategory, setSelectedCategory] = useState(null) // null = "Tất cả"
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [showAll, setShowAll] = useState(false) // Trạng thái hiển thị tất cả món hay chỉ một ít
+  const [isTransitioning, setIsTransitioning] = useState(false) // Trạng thái đang chuyển category
 
   const [headerRef, isHeaderVisible] = useScrollAnimation({ threshold: 0.2 })
   const [contentRef, isContentVisible] = useScrollAnimation({ threshold: 0.2 })
@@ -28,7 +30,6 @@ export default function Menu() {
             const orderB = b.order || 999
             return orderA - orderB
           })
-          console.log("Categories loaded:", sortedCategories)
           setCategories(sortedCategories)
         } else {
           console.error("Error fetching categories:", data.error)
@@ -48,6 +49,11 @@ export default function Menu() {
     const fetchFoods = async () => {
       try {
         setLoading(true)
+        setIsTransitioning(true) // Bắt đầu transition
+        
+        // Fade out trước
+        await new Promise(resolve => setTimeout(resolve, 150))
+        
         const url = selectedCategory
           ? `/api/food?category_id=${selectedCategory}`
           : "/api/food"
@@ -65,7 +71,11 @@ export default function Menu() {
         console.error("Error fetching foods:", err)
         setError("Lỗi khi tải món ăn")
       } finally {
-        setLoading(false)
+        // Fade in sau khi có data
+        setTimeout(() => {
+          setLoading(false)
+          setIsTransitioning(false)
+        }, 150)
       }
     }
 
@@ -73,7 +83,15 @@ export default function Menu() {
   }, [selectedCategory])
 
   const handleCategoryClick = (categoryId) => {
-    setSelectedCategory(categoryId)
+    if (categoryId !== selectedCategory) {
+      setSelectedCategory(categoryId)
+      // Reset về trạng thái hiển thị giới hạn khi chọn category mới
+      setShowAll(false)
+    }
+  }
+
+  const handleShowMore = () => {
+    setShowAll(!showAll)
   }
 
   return (
@@ -111,20 +129,23 @@ export default function Menu() {
               Tất cả
             </button>
 
-            {/* Category Tabs */}
+            {/* Category Tabs - Hiển thị tất cả categories */}
             {categories.length > 0 ? (
-              categories.map((category) => (
+              categories.map((category, index) => (
                 <button
                   key={category.id || category._id}
                   onClick={() => handleCategoryClick(category.id)}
-                  className={`px-4 md:px-6 py-2 md:py-2.5 rounded-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900 ${
+                  className={`px-4 md:px-6 py-2 md:py-2.5 rounded-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900 transform hover:scale-105 active:scale-95 category-tab ${
                     selectedCategory === category.id
-                      ? "bg-green-600 text-white shadow-md shadow-green-500/30"
+                      ? "bg-green-600 text-white shadow-md shadow-green-500/30 scale-105"
                       : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-gray-50"
                   }`}
-                  style={category.color ? { borderColor: category.color } : {}}
+                  style={{
+                    ...(category.color ? { borderColor: category.color } : {}),
+                    animationDelay: `${index * 0.05}s`
+                  }}
                 >
-                  {category.icon && <span className="mr-2">{category.icon}</span>}
+                  {category.icon && <span className="mr-2 inline-block animate-bounce-subtle">{category.icon}</span>}
                   {category.name}
                 </button>
               ))
@@ -163,26 +184,122 @@ export default function Menu() {
           </div>
         )}
 
-        {/* Menu Grid */}
+        {/* Menu Grid - Chỉ hiển thị một số món đầu tiên trên landing page */}
         {!loading && !error && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {filteredFoods.length > 0 ? (
-              filteredFoods.map((food) => <MenuCard key={food.id} food={food} />)
-            ) : (
-              <div className="col-span-full flex items-center justify-center py-20">
-                <div className="text-center">
-                  <p className="text-gray-400 text-lg mb-2">
-                    {selectedCategory
-                      ? "Không có món nào trong danh mục này"
-                      : "Chưa có món ăn nào"}
-                  </p>
-                  <p className="text-gray-500 text-sm">
-                    Vui lòng quay lại sau hoặc thử danh mục khác
-                  </p>
+          <>
+            {/* Mobile: Horizontal Scroll Layout */}
+            <div className="md:hidden">
+              {filteredFoods.length > 0 ? (
+                <div 
+                  className={`flex gap-4 overflow-x-auto pb-4 scrollbar-hide transition-all duration-300 ${
+                    isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+                  }`}
+                  style={{
+                    scrollSnapType: 'x mandatory',
+                    WebkitOverflowScrolling: 'touch'
+                  }}
+                >
+                  {filteredFoods
+                    .slice(0, showAll ? filteredFoods.length : 6)
+                    .map((food, index) => (
+                      <div
+                        key={food.id}
+                        className="menu-item shrink-0 w-[280px]"
+                        style={{
+                          animationDelay: `${index * 0.1}s`,
+                          scrollSnapAlign: 'start'
+                        }}
+                      >
+                        <MenuCard food={food} />
+                      </div>
+                    ))}
                 </div>
+              ) : (
+                <div className="flex items-center justify-center py-20">
+                  <div className="text-center animate-fade-in">
+                    <p className="text-gray-400 text-lg mb-2">
+                      {selectedCategory
+                        ? "Không có món nào trong danh mục này"
+                        : "Chưa có món ăn nào"}
+                    </p>
+                    <p className="text-gray-500 text-sm">
+                      Vui lòng quay lại sau hoặc thử danh mục khác
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Tablet/Desktop: Grid Layout */}
+            <div 
+              className={`hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 transition-all duration-300 items-stretch ${
+                isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+              }`}
+            >
+              {filteredFoods.length > 0 ? (
+                // Chỉ hiển thị 6 món đầu tiên, nếu showAll = true thì hiển thị tất cả
+                filteredFoods
+                  .slice(0, showAll ? filteredFoods.length : 6)
+                  .map((food, index) => (
+                    <div
+                      key={food.id}
+                      className="menu-item"
+                      style={{
+                        animationDelay: `${index * 0.1}s`
+                      }}
+                    >
+                      <MenuCard food={food} />
+                    </div>
+                  ))
+              ) : (
+                <div className="col-span-full flex items-center justify-center py-20">
+                  <div className="text-center animate-fade-in">
+                    <p className="text-gray-400 text-lg mb-2">
+                      {selectedCategory
+                        ? "Không có món nào trong danh mục này"
+                        : "Chưa có món ăn nào"}
+                    </p>
+                    <p className="text-gray-500 text-sm">
+                      Vui lòng quay lại sau hoặc thử danh mục khác
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Nút "Xem thêm" nếu có nhiều hơn 6 món */}
+            {filteredFoods.length > 6 && (
+              <div 
+                className="flex justify-center mt-8 transition-all duration-500"
+                style={{
+                  animation: showAll ? 'slideDown 0.4s ease-out' : 'slideUp 0.4s ease-out'
+                }}
+              >
+                <button
+                  onClick={handleShowMore}
+                  className="px-8 py-3 bg-green-600 hover:bg-green-500 text-white rounded-lg font-medium transition-all duration-300 shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 transform hover:-translate-y-0.5 hover:scale-105 active:scale-95"
+                >
+                  <span className="flex items-center gap-2">
+                    {showAll ? (
+                      <>
+                        <span>Thu gọn</span>
+                        <svg className="w-5 h-5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                        </svg>
+                      </>
+                    ) : (
+                      <>
+                        <span>Xem thêm {filteredFoods.length - 6} món</span>
+                        <svg className="w-5 h-5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </>
+                    )}
+                  </span>
+                </button>
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </section>

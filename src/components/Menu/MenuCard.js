@@ -28,9 +28,9 @@ export default function MenuCard({ food, onOrderClick }) {
   }
 
   return (
-    <div className="group bg-gray-800 rounded-lg overflow-hidden hover:shadow-lg hover:shadow-green-500/20 transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50">
+    <div className="group bg-gray-800 rounded-lg overflow-hidden hover:shadow-lg hover:shadow-green-500/20 transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50 h-full flex flex-col">
       {/* Image */}
-      <div className="relative w-full h-48 md:h-56 overflow-hidden bg-gray-700">
+      <div className="relative w-full h-48 md:h-56 overflow-hidden bg-gray-700 shrink-0">
         {food.image ? (
           <Image
             src={food.image}
@@ -50,21 +50,23 @@ export default function MenuCard({ food, onOrderClick }) {
       </div>
 
       {/* Content */}
-      <div className="p-4 md:p-5">
+      <div className="p-4 md:p-5 flex flex-col grow">
         {/* Name */}
         <h3 className="text-lg md:text-xl font-semibold font-display text-gray-50 mb-2 line-clamp-1">
           {food.name}
         </h3>
 
         {/* Description */}
-        {food.description && (
-          <p className="text-sm text-gray-400 mb-3 line-clamp-2 min-h-10">
+        {food.description ? (
+          <p className="text-sm text-gray-400 mb-3 line-clamp-2 grow">
             {food.description}
           </p>
+        ) : (
+          <div className="grow mb-3"></div>
         )}
 
         {/* Price and Actions */}
-        <div className="flex items-center justify-between mt-4">
+        <div className="flex items-center justify-between mt-auto">
           <span className="text-xl md:text-2xl font-bold text-green-400">
             {formatCurrency(food.price)}
           </span>

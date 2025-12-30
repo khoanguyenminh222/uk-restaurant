@@ -289,7 +289,8 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
           isMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
         }`}
       >
-        <nav className="px-4 py-4 space-y-2 cursor-pointer" aria-label="Mobile navigation">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav className="py-4 space-y-2 cursor-pointer" aria-label="Mobile navigation">
           {menuItems.map((item) => {
             const IconComponent = item.icon
             return (
@@ -361,7 +362,8 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
               </button>
             )
           )}
-        </nav>
+          </nav>
+        </div>
       </div>
     </header>
   )
