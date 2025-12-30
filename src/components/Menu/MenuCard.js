@@ -1,13 +1,33 @@
 "use client"
 
+import { useState, useRef } from "react"
 import Image from "next/image"
 import { ShoppingCart, Utensils } from "lucide-react"
 import { addToCart } from "@/utils/cart"
 import { formatCurrency } from "@/utils/helpers"
 
-export default function MenuCard({ food, onOrderClick }) {
+export default function MenuCard({ food, onOrderClick, onAddToCart }) {
+  const [isAnimating, setIsAnimating] = useState(false)
+  const buttonRef = useRef(null)
+
   const handleAddToCart = (e) => {
     e.stopPropagation()
+    
+    // Trigger animation
+    setIsAnimating(true)
+    
+    // Get button position for animation
+    const buttonRect = buttonRef.current?.getBoundingClientRect()
+    if (buttonRect && onAddToCart) {
+      onAddToCart({
+        food,
+        position: {
+          x: buttonRect.left + buttonRect.width / 2,
+          y: buttonRect.top + buttonRect.height / 2,
+        }
+      })
+    }
+    
     addToCart({
       id: food.id,
       name: food.name,
@@ -16,7 +36,11 @@ export default function MenuCard({ food, onOrderClick }) {
       category_id: food.category_id,
       quantity: 1,
     })
-    // (Cập nhật số lượng món trong giỏ hàng)
+    
+    // Reset animation after delay
+    setTimeout(() => setIsAnimating(false), 600)
+    
+    // Update cart count
     window.dispatchEvent(new CustomEvent("cartUpdated"))
   }
 
@@ -28,7 +52,7 @@ export default function MenuCard({ food, onOrderClick }) {
   }
 
   return (
-    <div className="group bg-gray-800 rounded-lg overflow-hidden hover:shadow-lg hover:shadow-green-500/20 transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50 h-full flex flex-col">
+    <div className="group bg-gray-800 rounded-lg overflow-hidden hover:shadow-lg hover:shadow-green-500/20 transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50 h-full flex flex-col cursor-pointer">
       {/* Image */}
       <div className="relative w-full h-48 md:h-56 overflow-hidden bg-gray-700 shrink-0">
         {food.image ? (
@@ -66,19 +90,27 @@ export default function MenuCard({ food, onOrderClick }) {
         )}
 
         {/* Price and Actions */}
-        <div className="flex items-center justify-between mt-auto">
-          <span className="text-xl md:text-2xl font-bold text-green-400">
-            {formatCurrency(food.price)}
-          </span>
+        <div className="flex flex-col gap-3 mt-auto">
+          {/* Price */}
+          <div className="flex items-center justify-between">
+            <span className="text-xl md:text-2xl font-bold text-green-400">
+              {formatCurrency(food.price)}
+            </span>
+          </div>
 
+          {/* Actions */}
           <div className="flex items-center gap-2">
             {/* Add to Cart Button */}
             <button
+              ref={buttonRef}
               onClick={handleAddToCart}
-              className="p-2 bg-green-600 hover:bg-green-500 text-white rounded-lg transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-800"
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-500 text-white rounded-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-800 ${
+                isAnimating ? "scale-95" : "hover:scale-105 active:scale-95"
+              }`}
               aria-label={`Thêm ${food.name} vào giỏ hàng`}
             >
-              <ShoppingCart className="w-5 h-5" />
+              <ShoppingCart className={`w-5 h-5 transition-transform ${isAnimating ? "scale-125 rotate-12" : ""}`} />
+              <span className="text-sm">Thêm vào giỏ</span>
             </button>
 
             {/* Order Now Button (Optional) */}
