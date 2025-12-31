@@ -21,7 +21,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="p-2 rounded-lg text-foreground hover:bg-muted transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background hover:scale-110 active:scale-95"
+      className="p-2 rounded-lg text-foreground hover:bg-muted transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background hover:scale-110 active:scale-95 cursor-pointer"
       aria-label={theme === "light" ? "Chuyển sang dark mode" : "Chuyển sang light mode"}
       title={theme === "light" ? "Chuyển sang dark mode" : "Chuyển sang light mode"}
     >

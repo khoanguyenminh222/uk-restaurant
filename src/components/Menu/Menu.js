@@ -190,7 +190,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
             {/* Tab "Tất cả" - Luôn hiển thị */}
             <button
               onClick={() => handleCategoryClick(null)}
-              className={`px-4 md:px-6 py-2 md:py-2.5 rounded-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background ${
+              className={`px-4 md:px-6 py-2 md:py-2.5 rounded-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background cursor-pointer ${
                 selectedCategory === null
                   ? "bg-primary text-primary-foreground shadow-md shadow-primary/30"
                   : "bg-card text-card-foreground hover:bg-muted border border-border"
@@ -205,7 +205,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
                 <button
                   key={category.id || category._id}
                   onClick={() => handleCategoryClick(category.id)}
-                  className={`px-4 md:px-6 py-2 md:py-2.5 rounded-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transform hover:scale-105 active:scale-95 category-tab ${
+                  className={`px-4 md:px-6 py-2 md:py-2.5 rounded-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transform hover:scale-105 active:scale-95 category-tab cursor-pointer ${
                     selectedCategory === category.id
                       ? "bg-primary text-primary-foreground shadow-md shadow-primary/30 scale-105"
                       : "bg-card text-card-foreground hover:bg-muted border border-border"
