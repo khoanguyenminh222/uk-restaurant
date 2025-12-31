@@ -351,6 +351,14 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
             )
           })}
           
+          {/* Theme Toggle in Mobile Menu - Always visible */}
+          <div className="px-4 py-3 border-t border-border">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-foreground">Giao diện</span>
+              <ThemeToggle />
+            </div>
+          </div>
+
           {/* Mobile User Menu */}
           {user ? (
             <>
@@ -403,27 +411,18 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
               </button>
             </>
           ) : (
-            <>
-              {/* Theme Toggle in Mobile Menu */}
-              <div className="px-4 py-3 border-t border-border">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-foreground">Giao diện</span>
-                  <ThemeToggle />
-                </div>
-              </div>
-              {onLoginClick && (
-                <button
-                  onClick={() => {
-                    setIsMenuOpen(false)
-                    onLoginClick()
-                  }}
-                  className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-foreground hover:text-primary hover:bg-muted transition-all duration-300"
-                >
-                  <User className="w-5 h-5" />
-                  <span>Đăng nhập</span>
-                </button>
-              )}
-            </>
+            onLoginClick && (
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false)
+                  onLoginClick()
+                }}
+                className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-foreground hover:text-primary hover:bg-muted transition-all duration-300"
+              >
+                <User className="w-5 h-5" />
+                <span>Đăng nhập</span>
+              </button>
+            )
           )}
           </nav>
         </div>
