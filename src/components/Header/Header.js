@@ -245,7 +245,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
                             setIsUserMenuOpen(false)
                             onProfileClick()
                           }}
-                          className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:text-green-400 hover:bg-green-950/20 transition-colors"
+                          className="w-full cursor-pointer flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:text-green-400 hover:bg-green-950/20 transition-colors"
                         >
                           <UserCircle className="w-4 h-4" />
                           Thông tin tài khoản
@@ -258,7 +258,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
                             setIsUserMenuOpen(false)
                             onOrderHistoryClick()
                           }}
-                          className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:text-green-400 hover:bg-green-950/20 transition-colors"
+                          className="w-full cursor-pointer flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:text-green-400 hover:bg-green-950/20 transition-colors"
                         >
                           <History className="w-4 h-4" />
                           Lịch sử đơn hàng
@@ -268,7 +268,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
                       <div className="border-t border-gray-800 mt-2 pt-2">
                         <button
                           onClick={handleLogout}
-                          className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-950/20 transition-colors"
+                          className="w-full cursor-pointer flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-950/20 transition-colors"
                         >
                           <LogOut className="w-4 h-4" />
                           Đăng xuất
@@ -309,7 +309,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
       <div
         id="mobile-menu"
         className={`md:hidden cursor-pointer bg-gray-900 border-t border-gray-800 transition-all duration-300 ease-in-out overflow-hidden ${
-          isMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+          isMenuOpen ? "opacity-100" : "max-h-0 opacity-0"
         }`}
       >
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -342,7 +342,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
                     setIsMenuOpen(false)
                     onProfileClick()
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-gray-300 hover:text-green-400 hover:bg-green-950/20 transition-all duration-300"
+                  className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-gray-300 hover:text-green-400 hover:bg-green-950/20 transition-all duration-300"
                 >
                   <UserCircle className="w-5 h-5" />
                   <span>Thông tin tài khoản</span>
@@ -354,7 +354,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
                     setIsMenuOpen(false)
                     onOrderHistoryClick()
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-gray-300 hover:text-green-400 hover:bg-green-950/20 transition-all duration-300"
+                  className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-gray-300 hover:text-green-400 hover:bg-green-950/20 transition-all duration-300"
                 >
                   <History className="w-5 h-5" />
                   <span>Lịch sử đơn hàng</span>
@@ -365,7 +365,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
                   handleLogout()
                   setIsMenuOpen(false)
                 }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-red-400 hover:text-red-300 hover:bg-red-950/20 transition-all duration-300"
+                className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-red-400 hover:text-red-300 hover:bg-red-950/20 transition-all duration-300"
               >
                 <LogOut className="w-5 h-5" />
                 <span>Đăng xuất</span>
@@ -378,7 +378,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
                   setIsMenuOpen(false)
                   onLoginClick()
                 }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-gray-300 hover:text-green-400 hover:bg-green-950/20 transition-all duration-300"
+                className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-gray-300 hover:text-green-400 hover:bg-green-950/20 transition-all duration-300"
               >
                 <User className="w-5 h-5" />
                 <span>Đăng nhập</span>

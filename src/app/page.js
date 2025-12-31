@@ -6,16 +6,21 @@ import Hero from "@/components/Hero/Hero"
 import Menu from "@/components/Menu/Menu"
 import About from "@/components/About/About"
 import Contact from "@/components/Contact/Contact"
+import Footer from "@/components/Footer/Footer"
 import ScrollToTop from "@/components/ScrollToTop/ScrollToTop"
 import Cart from "@/components/Cart/Cart"
 import Toast from "@/components/Toast/Toast"
 import Auth from "@/components/Auth/Auth"
 import OrderForm from "@/components/OrderForm/OrderForm"
+import UserProfile from "@/components/UserProfile/UserProfile"
+import OrderHistory from "@/components/OrderHistory/OrderHistory"
 
 export default function Home() {
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isAuthOpen, setIsAuthOpen] = useState(false)
   const [isOrderFormOpen, setIsOrderFormOpen] = useState(false)
+  const [isUserProfileOpen, setIsUserProfileOpen] = useState(false)
+  const [isOrderHistoryOpen, setIsOrderHistoryOpen] = useState(false)
   const [orderFormItems, setOrderFormItems] = useState(null)
   const [authTab, setAuthTab] = useState("login")
   const [toast, setToast] = useState({ message: "", isVisible: false })
@@ -107,13 +112,12 @@ export default function Home() {
   }
 
   const handleProfileClick = () => {
-    // Handle profile click
-    console.log("Profile clicked")
+    setIsUserProfileOpen(true)
   }
 
   const handleOrderHistoryClick = () => {
-    // Handle order history click
-    console.log("Order history clicked")
+    // Mở OrderHistory để xem lịch sử đơn hàng
+    setIsOrderHistoryOpen(true)
   }
 
   return (
@@ -138,6 +142,7 @@ export default function Home() {
         <About />
         <Contact />
       </main>
+      <Footer />
       <ScrollToTop />
       <Cart isOpen={isCartOpen} onClose={handleCartClose} onCheckout={handleCheckout} />
       <Auth
@@ -150,6 +155,14 @@ export default function Home() {
         onClose={() => setIsOrderFormOpen(false)}
         items={orderFormItems}
         onSuccess={handleOrderSuccess}
+      />
+      <UserProfile
+        isOpen={isUserProfileOpen}
+        onClose={() => setIsUserProfileOpen(false)}
+      />
+      <OrderHistory
+        isOpen={isOrderHistoryOpen}
+        onClose={() => setIsOrderHistoryOpen(false)}
       />
       <Toast
         message={toast.message}

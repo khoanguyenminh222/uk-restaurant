@@ -205,11 +205,6 @@ export default function Contact() {
             </p>
           </div>
         </div>
-
-        {/* Footer */}
-        <div className="mt-20 pt-8 border-t border-gray-700 text-center">
-          <p className="text-gray-400 text-sm">© 2025 UK Restaurant. Ăn no khỏi &ldquo;bàn&rdquo;</p>
-        </div>
       </div>
     </section>
   )
