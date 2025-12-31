@@ -4,19 +4,54 @@ import clientPromise from '@/lib/mongodb';
 /**
  * GET /api/categories
  * Lấy danh sách tất cả danh mục
+ * Query params:
+ *   - search (optional) - search theo tên, description
+ *   - page (optional) - số trang
+ *   - limit (optional) - số lượng/trang
  */
-export async function GET() {
+export async function GET(request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get('search');
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
+
     const client = await clientPromise;
     const db = client.db('uk-restaurant');
+
+    // Build query
+    const query = {};
+
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    // Get total count
+    const total = await db.collection('categories').countDocuments(query);
+
+    // Get categories with pagination
     const categories = await db
       .collection('categories')
-      .find({})
+      .find(query)
       .sort({ order: 1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
       .toArray();
 
     return NextResponse.json(
-      { success: true, data: categories },
+      { 
+        success: true, 
+        data: categories,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      },
       { status: 200 }
     );
   } catch (error) {

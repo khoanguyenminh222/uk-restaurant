@@ -3,13 +3,15 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home } from 'lucide-react';
+import { Home, Menu, X, LayoutDashboard, FolderOpen, UtensilsCrossed, Users, LogOut, ShoppingCart, UserCircle } from 'lucide-react';
+import ThemeToggle from '@/components/ThemeToggle/ThemeToggle';
 
 export default function AdminLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [adminInfo, setAdminInfo] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const checkAuth = () => {
@@ -41,6 +43,23 @@ export default function AdminLayout({ children }) {
     checkAuth();
   }, [router, pathname]);
 
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [mobileMenuOpen]);
+
   const handleLogout = () => {
     localStorage.removeItem('admin_data');
     localStorage.removeItem('admin_logged_in');
@@ -57,24 +76,63 @@ export default function AdminLayout({ children }) {
     return null;
   }
 
-  // Only show "Quản lý Admin" menu for super_admin
+  // Navigation items based on role
   const navItems = [
-    { href: '/admin/dashboard', label: 'Dashboard', icon: '📊' },
-    { href: '/admin/categories', label: 'Danh mục', icon: '📁' },
-    { href: '/admin/food', label: 'Món ăn', icon: '🍽️' },
+    { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/admin/orders', label: 'Đơn hàng', icon: ShoppingCart },
+    { href: '/admin/categories', label: 'Danh mục', icon: FolderOpen },
+    { href: '/admin/food', label: 'Món ăn', icon: UtensilsCrossed },
+    { href: '/admin/users', label: 'Người dùng', icon: UserCircle },
     ...(adminInfo && adminInfo.role === 'super_admin' 
-      ? [{ href: '/admin/admins', label: 'Quản lý Admin', icon: '👥' }]
+      ? [{ href: '/admin/admins', label: 'Quản lý Admin', icon: Users }]
       : []
     ),
   ];
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Mobile Header */}
+      <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-card border-b border-border z-50 flex items-center justify-between px-4">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 rounded-lg text-card-foreground hover:bg-muted transition-colors"
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+          <div>
+            <h1 className="text-lg font-bold text-card-foreground">UK Restaurant</h1>
+            <p className="text-xs text-muted-foreground">Admin Panel</p>
+          </div>
+        </div>
+        <ThemeToggle />
+      </header>
+
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-full w-64 bg-card border-r border-border z-10">
+      <aside
+        className={`fixed left-0 top-0 h-full w-64 bg-card border-r border-border z-50 transform transition-transform duration-300 ease-in-out ${
+          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        } lg:translate-x-0`}
+      >
         <div className="p-6 border-b border-border">
-          <h1 className="text-xl font-bold text-card-foreground">UK Restaurant</h1>
-          <p className="text-sm text-muted-foreground">Admin Panel</p>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-xl font-bold text-card-foreground">UK Restaurant</h1>
+              <p className="text-sm text-muted-foreground">Admin Panel</p>
+            </div>
+            <div className="hidden lg:block">
+              <ThemeToggle />
+            </div>
+          </div>
           {adminInfo && (
             <div className="mt-3 pt-3 border-t border-border">
               <p className="text-xs text-muted-foreground">Đăng nhập bởi</p>
@@ -90,10 +148,11 @@ export default function AdminLayout({ children }) {
           )}
         </div>
 
-        <nav className="p-4">
+        <nav className="p-4 flex-1 overflow-y-auto">
           <ul className="space-y-2">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
+              const IconComponent = item.icon;
               return (
                 <li key={item.href}>
                   <Link
@@ -104,7 +163,7 @@ export default function AdminLayout({ children }) {
                         : 'text-muted-foreground hover:bg-muted hover:text-card-foreground'
                     }`}
                   >
-                    <span className="text-xl">{item.icon}</span>
+                    <IconComponent className="w-5 h-5" />
                     <span className="font-medium">{item.label}</span>
                   </Link>
                 </li>
@@ -113,7 +172,7 @@ export default function AdminLayout({ children }) {
           </ul>
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border space-y-2">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border space-y-2 bg-card">
           <Link
             href="/"
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-muted hover:text-card-foreground transition-colors"
@@ -125,14 +184,14 @@ export default function AdminLayout({ children }) {
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-muted hover:text-card-foreground transition-colors"
           >
-            <span className="text-xl">🚪</span>
+            <LogOut className="w-5 h-5" />
             <span className="font-medium">Đăng xuất</span>
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="ml-64 p-8">
+      <main className="lg:ml-64 pt-20 lg:pt-4 p-4 lg:p-8 min-h-screen">
         {children}
       </main>
     </div>

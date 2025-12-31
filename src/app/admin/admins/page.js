@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { UserPlus, X, Mail, Phone, User, Shield, ShieldCheck, Loader2, Edit2, Trash2 } from 'lucide-react';
+import { UserPlus, X, Mail, Phone, User, Shield, ShieldCheck, Loader2, Edit2, Trash2, Search, Filter, ChevronDown } from 'lucide-react';
 
 export default function AdminsPage() {
   const [admins, setAdmins] = useState([]);
@@ -11,6 +11,9 @@ export default function AdminsPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [creating, setCreating] = useState(false);
   const [currentAdmin, setCurrentAdmin] = useState(null); // Current logged-in admin
+  const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
   const [formData, setFormData] = useState({
     phone: '',
     name: '',
@@ -34,16 +37,34 @@ export default function AdminsPage() {
     }
     
     fetchAdmins();
-  }, []);
+  }, [roleFilter, pagination.page]);
 
   const fetchAdmins = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/admins');
+      const params = new URLSearchParams({
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString(),
+      });
+
+      if (roleFilter !== 'all') {
+        params.append('role', roleFilter);
+      }
+
+      if (searchTerm) {
+        params.append('search', searchTerm);
+      }
+
+      const response = await fetch(`/api/admin/admins?${params}`);
       const data = await response.json();
 
       if (data.success) {
         setAdmins(data.data || []);
+        setPagination(prev => ({
+          ...prev,
+          total: data.pagination?.total || 0,
+          totalPages: data.pagination?.totalPages || 0,
+        }));
       } else {
         setError(data.error || 'Không thể tải danh sách admin');
       }
@@ -53,6 +74,11 @@ export default function AdminsPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearch = () => {
+    setPagination(prev => ({ ...prev, page: 1 }));
+    fetchAdmins();
   };
 
   const validateForm = () => {
@@ -172,10 +198,10 @@ export default function AdminsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-card-foreground flex items-center gap-2">
+        <h1 className="text-2xl lg:text-3xl font-bold text-card-foreground flex items-center gap-2">
           <Shield className="w-6 h-6 text-primary" />
           Quản lý Admin
         </h1>
@@ -199,6 +225,48 @@ export default function AdminsPage() {
           {success}
         </div>
       )}
+
+      {/* Filters */}
+      <div className="bg-card rounded-lg border border-border p-4 space-y-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+          {/* Search */}
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Tìm theo tên, SĐT, email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              className="w-full pl-10 pr-4 py-2 bg-input border border-border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <button
+            onClick={handleSearch}
+            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium"
+          >
+            Tìm kiếm
+          </button>
+
+          {/* Role Filter */}
+          <div className="relative">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <select
+              value={roleFilter}
+              onChange={(e) => {
+                setRoleFilter(e.target.value);
+                setPagination(prev => ({ ...prev, page: 1 }));
+              }}
+              className="pl-10 pr-8 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring appearance-none"
+            >
+              <option value="all">Tất cả</option>
+              <option value="admin">Admin</option>
+              <option value="super_admin">Super Admin</option>
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          </div>
+        </div>
+      </div>
 
       {/* Create Admin Form Modal */}
       {showCreateForm && (
@@ -396,8 +464,8 @@ export default function AdminsPage() {
         </div>
       )}
 
-      {/* Admins List */}
-      <div className="bg-card/50 rounded-lg border border-border overflow-hidden">
+      {/* Desktop Table View */}
+      <div className="hidden lg:block bg-card/50 rounded-lg border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-muted/50">
@@ -414,7 +482,7 @@ export default function AdminsPage() {
               {admins.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="px-4 py-8 text-center text-muted-foreground">
-                    Chưa có admin nào
+                    {searchTerm || roleFilter !== 'all' ? 'Không tìm thấy admin' : 'Chưa có admin nào'}
                   </td>
                 </tr>
               ) : (
@@ -451,6 +519,88 @@ export default function AdminsPage() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Pagination */}
+      {pagination.totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
+            disabled={pagination.page === 1}
+            className="px-4 py-2 bg-card border border-border rounded-lg text-card-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            Trước
+          </button>
+          <span className="px-4 py-2 text-sm text-muted-foreground">
+            Trang {pagination.page} / {pagination.totalPages}
+          </span>
+          <button
+            onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.totalPages, prev.page + 1) }))}
+            disabled={pagination.page === pagination.totalPages}
+            className="px-4 py-2 bg-card border border-border rounded-lg text-card-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            Sau
+          </button>
+        </div>
+      )}
+
+      {/* Mobile Card View */}
+      <div className="lg:hidden space-y-4">
+        {admins.length === 0 ? (
+          <div className="bg-card rounded-lg border border-border p-8 text-center">
+            <Shield className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">
+              {searchTerm || roleFilter !== 'all' ? 'Không tìm thấy admin' : 'Chưa có admin nào'}
+            </p>
+          </div>
+        ) : (
+          admins.map((admin) => (
+            <div
+              key={admin._id}
+              className="bg-card rounded-lg border border-border p-4 space-y-3"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="font-semibold text-card-foreground">{admin.name}</h3>
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium shrink-0 ${
+                        admin.role === 'super_admin'
+                          ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50'
+                          : 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
+                      }`}
+                    >
+                      {admin.role === 'super_admin' ? (
+                        <ShieldCheck className="w-3 h-3" />
+                      ) : (
+                        <Shield className="w-3 h-3" />
+                      )}
+                      {admin.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Phone className="w-4 h-4" />
+                      <span>{admin.phone}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Mail className="w-4 h-4" />
+                      <span className="truncate">{admin.email}</span>
+                    </div>
+                    <div className="pt-2 border-t border-border space-y-1">
+                      <p className="text-xs text-muted-foreground">
+                        <span className="font-medium">Ngày tạo:</span> {formatDate(admin.created_at)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        <span className="font-medium">Đăng nhập cuối:</span> {formatDate(admin.last_login)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

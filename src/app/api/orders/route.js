@@ -10,6 +10,10 @@ import { sendOrderConfirmationEmail } from '@/lib/email';
  * Query params: 
  *   - phone (optional) - tra cứu đơn hàng theo số điện thoại
  *   - order_id (optional) - tra cứu đơn hàng theo mã đơn hàng
+ *   - status (optional) - filter theo status
+ *   - search (optional) - search theo order_id, customer_name, customer_phone
+ *   - page (optional) - số trang
+ *   - limit (optional) - số lượng/trang
  * Admin: lấy tất cả đơn hàng
  */
 export async function GET(request) {
@@ -17,25 +21,59 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const phone = searchParams.get('phone');
     const orderId = searchParams.get('order_id');
+    const status = searchParams.get('status');
+    const search = searchParams.get('search');
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
 
     const client = await clientPromise;
     const db = client.db('uk-restaurant');
 
     const query = {};
+    
+    // Specific lookups (for track order)
     if (orderId) {
       query.order_id = orderId;
     } else if (phone) {
       query.customer_phone = phone;
+    } else {
+      // Admin view - apply filters
+      if (status && status !== 'all') {
+        query.status = status;
+      }
+
+      if (search) {
+        query.$or = [
+          { order_id: { $regex: search, $options: 'i' } },
+          { customer_name: { $regex: search, $options: 'i' } },
+          { customer_phone: { $regex: search, $options: 'i' } },
+        ];
+      }
     }
 
+    // Get total count
+    const total = await db.collection('orders').countDocuments(query);
+
+    // Get orders with pagination
     const orders = await db
       .collection('orders')
       .find(query)
       .sort({ created_at: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
       .toArray();
 
     return NextResponse.json(
-      { success: true, data: orders },
+      { 
+        success: true, 
+        data: orders,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      },
       { status: 200 }
     );
   } catch (error) {
