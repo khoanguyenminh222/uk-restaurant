@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useScrollAnimation } from "@/hooks/useScrollAnimation"
 import MenuCard from "./MenuCard"
 
-export default function Menu({ onAddToCart }) {
+export default function Menu({ onAddToCart, onOrderClick }) {
   const [categories, setCategories] = useState([])
   const [foods, setFoods] = useState([])
   const [filteredFoods, setFilteredFoods] = useState([])
@@ -210,7 +210,7 @@ export default function Menu({ onAddToCart }) {
                           scrollSnapAlign: 'start'
                         }}
                       >
-                        <MenuCard food={food} onAddToCart={onAddToCart} />
+                        <MenuCard food={food} onAddToCart={onAddToCart} onOrderClick={onOrderClick} />
                       </div>
                     ))}
                 </div>

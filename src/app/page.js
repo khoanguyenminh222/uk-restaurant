@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import Header from "@/components/Header/Header"
 import Hero from "@/components/Hero/Hero"
 import Menu from "@/components/Menu/Menu"
@@ -10,10 +10,13 @@ import ScrollToTop from "@/components/ScrollToTop/ScrollToTop"
 import Cart from "@/components/Cart/Cart"
 import Toast from "@/components/Toast/Toast"
 import Auth from "@/components/Auth/Auth"
+import OrderForm from "@/components/OrderForm/OrderForm"
 
 export default function Home() {
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isAuthOpen, setIsAuthOpen] = useState(false)
+  const [isOrderFormOpen, setIsOrderFormOpen] = useState(false)
+  const [orderFormItems, setOrderFormItems] = useState(null)
   const [authTab, setAuthTab] = useState("login")
   const [toast, setToast] = useState({ message: "", isVisible: false })
   const cartIconRef = useRef(null)
@@ -67,9 +70,36 @@ export default function Home() {
   }
 
   const handleCheckout = (cart) => {
-    // TODO: Mở Order Form Modal với cart items
-    console.log("Checkout with cart:", cart)
+    setIsCartOpen(false)
+    setOrderFormItems(cart)
+    setIsOrderFormOpen(true)
   }
+
+  const handleOrderSuccess = (orderData) => {
+    setToast({
+      message: `Đặt món thành công! Mã đơn hàng: ${orderData.order_id}`,
+      isVisible: true,
+    })
+  }
+
+  const handleOrderNow = (food) => {
+    setOrderFormItems(food)
+    setIsOrderFormOpen(true)
+  }
+
+  // Listen for toast events from OrderForm
+  useEffect(() => {
+    const handleShowToast = (event) => {
+      setToast({
+        message: event.detail.message,
+        isVisible: true,
+        type: event.detail.type || "success",
+      })
+    }
+
+    window.addEventListener("showToast", handleShowToast)
+    return () => window.removeEventListener("showToast", handleShowToast)
+  }, [])
 
   const handleLoginClick = () => {
     setAuthTab("login")
@@ -104,7 +134,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <Menu onAddToCart={handleAddToCart} />
+        <Menu onAddToCart={handleAddToCart} onOrderClick={handleOrderNow} />
         <About />
         <Contact />
       </main>
@@ -115,11 +145,17 @@ export default function Home() {
         onClose={() => setIsAuthOpen(false)}
         initialTab={authTab}
       />
+      <OrderForm
+        isOpen={isOrderFormOpen}
+        onClose={() => setIsOrderFormOpen(false)}
+        items={orderFormItems}
+        onSuccess={handleOrderSuccess}
+      />
       <Toast
         message={toast.message}
         isVisible={toast.isVisible}
         onClose={handleCloseToast}
-        type="success"
+        type={toast.type || "success"}
       />
       
       {/* Flying Item Animation */}

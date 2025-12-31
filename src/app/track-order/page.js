@@ -1,0 +1,263 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
+import { Search, Package, Clock, CheckCircle, XCircle, Loader2 } from "lucide-react"
+import { formatCurrency } from "@/utils/helpers"
+
+const statusConfig = {
+  pending: {
+    label: "Chờ xác nhận",
+    color: "text-yellow-400",
+    bgColor: "bg-yellow-950/30",
+    borderColor: "border-yellow-500/50",
+    icon: Clock,
+  },
+  confirmed: {
+    label: "Đã xác nhận",
+    color: "text-blue-400",
+    bgColor: "bg-blue-950/30",
+    borderColor: "border-blue-500/50",
+    icon: CheckCircle,
+  },
+  preparing: {
+    label: "Đang chuẩn bị",
+    color: "text-orange-400",
+    bgColor: "bg-orange-950/30",
+    borderColor: "border-orange-500/50",
+    icon: Clock,
+  },
+  ready: {
+    label: "Sẵn sàng",
+    color: "text-green-400",
+    bgColor: "bg-green-950/30",
+    borderColor: "border-green-500/50",
+    icon: CheckCircle,
+  },
+  delivered: {
+    label: "Đã giao hàng",
+    color: "text-green-500",
+    bgColor: "bg-green-950/30",
+    borderColor: "border-green-500/50",
+    icon: CheckCircle,
+  },
+  cancelled: {
+    label: "Đã hủy",
+    color: "text-red-400",
+    bgColor: "bg-red-950/30",
+    borderColor: "border-red-500/50",
+    icon: XCircle,
+  },
+}
+
+export default function TrackOrderPage() {
+  const searchParams = useSearchParams()
+  const orderIdFromUrl = searchParams.get("order_id")
+  
+  const [orderId, setOrderId] = useState(orderIdFromUrl || "")
+  const [order, setOrder] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    if (orderIdFromUrl) {
+      fetchOrder(orderIdFromUrl)
+    }
+  }, [orderIdFromUrl])
+
+  const fetchOrder = async (id) => {
+    if (!id || !id.trim()) {
+      setError("Vui lòng nhập mã đơn hàng")
+      return
+    }
+
+    setLoading(true)
+    setError("")
+    setOrder(null)
+
+    try {
+      const response = await fetch(`/api/orders?order_id=${encodeURIComponent(id.trim())}`)
+      const data = await response.json()
+
+      if (data.success && data.data && data.data.length > 0) {
+        setOrder(data.data[0])
+      } else {
+        setError("Không tìm thấy đơn hàng với mã này")
+      }
+    } catch (err) {
+      console.error("Error fetching order:", err)
+      setError("Lỗi khi tìm kiếm đơn hàng. Vui lòng thử lại sau.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSearch = (e) => {
+    e.preventDefault()
+    fetchOrder(orderId)
+  }
+
+  const StatusIcon = order ? statusConfig[order.status]?.icon || Clock : Clock
+
+  return (
+    <div className="min-h-screen bg-gray-950 py-12 px-4">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-50 mb-2 flex items-center justify-center gap-2">
+            <Package className="w-8 h-8 text-green-400" />
+            Theo dõi đơn hàng
+          </h1>
+          <p className="text-gray-400">Nhập mã đơn hàng để xem trạng thái đơn hàng của bạn</p>
+        </div>
+
+        {/* Search Form */}
+        <div className="bg-gray-900 rounded-xl p-6 mb-6 border border-gray-800">
+          <form onSubmit={handleSearch} className="flex gap-3">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                value={orderId}
+                onChange={(e) => setOrderId(e.target.value)}
+                placeholder="Nhập mã đơn hàng (ví dụ: ORD-1234567890-123)"
+                className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-6 py-3 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Đang tìm...</span>
+                </>
+              ) : (
+                <>
+                  <Search className="w-5 h-5" />
+                  <span>Tìm kiếm</span>
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-950/50 border border-red-500/50 rounded-lg text-red-400">
+            {error}
+          </div>
+        )}
+
+        {/* Order Details */}
+        {order && (
+          <div className="space-y-6">
+            {/* Order Status Card */}
+            <div className={`bg-gray-900 rounded-xl p-6 border ${statusConfig[order.status]?.borderColor || "border-gray-800"}`}>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className={`p-3 rounded-lg ${statusConfig[order.status]?.bgColor || "bg-gray-800"}`}>
+                    <StatusIcon className={`w-6 h-6 ${statusConfig[order.status]?.color || "text-gray-400"}`} />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-50">Trạng thái đơn hàng</h2>
+                    <p className={`text-sm font-medium ${statusConfig[order.status]?.color || "text-gray-400"}`}>
+                      {statusConfig[order.status]?.label || order.status}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-400">Mã đơn hàng</p>
+                  <p className="text-sm font-mono font-semibold text-gray-50">{order.order_id}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Order Info */}
+            <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
+              <h3 className="text-lg font-semibold text-gray-50 mb-4">Thông tin đơn hàng</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-400 mb-1">Tên khách hàng</p>
+                  <p className="text-gray-50 font-medium">{order.customer_name}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-1">Số điện thoại</p>
+                  <p className="text-gray-50 font-medium">{order.customer_phone}</p>
+                </div>
+                <div className="md:col-span-2">
+                  <p className="text-xs text-gray-400 mb-1">Địa chỉ giao hàng</p>
+                  <p className="text-gray-50 font-medium">{order.customer_address || "Tại quán"}</p>
+                </div>
+                {order.notes && (
+                  <div className="md:col-span-2">
+                    <p className="text-xs text-gray-400 mb-1">Ghi chú</p>
+                    <p className="text-gray-50">{order.notes}</p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-xs text-gray-400 mb-1">Ngày đặt hàng</p>
+                  <p className="text-gray-50 font-medium">
+                    {order.created_at
+                      ? new Date(order.created_at).toLocaleString("vi-VN", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-1">Tổng tiền</p>
+                  <p className="text-green-400 font-bold text-lg">{formatCurrency(order.total_price || 0)}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Order Items */}
+            <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
+              <h3 className="text-lg font-semibold text-gray-50 mb-4">Chi tiết đơn hàng</h3>
+              <div className="space-y-3">
+                {order.items && Array.isArray(order.items) && order.items.length > 0 ? (
+                  order.items.map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg"
+                    >
+                      <div className="flex-1">
+                        <p className="text-gray-50 font-medium">{item.tên_món}</p>
+                        <p className="text-sm text-gray-400">
+                          {formatCurrency(item.giá)} × {item.quantity}
+                        </p>
+                      </div>
+                      <p className="text-green-400 font-semibold">
+                        {formatCurrency(item.giá * item.quantity)}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
+                    <div className="flex-1">
+                      <p className="text-gray-50 font-medium">{order.tên_món}</p>
+                      <p className="text-sm text-gray-400">
+                        {formatCurrency(order.giá || 0)} × {order.quantity || 1}
+                      </p>
+                    </div>
+                    <p className="text-green-400 font-semibold">
+                      {formatCurrency((order.giá || 0) * (order.quantity || 1))}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+

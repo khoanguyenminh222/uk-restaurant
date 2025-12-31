@@ -2,23 +2,29 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { validateOrder } from '@/lib/models/Order';
 import { validateOrderLog } from '@/lib/models/OrderLog';
+import { sendOrderConfirmationEmail } from '@/lib/email';
 
 /**
  * GET /api/orders
  * Lấy danh sách đơn hàng
- * Query params: phone (optional) - tra cứu đơn hàng theo số điện thoại
+ * Query params: 
+ *   - phone (optional) - tra cứu đơn hàng theo số điện thoại
+ *   - order_id (optional) - tra cứu đơn hàng theo mã đơn hàng
  * Admin: lấy tất cả đơn hàng
  */
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const phone = searchParams.get('phone');
+    const orderId = searchParams.get('order_id');
 
     const client = await clientPromise;
     const db = client.db('uk-restaurant');
 
     const query = {};
-    if (phone) {
+    if (orderId) {
+      query.order_id = orderId;
+    } else if (phone) {
       query.customer_phone = phone;
     }
 
@@ -122,6 +128,39 @@ export async function POST(request) {
       const logValidation = validateOrderLog(logEntry);
       if (logValidation.isValid) {
         await db.collection('orderLog').insertOne(logEntry);
+      }
+    }
+
+    // Get user email if user_id exists
+    let customerEmail = null;
+    if (body.user_id) {
+      try {
+        const user = await db.collection('users').findOne({ user_id: body.user_id });
+        if (user && user.email) {
+          customerEmail = user.email;
+        }
+      } catch (userError) {
+        console.error('Error fetching user email:', userError);
+        // Continue without email
+      }
+    }
+
+    // Send order confirmation email if email is available
+    if (customerEmail) {
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const trackOrderUrl = `${baseUrl}/track-order?order_id=${body.order_id}`;
+        
+        await sendOrderConfirmationEmail(
+          customerEmail,
+          body.customer_name,
+          body.order_id,
+          trackOrderUrl,
+          body
+        );
+      } catch (emailError) {
+        console.error('Error sending order confirmation email:', emailError);
+        // Continue even if email fails
       }
     }
 
