@@ -145,13 +145,13 @@ export default function Home() {
       <main>
         <Hero />
         {/* Scroll Indicator */}
-        <div className="relative flex justify-center py-8 bg-background">
+        {/* <div className="relative flex justify-center py-8 bg-background">
           <div className="animate-bounce">
             <div className="w-6 h-10 border-2 border-primary rounded-full flex items-start justify-center p-2">
               <div className="w-1.5 h-3 bg-primary rounded-full animate-pulse"></div>
             </div>
           </div>
-        </div>
+        </div> */}
         <Menu onAddToCart={handleAddToCart} onOrderClick={handleOrderNow} />
         <About />
         <Contact />

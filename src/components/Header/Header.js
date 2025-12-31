@@ -147,7 +147,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-background ${
-        isScrolled ? "bg-background/95 backdrop-blur-md shadow-lg shadow-black/10" : "bg-transparent"
+        isScrolled ? "bg-background/95 backdrop-blur-md shadow-lg shadow-black/10" : "bg-background"
       }`}
     >
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-visible">
