@@ -136,7 +136,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
 
   return (
     <section id="menu" className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-muted">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto overflow-hidden">
         {/* Section Header */}
         <div
           ref={headerRef}
@@ -351,7 +351,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
               >
                 <button
                   onClick={handleShowMore}
-                  className="px-8 py-3 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg font-medium transition-all duration-300 shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transform hover:-translate-y-0.5 hover:scale-105 active:scale-95"
+                  className="px-8 py-3 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg font-medium transition-all duration-300 shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transform hover:-translate-y-0.5 hover:scale-105 active:scale-95 cursor-pointer"
                 >
                   <span className="flex items-center gap-2">
                     {showAll ? (

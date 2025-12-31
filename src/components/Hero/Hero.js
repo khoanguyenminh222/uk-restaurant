@@ -37,7 +37,7 @@ export default function Hero() {
         background: `linear-gradient(to bottom, var(--hero-gradient-from), var(--hero-gradient-via), var(--hero-gradient-to))`
       }}
     >
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto overflow-hidden">
         <div className="max-w-4xl mx-auto text-center">
           {/* Title */}
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-display text-foreground mb-4 animate-fade-in-up text-balance">

@@ -9,22 +9,34 @@ import { formatCurrency } from "@/utils/helpers"
 export default function MenuCard({ food, onOrderClick, onAddToCart }) {
   const [isAnimating, setIsAnimating] = useState(false)
   const buttonRef = useRef(null)
+  const cardRef = useRef(null)
 
-  const handleAddToCart = (e) => {
+  const handleAddToCart = (e, useCardPosition = false) => {
     e.stopPropagation()
     
     // Trigger animation
     setIsAnimating(true)
     
-    // Get button position for animation
-    const buttonRect = buttonRef.current?.getBoundingClientRect()
-    if (buttonRect && onAddToCart) {
+    // Get position for animation (button or card)
+    let position = null
+    if (useCardPosition && cardRef.current) {
+      const cardRect = cardRef.current.getBoundingClientRect()
+      position = {
+        x: cardRect.left + cardRect.width / 2,
+        y: cardRect.top + cardRect.height / 2,
+      }
+    } else if (buttonRef.current) {
+      const buttonRect = buttonRef.current.getBoundingClientRect()
+      position = {
+        x: buttonRect.left + buttonRect.width / 2,
+        y: buttonRect.top + buttonRect.height / 2,
+      }
+    }
+    
+    if (position && onAddToCart) {
       onAddToCart({
         food,
-        position: {
-          x: buttonRect.left + buttonRect.width / 2,
-          y: buttonRect.top + buttonRect.height / 2,
-        }
+        position
       })
     }
     
@@ -51,8 +63,21 @@ export default function MenuCard({ food, onOrderClick, onAddToCart }) {
     }
   }
 
+  const handleCardClick = (e) => {
+    // Chỉ thêm vào giỏ nếu click vào card, không phải vào button
+    // Các button đã có stopPropagation nên sẽ không trigger event này
+    if (e.target.closest('button')) {
+      return
+    }
+    handleAddToCart(e, true)
+  }
+
   return (
-    <div className="group bg-card rounded-lg overflow-hidden hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 transform hover:-translate-y-1 border border-border hover:border-primary/50 h-full flex flex-col cursor-pointer">
+    <div 
+      ref={cardRef}
+      onClick={handleCardClick}
+      className="group bg-card rounded-lg overflow-hidden hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 transform hover:-translate-y-1 border border-border hover:border-primary/50 h-full flex flex-col cursor-pointer"
+    >
       {/* Image */}
       <div className="relative w-full h-48 md:h-56 overflow-hidden bg-muted shrink-0">
         {food.image ? (
@@ -104,7 +129,7 @@ export default function MenuCard({ food, onOrderClick, onAddToCart }) {
             <button
               ref={buttonRef}
               onClick={handleAddToCart}
-              className={`flex-1 flex items-center justify-center gap-1 md:gap-2 px-2 md:px-4 py-2.5 min-h-[42px] bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background whitespace-nowrap ${
+              className={`flex-1 cursor-pointer flex items-center justify-center gap-1 md:gap-2 px-2 md:px-4 py-2.5 min-h-[42px] bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background whitespace-nowrap ${
                 isAnimating ? "scale-95" : "hover:scale-105 active:scale-95"
               }`}
               aria-label={`Thêm ${food.name} vào giỏ hàng`}

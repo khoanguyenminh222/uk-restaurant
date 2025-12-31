@@ -35,7 +35,7 @@ export default function About() {
 
   return (
     <section id="about" className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-background">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto overflow-hidden">
         {/* Section Header */}
         <div
           ref={headerRef}
