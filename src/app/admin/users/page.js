@@ -42,6 +42,7 @@ export default function AdminUsers() {
     role: 'user',
   });
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
+  const [currentAdmin, setCurrentAdmin] = useState(null);
   
   // Refs for modals
   const detailModalRef = useRef(null);
@@ -49,8 +50,23 @@ export default function AdminUsers() {
   const deleteModalRef = useRef(null);
 
   useEffect(() => {
-    fetchUsers();
-  }, [roleFilter, pagination.page]);
+    // Get current admin info from localStorage
+    const adminData = localStorage.getItem('admin_data');
+    if (adminData) {
+      try {
+        const admin = JSON.parse(adminData);
+        setCurrentAdmin(admin);
+      } catch (e) {
+        console.error('Error parsing admin data:', e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (currentAdmin !== null) {
+      fetchUsers();
+    }
+  }, [roleFilter, pagination.page, currentAdmin]);
 
   const fetchUsers = async () => {
     try {
@@ -97,6 +113,12 @@ export default function AdminUsers() {
   };
 
   const handleEdit = (user) => {
+    // Prevent editing admin/super_admin if current admin is admin (not super_admin)
+    if (currentAdmin && currentAdmin.role === 'admin' && (user.role === 'admin' || user.role === 'super_admin')) {
+      setError('Bạn không có quyền sửa tài khoản admin/super_admin');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
     setSelectedUser(user);
     setEditFormData({
       name: user.name || '',
@@ -140,6 +162,12 @@ export default function AdminUsers() {
   };
 
   const handleDelete = (user) => {
+    // Prevent deleting admin/super_admin if current admin is admin (not super_admin)
+    if (currentAdmin && currentAdmin.role === 'admin' && (user.role === 'admin' || user.role === 'super_admin')) {
+      setError('Bạn không có quyền xóa tài khoản admin/super_admin');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
     setSelectedUser(user);
     setShowDeleteModal(true);
   };
@@ -216,6 +244,19 @@ export default function AdminUsers() {
     });
   };
 
+  // Check if current admin can interact with a user (edit/delete)
+  const canInteractWithUser = (user) => {
+    // If current admin is super_admin, can interact with all users
+    if (currentAdmin && currentAdmin.role === 'super_admin') {
+      return true;
+    }
+    // If current admin is admin, cannot interact with admin/super_admin users
+    if (currentAdmin && currentAdmin.role === 'admin' && (user.role === 'admin' || user.role === 'super_admin')) {
+      return false;
+    }
+    return true;
+  };
+
   const getRoleBadge = (role) => {
     if (role === 'super_admin') {
       return {
@@ -287,7 +328,7 @@ export default function AdminUsers() {
           </div>
           <button
             onClick={handleSearch}
-            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium"
+            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer"
           >
             Tìm kiếm
           </button>
@@ -405,7 +446,7 @@ export default function AdminUsers() {
                               setSelectedUser(user);
                               setShowDetailModal(true);
                             }}
-                            className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                            className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
                             aria-label="Xem chi tiết"
                           >
                             <Eye className="w-4 h-4" />
@@ -413,7 +454,7 @@ export default function AdminUsers() {
                           {isDeleted ? (
                             <button
                               onClick={() => handleRestore(user)}
-                              className="p-2 text-green-600 hover:bg-green-500/10 rounded-lg transition-colors"
+                              className="p-2 text-green-600 hover:bg-green-500/10 rounded-lg transition-colors cursor-pointer"
                               aria-label="Khôi phục"
                               disabled={editing}
                             >
@@ -423,15 +464,23 @@ export default function AdminUsers() {
                             <>
                               <button
                                 onClick={() => handleEdit(user)}
-                                className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                                disabled={!canInteractWithUser(user)}
+                                className={`p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors ${
+                                  canInteractWithUser(user) ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
+                                }`}
                                 aria-label="Sửa"
+                                title={!canInteractWithUser(user) ? 'Bạn không có quyền sửa tài khoản admin/super_admin' : 'Sửa'}
                               >
                                 <Edit2 className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() => handleDelete(user)}
-                                className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                                disabled={!canInteractWithUser(user)}
+                                className={`p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors ${
+                                  canInteractWithUser(user) ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
+                                }`}
                                 aria-label="Xóa"
+                                title={!canInteractWithUser(user) ? 'Bạn không có quyền xóa tài khoản admin/super_admin' : 'Xóa'}
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -521,7 +570,7 @@ export default function AdminUsers() {
                       setSelectedUser(user);
                       setShowDetailModal(true);
                     }}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium cursor-pointer"
                   >
                     <Eye className="w-4 h-4" />
                     <span>Chi tiết</span>
@@ -529,7 +578,7 @@ export default function AdminUsers() {
                   {isDeleted ? (
                     <button
                       onClick={() => handleRestore(user)}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-500/10 hover:bg-green-500/20 text-green-600 rounded-lg transition-colors font-medium"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-500/10 hover:bg-green-500/20 text-green-600 rounded-lg transition-colors font-medium cursor-pointer"
                       disabled={editing}
                     >
                       <RotateCcw className="w-4 h-4" />
@@ -539,14 +588,22 @@ export default function AdminUsers() {
                     <>
                       <button
                         onClick={() => handleEdit(user)}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium"
+                        disabled={!canInteractWithUser(user)}
+                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium ${
+                          canInteractWithUser(user) ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
+                        }`}
+                        title={!canInteractWithUser(user) ? 'Bạn không có quyền sửa tài khoản admin/super_admin' : 'Sửa'}
                       >
                         <Edit2 className="w-4 h-4" />
                         <span>Sửa</span>
                       </button>
                       <button
                         onClick={() => handleDelete(user)}
-                        className="px-4 py-2 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg transition-colors"
+                        disabled={!canInteractWithUser(user)}
+                        className={`px-4 py-2 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg transition-colors ${
+                          canInteractWithUser(user) ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
+                        }`}
+                        title={!canInteractWithUser(user) ? 'Bạn không có quyền xóa tài khoản admin/super_admin' : 'Xóa'}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -565,7 +622,7 @@ export default function AdminUsers() {
           <button
             onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
             disabled={pagination.page === 1}
-            className="px-4 py-2 bg-card border border-border rounded-lg text-card-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 bg-card border border-border rounded-lg text-card-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             Trước
           </button>
@@ -575,7 +632,7 @@ export default function AdminUsers() {
           <button
             onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.totalPages, prev.page + 1) }))}
             disabled={pagination.page === pagination.totalPages}
-            className="px-4 py-2 bg-card border border-border rounded-lg text-card-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 bg-card border border-border rounded-lg text-card-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             Sau
           </button>
@@ -601,7 +658,7 @@ export default function AdminUsers() {
                 setShowDetailModal(false);
                 setSelectedUser(null);
               }}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors"
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
               aria-label="Đóng"
             >
               <X className="w-5 h-5" />
@@ -703,7 +760,7 @@ export default function AdminUsers() {
                 setSelectedUser(null);
                 setEditFormData({ name: '', email: '', address: '', role: 'user' });
               }}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors"
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
               aria-label="Đóng"
             >
               <X className="w-5 h-5" />
@@ -787,7 +844,7 @@ export default function AdminUsers() {
                     setSelectedUser(null);
                     setEditFormData({ name: '', email: '', address: '', role: 'user' });
                   }}
-                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium"
+                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium cursor-pointer"
                 >
                   Hủy
                 </button>
@@ -816,7 +873,7 @@ export default function AdminUsers() {
                 setShowDeleteModal(false);
                 setSelectedUser(null);
               }}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors"
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
               aria-label="Đóng"
             >
               <X className="w-5 h-5" />
@@ -861,7 +918,7 @@ export default function AdminUsers() {
                     setShowDeleteModal(false);
                     setSelectedUser(null);
                   }}
-                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium"
+                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium cursor-pointer"
                 >
                   Hủy
                 </button>

@@ -298,7 +298,7 @@ export default function AdminsPage() {
         </h1>
         <button
           onClick={() => setShowCreateForm(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg font-medium transition-colors"
+          className="flex cursor-pointer items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg font-medium transition-colors"
         >
           <UserPlus className="w-5 h-5" />
           Tạo Admin mới
@@ -334,7 +334,7 @@ export default function AdminsPage() {
           </div>
           <button
             onClick={handleSearch}
-            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium"
+            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer"
           >
             Tìm kiếm
           </button>
@@ -609,14 +609,14 @@ export default function AdminsPage() {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleEdit(admin)}
-                          className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                            className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
                           aria-label="Sửa"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(admin)}
-                          className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                            className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors cursor-pointer"
                           aria-label="Xóa"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -637,7 +637,7 @@ export default function AdminsPage() {
           <button
             onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
             disabled={pagination.page === 1}
-            className="px-4 py-2 bg-card border border-border rounded-lg text-card-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 bg-card border border-border rounded-lg text-card-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             Trước
           </button>
@@ -647,7 +647,7 @@ export default function AdminsPage() {
           <button
             onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.totalPages, prev.page + 1) }))}
             disabled={pagination.page === pagination.totalPages}
-            className="px-4 py-2 bg-card border border-border rounded-lg text-card-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 bg-card border border-border rounded-lg text-card-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             Sau
           </button>
@@ -711,7 +711,7 @@ export default function AdminsPage() {
               <div className="flex items-center gap-2 pt-2 border-t border-border">
                 <button
                   onClick={() => handleEdit(admin)}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium cursor-pointer"
                 >
                   <Edit2 className="w-4 h-4" />
                   <span>Sửa</span>
@@ -750,7 +750,7 @@ export default function AdminsPage() {
                 setEditingAdmin(null);
                 setEditFormData({ name: '', email: '', address: '', role: 'admin' });
               }}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors"
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
               aria-label="Đóng"
             >
               <X className="w-5 h-5" />
@@ -833,7 +833,7 @@ export default function AdminsPage() {
                     setEditingAdmin(null);
                     setEditFormData({ name: '', email: '', address: '', role: 'admin' });
                   }}
-                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium"
+                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium cursor-pointer"
                 >
                   Hủy
                 </button>
@@ -862,7 +862,7 @@ export default function AdminsPage() {
                 setShowDeleteModal(false);
                 setEditingAdmin(null);
               }}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors"
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
               aria-label="Đóng"
             >
               <X className="w-5 h-5" />
@@ -907,7 +907,7 @@ export default function AdminsPage() {
                     setShowDeleteModal(false);
                     setEditingAdmin(null);
                   }}
-                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium"
+                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium cursor-pointer"
                 >
                   Hủy
                 </button>

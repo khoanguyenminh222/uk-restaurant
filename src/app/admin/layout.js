@@ -96,7 +96,7 @@ export default function AdminLayout({ children }) {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-lg text-card-foreground hover:bg-muted transition-colors"
+            className="p-2 rounded-lg text-card-foreground hover:bg-muted transition-colors cursor-pointer"
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -175,14 +175,14 @@ export default function AdminLayout({ children }) {
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border space-y-2 bg-card">
           <Link
             href="/"
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-muted hover:text-card-foreground transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-muted hover:text-card-foreground transition-colors cursor-pointer"
           >
             <Home className="w-5 h-5" />
             <span className="font-medium">Về trang chủ</span>
           </Link>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-muted hover:text-card-foreground transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-muted hover:text-card-foreground transition-colors cursor-pointer"
           >
             <LogOut className="w-5 h-5" />
             <span className="font-medium">Đăng xuất</span>

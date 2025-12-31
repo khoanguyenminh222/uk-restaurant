@@ -232,7 +232,7 @@ export default function AdminCategories() {
           </div>
           <button
             onClick={handleSearch}
-            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium"
+            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer"
           >
             Tìm kiếm
           </button>
@@ -308,7 +308,7 @@ export default function AdminCategories() {
                       <div className="flex items-center justify-end gap-3">
                         <button
                           onClick={() => handleOpenModal(category)}
-                          className="flex items-center gap-1 text-primary hover:text-primary-light transition-colors"
+                          className="flex items-center gap-1 text-primary hover:text-primary-light transition-colors cursor-pointer"
                           aria-label="Sửa"
                         >
                           <Edit2 className="w-4 h-4" />
@@ -316,7 +316,7 @@ export default function AdminCategories() {
                         </button>
                         <button
                           onClick={() => handleDelete(category.id)}
-                          className="flex items-center gap-1 text-destructive hover:text-destructive/80 transition-colors"
+                          className="flex items-center gap-1 text-destructive hover:text-destructive/80 transition-colors cursor-pointer"
                           aria-label="Xóa"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -377,14 +377,14 @@ export default function AdminCategories() {
               <div className="flex items-center gap-2 pt-2 border-t border-border">
                 <button
                   onClick={() => handleOpenModal(category)}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium cursor-pointer"
                 >
                   <Edit2 className="w-4 h-4" />
                   <span>Sửa</span>
                 </button>
                 <button
                   onClick={() => handleDelete(category.id)}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg transition-colors font-medium"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg transition-colors font-medium cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4" />
                   <span>Xóa</span>
@@ -401,7 +401,7 @@ export default function AdminCategories() {
           <button
             onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
             disabled={pagination.page === 1}
-            className="px-4 py-2 bg-card border border-border rounded-lg text-card-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 bg-card border border-border rounded-lg text-card-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             Trước
           </button>
@@ -411,7 +411,7 @@ export default function AdminCategories() {
           <button
             onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.totalPages, prev.page + 1) }))}
             disabled={pagination.page === pagination.totalPages}
-            className="px-4 py-2 bg-card border border-border rounded-lg text-card-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 bg-card border border-border rounded-lg text-card-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             Sau
           </button>
@@ -430,7 +430,7 @@ export default function AdminCategories() {
           >
             <button
               onClick={handleCloseModal}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors"
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
               aria-label="Đóng"
             >
               <X className="w-5 h-5" />
@@ -520,14 +520,14 @@ export default function AdminCategories() {
               <div className="flex gap-4 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium"
+                  className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer"
                 >
                   {editingCategory ? 'Cập nhật' : 'Thêm mới'}
                 </button>
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium"
+                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium cursor-pointer"
                 >
                   Hủy
                 </button>
@@ -561,7 +561,7 @@ export default function AdminCategories() {
               <button
                 onClick={handleConfirmDelete}
                 disabled={deleting}
-                className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {deleting ? 'Đang xóa...' : 'Xóa'}
               </button>
@@ -571,7 +571,7 @@ export default function AdminCategories() {
                   setDeletingCategoryId(null);
                 }}
                 disabled={deleting}
-                className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 Hủy
               </button>

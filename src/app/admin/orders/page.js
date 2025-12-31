@@ -284,7 +284,7 @@ export default function AdminOrders() {
         <div className="flex items-center gap-2">
           <button
             onClick={fetchOrders}
-            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium text-sm"
+            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium text-sm cursor-pointer"
           >
             Làm mới
           </button>
@@ -314,13 +314,13 @@ export default function AdminOrders() {
               placeholder="Tìm theo Order ID, tên KH, SĐT..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               className="w-full pl-10 pr-4 py-2 bg-input border border-border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
           <button
             onClick={handleSearch}
-            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium"
+            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer"
           >
             Tìm kiếm
           </button>
@@ -365,7 +365,7 @@ export default function AdminOrders() {
                 setDateTo('');
                 setPagination(prev => ({ ...prev, page: 1 }));
               }}
-              className="px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium whitespace-nowrap"
+              className="px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium whitespace-nowrap cursor-pointer"
             >
               Xóa lọc ngày
             </button>
@@ -490,7 +490,7 @@ export default function AdminOrders() {
                           {order.status !== 'cancelled' && getNextStatus(order.status) && (
                             <button
                               onClick={() => handleQuickUpdateStatus(order)}
-                              className="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                              className="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
                               title={`Chuyển sang ${STATUS_CONFIG[getNextStatus(order.status)]?.label}`}
                               aria-label="Cập nhật trạng thái"
                             >
@@ -516,21 +516,21 @@ export default function AdminOrders() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleViewDetail(order.order_id)}
-                            className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                            className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
                             aria-label="Xem chi tiết"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleEdit(order)}
-                            className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                            className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
                             aria-label="Sửa"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDelete(order.order_id)}
-                            className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                            className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors cursor-pointer"
                             aria-label="Xóa"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -575,7 +575,7 @@ export default function AdminOrders() {
                         {order.status !== 'cancelled' && getNextStatus(order.status) && (
                           <button
                             onClick={() => handleQuickUpdateStatus(order)}
-                            className="p-1 text-primary hover:bg-primary/10 rounded transition-colors"
+                            className="p-1 text-primary hover:bg-primary/10 rounded transition-colors cursor-pointer"
                             title={`Chuyển sang ${STATUS_CONFIG[getNextStatus(order.status)]?.label}`}
                             aria-label="Cập nhật trạng thái"
                           >
@@ -620,21 +620,21 @@ export default function AdminOrders() {
                 <div className="flex items-center gap-2 pt-2 border-t border-border">
                   <button
                     onClick={() => handleViewDetail(order.order_id)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium cursor-pointer"
                   >
                     <Eye className="w-4 h-4" />
                     <span>Chi tiết</span>
                   </button>
                   <button
                     onClick={() => handleEdit(order)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium cursor-pointer"
                   >
                     <Edit2 className="w-4 h-4" />
                     <span>Sửa</span>
                   </button>
                   <button
                     onClick={() => handleDelete(order.order_id)}
-                    className="px-4 py-2 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg transition-colors"
+                    className="px-4 py-2 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg transition-colors cursor-pointer"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -651,7 +651,7 @@ export default function AdminOrders() {
           <button
             onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
             disabled={pagination.page === 1}
-            className="px-4 py-2 bg-card border border-border rounded-lg text-card-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 bg-card border border-border rounded-lg text-card-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             Trước
           </button>
@@ -661,7 +661,7 @@ export default function AdminOrders() {
           <button
             onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.totalPages, prev.page + 1) }))}
             disabled={pagination.page === pagination.totalPages}
-            className="px-4 py-2 bg-card border border-border rounded-lg text-card-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 bg-card border border-border rounded-lg text-card-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             Sau
           </button>
@@ -687,7 +687,7 @@ export default function AdminOrders() {
                 setShowDetailModal(false);
                 setSelectedOrder(null);
               }}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors"
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
               aria-label="Đóng"
             >
               <X className="w-5 h-5" />
@@ -808,7 +808,7 @@ export default function AdminOrders() {
                 setSelectedOrder(null);
                 setEditingStatus('');
               }}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors"
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
               aria-label="Đóng"
             >
               <X className="w-5 h-5" />
@@ -842,7 +842,7 @@ export default function AdminOrders() {
                     setShowEditModal(false);
                     handleUpdateStatus(selectedOrder.order_id, editingStatus);
                   }}
-                  className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium"
+                  className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer"
                 >
                   Cập nhật
                 </button>
@@ -852,7 +852,7 @@ export default function AdminOrders() {
                     setSelectedOrder(null);
                     setEditingStatus('');
                   }}
-                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium"
+                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium cursor-pointer"
                 >
                   Hủy
                 </button>
@@ -882,7 +882,7 @@ export default function AdminOrders() {
             <div className="flex gap-3">
               <button
                 onClick={handleConfirmAction}
-                className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium"
+                className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer"
               >
                 Xác nhận
               </button>
@@ -892,7 +892,7 @@ export default function AdminOrders() {
                   setConfirmAction(null);
                   setConfirmMessage('');
                 }}
-                className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium"
+                className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium cursor-pointer"
               >
                 Hủy
               </button>
