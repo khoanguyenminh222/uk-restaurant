@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { Search, X } from "lucide-react"
 import { useScrollAnimation } from "@/hooks/useScrollAnimation"
 import MenuCard from "./MenuCard"
 
@@ -9,6 +10,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
   const [foods, setFoods] = useState([])
   const [filteredFoods, setFilteredFoods] = useState([])
   const [selectedCategory, setSelectedCategory] = useState(null) // null = "Tất cả"
+  const [searchQuery, setSearchQuery] = useState("") // Query tìm kiếm
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [showAll, setShowAll] = useState(false) // Trạng thái hiển thị tất cả món hay chỉ một ít
@@ -44,6 +46,23 @@ export default function Menu({ onAddToCart, onOrderClick }) {
     fetchCategories()
   }, [])
 
+  // Filter foods based on search query
+  const applyFilters = (foodsList, query) => {
+    let filtered = foodsList
+
+    // Filter by search query
+    if (query.trim()) {
+      const lowerQuery = query.toLowerCase().trim()
+      filtered = filtered.filter((food) => {
+        const name = (food.name || "").toLowerCase()
+        const description = (food.description || "").toLowerCase()
+        return name.includes(lowerQuery) || description.includes(lowerQuery)
+      })
+    }
+
+    setFilteredFoods(filtered)
+  }
+
   // Fetch foods
   useEffect(() => {
     const fetchFoods = async () => {
@@ -63,7 +82,8 @@ export default function Menu({ onAddToCart, onOrderClick }) {
           // Chỉ hiển thị món còn available
           const availableFoods = data.data.filter((food) => food.is_available !== false)
           setFoods(availableFoods)
-          setFilteredFoods(availableFoods)
+          // Apply search filter nếu có
+          applyFilters(availableFoods, searchQuery)
         } else {
           setError(data.error || "Lỗi khi tải món ăn")
         }
@@ -82,12 +102,32 @@ export default function Menu({ onAddToCart, onOrderClick }) {
     fetchFoods()
   }, [selectedCategory])
 
+  // Apply filters when search query changes
+  useEffect(() => {
+    if (foods.length > 0) {
+      applyFilters(foods, searchQuery)
+      // Reset showAll khi search thay đổi
+      setShowAll(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery])
+
   const handleCategoryClick = (categoryId) => {
     if (categoryId !== selectedCategory) {
       setSelectedCategory(categoryId)
       // Reset về trạng thái hiển thị giới hạn khi chọn category mới
       setShowAll(false)
+      // Clear search khi đổi category (optional - có thể bỏ nếu muốn giữ search)
+      // setSearchQuery("")
     }
+  }
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value)
+  }
+
+  const handleClearSearch = () => {
+    setSearchQuery("")
   }
 
   const handleShowMore = () => {
@@ -111,11 +151,41 @@ export default function Menu({ onAddToCart, onOrderClick }) {
           </p>
         </div>
 
-        {/* Category Tabs */}
+        {/* Search Bar */}
         <div
           ref={contentRef}
-          className={`mb-8 scroll-fade-in ${isContentVisible ? "visible" : ""}`}
+          className={`mb-6 scroll-fade-in ${isContentVisible ? "visible" : ""}`}
         >
+          <div className="max-w-md mx-auto">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                placeholder="Tìm kiếm món ăn..."
+                className="w-full pl-10 pr-10 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+              />
+              {searchQuery && (
+                <button
+                  onClick={handleClearSearch}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
+                  aria-label="Xóa tìm kiếm"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            {searchQuery && (
+              <p className="mt-2 text-sm text-gray-400 text-center">
+                Tìm thấy {filteredFoods.length} món{filteredFoods.length !== 1 ? "" : ""}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Category Tabs */}
+        <div className="mb-8">
           <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
             {/* Tab "Tất cả" - Luôn hiển thị */}
             <button
@@ -218,12 +288,16 @@ export default function Menu({ onAddToCart, onOrderClick }) {
                 <div className="flex items-center justify-center py-20">
                   <div className="text-center animate-fade-in">
                     <p className="text-gray-400 text-lg mb-2">
-                      {selectedCategory
+                      {searchQuery
+                        ? `Không tìm thấy món nào với từ khóa "${searchQuery}"`
+                        : selectedCategory
                         ? "Không có món nào trong danh mục này"
                         : "Chưa có món ăn nào"}
                     </p>
                     <p className="text-gray-500 text-sm">
-                      Vui lòng quay lại sau hoặc thử danh mục khác
+                      {searchQuery
+                        ? "Thử tìm kiếm với từ khóa khác hoặc xóa bộ lọc"
+                        : "Vui lòng quay lại sau hoặc thử danh mục khác"}
                     </p>
                   </div>
                 </div>
