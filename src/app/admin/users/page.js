@@ -216,6 +216,9 @@ export default function AdminUsers() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Ngày tạo
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Đăng nhập lần cuối
+                </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Thao tác
                 </th>
@@ -224,7 +227,7 @@ export default function AdminUsers() {
             <tbody className="divide-y divide-border">
               {users.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="px-6 py-8 text-center text-muted-foreground">
+                  <td colSpan="9" className="px-6 py-8 text-center text-muted-foreground">
                     {searchTerm || roleFilter !== 'all' ? 'Không tìm thấy người dùng' : 'Chưa có người dùng nào'}
                   </td>
                 </tr>
@@ -259,6 +262,9 @@ export default function AdminUsers() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                         {formatDate(user.created_at)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                        {formatDate(user.last_login)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
@@ -330,6 +336,14 @@ export default function AdminUsers() {
                           <DollarSign className="w-4 h-4" />
                           <span>{formatCurrency(user.total_spent || 0)}</span>
                         </div>
+                      </div>
+                      <div className="pt-2 border-t border-border space-y-1">
+                        <p className="text-xs text-muted-foreground">
+                          <span className="font-medium">Ngày tạo:</span> {formatDate(user.created_at)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          <span className="font-medium">Đăng nhập lần cuối:</span> {formatDate(user.last_login)}
+                        </p>
                       </div>
                     </div>
                   </div>
