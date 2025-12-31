@@ -12,7 +12,10 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
   const [cartCount, setCartCount] = useState(0)
   const [user, setUser] = useState(null)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 })
   const userMenuRef = useRef(null)
+  const userButtonRef = useRef(null)
+  const dropdownRef = useRef(null)
 
   useEffect(() => {
     let lastScrollY = window.scrollY
@@ -82,7 +85,10 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
   // Close user menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+      const isClickInsideButton = userButtonRef.current && userButtonRef.current.contains(event.target)
+      const isClickInsideDropdown = dropdownRef.current && dropdownRef.current.contains(event.target)
+      
+      if (!isClickInsideButton && !isClickInsideDropdown) {
         setIsUserMenuOpen(false)
       }
     }
@@ -140,8 +146,8 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
         isScrolled ? "bg-gray-950/95 backdrop-blur-md shadow-lg shadow-black/50" : "bg-transparent"
       }`}
     >
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-visible">
+        <div className="flex items-center justify-between h-16 sm:h-20 overflow-visible">
           {/* Logo */}
           <button
             onClick={() => scrollToSection("home")}
@@ -196,7 +202,17 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
             {user ? (
               <div className="relative hidden md:block" ref={userMenuRef}>
                 <button
-                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  ref={userButtonRef}
+                  onClick={() => {
+                    if (userButtonRef.current) {
+                      const rect = userButtonRef.current.getBoundingClientRect()
+                      setDropdownPosition({
+                        top: rect.bottom + 8,
+                        right: window.innerWidth - rect.right
+                      })
+                    }
+                    setIsUserMenuOpen(!isUserMenuOpen)
+                  }}
                   className="flex items-center gap-2 px-3 py-2 cursor-pointer text-gray-300 hover:text-green-400 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-950 rounded-lg"
                   aria-label="Menu người dùng"
                   aria-expanded={isUserMenuOpen}
@@ -207,7 +223,14 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
 
                 {/* User Dropdown Menu */}
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-gray-900 border border-gray-800 rounded-lg shadow-lg z-50">
+                  <div 
+                    ref={dropdownRef}
+                    className="fixed w-56 bg-gray-900 border border-gray-800 rounded-lg shadow-lg z-50"
+                    style={{
+                      top: `${dropdownPosition.top}px`,
+                      right: `${dropdownPosition.right}px`
+                    }}
+                  >
                     <div className="py-2">
                       <div className="px-4 py-2 border-b border-gray-800">
                         <p className="text-sm font-medium text-gray-300">{user.name}</p>

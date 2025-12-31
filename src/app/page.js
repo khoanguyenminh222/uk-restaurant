@@ -9,9 +9,12 @@ import Contact from "@/components/Contact/Contact"
 import ScrollToTop from "@/components/ScrollToTop/ScrollToTop"
 import Cart from "@/components/Cart/Cart"
 import Toast from "@/components/Toast/Toast"
+import Auth from "@/components/Auth/Auth"
 
 export default function Home() {
   const [isCartOpen, setIsCartOpen] = useState(false)
+  const [isAuthOpen, setIsAuthOpen] = useState(false)
+  const [authTab, setAuthTab] = useState("login")
   const [toast, setToast] = useState({ message: "", isVisible: false })
   const cartIconRef = useRef(null)
   const [flyingItem, setFlyingItem] = useState(null)
@@ -69,8 +72,8 @@ export default function Home() {
   }
 
   const handleLoginClick = () => {
-    // Handle login click
-    console.log("Login clicked")
+    setAuthTab("login")
+    setIsAuthOpen(true)
   }
 
   const handleProfileClick = () => {
@@ -107,6 +110,11 @@ export default function Home() {
       </main>
       <ScrollToTop />
       <Cart isOpen={isCartOpen} onClose={handleCartClose} onCheckout={handleCheckout} />
+      <Auth
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+        initialTab={authTab}
+      />
       <Toast
         message={toast.message}
         isVisible={toast.isVisible}
