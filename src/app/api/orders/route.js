@@ -8,8 +8,9 @@ import { sendOrderConfirmationEmail } from '@/lib/email';
  * GET /api/orders
  * Lấy danh sách đơn hàng
  * Query params: 
- *   - phone (optional) - tra cứu đơn hàng theo số điện thoại
- *   - order_id (optional) - tra cứu đơn hàng theo mã đơn hàng
+ *   - order_id (optional) - tra cứu đơn hàng theo mã đơn hàng (ưu tiên)
+ *   - user_id (optional) - tra cứu đơn hàng theo user_id (cho lịch sử đơn hàng)
+ *   - phone (optional) - tra cứu đơn hàng theo số điện thoại (fallback)
  *   - status (optional) - filter theo status
  *   - search (optional) - search theo order_id, customer_name, customer_phone
  *   - page (optional) - số trang
@@ -21,6 +22,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const phone = searchParams.get('phone');
     const orderId = searchParams.get('order_id');
+    const userId = searchParams.get('user_id');
     const status = searchParams.get('status');
     const search = searchParams.get('search');
     const page = parseInt(searchParams.get('page') || '1');
@@ -34,6 +36,8 @@ export async function GET(request) {
     // Specific lookups (for track order)
     if (orderId) {
       query.order_id = orderId;
+    } else if (userId) {
+      query.user_id = userId;
     } else if (phone) {
       query.customer_phone = phone;
     } else {

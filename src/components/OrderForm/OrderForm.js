@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { X, User, Phone, MapPin, FileText, ShoppingBag, Loader2, CheckCircle, Copy, ExternalLink } from "lucide-react"
+import { X, User, Phone, MapPin, FileText, ShoppingBag, Loader2, CheckCircle, Copy, ExternalLink, History, XCircle } from "lucide-react"
 import { getUser } from "@/utils/user"
 import { getCustomerInfo, saveCustomerInfo } from "@/utils/customer"
 import { clearCart, getCartTotal } from "@/utils/cart"
@@ -32,6 +32,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
 
   // Success state
   const [successOrder, setSuccessOrder] = useState(null)
+  const [cancelling, setCancelling] = useState(false)
 
   // Load items and calculate totals
   useEffect(() => {
@@ -120,6 +121,64 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
   const handleCloseSuccess = () => {
     setSuccessOrder(null)
     onClose()
+  }
+
+  // Handle cancel order
+  const handleCancelOrder = async () => {
+    if (!successOrder || successOrder.status !== 'pending') {
+      return
+    }
+
+    if (!confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
+      return
+    }
+
+    setCancelling(true)
+    try {
+      const response = await fetch(`/api/orders/${successOrder.order_id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'cancelled',
+          changed_by: 'customer',
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        // Update success order status
+        setSuccessOrder({ ...successOrder, status: 'cancelled' })
+        
+        // Show success message
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("showToast", {
+              detail: {
+                message: "Đã hủy đơn hàng thành công!",
+                type: "success",
+              },
+            })
+          )
+        }
+      } else {
+        setError(data.error || 'Không thể hủy đơn hàng')
+      }
+    } catch (err) {
+      console.error('Error cancelling order:', err)
+      setError('Lỗi khi hủy đơn hàng')
+    } finally {
+      setCancelling(false)
+    }
+  }
+
+  // Get order history URL
+  const getOrderHistoryUrl = () => {
+    if (typeof window === "undefined" || !successOrder) return ""
+    const baseUrl = window.location.origin
+    return `${baseUrl}/track-order?order_id=${successOrder.order_id}`
   }
 
   // Close modal when clicking outside
@@ -370,6 +429,50 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
               </a>
             </div>
 
+            {/* Order History Link */}
+            <div className="bg-muted rounded-lg p-6 mb-6 border border-border">
+              <p className="text-sm text-muted-foreground mb-3">Xem lịch sử đơn hàng</p>
+              <a
+                href={getOrderHistoryUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-primary/10 hover:bg-primary/20 text-primary font-semibold rounded-lg transition-colors"
+              >
+                <History className="w-5 h-5" />
+                Xem lịch sử đơn hàng
+              </a>
+            </div>
+
+            {/* Cancel Order Button (only if status is pending) */}
+            {successOrder.status === 'pending' && (
+              <div className="mb-6">
+                <button
+                  onClick={handleCancelOrder}
+                  disabled={cancelling}
+                  className="w-full py-3 bg-destructive/10 hover:bg-destructive/20 text-destructive font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {cancelling ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Đang hủy...</span>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="w-5 h-5" />
+                      <span>Hủy đơn hàng</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {/* Status Badge */}
+            {successOrder.status === 'cancelled' && (
+              <div className="mb-6 p-4 bg-destructive/10 border border-destructive/50 rounded-lg">
+                <p className="text-destructive font-medium">Đơn hàng đã được hủy</p>
+              </div>
+            )}
+
             {/* Info */}
             <p className="text-sm text-muted-foreground mb-6">
               Chúng tôi đã gửi thông tin đơn hàng đến email của bạn (nếu bạn đã đăng nhập).
@@ -420,6 +523,12 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
           {error && (
             <div className="mb-4 p-3 bg-destructive/10 border border-destructive/50 rounded-lg text-destructive text-sm">
               {error}
+              <button
+                onClick={() => setError("")}
+                className="ml-2 text-destructive hover:text-destructive/80"
+              >
+                <X className="w-4 h-4 inline" />
+              </button>
             </div>
           )}
 

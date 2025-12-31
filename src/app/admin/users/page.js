@@ -30,6 +30,16 @@ export default function AdminUsers() {
   const [roleFilter, setRoleFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    email: '',
+    address: '',
+    role: 'user',
+  });
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
 
   useEffect(() => {
@@ -78,6 +88,82 @@ export default function AdminUsers() {
   const handleSearch = () => {
     setPagination(prev => ({ ...prev, page: 1 }));
     fetchUsers();
+  };
+
+  const handleEdit = (user) => {
+    setSelectedUser(user);
+    setEditFormData({
+      name: user.name || '',
+      email: user.email || '',
+      address: user.address || '',
+      role: user.role || 'user',
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateUser = async () => {
+    if (!selectedUser) return;
+
+    setEditing(true);
+    try {
+      const response = await fetch(`/api/users/${selectedUser.user_id || selectedUser._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editFormData),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSuccess('Đã cập nhật thông tin người dùng thành công!');
+        fetchUsers();
+        setShowEditModal(false);
+        setSelectedUser(null);
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        setError(data.error || 'Không thể cập nhật thông tin người dùng');
+      }
+    } catch (err) {
+      console.error('Error updating user:', err);
+      setError('Lỗi khi cập nhật người dùng');
+    } finally {
+      setEditing(false);
+    }
+  };
+
+  const handleDelete = (user) => {
+    setSelectedUser(user);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedUser) return;
+
+    setDeleting(true);
+    try {
+      const response = await fetch(`/api/users/${selectedUser.user_id || selectedUser._id}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSuccess(`Đã xóa người dùng thành công!${data.has_orders ? ` (Người dùng có ${data.order_count} đơn hàng)` : ''}`);
+        fetchUsers();
+        setShowDeleteModal(false);
+        setSelectedUser(null);
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        setError(data.error || 'Không thể xóa người dùng');
+      }
+    } catch (err) {
+      console.error('Error deleting user:', err);
+      setError('Lỗi khi xóa người dùng');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const formatDate = (dateString) => {
@@ -267,16 +353,32 @@ export default function AdminUsers() {
                         {formatDate(user.last_login)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setShowDetailModal(true);
-                          }}
-                          className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                          aria-label="Xem chi tiết"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setShowDetailModal(true);
+                            }}
+                            className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                            aria-label="Xem chi tiết"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleEdit(user)}
+                            className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                            aria-label="Sửa"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(user)}
+                            className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                            aria-label="Xóa"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -348,16 +450,31 @@ export default function AdminUsers() {
                     </div>
                   </div>
                 </div>
-                <button
-                  onClick={() => {
-                    setSelectedUser(user);
-                    setShowDetailModal(true);
-                  }}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium"
-                >
-                  <Eye className="w-4 h-4" />
-                  <span>Xem chi tiết</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setSelectedUser(user);
+                      setShowDetailModal(true);
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium"
+                  >
+                    <Eye className="w-4 h-4" />
+                    <span>Chi tiết</span>
+                  </button>
+                  <button
+                    onClick={() => handleEdit(user)}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                    <span>Sửa</span>
+                  </button>
+                  <button
+                    onClick={() => handleDelete(user)}
+                    className="px-4 py-2 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             );
           })
@@ -471,6 +588,174 @@ export default function AdminUsers() {
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && selectedUser && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-lg max-w-md w-full p-6 border border-border relative">
+            <button
+              onClick={() => {
+                setShowEditModal(false);
+                setSelectedUser(null);
+                setEditFormData({ name: '', email: '', address: '', role: 'user' });
+              }}
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors"
+              aria-label="Đóng"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-3 mb-6">
+              <Edit2 className="w-6 h-6 text-primary" />
+              <h2 className="text-2xl font-bold text-card-foreground">Sửa thông tin người dùng</h2>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Tên <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={editFormData.name}
+                  onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={editFormData.email}
+                  onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Địa chỉ
+                </label>
+                <input
+                  type="text"
+                  value={editFormData.address}
+                  onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Vai trò
+                </label>
+                <select
+                  value={editFormData.role}
+                  onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value })}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                  <option value="super_admin">Super Admin</option>
+                </select>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={handleUpdateUser}
+                  disabled={editing}
+                  className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {editing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Đang cập nhật...</span>
+                    </>
+                  ) : (
+                    <span>Cập nhật</span>
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setSelectedUser(null);
+                    setEditFormData({ name: '', email: '', address: '', role: 'user' });
+                  }}
+                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium"
+                >
+                  Hủy
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && selectedUser && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-lg max-w-md w-full p-6 border border-border relative">
+            <button
+              onClick={() => {
+                setShowDeleteModal(false);
+                setSelectedUser(null);
+              }}
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors"
+              aria-label="Đóng"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-3 mb-6">
+              <Trash2 className="w-6 h-6 text-destructive" />
+              <h2 className="text-2xl font-bold text-card-foreground">Xóa người dùng</h2>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-card-foreground">
+                Bạn có chắc chắn muốn xóa người dùng <strong>{selectedUser.name}</strong>?
+              </p>
+              {selectedUser.order_count > 0 && (
+                <div className="p-3 bg-warning/10 border border-warning/50 rounded-lg">
+                  <p className="text-sm text-warning">
+                    Cảnh báo: Người dùng này có {selectedUser.order_count} đơn hàng. Dữ liệu đơn hàng sẽ được giữ nguyên.
+                  </p>
+                </div>
+              )}
+              <p className="text-sm text-muted-foreground">
+                Thao tác này sẽ xóa mềm người dùng (không xóa hoàn toàn).
+              </p>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={handleConfirmDelete}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive/90 text-white rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {deleting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Đang xóa...</span>
+                    </>
+                  ) : (
+                    <span>Xóa</span>
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setSelectedUser(null);
+                  }}
+                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium"
+                >
+                  Hủy
+                </button>
               </div>
             </div>
           </div>

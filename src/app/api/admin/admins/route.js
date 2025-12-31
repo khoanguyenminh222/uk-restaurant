@@ -25,7 +25,8 @@ export async function GET(request) {
 
     // Build query
     const query = {
-      role: { $in: ['admin', 'super_admin'] }
+      role: { $in: ['admin', 'super_admin'] },
+      is_deleted: { $ne: true } // Exclude soft-deleted admins
     };
 
     if (role && role !== 'all') {

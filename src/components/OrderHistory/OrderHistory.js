@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { X, Package, Calendar, DollarSign, Filter, Loader2 } from "lucide-react"
+import { X, Package, Calendar, DollarSign, Filter, Loader2, Eye, XCircle, Clock, CheckCircle } from "lucide-react"
 import { getUser } from "@/utils/user"
 import { formatCurrency } from "@/utils/helpers"
 
@@ -15,13 +15,19 @@ export default function OrderHistory({ isOpen, onClose }) {
   const [filteredOrders, setFilteredOrders] = useState([])
   const [statusFilter, setStatusFilter] = useState("all") // all, pending, confirmed, completed, cancelled
 
+  // Detail modal state
+  const [showDetailModal, setShowDetailModal] = useState(false)
+  const [selectedOrder, setSelectedOrder] = useState(null)
+  const [cancelling, setCancelling] = useState(false)
+  const detailModalRef = useRef(null)
+
   // Load user info and orders
   useEffect(() => {
     if (isOpen) {
       const currentUser = getUser()
-      if (currentUser) {
-        // Load orders
-        loadOrders(currentUser.phone)
+      if (currentUser && currentUser.user_id) {
+        // Load orders using user_id
+        loadOrders(currentUser.user_id)
       } else {
         // User not logged in, close modal
         onClose()
@@ -39,13 +45,13 @@ export default function OrderHistory({ isOpen, onClose }) {
   }, [orders, statusFilter])
 
   // Load orders
-  const loadOrders = async (phone) => {
-    if (!phone) return
+  const loadOrders = async (userId) => {
+    if (!userId) return
 
     setOrdersLoading(true)
     setError("")
     try {
-      const response = await fetch(`/api/orders?phone=${phone}`)
+      const response = await fetch(`/api/orders?user_id=${userId}`)
       const data = await response.json()
 
       if (data.success) {
@@ -64,6 +70,15 @@ export default function OrderHistory({ isOpen, onClose }) {
   // Close modal when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // Don't close if clicking inside detail modal
+      if (detailModalRef.current && detailModalRef.current.contains(event.target)) {
+        return
+      }
+      // Don't close if clicking inside main modal
+      if (modalRef.current && modalRef.current.contains(event.target)) {
+        return
+      }
+      // Close main modal only if clicking outside both modals
       if (modalRef.current && !modalRef.current.contains(event.target)) {
         onClose()
       }
@@ -126,6 +141,65 @@ export default function OrderHistory({ isOpen, onClose }) {
       cancelled: "Đã hủy",
     }
     return labels[status] || status
+  }
+
+  // Handle view detail
+  const handleViewDetail = (order) => {
+    setSelectedOrder(order)
+    setShowDetailModal(true)
+  }
+
+  // Handle cancel order
+  const handleCancelOrder = async () => {
+    if (!selectedOrder || selectedOrder.status !== 'pending') {
+      return
+    }
+
+    if (!confirm("Bạn có chắc chắn muốn hủy đơn hàng này?")) {
+      return
+    }
+
+    setCancelling(true)
+    try {
+      const response = await fetch(`/api/orders/${selectedOrder.order_id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: "cancelled", changed_by: "customer" }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        // Update order in local state
+        setOrders(prevOrders =>
+          prevOrders.map(order =>
+            order.order_id === selectedOrder.order_id
+              ? { ...order, status: "cancelled" }
+              : order
+          )
+        )
+        setSelectedOrder(prev => ({ ...prev, status: "cancelled" }))
+        
+        // Show success message
+        window.dispatchEvent(
+          new CustomEvent("showToast", {
+            detail: {
+              message: "Đơn hàng đã được hủy thành công.",
+              type: "success",
+            },
+          })
+        )
+      } else {
+        setError(data.error || "Không thể hủy đơn hàng.")
+      }
+    } catch (err) {
+      console.error("Error cancelling order:", err)
+      setError("Lỗi kết nối. Vui lòng thử lại sau.")
+    } finally {
+      setCancelling(false)
+    }
   }
 
   if (!isOpen) return null
@@ -257,6 +331,17 @@ export default function OrderHistory({ isOpen, onClose }) {
                           </p>
                         )}
                       </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleViewDetail(order)}
+                          className="px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary font-medium rounded-lg transition-colors flex items-center gap-2"
+                        >
+                          <Eye className="w-4 h-4" />
+                          <span className="hidden sm:inline">Chi tiết</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -265,6 +350,160 @@ export default function OrderHistory({ isOpen, onClose }) {
           </div>
         </div>
       </div>
+
+      {/* Detail Modal */}
+      {showDetailModal && selectedOrder && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" 
+          style={{ zIndex: 60 }}
+          onClick={(e) => {
+            // Close detail modal when clicking on backdrop
+            if (e.target === e.currentTarget) {
+              setShowDetailModal(false)
+              setSelectedOrder(null)
+            }
+          }}
+        >
+          <div 
+            ref={detailModalRef}
+            className="bg-card rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto relative border border-border"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => {
+                setShowDetailModal(false)
+                setSelectedOrder(null)
+              }}
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors z-10"
+              aria-label="Đóng"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <Package className="w-6 h-6 text-primary" />
+                <h2 className="text-2xl font-bold text-card-foreground">Chi tiết đơn hàng</h2>
+              </div>
+
+              <div className="space-y-6">
+                {/* Order Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Mã đơn hàng</p>
+                    <p className="font-mono font-semibold text-primary">{selectedOrder.order_id}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Ngày đặt</p>
+                    <p className="font-medium text-card-foreground">{formatDate(selectedOrder.created_at)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Trạng thái</p>
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(selectedOrder.status)}`}
+                    >
+                      {selectedOrder.status === 'pending' && <Clock className="w-3 h-3" />}
+                      {selectedOrder.status === 'cancelled' && <XCircle className="w-3 h-3" />}
+                      {(selectedOrder.status === 'delivered' || selectedOrder.status === 'completed') && <CheckCircle className="w-3 h-3" />}
+                      {getStatusLabel(selectedOrder.status)}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Tổng tiền</p>
+                    <p className="font-bold text-lg text-primary">{formatCurrency(selectedOrder.total_price || 0)}</p>
+                  </div>
+                </div>
+
+                {/* Customer Info */}
+                <div className="border-t border-border pt-4">
+                  <h3 className="font-semibold text-card-foreground mb-3">Thông tin khách hàng</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Tên</p>
+                      <p className="font-medium text-card-foreground">{selectedOrder.customer_name}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Số điện thoại</p>
+                      <a href={`tel:${selectedOrder.customer_phone}`} className="font-medium text-primary hover:underline">
+                        {selectedOrder.customer_phone}
+                      </a>
+                    </div>
+                    <div className="md:col-span-2">
+                      <p className="text-sm text-muted-foreground mb-1">Địa chỉ</p>
+                      <p className="font-medium text-card-foreground">{selectedOrder.customer_address || 'Tại quán'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Items */}
+                <div className="border-t border-border pt-4">
+                  <h3 className="font-semibold text-card-foreground mb-3">Danh sách món</h3>
+                  {selectedOrder.items && Array.isArray(selectedOrder.items) && selectedOrder.items.length > 0 ? (
+                    <div className="space-y-2">
+                      {selectedOrder.items.map((item, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                          <div>
+                            <p className="font-medium text-card-foreground">{item.tên_món}</p>
+                            <p className="text-sm text-muted-foreground">x{item.quantity} - {formatCurrency(item.giá)}</p>
+                          </div>
+                          <p className="font-medium text-primary">{formatCurrency(item.giá * item.quantity)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-muted rounded-lg">
+                      <p className="font-medium text-card-foreground">{selectedOrder.tên_món || 'N/A'}</p>
+                      <p className="text-sm text-muted-foreground">x{selectedOrder.quantity || 1} - {formatCurrency(selectedOrder.giá || 0)}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Notes */}
+                {selectedOrder.notes && (
+                  <div className="border-t border-border pt-4">
+                    <h3 className="font-semibold text-card-foreground mb-3">Ghi chú</h3>
+                    <p className="text-sm text-card-foreground">{selectedOrder.notes}</p>
+                  </div>
+                )}
+
+                {/* Cancel Button (only if status is pending) */}
+                {selectedOrder.status === 'pending' && (
+                  <div className="border-t border-border pt-4">
+                    <button
+                      onClick={handleCancelOrder}
+                      disabled={cancelling}
+                      className="w-full py-3 bg-destructive/10 hover:bg-destructive/20 text-destructive font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {cancelling ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <span>Đang hủy...</span>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="w-5 h-5" />
+                          <span>Hủy đơn hàng</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+
+                {/* Cancelled Status Badge */}
+                {selectedOrder.status === 'cancelled' && (
+                  <div className="border-t border-border pt-4">
+                    <div className="p-4 bg-destructive/10 border border-destructive/50 rounded-lg">
+                      <p className="text-destructive font-medium flex items-center gap-2">
+                        <XCircle className="w-5 h-5" />
+                        Đơn hàng đã được hủy
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

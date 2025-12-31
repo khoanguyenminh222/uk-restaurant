@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { UserPlus, X, Mail, Phone, User, Shield, ShieldCheck, Loader2, Edit2, Trash2, Search, Filter, ChevronDown } from 'lucide-react';
+import { UserPlus, X, Mail, Phone, User, Shield, ShieldCheck, Loader2, Edit2, Trash2, Search, Filter, ChevronDown, Eye } from 'lucide-react';
 
 export default function AdminsPage() {
   const [admins, setAdmins] = useState([]);
@@ -10,6 +10,17 @@ export default function AdminsPage() {
   const [success, setSuccess] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [editingAdmin, setEditingAdmin] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    email: '',
+    address: '',
+    role: 'admin',
+  });
   const [currentAdmin, setCurrentAdmin] = useState(null); // Current logged-in admin
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -79,6 +90,82 @@ export default function AdminsPage() {
   const handleSearch = () => {
     setPagination(prev => ({ ...prev, page: 1 }));
     fetchAdmins();
+  };
+
+  const handleEdit = (admin) => {
+    setEditingAdmin(admin);
+    setEditFormData({
+      name: admin.name || '',
+      email: admin.email || '',
+      address: admin.address || '',
+      role: admin.role || 'admin',
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateAdmin = async () => {
+    if (!editingAdmin) return;
+
+    setEditing(true);
+    try {
+      const response = await fetch(`/api/admin/admins/${editingAdmin.user_id || editingAdmin._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editFormData),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSuccess('Đã cập nhật thông tin admin thành công!');
+        fetchAdmins();
+        setShowEditModal(false);
+        setEditingAdmin(null);
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        setError(data.error || 'Không thể cập nhật thông tin admin');
+      }
+    } catch (err) {
+      console.error('Error updating admin:', err);
+      setError('Lỗi khi cập nhật admin');
+    } finally {
+      setEditing(false);
+    }
+  };
+
+  const handleDelete = (admin) => {
+    setEditingAdmin(admin);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!editingAdmin) return;
+
+    setDeleting(true);
+    try {
+      const response = await fetch(`/api/admin/admins/${editingAdmin.user_id || editingAdmin._id}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSuccess('Đã xóa admin thành công!');
+        fetchAdmins();
+        setShowDeleteModal(false);
+        setEditingAdmin(null);
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        setError(data.error || 'Không thể xóa admin');
+      }
+    } catch (err) {
+      console.error('Error deleting admin:', err);
+      setError('Lỗi khi xóa admin');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const validateForm = () => {
@@ -476,6 +563,7 @@ export default function AdminsPage() {
                 <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Vai trò</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Ngày tạo</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Đăng nhập cuối</th>
+                <th className="px-4 py-3 text-right text-sm font-semibold text-muted-foreground">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -512,6 +600,24 @@ export default function AdminsPage() {
                     </td>
                     <td className="px-4 py-3 text-sm text-muted-foreground">
                       {formatDate(admin.last_login)}
+                    </td>
+                    <td className="px-4 py-3 text-right text-sm font-medium">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleEdit(admin)}
+                          className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                          aria-label="Sửa"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(admin)}
+                          className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                          aria-label="Xóa"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -598,10 +704,193 @@ export default function AdminsPage() {
                   </div>
                 </div>
               </div>
+              <div className="flex items-center gap-2 pt-2 border-t border-border">
+                <button
+                  onClick={() => handleEdit(admin)}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium"
+                >
+                  <Edit2 className="w-4 h-4" />
+                  <span>Sửa</span>
+                </button>
+                <button
+                  onClick={() => handleDelete(admin)}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg transition-colors font-medium"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Xóa</span>
+                </button>
+              </div>
             </div>
           ))
         )}
       </div>
+
+      {/* Edit Modal */}
+      {showEditModal && editingAdmin && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-lg max-w-md w-full p-6 border border-border relative">
+            <button
+              onClick={() => {
+                setShowEditModal(false);
+                setEditingAdmin(null);
+                setEditFormData({ name: '', email: '', address: '', role: 'admin' });
+              }}
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors"
+              aria-label="Đóng"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-3 mb-6">
+              <Edit2 className="w-6 h-6 text-primary" />
+              <h2 className="text-2xl font-bold text-card-foreground">Sửa thông tin admin</h2>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Tên <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={editFormData.name}
+                  onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={editFormData.email}
+                  onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Địa chỉ
+                </label>
+                <input
+                  type="text"
+                  value={editFormData.address}
+                  onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Vai trò
+                </label>
+                <select
+                  value={editFormData.role}
+                  onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value })}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="admin">Admin</option>
+                  <option value="super_admin">Super Admin</option>
+                </select>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={handleUpdateAdmin}
+                  disabled={editing}
+                  className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {editing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Đang cập nhật...</span>
+                    </>
+                  ) : (
+                    <span>Cập nhật</span>
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingAdmin(null);
+                    setEditFormData({ name: '', email: '', address: '', role: 'admin' });
+                  }}
+                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium"
+                >
+                  Hủy
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && editingAdmin && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-lg max-w-md w-full p-6 border border-border relative">
+            <button
+              onClick={() => {
+                setShowDeleteModal(false);
+                setEditingAdmin(null);
+              }}
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors"
+              aria-label="Đóng"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-3 mb-6">
+              <Trash2 className="w-6 h-6 text-destructive" />
+              <h2 className="text-2xl font-bold text-card-foreground">Xóa admin</h2>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-card-foreground">
+                Bạn có chắc chắn muốn xóa admin <strong>{editingAdmin.name}</strong>?
+              </p>
+              {editingAdmin.role === 'super_admin' && (
+                <div className="p-3 bg-warning/10 border border-warning/50 rounded-lg">
+                  <p className="text-sm text-warning">
+                    Cảnh báo: Đây là Super Admin. Hãy đảm bảo còn ít nhất 1 Super Admin khác trong hệ thống.
+                  </p>
+                </div>
+              )}
+              <p className="text-sm text-muted-foreground">
+                Thao tác này sẽ xóa mềm admin (không xóa hoàn toàn).
+              </p>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={handleConfirmDelete}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive/90 text-white rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {deleting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Đang xóa...</span>
+                    </>
+                  ) : (
+                    <span>Xóa</span>
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setEditingAdmin(null);
+                  }}
+                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium"
+                >
+                  Hủy
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
