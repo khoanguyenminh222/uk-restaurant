@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Utensils, Home, BookOpen, Phone, ShoppingCart, User, Menu as MenuIcon, X, LogOut, UserCircle, History } from "lucide-react"
+import { Utensils, Home, BookOpen, Phone, ShoppingCart, User, Menu as MenuIcon, X, LogOut, UserCircle, History, Shield } from "lucide-react"
 import { getCartItemCount } from "@/utils/cart"
 import { getUser, clearUser } from "@/utils/user"
 
@@ -265,6 +265,18 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
                         </button>
                       )}
                       
+                      {/* Admin Panel Link - Only for admin/super_admin */}
+                      {(user?.role === 'admin' || user?.role === 'super_admin') && (
+                        <a
+                          href="/admin/dashboard"
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="w-full cursor-pointer flex items-center gap-3 px-4 py-2 text-sm text-blue-400 hover:text-blue-300 hover:bg-blue-950/20 transition-colors"
+                        >
+                          <Shield className="w-4 h-4" />
+                          Admin Panel
+                        </a>
+                      )}
+                      
                       <div className="border-t border-gray-800 mt-2 pt-2">
                         <button
                           onClick={handleLogout}
@@ -360,6 +372,19 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
                   <span>Lịch sử đơn hàng</span>
                 </button>
               )}
+              
+              {/* Admin Panel Link - Only for admin/super_admin */}
+              {(user?.role === 'admin' || user?.role === 'super_admin') && (
+                <a
+                  href="/admin/dashboard"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-blue-400 hover:text-blue-300 hover:bg-blue-950/20 transition-all duration-300"
+                >
+                  <Shield className="w-5 h-5" />
+                  <span>Admin Panel</span>
+                </a>
+              )}
+              
               <button
                 onClick={() => {
                   handleLogout()

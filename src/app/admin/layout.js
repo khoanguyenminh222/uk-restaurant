@@ -3,18 +3,37 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { Home } from 'lucide-react';
 
 export default function AdminLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [adminInfo, setAdminInfo] = useState(null);
 
   useEffect(() => {
     const checkAuth = () => {
+      const adminData = localStorage.getItem('admin_data');
       const loggedIn = localStorage.getItem('admin_logged_in');
-      if (loggedIn === 'true') {
-        setIsLoggedIn(true);
-      } else if (pathname !== '/admin') {
+      
+      if (loggedIn === 'true' && adminData) {
+        try {
+          const admin = JSON.parse(adminData);
+          // Check if user is admin or super_admin
+          if (admin.role === 'admin' || admin.role === 'super_admin') {
+            setIsLoggedIn(true);
+            setAdminInfo(admin);
+            return;
+          }
+        } catch (e) {
+          // Invalid data, clear it
+          localStorage.removeItem('admin_data');
+          localStorage.removeItem('admin_logged_in');
+        }
+      }
+      
+      // Not logged in, redirect to login
+      if (pathname !== '/admin') {
         router.push('/admin');
       }
     };
@@ -23,6 +42,7 @@ export default function AdminLayout({ children }) {
   }, [router, pathname]);
 
   const handleLogout = () => {
+    localStorage.removeItem('admin_data');
     localStorage.removeItem('admin_logged_in');
     router.push('/admin');
   };
@@ -37,10 +57,15 @@ export default function AdminLayout({ children }) {
     return null;
   }
 
+  // Only show "Quản lý Admin" menu for super_admin
   const navItems = [
     { href: '/admin/dashboard', label: 'Dashboard', icon: '📊' },
     { href: '/admin/categories', label: 'Danh mục', icon: '📁' },
     { href: '/admin/food', label: 'Món ăn', icon: '🍽️' },
+    ...(adminInfo && adminInfo.role === 'super_admin' 
+      ? [{ href: '/admin/admins', label: 'Quản lý Admin', icon: '👥' }]
+      : []
+    ),
   ];
 
   return (
@@ -50,6 +75,19 @@ export default function AdminLayout({ children }) {
         <div className="p-6 border-b border-gray-800">
           <h1 className="text-xl font-bold text-white">UK Restaurant</h1>
           <p className="text-sm text-gray-400">Admin Panel</p>
+          {adminInfo && (
+            <div className="mt-3 pt-3 border-t border-gray-800">
+              <p className="text-xs text-gray-500">Đăng nhập bởi</p>
+              <p className="text-sm text-gray-300 font-medium">{adminInfo.name}</p>
+              <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                adminInfo.role === 'super_admin'
+                  ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50'
+                  : 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
+              }`}>
+                {adminInfo.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+              </span>
+            </div>
+          )}
         </div>
 
         <nav className="p-4">
@@ -75,7 +113,14 @@ export default function AdminLayout({ children }) {
           </ul>
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-800">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-800 space-y-2">
+          <Link
+            href="/"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
+          >
+            <Home className="w-5 h-5" />
+            <span className="font-medium">Về trang chủ</span>
+          </Link>
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"

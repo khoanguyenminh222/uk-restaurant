@@ -208,8 +208,15 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
           email: data.data.email,
           address: data.data.address || "",
           email_verified: data.email_verified || false,
+          role: data.data.role || 'user', // Include role
         }
         saveUser(userData)
+
+        // If user is admin or super_admin, also save to admin_data
+        if (data.data.role === 'admin' || data.data.role === 'super_admin') {
+          localStorage.setItem('admin_data', JSON.stringify(data.data))
+          localStorage.setItem('admin_logged_in', 'true')
+        }
 
         // Close modal
         onClose()
@@ -568,8 +575,15 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
               email: loginData.data.email,
               address: loginData.data.address || "",
               email_verified: true,
+              role: loginData.data.role || 'user', // Include role
             }
             saveUser(userData)
+
+            // If user is admin or super_admin, also save to admin_data
+            if (loginData.data.role === 'admin' || loginData.data.role === 'super_admin') {
+              localStorage.setItem('admin_data', JSON.stringify(loginData.data))
+              localStorage.setItem('admin_logged_in', 'true')
+            }
 
             // Close modal
             onClose()

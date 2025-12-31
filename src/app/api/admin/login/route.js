@@ -3,8 +3,8 @@ import clientPromise from '@/lib/mongodb';
 import bcrypt from 'bcryptjs';
 
 /**
- * POST /api/auth/login
- * Đăng nhập user
+ * POST /api/admin/login
+ * Đăng nhập admin (chỉ cho phép admin và super_admin)
  */
 export async function POST(request) {
   try {
@@ -29,6 +29,14 @@ export async function POST(request) {
       );
     }
 
+    // Check if user is admin or super_admin
+    if (user.role !== 'admin' && user.role !== 'super_admin') {
+      return NextResponse.json(
+        { success: false, error: 'Bạn không có quyền truy cập trang admin' },
+        { status: 403 }
+      );
+    }
+
     // Check password
     const isPasswordValid = await bcrypt.compare(body.password, user.password);
     if (!isPasswordValid) {
@@ -38,44 +46,25 @@ export async function POST(request) {
       );
     }
 
-    // Check if email is verified
-    if (!user.email_verified) {
-      // Return user info (without password) for verification screen
-      const { password, verification_code, verification_code_expires, ...userWithoutPassword } = user;
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Vui lòng xác thực email trước khi đăng nhập. Kiểm tra email của bạn để lấy mã xác thực.',
-          email_not_verified: true,
-          email: user.email,
-          user: userWithoutPassword // Include user info for verification screen
-        },
-        { status: 403 }
-      );
-    }
-
     // Update last_login
     await db.collection('users').updateOne(
       { _id: user._id },
       { $set: { last_login: new Date() } }
     );
 
-    // Return user without password
-    const { password, verification_code, verification_code_expires, ...userWithoutPassword } = user;
+    // Return admin user without password
+    const { password, verification_code, verification_code_expires, ...adminWithoutPassword } = user;
 
     return NextResponse.json(
       {
         success: true,
-        data: {
-          ...userWithoutPassword,
-          role: user.role || 'user', // Include role in response
-        },
-        email_verified: user.email_verified || false,
+        data: adminWithoutPassword,
+        message: 'Đăng nhập thành công',
       },
       { status: 200 }
     );
   } catch (error) {
-    console.error('Error logging in:', error);
+    console.error('Error logging in admin:', error);
     return NextResponse.json(
       { success: false, error: 'Lỗi khi đăng nhập. Vui lòng thử lại sau.' },
       { status: 500 }

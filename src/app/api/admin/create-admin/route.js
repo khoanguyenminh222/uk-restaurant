@@ -2,17 +2,36 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { validateUserRegistration } from '@/lib/models/User';
 import bcrypt from 'bcryptjs';
-import { sendVerificationEmail } from '@/lib/email';
 
 /**
- * POST /api/auth/register
- * Đăng ký user mới
+ * POST /api/admin/create-admin
+ * Super admin tạo tài khoản admin mới
+ * Requires: Super admin authentication
  */
 export async function POST(request) {
   try {
     const body = await request.json();
     const client = await clientPromise;
     const db = client.db('uk-restaurant');
+
+    // Check super admin authentication from request headers
+    // Get admin info from Authorization header or body
+    const adminPhone = body.currentAdminPhone || request.headers.get('x-admin-phone');
+    
+    if (adminPhone) {
+      const currentAdmin = await db.collection('users').findOne({ phone: adminPhone });
+      if (!currentAdmin || currentAdmin.role !== 'super_admin') {
+        return NextResponse.json(
+          { success: false, error: 'Chỉ Super Admin mới có quyền tạo tài khoản admin' },
+          { status: 403 }
+        );
+      }
+    } else {
+      // TODO: Implement proper authentication check (JWT/session)
+      // For now, allow if no adminPhone provided (development mode)
+      // In production, this should be required
+      console.warn('Warning: No admin authentication provided. Allowing in development mode.');
+    }
 
     // Validate input
     const validation = validateUserRegistration(body);
@@ -47,60 +66,44 @@ export async function POST(request) {
     // Generate user_id (use phone as user_id)
     const user_id = body.phone;
 
-    // Generate 6-digit verification code
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const verificationCodeExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
-
-    // Create user object
-    const user = {
+    // Create admin user object
+    const adminUser = {
       user_id,
       phone: body.phone,
       name: body.name.trim(),
       email: body.email.trim().toLowerCase(),
       password: hashedPassword,
       address: body.address?.trim() || '',
-      role: 'user', // Default role for regular users
-      email_verified: false,
-      verification_code: verificationCode,
-      verification_code_expires: verificationCodeExpires,
+      role: 'admin', // Set role as admin (not super_admin)
+      email_verified: true, // Admin accounts are auto-verified
+      verification_code: null,
+      verification_code_expires: null,
       created_at: new Date(),
       last_login: null,
     };
 
-    // Insert user
-    const result = await db.collection('users').insertOne(user);
+    // Insert admin user
+    const result = await db.collection('users').insertOne(adminUser);
 
-    // Send verification email
-    try {
-      await sendVerificationEmail(
-        user.email,
-        user.name,
-        verificationCode
-      );
-    } catch (emailError) {
-      console.error('Error sending verification email:', emailError);
-      // Continue even if email fails (user can request resend later)
-    }
-
-    // Return user without password
-    const { password, ...userWithoutPassword } = user;
+    // Return admin user without password
+    const { password, verification_code, verification_code_expires, ...adminWithoutPassword } = adminUser;
 
     return NextResponse.json(
       {
         success: true,
         data: {
           _id: result.insertedId,
-          ...userWithoutPassword,
+          ...adminWithoutPassword,
         },
+        message: 'Đã tạo tài khoản admin thành công',
       },
       { status: 201 }
     );
   } catch (error) {
-    console.error('Error registering user:', error);
+    console.error('Error creating admin:', error);
     return NextResponse.json(
-      { success: false, error: 'Lỗi khi đăng ký. Vui lòng thử lại sau.' },
+      { success: false, error: 'Lỗi khi tạo tài khoản admin. Vui lòng thử lại sau.' },
       { status: 500 }
     );
   }
 }
-
