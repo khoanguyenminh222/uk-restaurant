@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, Menu, X, LayoutDashboard, FolderOpen, UtensilsCrossed, Users, LogOut, ShoppingCart, UserCircle } from 'lucide-react';
+import { Home, Menu, X, LayoutDashboard, FolderOpen, UtensilsCrossed, Users, LogOut, ShoppingCart, UserCircle, Image as ImageIcon } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle/ThemeToggle';
 
 export default function AdminLayout({ children }) {
@@ -80,6 +80,7 @@ export default function AdminLayout({ children }) {
   const navItems = [
     { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/admin/orders', label: 'Đơn hàng', icon: ShoppingCart },
+    { href: '/admin/banners', label: 'Banner', icon: ImageIcon },
     { href: '/admin/categories', label: 'Danh mục', icon: FolderOpen },
     { href: '/admin/food', label: 'Món ăn', icon: UtensilsCrossed },
     { href: '/admin/users', label: 'Người dùng', icon: UserCircle },
