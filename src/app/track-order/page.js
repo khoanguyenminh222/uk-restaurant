@@ -100,34 +100,34 @@ export default function TrackOrderPage() {
   const StatusIcon = order ? statusConfig[order.status]?.icon || Clock : Clock
 
   return (
-    <div className="min-h-screen bg-gray-950 py-12 px-4">
+    <div className="min-h-screen bg-background py-12 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-50 mb-2 flex items-center justify-center gap-2">
-            <Package className="w-8 h-8 text-green-400" />
+          <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center justify-center gap-2">
+            <Package className="w-8 h-8 text-primary" />
             Theo dõi đơn hàng
           </h1>
-          <p className="text-gray-400">Nhập mã đơn hàng để xem trạng thái đơn hàng của bạn</p>
+          <p className="text-muted-foreground">Nhập mã đơn hàng để xem trạng thái đơn hàng của bạn</p>
         </div>
 
         {/* Search Form */}
-        <div className="bg-gray-900 rounded-xl p-6 mb-6 border border-gray-800">
+        <div className="bg-card rounded-xl p-6 mb-6 border border-border">
           <form onSubmit={handleSearch} className="flex gap-3">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <input
                 type="text"
                 value={orderId}
                 onChange={(e) => setOrderId(e.target.value)}
                 placeholder="Nhập mã đơn hàng (ví dụ: ORD-1234567890-123)"
-                className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full pl-10 pr-4 py-3 bg-input border border-border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-3 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-6 py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {loading ? (
                 <>
@@ -146,7 +146,7 @@ export default function TrackOrderPage() {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-red-950/50 border border-red-500/50 rounded-lg text-red-400">
+          <div className="mb-6 p-4 bg-destructive/10 border border-destructive/50 rounded-lg text-destructive">
             {error}
           </div>
         )}
@@ -155,51 +155,51 @@ export default function TrackOrderPage() {
         {order && (
           <div className="space-y-6">
             {/* Order Status Card */}
-            <div className={`bg-gray-900 rounded-xl p-6 border ${statusConfig[order.status]?.borderColor || "border-gray-800"}`}>
+            <div className={`bg-card rounded-xl p-6 border ${statusConfig[order.status]?.borderColor || "border-border"}`}>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className={`p-3 rounded-lg ${statusConfig[order.status]?.bgColor || "bg-gray-800"}`}>
-                    <StatusIcon className={`w-6 h-6 ${statusConfig[order.status]?.color || "text-gray-400"}`} />
+                  <div className={`p-3 rounded-lg ${statusConfig[order.status]?.bgColor || "bg-muted"}`}>
+                    <StatusIcon className={`w-6 h-6 ${statusConfig[order.status]?.color || "text-muted-foreground"}`} />
                   </div>
                   <div>
-                    <h2 className="text-lg font-semibold text-gray-50">Trạng thái đơn hàng</h2>
-                    <p className={`text-sm font-medium ${statusConfig[order.status]?.color || "text-gray-400"}`}>
+                    <h2 className="text-lg font-semibold text-card-foreground">Trạng thái đơn hàng</h2>
+                    <p className={`text-sm font-medium ${statusConfig[order.status]?.color || "text-muted-foreground"}`}>
                       {statusConfig[order.status]?.label || order.status}
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-gray-400">Mã đơn hàng</p>
-                  <p className="text-sm font-mono font-semibold text-gray-50">{order.order_id}</p>
+                  <p className="text-xs text-muted-foreground">Mã đơn hàng</p>
+                  <p className="text-sm font-mono font-semibold text-card-foreground">{order.order_id}</p>
                 </div>
               </div>
             </div>
 
             {/* Order Info */}
-            <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-              <h3 className="text-lg font-semibold text-gray-50 mb-4">Thông tin đơn hàng</h3>
+            <div className="bg-card rounded-xl p-6 border border-border">
+              <h3 className="text-lg font-semibold text-card-foreground mb-4">Thông tin đơn hàng</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-gray-400 mb-1">Tên khách hàng</p>
-                  <p className="text-gray-50 font-medium">{order.customer_name}</p>
+                  <p className="text-xs text-muted-foreground mb-1">Tên khách hàng</p>
+                  <p className="text-card-foreground font-medium">{order.customer_name}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 mb-1">Số điện thoại</p>
-                  <p className="text-gray-50 font-medium">{order.customer_phone}</p>
+                  <p className="text-xs text-muted-foreground mb-1">Số điện thoại</p>
+                  <p className="text-card-foreground font-medium">{order.customer_phone}</p>
                 </div>
                 <div className="md:col-span-2">
-                  <p className="text-xs text-gray-400 mb-1">Địa chỉ giao hàng</p>
-                  <p className="text-gray-50 font-medium">{order.customer_address || "Tại quán"}</p>
+                  <p className="text-xs text-muted-foreground mb-1">Địa chỉ giao hàng</p>
+                  <p className="text-card-foreground font-medium">{order.customer_address || "Tại quán"}</p>
                 </div>
                 {order.notes && (
                   <div className="md:col-span-2">
-                    <p className="text-xs text-gray-400 mb-1">Ghi chú</p>
-                    <p className="text-gray-50">{order.notes}</p>
+                    <p className="text-xs text-muted-foreground mb-1">Ghi chú</p>
+                    <p className="text-card-foreground">{order.notes}</p>
                   </div>
                 )}
                 <div>
-                  <p className="text-xs text-gray-400 mb-1">Ngày đặt hàng</p>
-                  <p className="text-gray-50 font-medium">
+                  <p className="text-xs text-muted-foreground mb-1">Ngày đặt hàng</p>
+                  <p className="text-card-foreground font-medium">
                     {order.created_at
                       ? new Date(order.created_at).toLocaleString("vi-VN", {
                           year: "numeric",
@@ -212,42 +212,42 @@ export default function TrackOrderPage() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 mb-1">Tổng tiền</p>
-                  <p className="text-green-400 font-bold text-lg">{formatCurrency(order.total_price || 0)}</p>
+                  <p className="text-xs text-muted-foreground mb-1">Tổng tiền</p>
+                  <p className="text-primary font-bold text-lg">{formatCurrency(order.total_price || 0)}</p>
                 </div>
               </div>
             </div>
 
             {/* Order Items */}
-            <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-              <h3 className="text-lg font-semibold text-gray-50 mb-4">Chi tiết đơn hàng</h3>
+            <div className="bg-card rounded-xl p-6 border border-border">
+              <h3 className="text-lg font-semibold text-card-foreground mb-4">Chi tiết đơn hàng</h3>
               <div className="space-y-3">
                 {order.items && Array.isArray(order.items) && order.items.length > 0 ? (
                   order.items.map((item, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg"
+                      className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
                     >
                       <div className="flex-1">
-                        <p className="text-gray-50 font-medium">{item.tên_món}</p>
-                        <p className="text-sm text-gray-400">
+                        <p className="text-card-foreground font-medium">{item.tên_món}</p>
+                        <p className="text-sm text-muted-foreground">
                           {formatCurrency(item.giá)} × {item.quantity}
                         </p>
                       </div>
-                      <p className="text-green-400 font-semibold">
+                      <p className="text-primary font-semibold">
                         {formatCurrency(item.giá * item.quantity)}
                       </p>
                     </div>
                   ))
                 ) : (
-                  <div className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                     <div className="flex-1">
-                      <p className="text-gray-50 font-medium">{order.tên_món}</p>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-card-foreground font-medium">{order.tên_món}</p>
+                      <p className="text-sm text-muted-foreground">
                         {formatCurrency(order.giá || 0)} × {order.quantity || 1}
                       </p>
                     </div>
-                    <p className="text-green-400 font-semibold">
+                    <p className="text-primary font-semibold">
                       {formatCurrency((order.giá || 0) * (order.quantity || 1))}
                     </p>
                   </div>

@@ -80,16 +80,16 @@ export default function Contact() {
   const mapEmbedUrl = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.1234567890!2d106.6297!3d10.8231!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTDCsDQ5JzIzLjIiTiAxMDbCsDM3JzQ2LjkiRQ!5e0!3m2!1svi!2s!4v1234567890123!5m2!1svi!2s"
 
   return (
-    <section id="contact" className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-gray-900">
+    <section id="contact" className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-muted">
       <div className="max-w-7xl mx-auto">
         {/* Section Header */}
         <div
           ref={headerRef}
           className={`text-center mb-12 scroll-fade-in ${isHeaderVisible ? "visible" : ""}`}
         >
-          <h2 className="text-3xl md:text-4xl font-bold font-display text-gray-50 mb-4">Liên hệ</h2>
-          <div className="w-16 h-1 bg-green-500 mx-auto mb-6 rounded-full"></div>
-          <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed">
+          <h2 className="text-3xl md:text-4xl font-bold font-display text-foreground mb-4">Liên hệ</h2>
+          <div className="w-16 h-1 bg-primary mx-auto mb-6 rounded-full"></div>
+          <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Hãy liên hệ với chúng tôi để được tư vấn và đặt món ngay hôm nay
           </p>
         </div>
@@ -97,7 +97,7 @@ export default function Contact() {
         {/* Contact Card */}
         <div
           ref={contactCardRef}
-          className={`max-w-2xl mx-auto bg-gray-950 border border-green-700 rounded-lg p-8 shadow-sm hover:shadow-md hover:shadow-black/50 transition-all duration-300 mb-12 scroll-fade-in ${isContactCardVisible ? "visible" : ""}`}
+          className={`max-w-2xl mx-auto bg-card border border-primary rounded-lg p-8 shadow-sm hover:shadow-md hover:shadow-black/50 transition-all duration-300 mb-12 scroll-fade-in ${isContactCardVisible ? "visible" : ""}`}
         >
           <div className="space-y-6">
             {contactInfo.map((item, index) => {
@@ -105,22 +105,22 @@ export default function Contact() {
               return (
                 <div key={index} className="flex items-start gap-4">
                   {/* Icon Container */}
-                  <div className="shrink-0 w-12 h-12 bg-green-950/50 rounded-lg flex items-center justify-center text-green-400">
+                  <div className="shrink-0 w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
                     <IconComponent className="w-6 h-6" />
                   </div>
 
                   {/* Text Container */}
                   <div className="flex-1">
-                    <h3 className="text-base font-semibold text-gray-50 mb-1">{item.title}</h3>
+                    <h3 className="text-base font-semibold text-card-foreground mb-1">{item.title}</h3>
                     {item.href ? (
                       <a
                         href={item.href}
-                        className="text-gray-400 hover:text-green-400 transition-colors duration-300 focus:outline-none focus:text-green-400"
+                        className="text-muted-foreground hover:text-primary transition-colors duration-300 focus:outline-none focus:text-primary"
                       >
                         {item.value}
                       </a>
                     ) : (
-                      <p className="text-gray-400">{item.value}</p>
+                      <p className="text-muted-foreground">{item.value}</p>
                     )}
                   </div>
                 </div>
@@ -134,11 +134,11 @@ export default function Contact() {
           {/* Google Maps */}
           <div
             ref={mapRef}
-            className={`bg-gray-950 border border-green-700 rounded-lg overflow-hidden shadow-sm hover:shadow-md hover:shadow-black/50 transition-all duration-300 scroll-fade-in-left scroll-delay-100 ${isMapVisible ? "visible" : ""}`}
+            className={`bg-card border border-primary rounded-lg overflow-hidden shadow-sm hover:shadow-md hover:shadow-black/50 transition-all duration-300 scroll-fade-in-left scroll-delay-100 ${isMapVisible ? "visible" : ""}`}
           >
-            <div className="p-4 border-b border-green-700">
-              <h3 className="text-lg font-semibold text-gray-50 flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-green-400" />
+            <div className="p-4 border-b border-primary">
+              <h3 className="text-lg font-semibold text-card-foreground flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-primary" />
                 Vị trí của chúng tôi
               </h3>
             </div>
@@ -160,10 +160,10 @@ export default function Contact() {
           {/* Social Media */}
           <div
             ref={socialRef}
-            className={`bg-gray-950 border border-green-700 rounded-lg p-8 shadow-sm hover:shadow-md hover:shadow-black/50 transition-all duration-300 scroll-fade-in-right scroll-delay-200 ${isSocialVisible ? "visible" : ""}`}
+            className={`bg-card border border-primary rounded-lg p-8 shadow-sm hover:shadow-md hover:shadow-black/50 transition-all duration-300 scroll-fade-in-right scroll-delay-200 ${isSocialVisible ? "visible" : ""}`}
           >
-            <h3 className="text-lg font-semibold text-gray-50 mb-6 flex items-center gap-2">
-              <MessageCircle className="w-5 h-5 text-green-400" />
+            <h3 className="text-lg font-semibold text-card-foreground mb-6 flex items-center gap-2">
+              <MessageCircle className="w-5 h-5 text-primary" />
               Kết nối với chúng tôi
             </h3>
             <div className="space-y-4">
@@ -175,20 +175,20 @@ export default function Contact() {
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-4 p-4 bg-gray-700/50 border border-gray-600 rounded-lg hover:border-green-500/50 hover:bg-gray-700 transition-all duration-300 group"
+                    className="flex items-center gap-4 p-4 bg-muted border border-border rounded-lg hover:border-primary/50 hover:bg-muted/80 transition-all duration-300 group"
                   >
                     <div className={`shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${social.color} group-hover:scale-110 transition-transform duration-300`}>
                       <IconComponent className="w-6 h-6" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="text-base font-semibold text-gray-50 mb-1">{social.name}</h4>
-                      <p className="text-sm text-gray-400 group-hover:text-green-400 transition-colors duration-300">
+                      <h4 className="text-base font-semibold text-card-foreground mb-1">{social.name}</h4>
+                      <p className="text-sm text-muted-foreground group-hover:text-primary transition-colors duration-300">
                         {social.description}
                       </p>
                     </div>
                     <div className="shrink-0">
                       <svg
-                        className="w-5 h-5 text-gray-400 group-hover:text-green-400 transition-colors duration-300"
+                        className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors duration-300"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -200,7 +200,7 @@ export default function Contact() {
                 )
               })}
             </div>
-            <p className="text-sm text-gray-500 mt-6">
+            <p className="text-sm text-muted-foreground mt-6">
               Cập nhật thông tin mới nhất về thực đơn, khuyến mãi và sự kiện đặc biệt
             </p>
           </div>

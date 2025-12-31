@@ -614,11 +614,11 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div
         ref={modalRef}
-        className="relative w-full max-w-md bg-gray-900 rounded-xl shadow-2xl border border-gray-800 overflow-hidden animate-fade-in-up"
+        className="relative w-full max-w-md bg-card rounded-xl shadow-2xl border border-border overflow-hidden animate-fade-in-up"
       >
         {/* Tabs - Chỉ hiển thị khi không ở verification screen và forgot-password */}
         {activeTab !== "verify" && activeTab !== "forgot-password" && (
-          <div className="flex border-b border-gray-800">
+          <div className="flex border-b border-border">
             <button
               onClick={() => {
                 setActiveTab("login")
@@ -627,8 +627,8 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
               }}
               className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${
                 activeTab === "login"
-                  ? "bg-green-600 text-white"
-                  : "text-gray-400 hover:text-white hover:bg-gray-800"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-card-foreground hover:bg-muted"
               }`}
             >
               Đăng nhập
@@ -641,8 +641,8 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
               }}
               className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${
                 activeTab === "register"
-                  ? "bg-green-600 text-white"
-                  : "text-gray-400 hover:text-white hover:bg-gray-800"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-card-foreground hover:bg-muted"
               }`}
             >
               Đăng ký
@@ -652,15 +652,15 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
 
         {/* Verification Header */}
         {activeTab === "verify" && (
-          <div className="border-b border-gray-800 bg-green-950/20 py-4 px-6">
-            <h3 className="text-lg font-semibold text-gray-50 text-center">Xác thực email</h3>
+          <div className="border-b border-border bg-primary/10 py-4 px-6">
+            <h3 className="text-lg font-semibold text-card-foreground text-center">Xác thực email</h3>
           </div>
         )}
 
         {/* Forgot Password Header */}
         {activeTab === "forgot-password" && (
-          <div className="border-b border-gray-800 bg-green-950/20 py-4 px-6">
-            <h3 className="text-lg font-semibold text-gray-50 text-center">Quên mật khẩu</h3>
+          <div className="border-b border-border bg-primary/10 py-4 px-6">
+            <h3 className="text-lg font-semibold text-card-foreground text-center">Quên mật khẩu</h3>
           </div>
         )}
 
@@ -668,14 +668,14 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
         <div className="p-6 md:p-8">
           {/* Error Message */}
           {error && (
-            <div className="mb-4 p-3 bg-red-950/50 border border-red-500/50 rounded-lg text-red-400 text-sm">
+            <div className="mb-4 p-3 bg-destructive/10 border border-destructive/50 rounded-lg text-destructive text-sm">
               {error}
             </div>
           )}
 
           {/* Success Message */}
           {successMessage && (
-            <div className="mb-4 p-3 bg-green-950/50 border border-green-500/50 rounded-lg text-green-400 text-sm">
+            <div className="mb-4 p-3 bg-success/10 border border-success/50 rounded-lg text-success text-sm">
               {successMessage}
             </div>
           )}
@@ -685,11 +685,11 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
             <form onSubmit={handleLogin} className="space-y-4">
               {/* Phone */}
               <div>
-                <label htmlFor="login-phone" className="block text-sm font-medium text-gray-300 mb-2">
-                  Số điện thoại <span className="text-red-400">*</span>
+                <label htmlFor="login-phone" className="block text-sm font-medium text-card-foreground mb-2">
+                  Số điện thoại <span className="text-destructive">*</span>
                 </label>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
                     id="login-phone"
                     name="phone"
@@ -697,23 +697,23 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                     value={loginForm.phone}
                     onChange={handleLoginChange}
                     placeholder="0901234567"
-                    className={`w-full pl-10 pr-4 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                      loginErrors.phone ? "border-red-500" : "border-gray-700"
+                    className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
+                      loginErrors.phone ? "border-destructive" : "border-border"
                     }`}
                   />
                 </div>
                 {loginErrors.phone && (
-                  <p className="mt-1 text-sm text-red-400">{loginErrors.phone}</p>
+                  <p className="mt-1 text-sm text-destructive">{loginErrors.phone}</p>
                 )}
               </div>
 
               {/* Password */}
               <div>
-                <label htmlFor="login-password" className="block text-sm font-medium text-gray-300 mb-2">
-                  Mật khẩu <span className="text-red-400">*</span>
+                <label htmlFor="login-password" className="block text-sm font-medium text-card-foreground mb-2">
+                  Mật khẩu <span className="text-destructive">*</span>
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
                     id="login-password"
                     name="password"
@@ -721,37 +721,37 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                     value={loginForm.password}
                     onChange={handleLoginChange}
                     placeholder="Nhập mật khẩu"
-                    className={`w-full pl-10 pr-12 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                      loginErrors.password ? "border-red-500" : "border-gray-700"
+                    className={`w-full pl-10 pr-12 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
+                      loginErrors.password ? "border-destructive" : "border-border"
                     }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-card-foreground transition-colors"
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
                 {loginErrors.password && (
-                  <p className="mt-1 text-sm text-red-400">{loginErrors.password}</p>
+                  <p className="mt-1 text-sm text-destructive">{loginErrors.password}</p>
                 )}
               </div>
 
               {/* Remember Me & Forgot Password */}
               <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+                <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
                   <input
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-700 bg-gray-800 text-green-600 focus:ring-green-500"
+                    className="w-4 h-4 rounded border-border bg-input text-primary focus:ring-ring"
                   />
                   <span>Nhớ mật khẩu</span>
                 </label>
                 <button
                   type="button"
-                  className="text-sm text-green-400 hover:text-green-300 transition-colors"
+                  className="text-sm text-primary hover:text-primary-dark transition-colors"
                   onClick={() => {
                     setActiveTab("forgot-password")
                     setError("")
@@ -766,18 +766,18 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? "Đang đăng nhập..." : "Đăng nhập"}
               </button>
 
               {/* Switch to Register */}
-              <p className="text-center text-sm text-gray-400">
+              <p className="text-center text-sm text-muted-foreground">
                 Chưa có tài khoản?{" "}
                 <button
                   type="button"
                   onClick={() => setActiveTab("register")}
-                  className="text-green-400 hover:text-green-300 font-medium transition-colors"
+                  className="text-primary hover:text-primary-dark font-medium transition-colors"
                 >
                   Đăng ký ngay
                 </button>
@@ -790,11 +790,11 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
             <form onSubmit={handleRegister} className="space-y-4">
               {/* Phone */}
               <div>
-                <label htmlFor="register-phone" className="block text-sm font-medium text-gray-300 mb-2">
-                  Số điện thoại <span className="text-red-400">*</span>
+                <label htmlFor="register-phone" className="block text-sm font-medium text-card-foreground mb-2">
+                  Số điện thoại <span className="text-destructive">*</span>
                 </label>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
                     id="register-phone"
                     name="phone"
@@ -802,23 +802,23 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                     value={registerForm.phone}
                     onChange={handleRegisterChange}
                     placeholder="0901234567"
-                    className={`w-full pl-10 pr-4 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                      registerErrors.phone ? "border-red-500" : "border-gray-700"
+                    className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
+                      registerErrors.phone ? "border-destructive" : "border-border"
                     }`}
                   />
                 </div>
                 {registerErrors.phone && (
-                  <p className="mt-1 text-sm text-red-400">{registerErrors.phone}</p>
+                  <p className="mt-1 text-sm text-destructive">{registerErrors.phone}</p>
                 )}
               </div>
 
               {/* Name */}
               <div>
-                <label htmlFor="register-name" className="block text-sm font-medium text-gray-300 mb-2">
-                  Tên <span className="text-red-400">*</span>
+                <label htmlFor="register-name" className="block text-sm font-medium text-card-foreground mb-2">
+                  Tên <span className="text-destructive">*</span>
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
                     id="register-name"
                     name="name"
@@ -826,23 +826,23 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                     value={registerForm.name}
                     onChange={handleRegisterChange}
                     placeholder="Nguyễn Văn A"
-                    className={`w-full pl-10 pr-4 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                      registerErrors.name ? "border-red-500" : "border-gray-700"
+                    className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
+                      registerErrors.name ? "border-destructive" : "border-border"
                     }`}
                   />
                 </div>
                 {registerErrors.name && (
-                  <p className="mt-1 text-sm text-red-400">{registerErrors.name}</p>
+                  <p className="mt-1 text-sm text-destructive">{registerErrors.name}</p>
                 )}
               </div>
 
               {/* Email */}
               <div>
-                <label htmlFor="register-email" className="block text-sm font-medium text-gray-300 mb-2">
-                  Email <span className="text-red-400">*</span>
+                <label htmlFor="register-email" className="block text-sm font-medium text-card-foreground mb-2">
+                  Email <span className="text-destructive">*</span>
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
                     id="register-email"
                     name="email"
@@ -850,23 +850,23 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                     value={registerForm.email}
                     onChange={handleRegisterChange}
                     placeholder="example@email.com"
-                    className={`w-full pl-10 pr-4 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                      registerErrors.email ? "border-red-500" : "border-gray-700"
+                    className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
+                      registerErrors.email ? "border-destructive" : "border-border"
                     }`}
                   />
                 </div>
                 {registerErrors.email && (
-                  <p className="mt-1 text-sm text-red-400">{registerErrors.email}</p>
+                  <p className="mt-1 text-sm text-destructive">{registerErrors.email}</p>
                 )}
               </div>
 
               {/* Password */}
               <div>
-                <label htmlFor="register-password" className="block text-sm font-medium text-gray-300 mb-2">
-                  Mật khẩu <span className="text-red-400">*</span>
+                <label htmlFor="register-password" className="block text-sm font-medium text-card-foreground mb-2">
+                  Mật khẩu <span className="text-destructive">*</span>
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
                     id="register-password"
                     name="password"
@@ -874,30 +874,30 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                     value={registerForm.password}
                     onChange={handleRegisterChange}
                     placeholder="Ít nhất 6 ký tự"
-                    className={`w-full pl-10 pr-12 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                      registerErrors.password ? "border-red-500" : "border-gray-700"
+                    className={`w-full pl-10 pr-12 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
+                      registerErrors.password ? "border-destructive" : "border-border"
                     }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-card-foreground transition-colors"
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
                 {registerErrors.password && (
-                  <p className="mt-1 text-sm text-red-400">{registerErrors.password}</p>
+                  <p className="mt-1 text-sm text-destructive">{registerErrors.password}</p>
                 )}
               </div>
 
               {/* Confirm Password */}
               <div>
-                <label htmlFor="register-confirm-password" className="block text-sm font-medium text-gray-300 mb-2">
-                  Xác nhận mật khẩu <span className="text-red-400">*</span>
+                <label htmlFor="register-confirm-password" className="block text-sm font-medium text-card-foreground mb-2">
+                  Xác nhận mật khẩu <span className="text-destructive">*</span>
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
                     id="register-confirm-password"
                     name="confirmPassword"
@@ -905,30 +905,30 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                     value={registerForm.confirmPassword}
                     onChange={handleRegisterChange}
                     placeholder="Nhập lại mật khẩu"
-                    className={`w-full pl-10 pr-12 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                      registerErrors.confirmPassword ? "border-red-500" : "border-gray-700"
+                    className={`w-full pl-10 pr-12 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
+                      registerErrors.confirmPassword ? "border-destructive" : "border-border"
                     }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-card-foreground transition-colors"
                   >
                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
                 {registerErrors.confirmPassword && (
-                  <p className="mt-1 text-sm text-red-400">{registerErrors.confirmPassword}</p>
+                  <p className="mt-1 text-sm text-destructive">{registerErrors.confirmPassword}</p>
                 )}
               </div>
 
               {/* Address */}
               <div>
-                <label htmlFor="register-address" className="block text-sm font-medium text-gray-300 mb-2">
-                  Địa chỉ <span className="text-gray-500 text-xs">(Tùy chọn)</span>
+                <label htmlFor="register-address" className="block text-sm font-medium text-card-foreground mb-2">
+                  Địa chỉ <span className="text-muted-foreground text-xs">(Tùy chọn)</span>
                 </label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
                     id="register-address"
                     name="address"
@@ -936,13 +936,13 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                     value={registerForm.address}
                     onChange={handleRegisterChange}
                     placeholder="123 Đường ABC, Quận XYZ"
-                    className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full pl-10 pr-4 py-3 bg-input border border-border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                   />
                 </div>
               </div>
 
               {/* Info Text */}
-              <p className="text-xs text-gray-500 text-center">
+              <p className="text-xs text-muted-foreground text-center">
                 Chúng tôi sẽ gửi email xác thực để bảo vệ tài khoản và giúp bạn khôi phục mật khẩu nếu cần
               </p>
 
@@ -950,18 +950,18 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? "Đang đăng ký..." : "Đăng ký"}
               </button>
 
               {/* Switch to Login */}
-              <p className="text-center text-sm text-gray-400">
+              <p className="text-center text-sm text-muted-foreground">
                 Đã có tài khoản?{" "}
                 <button
                   type="button"
                   onClick={() => setActiveTab("login")}
-                  className="text-green-400 hover:text-green-300 font-medium transition-colors"
+                  className="text-primary hover:text-primary-dark font-medium transition-colors"
                 >
                   Đăng nhập
                 </button>
@@ -973,20 +973,20 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
           {activeTab === "forgot-password" && (
             <form onSubmit={handleForgotPassword} className="space-y-4">
               <div className="text-center mb-6">
-                <Lock className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-50 mb-2">Quên mật khẩu?</h3>
-                <p className="text-gray-400 text-sm">
+                <Lock className="w-16 h-16 text-primary mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-card-foreground mb-2">Quên mật khẩu?</h3>
+                <p className="text-muted-foreground text-sm">
                   Nhập số điện thoại của bạn, chúng tôi sẽ gửi email hướng dẫn đặt lại mật khẩu.
                 </p>
               </div>
 
               {/* Phone */}
               <div>
-                <label htmlFor="forgot-phone" className="block text-sm font-medium text-gray-300 mb-2">
-                  Số điện thoại <span className="text-red-400">*</span>
+                <label htmlFor="forgot-phone" className="block text-sm font-medium text-card-foreground mb-2">
+                  Số điện thoại <span className="text-destructive">*</span>
                 </label>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
                     id="forgot-phone"
                     name="phone"
@@ -994,18 +994,18 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                     value={forgotPasswordForm.phone}
                     onChange={handleForgotPasswordChange}
                     placeholder="0901234567"
-                    className={`w-full pl-10 pr-4 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                      forgotPasswordErrors.phone ? "border-red-500" : "border-gray-700"
+                    className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
+                      forgotPasswordErrors.phone ? "border-destructive" : "border-border"
                     }`}
                   />
                 </div>
                 {forgotPasswordErrors.phone && (
-                  <p className="mt-1 text-sm text-red-400">{forgotPasswordErrors.phone}</p>
+                  <p className="mt-1 text-sm text-destructive">{forgotPasswordErrors.phone}</p>
                 )}
               </div>
 
               {/* Info Text */}
-              <p className="text-xs text-gray-500 text-center">
+              <p className="text-xs text-muted-foreground text-center">
                 Chúng tôi sẽ gửi link đặt lại mật khẩu đến email đã đăng ký của bạn. Link sẽ hết hạn sau 30 phút.
               </p>
 
@@ -1013,13 +1013,13 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? "Đang gửi..." : "Gửi email đặt lại mật khẩu"}
               </button>
 
               {/* Back to Login */}
-              <p className="text-center text-sm text-gray-400">
+              <p className="text-center text-sm text-muted-foreground">
                 Nhớ mật khẩu?{" "}
                 <button
                   type="button"
@@ -1030,7 +1030,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                     setForgotPasswordForm({ phone: "" })
                     setForgotPasswordErrors({})
                   }}
-                  className="text-green-400 hover:text-green-300 font-medium transition-colors"
+                  className="text-primary hover:text-primary-dark font-medium transition-colors"
                 >
                   Đăng nhập
                 </button>
@@ -1042,13 +1042,13 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
           {activeTab === "verify" && registeredUser && (
             <form onSubmit={handleVerifyEmail} className="space-y-6">
               <div className="text-center">
-                <Mail className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-50 mb-2">Kiểm tra email của bạn</h3>
-                <p className="text-gray-400 text-sm mb-1">
+                <Mail className="w-16 h-16 text-primary mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-card-foreground mb-2">Kiểm tra email của bạn</h3>
+                <p className="text-muted-foreground text-sm mb-1">
                   Chúng tôi đã gửi mã xác thực đến:
                 </p>
-                <p className="text-green-400 font-medium">{registeredUser.email}</p>
-                <p className="text-gray-500 text-xs mt-2">
+                <p className="text-primary font-medium">{registeredUser.email}</p>
+                <p className="text-muted-foreground text-xs mt-2">
                   Vui lòng nhập mã 6 số để hoàn tất đăng ký
                 </p>
                 
@@ -1057,7 +1057,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                   <button
                     type="button"
                     onClick={() => setShowChangeEmail(true)}
-                    className="mt-3 text-sm text-blue-400 hover:text-blue-300 font-medium transition-colors"
+                    className="mt-3 text-sm text-info hover:text-info/80 font-medium transition-colors"
                   >
                     Đổi email khác
                   </button>
@@ -1066,14 +1066,14 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
 
               {/* Change Email Form */}
               {showChangeEmail && (
-                <div className="border border-gray-700 rounded-lg p-4 bg-gray-800/50 space-y-3">
-                  <h4 className="text-sm font-medium text-gray-300 mb-2">Đổi email</h4>
+                <div className="border border-border rounded-lg p-4 bg-muted/50 space-y-3">
+                  <h4 className="text-sm font-medium text-card-foreground mb-2">Đổi email</h4>
                   <div>
-                    <label htmlFor="new-email" className="block text-xs font-medium text-gray-400 mb-1">
+                    <label htmlFor="new-email" className="block text-xs font-medium text-muted-foreground mb-1">
                       Email mới
                     </label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <input
                         id="new-email"
                         type="email"
@@ -1083,13 +1083,13 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                           setEmailError("")
                         }}
                         placeholder="email@example.com"
-                        className={`w-full pl-10 pr-4 py-2 bg-gray-900 border rounded-lg text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                          emailError ? "border-red-500" : "border-gray-700"
+                        className={`w-full pl-10 pr-4 py-2 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring ${
+                          emailError ? "border-destructive" : "border-border"
                         }`}
                       />
                     </div>
                     {emailError && (
-                      <p className="mt-1 text-xs text-red-400">{emailError}</p>
+                      <p className="mt-1 text-xs text-destructive">{emailError}</p>
                     )}
                   </div>
                   <div className="flex gap-2">
@@ -1097,7 +1097,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                       type="button"
                       onClick={handleChangeEmail}
                       disabled={loading}
-                      className="flex-1 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 py-2 bg-info hover:bg-info/80 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {loading ? "Đang xử lý..." : "Xác nhận"}
                     </button>
@@ -1109,7 +1109,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                         setEmailError("")
                       }}
                       disabled={loading}
-                      className="flex-1 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 py-2 bg-muted hover:bg-muted/80 text-card-foreground text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Hủy
                     </button>
@@ -1135,19 +1135,19 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                         if (prevInput) prevInput.focus()
                       }
                     }}
-                    className="w-12 h-14 text-center text-2xl font-bold bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-12 h-14 text-center text-2xl font-bold bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
                   />
                 ))}
               </div>
 
               {/* Resend Email Button */}
               <div className="text-center">
-                <p className="text-gray-400 text-sm mb-2">Không nhận được email?</p>
+                <p className="text-muted-foreground text-sm mb-2">Không nhận được email?</p>
                 <button
                   type="button"
                   onClick={handleResendVerification}
                   disabled={resendCooldown > 0 || loading}
-                  className="text-green-400 hover:text-green-300 text-sm font-medium transition-colors disabled:text-gray-600 disabled:cursor-not-allowed"
+                  className="text-primary hover:text-primary-dark text-sm font-medium transition-colors disabled:text-muted-foreground disabled:cursor-not-allowed"
                 >
                   {resendCooldown > 0
                     ? `Gửi lại sau ${resendCooldown}s`
@@ -1159,7 +1159,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
               <button
                 type="submit"
                 disabled={loading || verificationCode.join("").length !== 6}
-                className="w-full py-3 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? "Đang xác thực..." : "Xác thực"}
               </button>
@@ -1173,7 +1173,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                   setVerificationCode(["", "", "", "", "", ""])
                   setError("")
                 }}
-                className="w-full py-2 text-gray-400 hover:text-gray-300 text-sm transition-colors"
+                className="w-full py-2 text-muted-foreground hover:text-card-foreground text-sm transition-colors"
               >
                 ← Thay đổi thông tin
               </button>

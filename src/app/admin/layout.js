@@ -69,16 +69,16 @@ export default function AdminLayout({ children }) {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className="min-h-screen bg-background">
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-full w-64 bg-gray-900 border-r border-gray-800 z-10">
-        <div className="p-6 border-b border-gray-800">
-          <h1 className="text-xl font-bold text-white">UK Restaurant</h1>
-          <p className="text-sm text-gray-400">Admin Panel</p>
+      <aside className="fixed left-0 top-0 h-full w-64 bg-card border-r border-border z-10">
+        <div className="p-6 border-b border-border">
+          <h1 className="text-xl font-bold text-card-foreground">UK Restaurant</h1>
+          <p className="text-sm text-muted-foreground">Admin Panel</p>
           {adminInfo && (
-            <div className="mt-3 pt-3 border-t border-gray-800">
-              <p className="text-xs text-gray-500">Đăng nhập bởi</p>
-              <p className="text-sm text-gray-300 font-medium">{adminInfo.name}</p>
+            <div className="mt-3 pt-3 border-t border-border">
+              <p className="text-xs text-muted-foreground">Đăng nhập bởi</p>
+              <p className="text-sm text-card-foreground font-medium">{adminInfo.name}</p>
               <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${
                 adminInfo.role === 'super_admin'
                   ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50'
@@ -100,8 +100,8 @@ export default function AdminLayout({ children }) {
                     href={item.href}
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                       isActive
-                        ? 'bg-primary text-white'
-                        : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-muted-foreground hover:bg-muted hover:text-card-foreground'
                     }`}
                   >
                     <span className="text-xl">{item.icon}</span>
@@ -113,17 +113,17 @@ export default function AdminLayout({ children }) {
           </ul>
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-800 space-y-2">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border space-y-2">
           <Link
             href="/"
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-muted hover:text-card-foreground transition-colors"
           >
             <Home className="w-5 h-5" />
             <span className="font-medium">Về trang chủ</span>
           </Link>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-muted hover:text-card-foreground transition-colors"
           >
             <span className="text-xl">🚪</span>
             <span className="font-medium">Đăng xuất</span>

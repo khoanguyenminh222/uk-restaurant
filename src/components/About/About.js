@@ -34,16 +34,16 @@ export default function About() {
   ]
 
   return (
-    <section id="about" className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-gray-950">
+    <section id="about" className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-background">
       <div className="max-w-7xl mx-auto">
         {/* Section Header */}
         <div
           ref={headerRef}
           className={`text-center mb-12 scroll-fade-in ${isHeaderVisible ? "visible" : ""}`}
         >
-          <h2 className="text-3xl md:text-4xl font-bold font-display text-gray-50 mb-4">Giới thiệu</h2>
-          <div className="w-16 h-1 bg-green-500 mx-auto mb-6 rounded-full"></div>
-          <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed">
+          <h2 className="text-3xl md:text-4xl font-bold font-display text-foreground mb-4">Giới thiệu</h2>
+          <div className="w-16 h-1 bg-primary mx-auto mb-6 rounded-full"></div>
+          <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Cam kết mang đến cho bạn những trải nghiệm ẩm thực tuyệt vời nhất
           </p>
         </div>
@@ -56,20 +56,20 @@ export default function About() {
               <div
                 key={index}
                 ref={feature.ref}
-                className={`bg-gray-800 border border-gray-700 rounded-lg p-6 text-center hover:shadow-md hover:shadow-black/50 hover:border-green-500/50 transition-all duration-300 group scroll-fade-in ${
+                className={`bg-card border border-border rounded-lg p-6 text-center hover:shadow-md hover:shadow-black/50 hover:border-primary/50 transition-all duration-300 group scroll-fade-in ${
                   index === 0 ? "scroll-delay-100" : index === 1 ? "scroll-delay-200" : "scroll-delay-300"
                 } ${feature.isVisible ? "visible" : ""}`}
               >
                 {/* Icon */}
-                <div className="w-16 h-16 mx-auto mb-4 bg-green-950/50 rounded-full flex items-center justify-center text-green-400 group-hover:scale-110 transition-transform duration-300">
+                <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-300">
                   <IconComponent className="w-8 h-8" />
                 </div>
 
                 {/* Title */}
-                <h3 className="text-xl font-semibold font-display text-gray-50 mb-2">{feature.title}</h3>
+                <h3 className="text-xl font-semibold font-display text-card-foreground mb-2">{feature.title}</h3>
 
                 {/* Description */}
-                <p className="text-gray-400 leading-relaxed">{feature.description}</p>
+                <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
               </div>
             )
           })}

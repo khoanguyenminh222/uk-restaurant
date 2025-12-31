@@ -104,21 +104,21 @@ export default function UserProfile({ isOpen, onClose }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div
         ref={modalRef}
-        className="relative w-full max-w-4xl bg-gray-900 rounded-xl shadow-2xl border border-gray-800 overflow-hidden animate-fade-in-up max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-4xl bg-card rounded-xl shadow-2xl border border-border overflow-hidden animate-fade-in-up max-h-[90vh] overflow-y-auto"
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors z-10"
+          className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors z-10"
           aria-label="Đóng"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Header */}
-        <div className="border-b border-gray-800 bg-green-950/20 py-4 px-6">
-          <h2 className="text-xl font-semibold text-gray-50 flex items-center gap-2">
-            <User className="w-6 h-6 text-green-400" />
+        <div className="border-b border-border bg-primary/10 py-4 px-6">
+          <h2 className="text-xl font-semibold text-card-foreground flex items-center gap-2">
+            <User className="w-6 h-6 text-primary" />
             Thông tin tài khoản
           </h2>
         </div>
@@ -127,24 +127,24 @@ export default function UserProfile({ isOpen, onClose }) {
         <div className="p-6 space-y-6">
           {/* Messages */}
           {error && (
-            <div className="p-3 bg-red-950/50 border border-red-500/50 rounded-lg text-red-400 text-sm">
+            <div className="p-3 bg-destructive/10 border border-destructive/50 rounded-lg text-destructive text-sm">
               {error}
             </div>
           )}
           {success && (
-            <div className="p-3 bg-green-950/50 border border-green-500/50 rounded-lg text-green-400 text-sm">
+            <div className="p-3 bg-success/10 border border-success/50 rounded-lg text-success text-sm">
               {success}
             </div>
           )}
 
           {/* Profile Section */}
-          <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+          <div className="bg-muted/50 rounded-lg p-6 border border-border">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-50">Thông tin cá nhân</h3>
+              <h3 className="text-lg font-semibold text-card-foreground">Thông tin cá nhân</h3>
               {!isEditing ? (
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg text-sm font-medium transition-colors"
                 >
                   <Edit2 className="w-4 h-4" />
                   Sửa thông tin
@@ -154,7 +154,7 @@ export default function UserProfile({ isOpen, onClose }) {
                   <button
                     onClick={handleSaveProfile}
                     disabled={loading}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                    className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
                   >
                     {loading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -173,7 +173,7 @@ export default function UserProfile({ isOpen, onClose }) {
                       })
                       setError("")
                     }}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg text-sm font-medium transition-colors"
                   >
                     <XIcon className="w-4 h-4" />
                     Hủy
@@ -185,7 +185,7 @@ export default function UserProfile({ isOpen, onClose }) {
             <div className="space-y-4">
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-card-foreground mb-2">
                   <User className="w-4 h-4 inline mr-2" />
                   Tên
                 </label>
@@ -195,26 +195,26 @@ export default function UserProfile({ isOpen, onClose }) {
                     name="name"
                     value={editForm.name}
                     onChange={handleEditChange}
-                    className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                   />
                 ) : (
-                  <p className="text-gray-50">{user.name || "N/A"}</p>
+                  <p className="text-card-foreground">{user.name || "N/A"}</p>
                 )}
               </div>
 
               {/* Phone (read-only) */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-card-foreground mb-2">
                   <Phone className="w-4 h-4 inline mr-2" />
                   Số điện thoại
                 </label>
-                <p className="text-gray-50">{user.phone || "N/A"}</p>
-                <p className="text-xs text-gray-500 mt-1">Số điện thoại không thể thay đổi</p>
+                <p className="text-card-foreground">{user.phone || "N/A"}</p>
+                <p className="text-xs text-muted-foreground mt-1">Số điện thoại không thể thay đổi</p>
               </div>
 
               {/* Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-card-foreground mb-2">
                   <Mail className="w-4 h-4 inline mr-2" />
                   Email
                 </label>
@@ -224,16 +224,16 @@ export default function UserProfile({ isOpen, onClose }) {
                     name="email"
                     value={editForm.email}
                     onChange={handleEditChange}
-                    className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                   />
                 ) : (
-                  <p className="text-gray-50">{user.email || "N/A"}</p>
+                  <p className="text-card-foreground">{user.email || "N/A"}</p>
                 )}
               </div>
 
               {/* Address */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-card-foreground mb-2">
                   <MapPin className="w-4 h-4 inline mr-2" />
                   Địa chỉ
                 </label>
@@ -243,10 +243,10 @@ export default function UserProfile({ isOpen, onClose }) {
                     name="address"
                     value={editForm.address}
                     onChange={handleEditChange}
-                    className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                   />
                 ) : (
-                  <p className="text-gray-50">{user.address || "Chưa cập nhật"}</p>
+                  <p className="text-card-foreground">{user.address || "Chưa cập nhật"}</p>
                 )}
               </div>
             </div>

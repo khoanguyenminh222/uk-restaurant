@@ -105,16 +105,16 @@ export default function ResetPasswordPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-gray-900 rounded-xl shadow-2xl border border-gray-800 p-8 text-center">
-          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-50 mb-2">Đặt lại mật khẩu thành công!</h1>
-          <p className="text-gray-400 mb-6">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-card rounded-xl shadow-2xl border border-border p-8 text-center">
+          <CheckCircle className="w-16 h-16 text-primary mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-card-foreground mb-2">Đặt lại mật khẩu thành công!</h1>
+          <p className="text-muted-foreground mb-6">
             Mật khẩu của bạn đã được đặt lại thành công. Bạn sẽ được chuyển đến trang chủ để đăng nhập.
           </p>
           <Link
             href="/"
-            className="inline-block px-6 py-3 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg transition-colors"
+            className="inline-block px-6 py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors"
           >
             Về trang chủ
           </Link>
@@ -124,27 +124,27 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-gray-900 rounded-xl shadow-2xl border border-gray-800 overflow-hidden">
-        <div className="border-b border-gray-800 bg-green-950/20 py-4 px-6">
-          <h1 className="text-xl font-semibold text-gray-50 text-center">Đặt lại mật khẩu</h1>
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-card rounded-xl shadow-2xl border border-border overflow-hidden">
+        <div className="border-b border-border bg-primary/10 py-4 px-6">
+          <h1 className="text-xl font-semibold text-card-foreground text-center">Đặt lại mật khẩu</h1>
         </div>
 
         <div className="p-6 md:p-8">
           {error && (
-            <div className="mb-4 p-3 bg-red-950/50 border border-red-500/50 rounded-lg text-red-400 text-sm">
+            <div className="mb-4 p-3 bg-destructive/10 border border-destructive/50 rounded-lg text-destructive text-sm">
               {error}
             </div>
           )}
 
           {!token ? (
             <div className="text-center">
-              <p className="text-gray-400 mb-4">
+              <p className="text-muted-foreground mb-4">
                 Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.
               </p>
               <Link
                 href="/"
-                className="inline-block px-6 py-3 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg transition-colors"
+                className="inline-block px-6 py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors"
               >
                 Về trang chủ
               </Link>
@@ -152,11 +152,11 @@ export default function ResetPasswordPage() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                  Mật khẩu mới <span className="text-red-400">*</span>
+                <label htmlFor="password" className="block text-sm font-medium text-card-foreground mb-2">
+                  Mật khẩu mới <span className="text-destructive">*</span>
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
                     id="password"
                     name="password"
@@ -164,29 +164,29 @@ export default function ResetPasswordPage() {
                     value={password}
                     onChange={handlePasswordChange}
                     placeholder="Ít nhất 6 ký tự"
-                    className={`w-full pl-10 pr-12 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                      passwordErrors.password ? "border-red-500" : "border-gray-700"
+                    className={`w-full pl-10 pr-12 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
+                      passwordErrors.password ? "border-destructive" : "border-border"
                     }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-card-foreground transition-colors"
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
                 {passwordErrors.password && (
-                  <p className="mt-1 text-sm text-red-400">{passwordErrors.password}</p>
+                  <p className="mt-1 text-sm text-destructive">{passwordErrors.password}</p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
-                  Xác nhận mật khẩu <span className="text-red-400">*</span>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-card-foreground mb-2">
+                  Xác nhận mật khẩu <span className="text-destructive">*</span>
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
                     id="confirmPassword"
                     name="confirmPassword"
@@ -194,33 +194,33 @@ export default function ResetPasswordPage() {
                     value={confirmPassword}
                     onChange={handlePasswordChange}
                     placeholder="Nhập lại mật khẩu"
-                    className={`w-full pl-10 pr-12 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                      passwordErrors.confirmPassword ? "border-red-500" : "border-gray-700"
+                    className={`w-full pl-10 pr-12 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
+                      passwordErrors.confirmPassword ? "border-destructive" : "border-border"
                     }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-card-foreground transition-colors"
                   >
                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
                 {passwordErrors.confirmPassword && (
-                  <p className="mt-1 text-sm text-red-400">{passwordErrors.confirmPassword}</p>
+                  <p className="mt-1 text-sm text-destructive">{passwordErrors.confirmPassword}</p>
                 )}
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? "Đang đặt lại..." : "Đặt lại mật khẩu"}
               </button>
 
-              <p className="text-center text-sm text-gray-400">
-                <Link href="/" className="text-green-400 hover:text-green-300 font-medium transition-colors">
+              <p className="text-center text-sm text-muted-foreground">
+                <Link href="/" className="text-primary hover:text-primary-dark font-medium transition-colors">
                   Về trang chủ
                 </Link>
               </p>

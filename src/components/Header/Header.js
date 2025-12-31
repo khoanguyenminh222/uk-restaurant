@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { Utensils, Home, BookOpen, Phone, ShoppingCart, User, Menu as MenuIcon, X, LogOut, UserCircle, History, Shield } from "lucide-react"
 import { getCartItemCount } from "@/utils/cart"
 import { getUser, clearUser } from "@/utils/user"
+import ThemeToggle from "@/components/ThemeToggle/ThemeToggle"
 
 export default function Header({ onCartClick, onLoginClick, onProfileClick, onOrderHistoryClick }) {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -142,8 +143,8 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? "bg-gray-950/95 backdrop-blur-md shadow-lg shadow-black/50" : "bg-transparent"
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-background ${
+        isScrolled ? "bg-background/95 backdrop-blur-md shadow-lg shadow-black/10" : "bg-transparent"
       }`}
     >
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-visible">
@@ -151,11 +152,11 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
           {/* Logo */}
           <button
             onClick={() => scrollToSection("home")}
-            className="flex cursor-pointer items-center gap-2 text-xl sm:text-2xl md:text-3xl font-bold font-display text-green-600 hover:text-green-500 hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-950 rounded-lg px-2 py-1 shrink-0"
+            className="flex cursor-pointer items-center gap-2 text-xl sm:text-2xl md:text-3xl font-bold font-display text-primary hover:text-primary-light hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded-lg px-2 py-1 shrink-0"
             aria-label="UK Restaurant - Về trang chủ"
           >
-            <Utensils className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 shrink-0" />
-            <span className="bg-linear-to-r from-green-600 to-green-400 bg-clip-text text-transparent whitespace-nowrap">
+            <Utensils className="w-6 h-6 sm:w-8 sm:h-8 text-primary shrink-0" />
+            <span className="text-primary whitespace-nowrap linear-to-r from-primary to-primary-light">
               UK Restaurant
             </span>
           </button>
@@ -168,10 +169,10 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
-                  className={`px-4 py-2.5 rounded-lg font-medium cursor-pointer transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-950 flex items-center gap-2 ${
+                  className={`px-4 py-2.5 rounded-lg font-medium cursor-pointer transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background flex items-center gap-2 ${
                     activeSection === item.id
-                      ? "text-green-400 bg-green-950/30 relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-linear-to-r after:from-green-500 after:to-green-400"
-                      : "text-gray-300 hover:text-green-400 hover:bg-green-950/20"
+                      ? "text-primary bg-muted relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-linear-to-r after:from-primary after:to-primary-light"
+                      : "text-foreground hover:text-primary hover:bg-muted"
                   }`}
                   aria-current={activeSection === item.id ? "page" : undefined}
                 >
@@ -184,15 +185,20 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
 
           {/* Cart Icon & Login Button */}
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+            {/* Theme Toggle */}
+            <div className="hidden md:block">
+              <ThemeToggle />
+            </div>
+
             {/* Cart Icon */}
             <button
               onClick={onCartClick}
-              className="relative p-2 rounded-lg cursor-pointer text-gray-300 hover:text-green-400 hover:bg-green-950/30 hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-950 shrink-0"
+              className="relative p-2 rounded-lg cursor-pointer text-foreground hover:text-primary hover:bg-muted hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background shrink-0"
               aria-label={`Giỏ hàng (${cartCount} sản phẩm)`}
             >
               <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center bg-linear-to-r from-green-600 to-green-500 text-white text-xs font-semibold rounded-full animate-pulse">
+                <span className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center bg-linear-to-r from-primary to-primary-light text-primary-foreground text-xs font-semibold rounded-full animate-pulse">
                   {cartCount > 99 ? '99+' : cartCount}
                 </span>
               )}
@@ -213,7 +219,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
                     }
                     setIsUserMenuOpen(!isUserMenuOpen)
                   }}
-                  className="flex items-center gap-2 px-3 py-2 cursor-pointer text-gray-300 hover:text-green-400 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-950 rounded-lg"
+                  className="flex items-center gap-2 px-3 py-2 cursor-pointer text-foreground hover:text-primary transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded-lg"
                   aria-label="Menu người dùng"
                   aria-expanded={isUserMenuOpen}
                 >
@@ -225,17 +231,17 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
                 {isUserMenuOpen && (
                   <div 
                     ref={dropdownRef}
-                    className="fixed w-56 bg-gray-900 border border-gray-800 rounded-lg shadow-lg z-50"
+                    className="fixed w-56 bg-card border border-border rounded-lg shadow-lg z-50"
                     style={{
                       top: `${dropdownPosition.top}px`,
                       right: `${dropdownPosition.right}px`
                     }}
                   >
                     <div className="py-2">
-                      <div className="px-4 py-2 border-b border-gray-800">
-                        <p className="text-sm font-medium text-gray-300">{user.name}</p>
+                      <div className="px-4 py-2 border-b border-border">
+                        <p className="text-sm font-medium text-card-foreground">{user.name}</p>
                         {user.phone && (
-                          <p className="text-xs text-gray-500">{user.phone}</p>
+                          <p className="text-xs text-muted-foreground">{user.phone}</p>
                         )}
                       </div>
                       
@@ -245,7 +251,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
                             setIsUserMenuOpen(false)
                             onProfileClick()
                           }}
-                          className="w-full cursor-pointer flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:text-green-400 hover:bg-green-950/20 transition-colors"
+                          className="w-full cursor-pointer flex items-center gap-3 px-4 py-2 text-sm text-card-foreground hover:text-primary hover:bg-muted transition-colors"
                         >
                           <UserCircle className="w-4 h-4" />
                           Thông tin tài khoản
@@ -258,7 +264,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
                             setIsUserMenuOpen(false)
                             onOrderHistoryClick()
                           }}
-                          className="w-full cursor-pointer flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:text-green-400 hover:bg-green-950/20 transition-colors"
+                          className="w-full cursor-pointer flex items-center gap-3 px-4 py-2 text-sm text-card-foreground hover:text-primary hover:bg-muted transition-colors"
                         >
                           <History className="w-4 h-4" />
                           Lịch sử đơn hàng
@@ -270,17 +276,17 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
                         <a
                           href="/admin/dashboard"
                           onClick={() => setIsUserMenuOpen(false)}
-                          className="w-full cursor-pointer flex items-center gap-3 px-4 py-2 text-sm text-blue-400 hover:text-blue-300 hover:bg-blue-950/20 transition-colors"
+                          className="w-full cursor-pointer flex items-center gap-3 px-4 py-2 text-sm text-info hover:text-info/80 hover:bg-muted transition-colors"
                         >
                           <Shield className="w-4 h-4" />
                           Admin Panel
                         </a>
                       )}
                       
-                      <div className="border-t border-gray-800 mt-2 pt-2">
+                      <div className="border-t border-border mt-2 pt-2">
                         <button
                           onClick={handleLogout}
-                          className="w-full cursor-pointer flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-950/20 transition-colors"
+                          className="w-full cursor-pointer flex items-center gap-3 px-4 py-2 text-sm text-destructive hover:text-destructive/80 hover:bg-muted transition-colors"
                         >
                           <LogOut className="w-4 h-4" />
                           Đăng xuất
@@ -294,7 +300,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
               onLoginClick && (
                 <button
                   onClick={onLoginClick}
-                  className="hidden md:flex items-center gap-2 px-3 py-2 cursor-pointer text-gray-300 hover:text-green-400 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-950 rounded-lg"
+                  className="hidden md:flex items-center gap-2 px-3 py-2 cursor-pointer text-foreground hover:text-primary transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded-lg"
                   aria-label="Đăng nhập"
                 >
                   <User className="w-5 h-5 shrink-0" />
@@ -306,7 +312,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 rounded-lg cursor-pointer text-gray-200 hover:text-green-400 hover:bg-green-950/30 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-950 shrink-0"
+              className="md:hidden p-2 rounded-lg cursor-pointer text-foreground hover:text-primary hover:bg-muted transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background shrink-0"
               aria-label={isMenuOpen ? "Đóng menu" : "Mở menu"}
               aria-expanded={isMenuOpen}
               aria-controls="mobile-menu"
@@ -320,7 +326,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
       {/* Mobile Menu */}
       <div
         id="mobile-menu"
-        className={`md:hidden cursor-pointer bg-gray-900 border-t border-gray-800 transition-all duration-300 ease-in-out overflow-hidden ${
+        className={`md:hidden cursor-pointer bg-card border-t border-border transition-all duration-300 ease-in-out overflow-hidden ${
           isMenuOpen ? "opacity-100" : "max-h-0 opacity-0"
         }`}
       >
@@ -332,10 +338,10 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
               <button
                 key={item.id}
                 onClick={() => scrollToSection(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium cursor-pointer transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900 ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium cursor-pointer transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background ${
                   activeSection === item.id
-                    ? "text-green-400 bg-green-950/30"
-                    : "text-gray-300 hover:text-green-400 hover:bg-green-950/20"
+                    ? "text-primary bg-muted"
+                    : "text-foreground hover:text-primary hover:bg-muted"
                 }`}
                 aria-current={activeSection === item.id ? "page" : undefined}
               >
@@ -354,7 +360,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
                     setIsMenuOpen(false)
                     onProfileClick()
                   }}
-                  className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-gray-300 hover:text-green-400 hover:bg-green-950/20 transition-all duration-300"
+                  className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-foreground hover:text-primary hover:bg-muted transition-all duration-300"
                 >
                   <UserCircle className="w-5 h-5" />
                   <span>Thông tin tài khoản</span>
@@ -366,7 +372,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
                     setIsMenuOpen(false)
                     onOrderHistoryClick()
                   }}
-                  className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-gray-300 hover:text-green-400 hover:bg-green-950/20 transition-all duration-300"
+                  className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-foreground hover:text-primary hover:bg-muted transition-all duration-300"
                 >
                   <History className="w-5 h-5" />
                   <span>Lịch sử đơn hàng</span>
@@ -378,7 +384,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
                 <a
                   href="/admin/dashboard"
                   onClick={() => setIsMenuOpen(false)}
-                  className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-blue-400 hover:text-blue-300 hover:bg-blue-950/20 transition-all duration-300"
+                  className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-info hover:text-info/80 hover:bg-muted transition-all duration-300"
                 >
                   <Shield className="w-5 h-5" />
                   <span>Admin Panel</span>
@@ -390,25 +396,34 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
                   handleLogout()
                   setIsMenuOpen(false)
                 }}
-                className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-red-400 hover:text-red-300 hover:bg-red-950/20 transition-all duration-300"
+                className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-destructive hover:text-destructive/80 hover:bg-muted transition-all duration-300"
               >
                 <LogOut className="w-5 h-5" />
                 <span>Đăng xuất</span>
               </button>
             </>
           ) : (
-            onLoginClick && (
-              <button
-                onClick={() => {
-                  setIsMenuOpen(false)
-                  onLoginClick()
-                }}
-                className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-gray-300 hover:text-green-400 hover:bg-green-950/20 transition-all duration-300"
-              >
-                <User className="w-5 h-5" />
-                <span>Đăng nhập</span>
-              </button>
-            )
+            <>
+              {/* Theme Toggle in Mobile Menu */}
+              <div className="px-4 py-3 border-t border-border">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-foreground">Giao diện</span>
+                  <ThemeToggle />
+                </div>
+              </div>
+              {onLoginClick && (
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false)
+                    onLoginClick()
+                  }}
+                  className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-foreground hover:text-primary hover:bg-muted transition-all duration-300"
+                >
+                  <User className="w-5 h-5" />
+                  <span>Đăng nhập</span>
+                </button>
+              )}
+            </>
           )}
           </nav>
         </div>

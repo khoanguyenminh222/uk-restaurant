@@ -134,21 +134,21 @@ export default function OrderHistory({ isOpen, onClose }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div
         ref={modalRef}
-        className="relative w-full max-w-4xl bg-gray-900 rounded-xl shadow-2xl border border-gray-800 overflow-hidden animate-fade-in-up max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-4xl bg-card rounded-xl shadow-2xl border border-border overflow-hidden animate-fade-in-up max-h-[90vh] overflow-y-auto"
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors z-10"
+          className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors z-10"
           aria-label="Đóng"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Header */}
-        <div className="border-b border-gray-800 bg-green-950/20 py-4 px-6">
-          <h2 className="text-xl font-semibold text-gray-50 flex items-center gap-2">
-            <Package className="w-6 h-6 text-green-400" />
+        <div className="border-b border-border bg-primary/10 py-4 px-6">
+          <h2 className="text-xl font-semibold text-card-foreground flex items-center gap-2">
+            <Package className="w-6 h-6 text-primary" />
             Lịch sử đơn hàng
           </h2>
         </div>
@@ -157,26 +157,26 @@ export default function OrderHistory({ isOpen, onClose }) {
         <div className="p-6 space-y-6">
           {/* Error Message */}
           {error && (
-            <div className="p-3 bg-red-950/50 border border-red-500/50 rounded-lg text-red-400 text-sm">
+            <div className="p-3 bg-destructive/10 border border-destructive/50 rounded-lg text-destructive text-sm">
               {error}
             </div>
           )}
 
           {/* Order History Section */}
-          <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+          <div className="bg-muted/50 rounded-lg p-6 border border-border">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-50 flex items-center gap-2">
-                <Package className="w-5 h-5 text-green-400" />
+              <h3 className="text-lg font-semibold text-card-foreground flex items-center gap-2">
+                <Package className="w-5 h-5 text-primary" />
                 Danh sách đơn hàng
               </h3>
               
               {/* Status Filter */}
               <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4 text-gray-400" />
+                <Filter className="w-4 h-4 text-muted-foreground" />
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-3 py-1.5 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="px-3 py-1.5 bg-input border border-border rounded-lg text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   <option value="all">Tất cả</option>
                   <option value="pending">Chờ xử lý</option>
@@ -193,12 +193,12 @@ export default function OrderHistory({ isOpen, onClose }) {
             {/* Orders List */}
             {ordersLoading ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-green-400" />
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
               </div>
             ) : filteredOrders.length === 0 ? (
               <div className="text-center py-12">
-                <Package className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400">
+                <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">
                   {statusFilter === "all" ? "Chưa có đơn hàng nào" : "Không có đơn hàng với trạng thái này"}
                 </p>
               </div>
@@ -207,13 +207,13 @@ export default function OrderHistory({ isOpen, onClose }) {
                 {filteredOrders.map((order) => (
                   <div
                     key={order.order_id}
-                    className="bg-gray-900/50 rounded-lg p-4 border border-gray-700 hover:border-green-500/50 transition-colors"
+                    className="bg-card/50 rounded-lg p-4 border border-border hover:border-primary/50 transition-colors"
                   >
                     <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                       {/* Order Info */}
                       <div className="flex-1 space-y-2">
                         <div className="flex items-center gap-3 flex-wrap">
-                          <span className="text-sm font-mono font-semibold text-green-400">
+                          <span className="text-sm font-mono font-semibold text-primary">
                             {order.order_id}
                           </span>
                           <span
@@ -223,7 +223,7 @@ export default function OrderHistory({ isOpen, onClose }) {
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-4 text-sm text-gray-400">
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <Calendar className="w-4 h-4" />
                             {formatDate(order.created_at)}
@@ -239,20 +239,20 @@ export default function OrderHistory({ isOpen, onClose }) {
                           {order.items && order.items.length > 0 ? (
                             // Multiple items
                             order.items.map((item, index) => (
-                              <p key={index} className="text-sm text-gray-300">
+                              <p key={index} className="text-sm text-card-foreground">
                                 {item.tên_món} × {item.quantity} - {formatCurrency(item.giá * item.quantity)}
                               </p>
                             ))
                           ) : (
                             // Single item
-                            <p className="text-sm text-gray-300">
+                            <p className="text-sm text-card-foreground">
                               {order.tên_món} × {order.quantity || 1} - {formatCurrency((order.giá || 0) * (order.quantity || 1))}
                             </p>
                           )}
                         </div>
 
                         {order.notes && (
-                          <p className="text-xs text-gray-500 mt-2">
+                          <p className="text-xs text-muted-foreground mt-2">
                             Ghi chú: {order.notes}
                           </p>
                         )}

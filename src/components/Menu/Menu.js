@@ -135,18 +135,18 @@ export default function Menu({ onAddToCart, onOrderClick }) {
   }
 
   return (
-    <section id="menu" className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-gray-900">
+    <section id="menu" className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-muted">
       <div className="max-w-7xl mx-auto">
         {/* Section Header */}
         <div
           ref={headerRef}
           className={`text-center mb-12 scroll-fade-in ${isHeaderVisible ? "visible" : ""}`}
         >
-          <h2 className="text-3xl md:text-4xl font-bold font-display text-gray-50 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold font-display text-foreground mb-4">
             Thực đơn
           </h2>
-          <div className="w-16 h-1 bg-green-500 mx-auto mb-6 rounded-full"></div>
-          <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed">
+          <div className="w-16 h-1 bg-primary mx-auto mb-6 rounded-full"></div>
+          <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Khám phá thực đơn đa dạng với các món ăn được chế biến từ nguyên liệu tươi ngon nhất
           </p>
         </div>
@@ -158,18 +158,18 @@ export default function Menu({ onAddToCart, onOrderClick }) {
         >
           <div className="max-w-md mx-auto">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={handleSearchChange}
                 placeholder="Tìm kiếm món ăn..."
-                className="w-full pl-10 pr-10 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                className="w-full pl-10 pr-10 py-3 bg-card border border-border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
               />
               {searchQuery && (
                 <button
                   onClick={handleClearSearch}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors"
                   aria-label="Xóa tìm kiếm"
                 >
                   <X className="w-4 h-4" />
@@ -177,7 +177,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
               )}
             </div>
             {searchQuery && (
-              <p className="mt-2 text-sm text-gray-400 text-center">
+              <p className="mt-2 text-sm text-muted-foreground text-center">
                 Tìm thấy {filteredFoods.length} món{filteredFoods.length !== 1 ? "" : ""}
               </p>
             )}
@@ -190,10 +190,10 @@ export default function Menu({ onAddToCart, onOrderClick }) {
             {/* Tab "Tất cả" - Luôn hiển thị */}
             <button
               onClick={() => handleCategoryClick(null)}
-              className={`px-4 md:px-6 py-2 md:py-2.5 rounded-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900 ${
+              className={`px-4 md:px-6 py-2 md:py-2.5 rounded-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background ${
                 selectedCategory === null
-                  ? "bg-green-600 text-white shadow-md shadow-green-500/30"
-                  : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-gray-50"
+                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/30"
+                  : "bg-card text-card-foreground hover:bg-muted border border-border"
               }`}
             >
               Tất cả
@@ -205,10 +205,10 @@ export default function Menu({ onAddToCart, onOrderClick }) {
                 <button
                   key={category.id || category._id}
                   onClick={() => handleCategoryClick(category.id)}
-                  className={`px-4 md:px-6 py-2 md:py-2.5 rounded-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900 transform hover:scale-105 active:scale-95 category-tab ${
+                  className={`px-4 md:px-6 py-2 md:py-2.5 rounded-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transform hover:scale-105 active:scale-95 category-tab ${
                     selectedCategory === category.id
-                      ? "bg-green-600 text-white shadow-md shadow-green-500/30 scale-105"
-                      : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-gray-50"
+                      ? "bg-primary text-primary-foreground shadow-md shadow-primary/30 scale-105"
+                      : "bg-card text-card-foreground hover:bg-muted border border-border"
                   }`}
                   style={{
                     ...(category.color ? { borderColor: category.color } : {}),
@@ -220,7 +220,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
                 </button>
               ))
             ) : (
-              <div className="text-gray-400 text-sm">Đang tải danh mục...</div>
+              <div className="text-muted-foreground text-sm">Đang tải danh mục...</div>
             )}
           </div>
         </div>
@@ -229,8 +229,8 @@ export default function Menu({ onAddToCart, onOrderClick }) {
         {loading && (
           <div className="flex items-center justify-center py-20">
             <div className="flex flex-col items-center gap-4">
-              <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-gray-400">Đang tải thực đơn...</p>
+              <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-muted-foreground">Đang tải thực đơn...</p>
             </div>
           </div>
         )}
@@ -239,14 +239,14 @@ export default function Menu({ onAddToCart, onOrderClick }) {
         {error && !loading && (
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
-              <p className="text-red-400 mb-4">{error}</p>
+              <p className="text-destructive mb-4">{error}</p>
               <button
                 onClick={() => {
                   setError(null)
                   setSelectedCategory(null)
                   window.location.reload()
                 }}
-                className="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg transition-colors"
+                className="px-6 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors"
               >
                 Thử lại
               </button>
@@ -287,14 +287,14 @@ export default function Menu({ onAddToCart, onOrderClick }) {
               ) : (
                 <div className="flex items-center justify-center py-20">
                   <div className="text-center animate-fade-in">
-                    <p className="text-gray-400 text-lg mb-2">
+                    <p className="text-muted-foreground text-lg mb-2">
                       {searchQuery
                         ? `Không tìm thấy món nào với từ khóa "${searchQuery}"`
                         : selectedCategory
                         ? "Không có món nào trong danh mục này"
                         : "Chưa có món ăn nào"}
                     </p>
-                    <p className="text-gray-500 text-sm">
+                    <p className="text-muted-foreground text-sm">
                       {searchQuery
                         ? "Thử tìm kiếm với từ khóa khác hoặc xóa bộ lọc"
                         : "Vui lòng quay lại sau hoặc thử danh mục khác"}
@@ -328,12 +328,12 @@ export default function Menu({ onAddToCart, onOrderClick }) {
               ) : (
                 <div className="col-span-full flex items-center justify-center py-20">
                   <div className="text-center animate-fade-in">
-                    <p className="text-gray-400 text-lg mb-2">
+                    <p className="text-muted-foreground text-lg mb-2">
                       {selectedCategory
                         ? "Không có món nào trong danh mục này"
                         : "Chưa có món ăn nào"}
                     </p>
-                    <p className="text-gray-500 text-sm">
+                    <p className="text-muted-foreground text-sm">
                       Vui lòng quay lại sau hoặc thử danh mục khác
                     </p>
                   </div>
@@ -351,7 +351,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
               >
                 <button
                   onClick={handleShowMore}
-                  className="px-8 py-3 bg-green-600 hover:bg-green-500 text-white rounded-lg font-medium transition-all duration-300 shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 transform hover:-translate-y-0.5 hover:scale-105 active:scale-95"
+                  className="px-8 py-3 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg font-medium transition-all duration-300 shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transform hover:-translate-y-0.5 hover:scale-105 active:scale-95"
                 >
                   <span className="flex items-center gap-2">
                     {showAll ? (

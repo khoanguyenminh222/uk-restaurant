@@ -300,12 +300,12 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
         <div
           ref={modalRef}
-          className="relative w-full max-w-2xl bg-gray-900 rounded-xl shadow-2xl border border-gray-800 overflow-hidden animate-fade-in-up"
+          className="relative w-full max-w-2xl bg-card rounded-xl shadow-2xl border border-border overflow-hidden animate-fade-in-up"
         >
           {/* Close Button */}
           <button
             onClick={handleCloseSuccess}
-            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors z-10"
+            className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors z-10"
             aria-label="Đóng"
           >
             <X className="w-5 h-5" />
@@ -315,23 +315,23 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
           <div className="p-8 text-center">
             {/* Success Icon */}
             <div className="flex justify-center mb-6">
-              <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center">
-                <CheckCircle className="w-12 h-12 text-green-400" />
+              <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-12 h-12 text-primary" />
               </div>
             </div>
 
             {/* Success Title */}
-            <h2 className="text-2xl font-bold text-gray-50 mb-2">Đặt món thành công!</h2>
-            <p className="text-gray-400 mb-6">Đơn hàng của bạn đã được tiếp nhận và đang được xử lý.</p>
+            <h2 className="text-2xl font-bold text-card-foreground mb-2">Đặt món thành công!</h2>
+            <p className="text-muted-foreground mb-6">Đơn hàng của bạn đã được tiếp nhận và đang được xử lý.</p>
 
             {/* Order ID */}
-            <div className="bg-gray-800/50 rounded-lg p-6 mb-6 border border-gray-700">
-              <p className="text-sm text-gray-400 mb-2">Mã đơn hàng của bạn</p>
+            <div className="bg-muted rounded-lg p-6 mb-6 border border-border">
+              <p className="text-sm text-muted-foreground mb-2">Mã đơn hàng của bạn</p>
               <div className="flex items-center justify-center gap-3">
-                <p className="text-2xl font-mono font-bold text-green-400">{successOrder.order_id}</p>
+                <p className="text-2xl font-mono font-bold text-primary">{successOrder.order_id}</p>
                 <button
                   onClick={() => copyToClipboard(successOrder.order_id)}
-                  className="p-2 text-gray-400 hover:text-green-400 hover:bg-gray-700 rounded-lg transition-colors"
+                  className="p-2 text-muted-foreground hover:text-primary hover:bg-muted rounded-lg transition-colors"
                   title="Sao chép mã đơn hàng"
                 >
                   <Copy className="w-5 h-5" />
@@ -340,20 +340,20 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
             </div>
 
             {/* Track Order Link */}
-            <div className="bg-gray-800/50 rounded-lg p-6 mb-6 border border-gray-700">
-              <p className="text-sm text-gray-400 mb-3">Theo dõi đơn hàng</p>
+            <div className="bg-muted rounded-lg p-6 mb-6 border border-border">
+              <p className="text-sm text-muted-foreground mb-3">Theo dõi đơn hàng</p>
               <div className="flex items-center justify-center gap-3 mb-4">
                 <a
                   href={trackOrderUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-green-400 hover:text-green-300 font-medium break-all text-sm"
+                  className="text-primary hover:text-primary-light font-medium break-all text-sm"
                 >
                   {trackOrderUrl}
                 </a>
                 <button
                   onClick={() => copyToClipboard(trackOrderUrl)}
-                  className="p-2 text-gray-400 hover:text-green-400 hover:bg-gray-700 rounded-lg transition-colors shrink-0"
+                  className="p-2 text-muted-foreground hover:text-primary hover:bg-muted rounded-lg transition-colors shrink-0"
                   title="Sao chép link"
                 >
                   <Copy className="w-5 h-5" />
@@ -363,7 +363,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                 href={trackOrderUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors"
               >
                 <ExternalLink className="w-5 h-5" />
                 Mở trang theo dõi đơn hàng
@@ -371,7 +371,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
             </div>
 
             {/* Info */}
-            <p className="text-sm text-gray-400 mb-6">
+            <p className="text-sm text-muted-foreground mb-6">
               Chúng tôi đã gửi thông tin đơn hàng đến email của bạn (nếu bạn đã đăng nhập).
               <br />
               Bạn có thể sử dụng mã đơn hàng hoặc link trên để theo dõi trạng thái đơn hàng.
@@ -380,7 +380,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
             {/* Close Button */}
             <button
               onClick={handleCloseSuccess}
-              className="w-full py-3 bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded-lg transition-colors"
+              className="w-full py-3 bg-muted hover:bg-muted/80 text-card-foreground font-semibold rounded-lg transition-colors"
             >
               Đóng
             </button>
@@ -395,21 +395,21 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div
         ref={modalRef}
-        className="relative w-full max-w-2xl bg-gray-900 rounded-xl shadow-2xl border border-gray-800 overflow-hidden animate-fade-in-up max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-2xl bg-card rounded-xl shadow-2xl border border-border overflow-hidden animate-fade-in-up max-h-[90vh] overflow-y-auto"
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors z-10"
+          className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors z-10"
           aria-label="Đóng"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Header */}
-        <div className="border-b border-gray-800 bg-green-950/20 py-4 px-6">
-          <h2 className="text-xl font-semibold text-gray-50 flex items-center gap-2">
-            <ShoppingBag className="w-6 h-6 text-green-400" />
+        <div className="border-b border-border bg-primary/10 py-4 px-6">
+          <h2 className="text-xl font-semibold text-card-foreground flex items-center gap-2">
+            <ShoppingBag className="w-6 h-6 text-primary" />
             Đặt món
           </h2>
         </div>
@@ -418,21 +418,21 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
         <div className="p-6">
           {/* Error Message */}
           {error && (
-            <div className="mb-4 p-3 bg-red-950/50 border border-red-500/50 rounded-lg text-red-400 text-sm">
+            <div className="mb-4 p-3 bg-destructive/10 border border-destructive/50 rounded-lg text-destructive text-sm">
               {error}
             </div>
           )}
 
           {/* Order Summary */}
-          <div className="mb-6 bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-            <h3 className="text-sm font-semibold text-gray-300 mb-3">Đơn hàng của bạn</h3>
+          <div className="mb-6 bg-muted rounded-lg p-4 border border-border">
+            <h3 className="text-sm font-semibold text-card-foreground mb-3">Đơn hàng của bạn</h3>
             
             {/* Items List */}
             <div className="space-y-3 mb-4">
               {orderItems.map((item, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-3 bg-gray-900/50 rounded-lg p-3"
+                  className="flex items-center gap-3 bg-card rounded-lg p-3"
                 >
                   {item.image && (
                     <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0">
@@ -445,12 +445,12 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-50 truncate">{item.name}</p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-sm font-medium text-card-foreground truncate">{item.name}</p>
+                    <p className="text-xs text-muted-foreground">
                       {formatCurrency(item.price)} × {item.quantity || 1}
                     </p>
                   </div>
-                  <p className="text-sm font-semibold text-green-400 shrink-0">
+                  <p className="text-sm font-semibold text-primary shrink-0">
                     {formatCurrency((item.price || 0) * (item.quantity || 1))}
                   </p>
                 </div>
@@ -458,14 +458,14 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
             </div>
 
             {/* Summary */}
-            <div className="border-t border-gray-700 pt-3 space-y-2">
+            <div className="border-t border-border pt-3 space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Tổng số lượng:</span>
-                <span className="text-gray-50 font-medium">{totalQuantity} món</span>
+                <span className="text-muted-foreground">Tổng số lượng:</span>
+                <span className="text-card-foreground font-medium">{totalQuantity} món</span>
               </div>
               <div className="flex justify-between text-lg">
-                <span className="text-gray-50 font-semibold">Tổng tiền:</span>
-                <span className="text-green-400 font-bold">{formatCurrency(totalPrice)}</span>
+                <span className="text-card-foreground font-semibold">Tổng tiền:</span>
+                <span className="text-primary font-bold">{formatCurrency(totalPrice)}</span>
               </div>
             </div>
           </div>
@@ -474,11 +474,11 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Customer Name */}
             <div>
-              <label htmlFor="customer_name" className="block text-sm font-medium text-gray-300 mb-2">
-                Tên người đặt <span className="text-red-400">*</span>
+              <label htmlFor="customer_name" className="block text-sm font-medium text-card-foreground mb-2">
+                Tên người đặt <span className="text-destructive">*</span>
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <input
                   id="customer_name"
                   name="customer_name"
@@ -486,23 +486,23 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                   value={formData.customer_name}
                   onChange={handleChange}
                   placeholder="Nguyễn Văn A"
-                  className={`w-full pl-10 pr-4 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                    errors.customer_name ? "border-red-500" : "border-gray-700"
+                  className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
+                    errors.customer_name ? "border-destructive" : "border-border"
                   }`}
                 />
               </div>
               {errors.customer_name && (
-                <p className="mt-1 text-sm text-red-400">{errors.customer_name}</p>
+                <p className="mt-1 text-sm text-destructive">{errors.customer_name}</p>
               )}
             </div>
 
             {/* Customer Phone */}
             <div>
-              <label htmlFor="customer_phone" className="block text-sm font-medium text-gray-300 mb-2">
-                Số điện thoại <span className="text-red-400">*</span>
+              <label htmlFor="customer_phone" className="block text-sm font-medium text-card-foreground mb-2">
+                Số điện thoại <span className="text-destructive">*</span>
               </label>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <input
                   id="customer_phone"
                   name="customer_phone"
@@ -510,23 +510,23 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                   value={formData.customer_phone}
                   onChange={handleChange}
                   placeholder="0901234567"
-                  className={`w-full pl-10 pr-4 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                    errors.customer_phone ? "border-red-500" : "border-gray-700"
+                  className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
+                    errors.customer_phone ? "border-destructive" : "border-border"
                   }`}
                 />
               </div>
               {errors.customer_phone && (
-                <p className="mt-1 text-sm text-red-400">{errors.customer_phone}</p>
+                <p className="mt-1 text-sm text-destructive">{errors.customer_phone}</p>
               )}
             </div>
 
             {/* Customer Address */}
             <div>
-              <label htmlFor="customer_address" className="block text-sm font-medium text-gray-300 mb-2">
-                Địa chỉ giao hàng <span className="text-red-400">*</span>
+              <label htmlFor="customer_address" className="block text-sm font-medium text-card-foreground mb-2">
+                Địa chỉ giao hàng <span className="text-destructive">*</span>
               </label>
               <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <input
                   id="customer_address"
                   name="customer_address"
@@ -534,23 +534,23 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                   value={formData.customer_address}
                   onChange={handleChange}
                   placeholder="123 Đường ABC, Quận XYZ"
-                  className={`w-full pl-10 pr-4 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                    errors.customer_address ? "border-red-500" : "border-gray-700"
+                  className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
+                    errors.customer_address ? "border-destructive" : "border-border"
                   }`}
                 />
               </div>
               {errors.customer_address && (
-                <p className="mt-1 text-sm text-red-400">{errors.customer_address}</p>
+                <p className="mt-1 text-sm text-destructive">{errors.customer_address}</p>
               )}
             </div>
 
             {/* Notes */}
             <div>
-              <label htmlFor="notes" className="block text-sm font-medium text-gray-300 mb-2">
-                Ghi chú <span className="text-gray-500 text-xs">(Tùy chọn)</span>
+              <label htmlFor="notes" className="block text-sm font-medium text-card-foreground mb-2">
+                Ghi chú <span className="text-muted-foreground text-xs">(Tùy chọn)</span>
               </label>
               <div className="relative">
-                <FileText className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                <FileText className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
                 <textarea
                   id="notes"
                   name="notes"
@@ -558,7 +558,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                   onChange={handleChange}
                   placeholder="Ghi chú thêm cho đơn hàng..."
                   rows={3}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+                  className="w-full pl-10 pr-4 py-3 bg-input border border-border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                 />
               </div>
             </div>
@@ -567,7 +567,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>

@@ -1,6 +1,41 @@
 @import "tailwindcss";
 
+/* Light Theme (Default) */
 :root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --card: #ffffff;
+  --card-foreground: #171717;
+  --popover: #ffffff;
+  --popover-foreground: #171717;
+  --primary: #16a34a;
+  --primary-dark: #15803d;
+  --primary-light: #4ade80;
+  --primary-foreground: #ffffff;
+  --secondary: #059669;
+  --secondary-dark: #047857;
+  --secondary-light: #10b981;
+  --secondary-foreground: #ffffff;
+  --muted: #f5f5f5;
+  --muted-foreground: #525252;
+  --accent: #16a34a;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #e5e5e5;
+  --input: #f5f5f5;
+  --ring: #16a34a;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --info: #3b82f6;
+  --radius: 0.625rem;
+  --hero-gradient-from: #f0fdf4;
+  --hero-gradient-via: #ffffff;
+  --hero-gradient-to: #ffffff;
+}
+
+/* Dark Theme */
+.dark {
   --background: #0a0a0a;
   --foreground: #fafafa;
   --card: #1f1f1f;
@@ -15,7 +50,7 @@
   --secondary-dark: #047857;
   --secondary-light: #10b981;
   --secondary-foreground: #fafafa;
-  --muted: #404040;
+  --muted: #1d1d1d;
   --muted-foreground: #a3a3a3;
   --accent: #16a34a;
   --accent-foreground: #fafafa;
@@ -27,32 +62,9 @@
   --success: #10b981;
   --warning: #f59e0b;
   --info: #3b82f6;
-  --radius: 0.625rem;
-}
-
-.dark {
-  --background: #0a0a0a;
-  --foreground: #fafafa;
-  --card: #1f1f1f;
-  --card-foreground: #fafafa;
-  --popover: #1f1f1f;
-  --popover-foreground: #fafafa;
-  --primary: #16a34a;
-  --primary-foreground: #fafafa;
-  --secondary: #059669;
-  --secondary-foreground: #fafafa;
-  --muted: #404040;
-  --muted-foreground: #a3a3a3;
-  --accent: #16a34a;
-  --accent-foreground: #fafafa;
-  --destructive: #ef4444;
-  --destructive-foreground: #fafafa;
-  --border: #404040;
-  --input: #404040;
-  --ring: #16a34a;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --info: #3b82f6;
+  --hero-gradient-from: rgba(5, 46, 22, 0.5);
+  --hero-gradient-via: #0a0a0a;
+  --hero-gradient-to: #0a0a0a;
 }
 
 @theme inline {
@@ -109,6 +121,7 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
   }
   body {
     @apply bg-background text-foreground;
@@ -119,21 +132,34 @@
   }
 }
 
-/* Custom scrollbar for dark theme */
+/* Custom scrollbar - Light theme (default) */
 ::-webkit-scrollbar {
   width: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #171717;
+  background: #f5f5f5;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #404040;
+  background: #d4d4d4;
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
+  background: #a3a3a3;
+}
+
+/* Custom scrollbar - Dark theme */
+.dark ::-webkit-scrollbar-track {
+  background: #171717;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #404040;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
   background: #525252;
 }
 

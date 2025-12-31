@@ -121,7 +121,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className="min-h-screen bg-background">
       <Header 
         onCartClick={handleCartClick} 
         onLoginClick={handleLoginClick}
@@ -131,10 +131,10 @@ export default function Home() {
       <main>
         <Hero />
         {/* Scroll Indicator */}
-        <div className="relative flex justify-center py-8 bg-gray-950">
+        <div className="relative flex justify-center py-8 bg-background">
           <div className="animate-bounce">
-            <div className="w-6 h-10 border-2 border-green-500 rounded-full flex items-start justify-center p-2">
-              <div className="w-1.5 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            <div className="w-6 h-10 border-2 border-primary rounded-full flex items-start justify-center p-2">
+              <div className="w-1.5 h-3 bg-primary rounded-full animate-pulse"></div>
             </div>
           </div>
         </div>
@@ -185,7 +185,7 @@ export default function Home() {
             '--delta-y': `${flyingItem.deltaY}px`,
           }}
         >
-          <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center shadow-lg border-2 border-white overflow-hidden">
+          <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-lg border-2 border-white overflow-hidden">
             {flyingItem.image ? (
               <img
                 src={flyingItem.image}

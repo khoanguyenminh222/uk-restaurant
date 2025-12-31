@@ -166,7 +166,7 @@ export default function AdminsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-green-400" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -175,13 +175,13 @@ export default function AdminsPage() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-50 flex items-center gap-2">
-          <Shield className="w-6 h-6 text-green-400" />
+        <h1 className="text-2xl font-bold text-card-foreground flex items-center gap-2">
+          <Shield className="w-6 h-6 text-primary" />
           Quản lý Admin
         </h1>
         <button
           onClick={() => setShowCreateForm(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg font-medium transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg font-medium transition-colors"
         >
           <UserPlus className="w-5 h-5" />
           Tạo Admin mới
@@ -190,12 +190,12 @@ export default function AdminsPage() {
 
       {/* Messages */}
       {error && (
-        <div className="p-3 bg-red-950/50 border border-red-500/50 rounded-lg text-red-400 text-sm">
+        <div className="p-3 bg-destructive/10 border border-destructive/50 rounded-lg text-destructive text-sm">
           {error}
         </div>
       )}
       {success && (
-        <div className="p-3 bg-green-950/50 border border-green-500/50 rounded-lg text-green-400 text-sm">
+        <div className="p-3 bg-success/10 border border-success/50 rounded-lg text-success text-sm">
           {success}
         </div>
       )}
@@ -203,7 +203,7 @@ export default function AdminsPage() {
       {/* Create Admin Form Modal */}
       {showCreateForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="relative w-full max-w-md bg-gray-900 rounded-xl shadow-2xl border border-gray-800 overflow-hidden">
+          <div className="relative w-full max-w-md bg-card rounded-xl shadow-2xl border border-border overflow-hidden">
             <button
               onClick={() => {
                 setShowCreateForm(false);
@@ -218,91 +218,91 @@ export default function AdminsPage() {
                 setFormErrors({});
                 setError('');
               }}
-              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors z-10"
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors z-10"
             >
               <X className="w-5 h-5" />
             </button>
 
             <div className="p-6">
-              <h2 className="text-xl font-semibold text-gray-50 mb-4 flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-green-400" />
+              <h2 className="text-xl font-semibold text-card-foreground mb-4 flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-primary" />
                 Tạo tài khoản Admin mới
               </h2>
 
               <form onSubmit={handleCreateAdmin} className="space-y-4">
                 {/* Phone */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Số điện thoại <span className="text-red-400">*</span>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Số điện thoại <span className="text-destructive">*</span>
                   </label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                     <input
                       type="tel"
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}
                       placeholder="0901234567"
-                      className={`w-full pl-10 pr-4 py-2 bg-gray-800 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                        formErrors.phone ? 'border-red-500' : 'border-gray-700'
+                      className={`w-full pl-10 pr-4 py-2 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
+                        formErrors.phone ? 'border-destructive' : 'border-border'
                       }`}
                     />
                   </div>
                   {formErrors.phone && (
-                    <p className="mt-1 text-sm text-red-400">{formErrors.phone}</p>
+                    <p className="mt-1 text-sm text-destructive">{formErrors.phone}</p>
                   )}
                 </div>
 
                 {/* Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Tên <span className="text-red-400">*</span>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Tên <span className="text-destructive">*</span>
                   </label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                     <input
                       type="text"
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
                       placeholder="Nguyễn Văn A"
-                      className={`w-full pl-10 pr-4 py-2 bg-gray-800 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                        formErrors.name ? 'border-red-500' : 'border-gray-700'
+                      className={`w-full pl-10 pr-4 py-2 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
+                        formErrors.name ? 'border-destructive' : 'border-border'
                       }`}
                     />
                   </div>
                   {formErrors.name && (
-                    <p className="mt-1 text-sm text-red-400">{formErrors.name}</p>
+                    <p className="mt-1 text-sm text-destructive">{formErrors.name}</p>
                   )}
                 </div>
 
                 {/* Email */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Email <span className="text-red-400">*</span>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Email <span className="text-destructive">*</span>
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                     <input
                       type="email"
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
                       placeholder="admin@ukrestaurant.com"
-                      className={`w-full pl-10 pr-4 py-2 bg-gray-800 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                        formErrors.email ? 'border-red-500' : 'border-gray-700'
+                      className={`w-full pl-10 pr-4 py-2 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
+                        formErrors.email ? 'border-destructive' : 'border-border'
                       }`}
                     />
                   </div>
                   {formErrors.email && (
-                    <p className="mt-1 text-sm text-red-400">{formErrors.email}</p>
+                    <p className="mt-1 text-sm text-destructive">{formErrors.email}</p>
                   )}
                 </div>
 
                 {/* Password */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Mật khẩu <span className="text-red-400">*</span>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Mật khẩu <span className="text-destructive">*</span>
                   </label>
                   <input
                     type="password"
@@ -310,19 +310,19 @@ export default function AdminsPage() {
                     value={formData.password}
                     onChange={handleInputChange}
                     placeholder="Ít nhất 6 ký tự"
-                    className={`w-full px-4 py-2 bg-gray-800 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                      formErrors.password ? 'border-red-500' : 'border-gray-700'
+                    className={`w-full px-4 py-2 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
+                      formErrors.password ? 'border-destructive' : 'border-border'
                     }`}
                   />
                   {formErrors.password && (
-                    <p className="mt-1 text-sm text-red-400">{formErrors.password}</p>
+                    <p className="mt-1 text-sm text-destructive">{formErrors.password}</p>
                   )}
                 </div>
 
                 {/* Confirm Password */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Xác nhận mật khẩu <span className="text-red-400">*</span>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Xác nhận mật khẩu <span className="text-destructive">*</span>
                   </label>
                   <input
                     type="password"
@@ -330,19 +330,19 @@ export default function AdminsPage() {
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
                     placeholder="Nhập lại mật khẩu"
-                    className={`w-full px-4 py-2 bg-gray-800 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                      formErrors.confirmPassword ? 'border-red-500' : 'border-gray-700'
+                    className={`w-full px-4 py-2 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
+                      formErrors.confirmPassword ? 'border-destructive' : 'border-border'
                     }`}
                   />
                   {formErrors.confirmPassword && (
-                    <p className="mt-1 text-sm text-red-400">{formErrors.confirmPassword}</p>
+                    <p className="mt-1 text-sm text-destructive">{formErrors.confirmPassword}</p>
                   )}
                 </div>
 
                 {/* Address */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Địa chỉ <span className="text-gray-500 text-xs">(Tùy chọn)</span>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Địa chỉ <span className="text-muted-foreground text-xs">(Tùy chọn)</span>
                   </label>
                   <input
                     type="text"
@@ -350,7 +350,7 @@ export default function AdminsPage() {
                     value={formData.address}
                     onChange={handleInputChange}
                     placeholder="123 Đường ABC"
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                   />
                 </div>
 
@@ -359,7 +359,7 @@ export default function AdminsPage() {
                   <button
                     type="submit"
                     disabled={creating}
-                    className="flex-1 py-2 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex-1 py-2 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {creating ? (
                       <>
@@ -385,7 +385,7 @@ export default function AdminsPage() {
                       setFormErrors({});
                       setError('');
                     }}
-                    className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                    className="px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors"
                   >
                     Hủy
                   </button>
@@ -397,32 +397,32 @@ export default function AdminsPage() {
       )}
 
       {/* Admins List */}
-      <div className="bg-gray-800/50 rounded-lg border border-gray-700 overflow-hidden">
+      <div className="bg-card/50 rounded-lg border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-900/50">
+            <thead className="bg-muted/50">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-300">Tên</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-300">Số điện thoại</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-300">Email</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-300">Vai trò</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-300">Ngày tạo</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-300">Đăng nhập cuối</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Tên</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Số điện thoại</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Email</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Vai trò</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Ngày tạo</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Đăng nhập cuối</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-700">
+            <tbody className="divide-y divide-border">
               {admins.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan="6" className="px-4 py-8 text-center text-muted-foreground">
                     Chưa có admin nào
                   </td>
                 </tr>
               ) : (
                 admins.map((admin) => (
-                  <tr key={admin._id} className="hover:bg-gray-800/50 transition-colors">
-                    <td className="px-4 py-3 text-sm text-gray-50">{admin.name}</td>
-                    <td className="px-4 py-3 text-sm text-gray-300">{admin.phone}</td>
-                    <td className="px-4 py-3 text-sm text-gray-300">{admin.email}</td>
+                  <tr key={admin._id} className="hover:bg-muted/50 transition-colors">
+                    <td className="px-4 py-3 text-sm text-card-foreground">{admin.name}</td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground">{admin.phone}</td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground">{admin.email}</td>
                     <td className="px-4 py-3">
                       <span
                         className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
@@ -439,10 +439,10 @@ export default function AdminsPage() {
                         {admin.role === 'super_admin' ? 'Super Admin' : 'Admin'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-400">
+                    <td className="px-4 py-3 text-sm text-muted-foreground">
                       {formatDate(admin.created_at)}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-400">
+                    <td className="px-4 py-3 text-sm text-muted-foreground">
                       {formatDate(admin.last_login)}
                     </td>
                   </tr>
