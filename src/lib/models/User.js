@@ -9,6 +9,9 @@ export const UserSchema = {
   email: String, // required for registration, unique
   password: String, // required for registration (hashed)
   address: String, // optional
+  email_verified: Boolean, // false by default
+  verification_code: String, // 6-digit code
+  verification_code_expires: Date, // expires in 15 minutes
   created_at: Date,
   last_login: Date,
 };

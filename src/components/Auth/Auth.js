@@ -5,12 +5,18 @@ import { X, Eye, EyeOff, Mail, Phone, User, MapPin, Lock } from "lucide-react"
 import { saveUser } from "@/utils/user"
 
 export default function Auth({ isOpen, onClose, initialTab = "login" }) {
-  const [activeTab, setActiveTab] = useState(initialTab) // "login" or "register"
+  const [activeTab, setActiveTab] = useState(initialTab) // "login" or "register" or "verify"
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
+  const [verificationCode, setVerificationCode] = useState(["", "", "", "", "", ""])
+  const [resendCooldown, setResendCooldown] = useState(0)
+  const [registeredUser, setRegisteredUser] = useState(null) // Lưu thông tin user sau khi đăng ký
+  const [showChangeEmail, setShowChangeEmail] = useState(false) // Hiển thị form đổi email
+  const [newEmail, setNewEmail] = useState("") // Email mới
+  const [emailError, setEmailError] = useState("") // Lỗi email
   const modalRef = useRef(null)
 
   // Login form state
@@ -59,8 +65,23 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
       setError("")
       setLoginErrors({})
       setRegisterErrors({})
+      setVerificationCode(["", "", "", "", "", ""])
+      setRegisteredUser(null)
+      setShowChangeEmail(false)
+      setNewEmail("")
+      setEmailError("")
     }
   }, [isOpen, initialTab])
+
+  // Cooldown timer for resend email
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => {
+        setResendCooldown(resendCooldown - 1)
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [resendCooldown])
 
   // Validate phone format (Vietnamese)
   const validatePhone = (phone) => {
@@ -176,6 +197,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
           name: data.data.name,
           email: data.data.email,
           address: data.data.address || "",
+          email_verified: data.email_verified || false,
         }
         saveUser(userData)
 
@@ -185,7 +207,43 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
         // Reload page to update header
         window.location.reload()
       } else {
-        setError(data.error || "Đăng nhập thất bại")
+        // If email not verified, switch to verification tab
+        if (data.email_not_verified && data.email) {
+          setRegisteredUser({
+            phone: loginForm.phone.replace(/\s+/g, ""),
+            email: data.email,
+            name: data.user?.name || "", // Get name from user data if available
+            password: loginForm.password, // Save password for auto login after verification
+          })
+          setActiveTab("verify")
+          setResendCooldown(60) // Cooldown 60 giây
+          setError("")
+          
+          // Auto resend verification email
+          try {
+            const resendResponse = await fetch("/api/auth/resend-verification", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                phone: loginForm.phone.replace(/\s+/g, ""),
+              }),
+            })
+            const resendData = await resendResponse.json()
+            if (resendData.success) {
+              setError("") // Clear error, show success message
+              // Success message will be shown in verification screen
+            } else {
+              setError(resendData.error || "Không thể gửi lại email. Vui lòng thử lại sau.")
+            }
+          } catch (resendErr) {
+            console.error("Resend verification error:", resendErr)
+            setError("Không thể gửi lại email. Vui lòng thử lại sau.")
+          }
+        } else {
+          setError(data.error || "Đăng nhập thất bại")
+        }
       }
     } catch (err) {
       console.error("Login error:", err)
@@ -223,44 +281,238 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
       const data = await response.json()
 
       if (data.success) {
-        // Auto login after registration
-        const loginResponse = await fetch("/api/auth/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            phone: registerForm.phone.replace(/\s+/g, ""),
-            password: registerForm.password,
-          }),
+        // Lưu thông tin user để dùng cho verification
+        setRegisteredUser({
+          phone: registerForm.phone.replace(/\s+/g, ""),
+          email: registerForm.email.trim().toLowerCase(),
+          name: registerForm.name.trim(),
+          password: registerForm.password, // Lưu tạm để auto login sau khi verify
         })
-
-        const loginData = await loginResponse.json()
-
-        if (loginData.success) {
-          // Save user to localStorage
-          const userData = {
-            user_id: loginData.data.user_id,
-            phone: loginData.data.phone,
-            name: loginData.data.name,
-            email: loginData.data.email,
-            address: loginData.data.address || "",
-          }
-          saveUser(userData)
-
-          // Close modal
-          onClose()
-
-          // Reload page to update header
-          window.location.reload()
-        } else {
-          setError("Đăng ký thành công nhưng đăng nhập thất bại. Vui lòng đăng nhập lại.")
-        }
+        
+        // Chuyển sang màn hình verification
+        setActiveTab("verify")
+        setError("")
+        setResendCooldown(60) // Cooldown 60 giây
       } else {
         setError(data.error || "Đăng ký thất bại")
       }
     } catch (err) {
       console.error("Register error:", err)
+      setError("Lỗi kết nối. Vui lòng thử lại sau.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Handle verification code change
+  const handleVerificationCodeChange = (index, value) => {
+    // Only allow numeric input
+    if (value && !/^\d$/.test(value)) {
+      return
+    }
+
+    const newCode = [...verificationCode]
+    newCode[index] = value
+    setVerificationCode(newCode)
+
+    // Auto-focus next input if digit entered
+    if (value && index < 5) {
+      const nextInput = document.getElementById(`verification-code-${index + 1}`)
+      if (nextInput) nextInput.focus()
+    }
+  }
+
+  // Handle paste verification code
+  const handleVerificationCodePaste = (e) => {
+    e.preventDefault()
+    const pastedData = e.clipboardData.getData("text").trim()
+    
+    // Only accept 6 digits
+    if (/^\d{6}$/.test(pastedData)) {
+      const digits = pastedData.split("")
+      setVerificationCode(digits)
+      
+      // Focus last input
+      const lastInput = document.getElementById(`verification-code-5`)
+      if (lastInput) lastInput.focus()
+    }
+  }
+
+  // Handle resend verification email
+  const handleResendVerification = async () => {
+    if (!registeredUser || !registeredUser.phone) {
+      setError("Không tìm thấy thông tin người dùng")
+      return
+    }
+
+    setLoading(true)
+    setError("")
+    
+    try {
+      const response = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phone: registeredUser.phone,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setResendCooldown(60) // Reset cooldown to 60 seconds
+        setError("") // Clear any errors
+        // Optionally show success message
+        alert("Đã gửi lại mã xác thực đến email của bạn")
+      } else {
+        setError(data.error || "Không thể gửi lại email. Vui lòng thử lại sau.")
+      }
+    } catch (err) {
+      console.error("Resend verification error:", err)
+      setError("Lỗi kết nối. Vui lòng thử lại sau.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Handle change email
+  const handleChangeEmail = async (e) => {
+    e.preventDefault()
+    setEmailError("")
+    setError("")
+
+    if (!registeredUser || !registeredUser.phone) {
+      setEmailError("Không tìm thấy thông tin người dùng")
+      return
+    }
+
+    if (!newEmail.trim()) {
+      setEmailError("Email là bắt buộc")
+      return
+    }
+
+    if (!validateEmail(newEmail.trim())) {
+      setEmailError("Email không hợp lệ")
+      return
+    }
+
+    setLoading(true)
+    try {
+      const response = await fetch("/api/auth/change-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phone: registeredUser.phone,
+          newEmail: newEmail.trim(),
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        // Update registeredUser with new email
+        setRegisteredUser({
+          ...registeredUser,
+          email: data.email,
+        })
+        setNewEmail("")
+        setShowChangeEmail(false)
+        setResendCooldown(60) // Reset cooldown
+        setError("") // Clear errors
+        setEmailError("") // Clear email errors
+        // Show success message
+        alert("Đã đổi email và gửi mã xác thực đến email mới")
+      } else {
+        setEmailError(data.error || "Không thể đổi email. Vui lòng thử lại sau.")
+      }
+    } catch (err) {
+      console.error("Change email error:", err)
+      setEmailError("Lỗi kết nối. Vui lòng thử lại sau.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Handle verify email
+  const handleVerifyEmail = async (e) => {
+    e.preventDefault()
+    setError("")
+
+    if (!registeredUser || !registeredUser.phone) {
+      setError("Không tìm thấy thông tin người dùng")
+      return
+    }
+
+    const code = verificationCode.join("")
+    if (code.length !== 6) {
+      setError("Vui lòng nhập đầy đủ 6 số")
+      return
+    }
+
+    setLoading(true)
+    try {
+      const response = await fetch("/api/auth/verify-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phone: registeredUser.phone,
+          code: code,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        // Auto login after successful verification
+        try {
+          const loginResponse = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              phone: registeredUser.phone,
+              password: registeredUser.password,
+            }),
+          })
+
+          const loginData = await loginResponse.json()
+
+          if (loginData.success) {
+            // Save user to localStorage
+            const userData = {
+              user_id: loginData.data.user_id,
+              phone: loginData.data.phone,
+              name: loginData.data.name,
+              email: loginData.data.email,
+              address: loginData.data.address || "",
+              email_verified: true,
+            }
+            saveUser(userData)
+
+            // Close modal
+            onClose()
+
+            // Reload page to update header
+            window.location.reload()
+          } else {
+            setError(loginData.error || "Xác thực thành công nhưng đăng nhập thất bại. Vui lòng đăng nhập lại.")
+          }
+        } catch (loginErr) {
+          console.error("Auto login error:", loginErr)
+          setError("Xác thực thành công nhưng đăng nhập thất bại. Vui lòng đăng nhập lại.")
+        }
+      } else {
+        setError(data.error || "Mã xác thực không đúng")
+      }
+    } catch (err) {
+      console.error("Verify email error:", err)
       setError("Lỗi kết nối. Vui lòng thử lại sau.")
     } finally {
       setLoading(false)
@@ -275,46 +527,46 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
         ref={modalRef}
         className="relative w-full max-w-md bg-gray-900 rounded-xl shadow-2xl border border-gray-800 overflow-hidden animate-fade-in-up"
       >
-        {/* Close Button */}
-        {/* <button
-          onClick={onClose}
-          className="absolute top-2 right-4 p-2 text-red-400 hover:text-red-500 hover:bg-gray-800 rounded-lg transition-colors z-10"
-          aria-label="Đóng"
-        >
-          <X className="w-5 h-5" />
-        </button> */}
+        {/* Tabs - Chỉ hiển thị khi không ở verification screen */}
+        {activeTab !== "verify" && (
+          <div className="flex border-b border-gray-800">
+            <button
+              onClick={() => {
+                setActiveTab("login")
+                setError("")
+                setLoginErrors({})
+              }}
+              className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${
+                activeTab === "login"
+                  ? "bg-green-600 text-white"
+                  : "text-gray-400 hover:text-white hover:bg-gray-800"
+              }`}
+            >
+              Đăng nhập
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab("register")
+                setError("")
+                setRegisterErrors({})
+              }}
+              className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${
+                activeTab === "register"
+                  ? "bg-green-600 text-white"
+                  : "text-gray-400 hover:text-white hover:bg-gray-800"
+              }`}
+            >
+              Đăng ký
+            </button>
+          </div>
+        )}
 
-        {/* Tabs */}
-        <div className="flex border-b border-gray-800">
-          <button
-            onClick={() => {
-              setActiveTab("login")
-              setError("")
-              setLoginErrors({})
-            }}
-            className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${
-              activeTab === "login"
-                ? "bg-green-600 text-white"
-                : "text-gray-400 hover:text-white hover:bg-gray-800"
-            }`}
-          >
-            Đăng nhập
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab("register")
-              setError("")
-              setRegisterErrors({})
-            }}
-            className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${
-              activeTab === "register"
-                ? "bg-green-600 text-white"
-                : "text-gray-400 hover:text-white hover:bg-gray-800"
-            }`}
-          >
-            Đăng ký
-          </button>
-        </div>
+        {/* Verification Header */}
+        {activeTab === "verify" && (
+          <div className="border-b border-gray-800 bg-green-950/20 py-4 px-6">
+            <h3 className="text-lg font-semibold text-gray-50 text-center">Xác thực email</h3>
+          </div>
+        )}
 
         {/* Content */}
         <div className="p-6 md:p-8">
@@ -610,6 +862,148 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                   Đăng nhập
                 </button>
               </p>
+            </form>
+          )}
+
+          {/* Verification Form */}
+          {activeTab === "verify" && registeredUser && (
+            <form onSubmit={handleVerifyEmail} className="space-y-6">
+              <div className="text-center">
+                <Mail className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-50 mb-2">Kiểm tra email của bạn</h3>
+                <p className="text-gray-400 text-sm mb-1">
+                  Chúng tôi đã gửi mã xác thực đến:
+                </p>
+                <p className="text-green-400 font-medium">{registeredUser.email}</p>
+                <p className="text-gray-500 text-xs mt-2">
+                  Vui lòng nhập mã 6 số để hoàn tất đăng ký
+                </p>
+                
+                {/* Change Email Button */}
+                {!showChangeEmail && (
+                  <button
+                    type="button"
+                    onClick={() => setShowChangeEmail(true)}
+                    className="mt-3 text-sm text-blue-400 hover:text-blue-300 font-medium transition-colors"
+                  >
+                    Đổi email khác
+                  </button>
+                )}
+              </div>
+
+              {/* Change Email Form */}
+              {showChangeEmail && (
+                <div className="border border-gray-700 rounded-lg p-4 bg-gray-800/50 space-y-3">
+                  <h4 className="text-sm font-medium text-gray-300 mb-2">Đổi email</h4>
+                  <div>
+                    <label htmlFor="new-email" className="block text-xs font-medium text-gray-400 mb-1">
+                      Email mới
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        id="new-email"
+                        type="email"
+                        value={newEmail}
+                        onChange={(e) => {
+                          setNewEmail(e.target.value)
+                          setEmailError("")
+                        }}
+                        placeholder="email@example.com"
+                        className={`w-full pl-10 pr-4 py-2 bg-gray-900 border rounded-lg text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                          emailError ? "border-red-500" : "border-gray-700"
+                        }`}
+                      />
+                    </div>
+                    {emailError && (
+                      <p className="mt-1 text-xs text-red-400">{emailError}</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleChangeEmail}
+                      disabled={loading}
+                      className="flex-1 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? "Đang xử lý..." : "Xác nhận"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowChangeEmail(false)
+                        setNewEmail("")
+                        setEmailError("")
+                      }}
+                      disabled={loading}
+                      className="flex-1 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Hủy
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Verification Code Inputs */}
+              <div className="flex justify-center gap-2">
+                {verificationCode.map((digit, index) => (
+                  <input
+                    key={index}
+                    id={`verification-code-${index}`}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleVerificationCodeChange(index, e.target.value)}
+                    onPaste={index === 0 ? handleVerificationCodePaste : undefined}
+                    onKeyDown={(e) => {
+                      if (e.key === "Backspace" && !digit && index > 0) {
+                        const prevInput = document.getElementById(`verification-code-${index - 1}`)
+                        if (prevInput) prevInput.focus()
+                      }
+                    }}
+                    className="w-12 h-14 text-center text-2xl font-bold bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  />
+                ))}
+              </div>
+
+              {/* Resend Email Button */}
+              <div className="text-center">
+                <p className="text-gray-400 text-sm mb-2">Không nhận được email?</p>
+                <button
+                  type="button"
+                  onClick={handleResendVerification}
+                  disabled={resendCooldown > 0 || loading}
+                  className="text-green-400 hover:text-green-300 text-sm font-medium transition-colors disabled:text-gray-600 disabled:cursor-not-allowed"
+                >
+                  {resendCooldown > 0
+                    ? `Gửi lại sau ${resendCooldown}s`
+                    : "Gửi lại email"}
+                </button>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={loading || verificationCode.join("").length !== 6}
+                className="w-full py-3 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? "Đang xác thực..." : "Xác thực"}
+              </button>
+
+              {/* Back to Register */}
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("register")
+                  setRegisteredUser(null)
+                  setVerificationCode(["", "", "", "", "", ""])
+                  setError("")
+                }}
+                className="w-full py-2 text-gray-400 hover:text-gray-300 text-sm transition-colors"
+              >
+                ← Thay đổi thông tin
+              </button>
             </form>
           )}
         </div>

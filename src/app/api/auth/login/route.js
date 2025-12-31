@@ -38,6 +38,22 @@ export async function POST(request) {
       );
     }
 
+    // Check if email is verified
+    if (!user.email_verified) {
+      // Return user info (without password) for verification screen
+      const { password, verification_code, verification_code_expires, ...userWithoutPassword } = user;
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Vui lòng xác thực email trước khi đăng nhập. Kiểm tra email của bạn để lấy mã xác thực.',
+          email_not_verified: true,
+          email: user.email,
+          user: userWithoutPassword // Include user info for verification screen
+        },
+        { status: 403 }
+      );
+    }
+
     // Update last_login
     await db.collection('users').updateOne(
       { _id: user._id },
@@ -45,12 +61,13 @@ export async function POST(request) {
     );
 
     // Return user without password
-    const { password, ...userWithoutPassword } = user;
+    const { password, verification_code, verification_code_expires, ...userWithoutPassword } = user;
 
     return NextResponse.json(
       {
         success: true,
         data: userWithoutPassword,
+        email_verified: user.email_verified || false,
       },
       { status: 200 }
     );

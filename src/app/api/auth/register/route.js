@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { validateUserRegistration } from '@/lib/models/User';
 import bcrypt from 'bcryptjs';
+import { sendVerificationEmail } from '@/lib/email';
 
 /**
  * POST /api/auth/register
@@ -46,6 +47,10 @@ export async function POST(request) {
     // Generate user_id (use phone as user_id)
     const user_id = body.phone;
 
+    // Generate 6-digit verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const verificationCodeExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
     // Create user object
     const user = {
       user_id,
@@ -54,12 +59,27 @@ export async function POST(request) {
       email: body.email.trim().toLowerCase(),
       password: hashedPassword,
       address: body.address?.trim() || '',
+      email_verified: false,
+      verification_code: verificationCode,
+      verification_code_expires: verificationCodeExpires,
       created_at: new Date(),
       last_login: null,
     };
 
     // Insert user
     const result = await db.collection('users').insertOne(user);
+
+    // Send verification email
+    try {
+      await sendVerificationEmail(
+        user.email,
+        user.name,
+        verificationCode
+      );
+    } catch (emailError) {
+      console.error('Error sending verification email:', emailError);
+      // Continue even if email fails (user can request resend later)
+    }
 
     // Return user without password
     const { password, ...userWithoutPassword } = user;
