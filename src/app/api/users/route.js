@@ -24,8 +24,8 @@ export async function GET(request) {
     const client = await clientPromise;
     const db = client.db('uk-restaurant');
 
-    // Build query
-    const query = { is_deleted: { $ne: true } }; // Exclude soft-deleted users
+    // Build query - include all users (including soft-deleted) for admin view
+    const query = {};
 
     if (role && role !== 'all') {
       query.role = role;

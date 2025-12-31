@@ -79,10 +79,12 @@ export default function RootLayout({ children }) {
             __html: `
               (function() {
                 const theme = localStorage.getItem('uk-restaurant-theme');
-                const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                const shouldBeDark = theme === 'dark' || (!theme && systemPrefersDark);
+                // Default to light theme if no saved theme
+                const shouldBeDark = theme === 'dark';
                 if (shouldBeDark) {
                   document.documentElement.classList.add('dark');
+                } else {
+                  document.documentElement.classList.add('light');
                 }
               })();
             `,

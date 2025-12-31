@@ -25,6 +25,9 @@ export async function GET(request) {
     const userId = searchParams.get('user_id');
     const status = searchParams.get('status');
     const search = searchParams.get('search');
+    const customerType = searchParams.get('customer_type');
+    const dateFrom = searchParams.get('date_from');
+    const dateTo = searchParams.get('date_to');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
 
@@ -46,12 +49,56 @@ export async function GET(request) {
         query.status = status;
       }
 
-      if (search) {
+      // Filter by customer type
+      if (customerType === 'logged_in') {
+        query.user_id = { $exists: true, $ne: null };
+      } else if (customerType === 'guest') {
         query.$or = [
-          { order_id: { $regex: search, $options: 'i' } },
-          { customer_name: { $regex: search, $options: 'i' } },
-          { customer_phone: { $regex: search, $options: 'i' } },
+          { user_id: { $exists: false } },
+          { user_id: null }
         ];
+      }
+
+      // Filter by date range
+      if (dateFrom || dateTo) {
+        query.created_at = {};
+        if (dateFrom) {
+          // Start of day
+          const fromDate = new Date(dateFrom);
+          fromDate.setHours(0, 0, 0, 0);
+          query.created_at.$gte = fromDate;
+        }
+        if (dateTo) {
+          // End of day
+          const toDate = new Date(dateTo);
+          toDate.setHours(23, 59, 59, 999);
+          query.created_at.$lte = toDate;
+        }
+      }
+
+      if (search) {
+        // If customer type filter already has $or, we need to combine
+        if (query.$or) {
+          // Customer type filter exists, combine with search
+          const customerTypeQuery = { $or: query.$or };
+          query.$and = [
+            customerTypeQuery,
+            {
+              $or: [
+                { order_id: { $regex: search, $options: 'i' } },
+                { customer_name: { $regex: search, $options: 'i' } },
+                { customer_phone: { $regex: search, $options: 'i' } },
+              ]
+            }
+          ];
+          delete query.$or;
+        } else {
+          query.$or = [
+            { order_id: { $regex: search, $options: 'i' } },
+            { customer_name: { $regex: search, $options: 'i' } },
+            { customer_phone: { $regex: search, $options: 'i' } },
+          ];
+        }
       }
     }
 

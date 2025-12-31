@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FolderOpen, Plus, Edit2, Trash2, Loader2, X, Palette, Search, ChevronDown } from 'lucide-react';
 
 export default function AdminCategories() {
@@ -19,6 +19,9 @@ export default function AdminCategories() {
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingCategoryId, setDeletingCategoryId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchCategories();
@@ -141,13 +144,17 @@ export default function AdminCategories() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa danh mục này?')) {
-      return;
-    }
+  const handleDelete = (id) => {
+    setDeletingCategoryId(id);
+    setShowDeleteModal(true);
+  };
 
+  const handleConfirmDelete = async () => {
+    if (!deletingCategoryId) return;
+
+    setDeleting(true);
     try {
-      const res = await fetch(`/api/categories/${id}`, {
+      const res = await fetch(`/api/categories/${deletingCategoryId}`, {
         method: 'DELETE',
       });
 
@@ -156,12 +163,16 @@ export default function AdminCategories() {
       if (data.success) {
         setSuccess('Xóa thành công!');
         fetchCategories();
+        setShowDeleteModal(false);
+        setDeletingCategoryId(null);
       } else {
         setError(data.error || 'Không thể xóa danh mục');
       }
     } catch (error) {
       console.error('Error deleting category:', error);
       setError('Lỗi khi xóa danh mục');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -409,8 +420,14 @@ export default function AdminCategories() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-lg max-w-md w-full p-6 border border-border relative">
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={handleCloseModal}
+        >
+          <div 
+            className="bg-card rounded-lg max-w-md w-full p-6 border border-border relative"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={handleCloseModal}
               className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors"
@@ -516,6 +533,49 @@ export default function AdminCategories() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => {
+            setShowDeleteModal(false);
+            setDeletingCategoryId(null);
+          }}
+        >
+          <div 
+            className="bg-card rounded-lg max-w-md w-full p-6 border border-border"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-xl font-bold text-card-foreground mb-4">Xác nhận xóa</h2>
+            <p className="text-card-foreground mb-6">
+              Bạn có chắc chắn muốn xóa danh mục{' '}
+              <span className="font-bold">
+                {deletingCategoryId && categories.find(c => (c.id === deletingCategoryId || c._id === deletingCategoryId))?.name}
+              </span>?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={handleConfirmDelete}
+                disabled={deleting}
+                className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {deleting ? 'Đang xóa...' : 'Xóa'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeletingCategoryId(null);
+                }}
+                disabled={deleting}
+                className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Hủy
+              </button>
+            </div>
           </div>
         </div>
       )}

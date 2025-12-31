@@ -27,6 +27,13 @@ export default function AdminLogin() {
         localStorage.removeItem('admin_logged_in');
       }
     }
+    
+    // Check for logout success message
+    const logoutMessage = localStorage.getItem('admin_logout_success_message');
+    if (logoutMessage) {
+      setToast({ message: logoutMessage, isVisible: true, type: 'success' });
+      localStorage.removeItem('admin_logout_success_message');
+    }
   }, [router]);
 
   const handleSubmit = async (e) => {
@@ -67,6 +74,9 @@ export default function AdminLogin() {
         // Lưu thông tin admin vào localStorage
         localStorage.setItem('admin_data', JSON.stringify(data.data));
         localStorage.setItem('admin_logged_in', 'true');
+        
+        // Save success message
+        localStorage.setItem('admin_login_success_message', 'Đăng nhập thành công!');
         
         // Redirect đến dashboard
         router.push('/admin/dashboard');
@@ -193,6 +203,13 @@ export default function AdminLogin() {
           </div>
         </div>
       </div>
+      
+      <Toast
+        message={toast.message}
+        isVisible={toast.isVisible}
+        onClose={() => setToast({ message: "", isVisible: false })}
+        type={toast.type || "success"}
+      />
     </div>
   );
 }

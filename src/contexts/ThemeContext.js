@@ -15,10 +15,9 @@ export function ThemeProvider({ children }) {
     // Load theme from localStorage
     const savedTheme = localStorage.getItem("uk-restaurant-theme")
     
-    // Check system preference if no saved theme
+    // Default to light theme if no saved theme
     if (!savedTheme) {
-      const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
-      const initialTheme = systemPrefersDark ? "dark" : "light"
+      const initialTheme = "light"
       setTheme(initialTheme)
       // Apply theme immediately to prevent flash
       applyTheme(initialTheme)

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { formatCurrency } from '@/utils/helpers';
 import { 
   Users, 
@@ -18,7 +18,8 @@ import {
   Shield,
   ShieldCheck,
   ShoppingCart,
-  DollarSign
+  DollarSign,
+  RotateCcw
 } from 'lucide-react';
 
 export default function AdminUsers() {
@@ -41,6 +42,11 @@ export default function AdminUsers() {
     role: 'user',
   });
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
+  
+  // Refs for modals
+  const detailModalRef = useRef(null);
+  const editModalRef = useRef(null);
+  const deleteModalRef = useRef(null);
 
   useEffect(() => {
     fetchUsers();
@@ -163,6 +169,38 @@ export default function AdminUsers() {
       setError('Lỗi khi xóa người dùng');
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleRestore = async (user) => {
+    if (!user) return;
+
+    setEditing(true);
+    try {
+      const response = await fetch(`/api/users/${user.user_id || user._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          is_deleted: false,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSuccess('Đã khôi phục người dùng thành công!');
+        fetchUsers();
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        setError(data.error || 'Không thể khôi phục người dùng');
+      }
+    } catch (err) {
+      console.error('Error restoring user:', err);
+      setError('Lỗi khi khôi phục người dùng');
+    } finally {
+      setEditing(false);
     }
   };
 
@@ -321,10 +359,18 @@ export default function AdminUsers() {
                 users.map((user) => {
                   const roleBadge = getRoleBadge(user.role);
                   const RoleIcon = roleBadge.icon;
+                  const isDeleted = user.is_deleted === true;
                   return (
-                    <tr key={user._id || user.user_id} className="hover:bg-muted/50 transition-colors">
+                    <tr key={user._id || user.user_id} className={`hover:bg-muted/50 transition-colors ${isDeleted ? 'opacity-60' : ''}`}>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-medium text-card-foreground">{user.name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-card-foreground">{user.name}</span>
+                          {isDeleted && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-red-500/20 text-red-600 border border-red-500/50">
+                              Đã xóa
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                         <a href={`tel:${user.phone}`} className="hover:text-primary">
@@ -364,20 +410,33 @@ export default function AdminUsers() {
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() => handleEdit(user)}
-                            className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                            aria-label="Sửa"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(user)}
-                            className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
-                            aria-label="Xóa"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {isDeleted ? (
+                            <button
+                              onClick={() => handleRestore(user)}
+                              className="p-2 text-green-600 hover:bg-green-500/10 rounded-lg transition-colors"
+                              aria-label="Khôi phục"
+                              disabled={editing}
+                            >
+                              <RotateCcw className="w-4 h-4" />
+                            </button>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => handleEdit(user)}
+                                className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                                aria-label="Sửa"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(user)}
+                                className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                                aria-label="Xóa"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -402,19 +461,25 @@ export default function AdminUsers() {
           users.map((user) => {
             const roleBadge = getRoleBadge(user.role);
             const RoleIcon = roleBadge.icon;
+            const isDeleted = user.is_deleted === true;
             return (
               <div
                 key={user._id || user.user_id}
-                className="bg-card rounded-lg border border-border p-4 space-y-3"
+                className={`bg-card rounded-lg border border-border p-4 space-y-3 ${isDeleted ? 'opacity-60' : ''}`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
                       <span className="text-sm font-semibold text-card-foreground">{user.name}</span>
                       <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full border shrink-0 ${roleBadge.color}`}>
                         <RoleIcon className="w-3 h-3" />
                         {roleBadge.label}
                       </span>
+                      {isDeleted && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-red-500/20 text-red-600 border border-red-500/50 shrink-0">
+                          Đã xóa
+                        </span>
+                      )}
                     </div>
                     <div className="space-y-1 text-sm text-muted-foreground">
                       <p className="flex items-center gap-2">
@@ -461,19 +526,32 @@ export default function AdminUsers() {
                     <Eye className="w-4 h-4" />
                     <span>Chi tiết</span>
                   </button>
-                  <button
-                    onClick={() => handleEdit(user)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                    <span>Sửa</span>
-                  </button>
-                  <button
-                    onClick={() => handleDelete(user)}
-                    className="px-4 py-2 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {isDeleted ? (
+                    <button
+                      onClick={() => handleRestore(user)}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-500/10 hover:bg-green-500/20 text-green-600 rounded-lg transition-colors font-medium"
+                      disabled={editing}
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      <span>Khôi phục</span>
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => handleEdit(user)}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                        <span>Sửa</span>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(user)}
+                        className="px-4 py-2 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             );
@@ -506,8 +584,18 @@ export default function AdminUsers() {
 
       {/* Detail Modal */}
       {showDetailModal && selectedUser && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => {
+            setShowDetailModal(false);
+            setSelectedUser(null);
+          }}
+        >
+          <div 
+            ref={detailModalRef}
+            className="bg-card rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto relative"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={() => {
                 setShowDetailModal(false);
@@ -596,8 +684,19 @@ export default function AdminUsers() {
 
       {/* Edit Modal */}
       {showEditModal && selectedUser && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-lg max-w-md w-full p-6 border border-border relative">
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => {
+            setShowEditModal(false);
+            setSelectedUser(null);
+            setEditFormData({ name: '', email: '', address: '', role: 'user' });
+          }}
+        >
+          <div 
+            ref={editModalRef}
+            className="bg-card rounded-lg max-w-md w-full p-6 border border-border relative"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={() => {
                 setShowEditModal(false);
@@ -700,8 +799,18 @@ export default function AdminUsers() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && selectedUser && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-lg max-w-md w-full p-6 border border-border relative">
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => {
+            setShowDeleteModal(false);
+            setSelectedUser(null);
+          }}
+        >
+          <div 
+            ref={deleteModalRef}
+            className="bg-card rounded-lg max-w-md w-full p-6 border border-border relative"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={() => {
                 setShowDeleteModal(false);

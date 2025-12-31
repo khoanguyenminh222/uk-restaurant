@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { LayoutDashboard, FolderOpen, UtensilsCrossed, Loader2, ArrowRight } from 'lucide-react';
+import Toast from '@/components/Toast/Toast';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -10,9 +11,17 @@ export default function AdminDashboard() {
     food: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState({ message: "", isVisible: false });
 
   useEffect(() => {
     fetchStats();
+    
+    // Check for login success message
+    const loginMessage = localStorage.getItem('admin_login_success_message');
+    if (loginMessage) {
+      setToast({ message: loginMessage, isVisible: true, type: 'success' });
+      localStorage.removeItem('admin_login_success_message');
+    }
   }, []);
 
   const fetchStats = async () => {
@@ -113,6 +122,13 @@ export default function AdminDashboard() {
           </Link>
         </div>
       </div>
+      
+      <Toast
+        message={toast.message}
+        isVisible={toast.isVisible}
+        onClose={() => setToast({ message: "", isVisible: false })}
+        type={toast.type || "success"}
+      />
     </div>
   );
 }

@@ -71,13 +71,12 @@ export async function PUT(request, { params }) {
     const client = await clientPromise;
     const db = client.db('uk-restaurant');
 
-    // Find user
+    // Find user (including soft-deleted for admin to restore)
     const user = await db.collection('users').findOne({ 
       $or: [
         { user_id: id },
         { _id: id }
-      ],
-      is_deleted: { $ne: true }
+      ]
     });
 
     if (!user) {
@@ -91,6 +90,11 @@ export async function PUT(request, { params }) {
     const updateData = {
       updated_at: new Date(),
     };
+
+    // Allow restoring deleted users
+    if (body.is_deleted !== undefined) {
+      updateData.is_deleted = body.is_deleted === true;
+    }
 
     // Only allow updating specific fields
     if (body.name !== undefined) {

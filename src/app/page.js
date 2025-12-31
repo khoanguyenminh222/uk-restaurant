@@ -27,6 +27,20 @@ export default function Home() {
   const cartIconRef = useRef(null)
   const [flyingItem, setFlyingItem] = useState(null)
 
+  // Check for login/logout success messages
+  useEffect(() => {
+    const loginMessage = localStorage.getItem('login_success_message')
+    const logoutMessage = localStorage.getItem('logout_success_message')
+    
+    if (loginMessage) {
+      setToast({ message: loginMessage, isVisible: true, type: 'success' })
+      localStorage.removeItem('login_success_message')
+    } else if (logoutMessage) {
+      setToast({ message: logoutMessage, isVisible: true, type: 'success' })
+      localStorage.removeItem('logout_success_message')
+    }
+  }, [])
+
   const handleCartClick = () => {
     setIsCartOpen(true)
   }

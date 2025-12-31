@@ -20,12 +20,23 @@ export async function POST(request) {
       );
     }
 
-    // Find user by phone
-    const user = await db.collection('users').findOne({ phone: body.phone });
+    // Find user by phone (exclude soft-deleted users)
+    const user = await db.collection('users').findOne({ 
+      phone: body.phone,
+      is_deleted: { $ne: true }
+    });
     if (!user) {
       return NextResponse.json(
         { success: false, error: 'Số điện thoại hoặc mật khẩu không đúng' },
         { status: 401 }
+      );
+    }
+
+    // Check if account is deleted
+    if (user.is_deleted) {
+      return NextResponse.json(
+        { success: false, error: 'Tài khoản của bạn đã bị xóa. Vui lòng liên hệ quản trị viên.' },
+        { status: 403 }
       );
     }
 

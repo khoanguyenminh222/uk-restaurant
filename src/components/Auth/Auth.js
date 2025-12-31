@@ -218,6 +218,9 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
           localStorage.setItem('admin_logged_in', 'true')
         }
 
+        // Save success message to show after reload
+        localStorage.setItem('login_success_message', 'Đăng nhập thành công!')
+
         // Close modal
         onClose()
 

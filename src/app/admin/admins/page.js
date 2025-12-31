@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { UserPlus, X, Mail, Phone, User, Shield, ShieldCheck, Loader2, Edit2, Trash2, Search, Filter, ChevronDown, Eye } from 'lucide-react';
 
 export default function AdminsPage() {
@@ -34,6 +34,10 @@ export default function AdminsPage() {
     address: '',
   });
   const [formErrors, setFormErrors] = useState({});
+  
+  // Refs for modals
+  const editModalRef = useRef(null);
+  const deleteModalRef = useRef(null);
 
   useEffect(() => {
     // Get current admin info
@@ -727,8 +731,19 @@ export default function AdminsPage() {
 
       {/* Edit Modal */}
       {showEditModal && editingAdmin && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-lg max-w-md w-full p-6 border border-border relative">
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => {
+            setShowEditModal(false);
+            setEditingAdmin(null);
+            setEditFormData({ name: '', email: '', address: '', role: 'admin' });
+          }}
+        >
+          <div 
+            ref={editModalRef}
+            className="bg-card rounded-lg max-w-md w-full p-6 border border-border relative"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={() => {
                 setShowEditModal(false);
@@ -830,8 +845,18 @@ export default function AdminsPage() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && editingAdmin && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-lg max-w-md w-full p-6 border border-border relative">
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => {
+            setShowDeleteModal(false);
+            setEditingAdmin(null);
+          }}
+        >
+          <div 
+            ref={deleteModalRef}
+            className="bg-card rounded-lg max-w-md w-full p-6 border border-border relative"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={() => {
                 setShowDeleteModal(false);

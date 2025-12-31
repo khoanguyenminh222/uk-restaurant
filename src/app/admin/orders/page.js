@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { formatCurrency } from '@/utils/helpers';
 import { 
   ShoppingCart, 
@@ -19,7 +19,10 @@ import {
   Clock,
   Package,
   Truck,
-  CheckCircle
+  CheckCircle,
+  User,
+  UserX,
+  ArrowRight
 } from 'lucide-react';
 
 const STATUS_CONFIG = {
@@ -43,6 +46,17 @@ const STATUS_OPTIONS = [
   { value: 'cancelled', label: 'Đã hủy' },
 ];
 
+// Thứ tự trạng thái (ngoại trừ cancelled)
+const STATUS_FLOW = ['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'completed'];
+
+// Lấy trạng thái tiếp theo
+const getNextStatus = (currentStatus) => {
+  if (currentStatus === 'cancelled') return null;
+  const currentIndex = STATUS_FLOW.indexOf(currentStatus);
+  if (currentIndex === -1 || currentIndex === STATUS_FLOW.length - 1) return null;
+  return STATUS_FLOW[currentIndex + 1];
+};
+
 export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -50,15 +64,26 @@ export default function AdminOrders() {
   const [success, setSuccess] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [customerTypeFilter, setCustomerTypeFilter] = useState('all');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
+  const [confirmMessage, setConfirmMessage] = useState('');
   const [editingStatus, setEditingStatus] = useState('');
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
+  
+  // Refs for modals
+  const detailModalRef = useRef(null);
+  const editModalRef = useRef(null);
+  const confirmModalRef = useRef(null);
 
   useEffect(() => {
     fetchOrders();
-  }, [statusFilter, pagination.page]);
+  }, [statusFilter, customerTypeFilter, dateFrom, dateTo, pagination.page]);
 
   const fetchOrders = async () => {
     try {
@@ -70,6 +95,18 @@ export default function AdminOrders() {
 
       if (statusFilter !== 'all') {
         params.append('status', statusFilter);
+      }
+
+      if (customerTypeFilter !== 'all') {
+        params.append('customer_type', customerTypeFilter);
+      }
+
+      if (dateFrom) {
+        params.append('date_from', dateFrom);
+      }
+
+      if (dateTo) {
+        params.append('date_to', dateTo);
       }
 
       if (searchTerm) {
@@ -102,12 +139,10 @@ export default function AdminOrders() {
     fetchOrders();
   };
 
-  const handleUpdateStatus = async (orderId, newStatus) => {
-    if (!confirm(`Bạn có chắc chắn muốn đổi status sang "${STATUS_CONFIG[newStatus]?.label}"?`)) {
-      return;
-    }
-
-    try {
+  const handleUpdateStatus = (orderId, newStatus) => {
+    setConfirmMessage(`Bạn có chắc chắn muốn đổi status sang "${STATUS_CONFIG[newStatus]?.label}"?`);
+    setConfirmAction(() => async () => {
+      try {
       const response = await fetch(`/api/orders/${orderId}`, {
         method: 'PUT',
         headers: {
@@ -119,44 +154,61 @@ export default function AdminOrders() {
         }),
       });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (data.success) {
-        setSuccess(`Đã cập nhật status thành công!`);
-        fetchOrders();
-        setShowEditModal(false);
-        setTimeout(() => setSuccess(''), 3000);
-      } else {
-        setError(data.error || 'Không thể cập nhật status');
+        if (data.success) {
+          setSuccess(`Đã cập nhật status thành công!`);
+          fetchOrders();
+          setTimeout(() => setSuccess(''), 3000);
+        } else {
+          setError(data.error || 'Không thể cập nhật status');
+        }
+      } catch (err) {
+        console.error('Error updating order:', err);
+        setError('Lỗi khi cập nhật đơn hàng');
       }
-    } catch (err) {
-      console.error('Error updating order:', err);
-      setError('Lỗi khi cập nhật đơn hàng');
-    }
+    });
+    setShowConfirmModal(true);
   };
 
 
-  const handleDelete = async (orderId) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa đơn hàng này?')) {
-      return;
+  const handleQuickUpdateStatus = (order) => {
+    const nextStatus = getNextStatus(order.status);
+    if (nextStatus) {
+      handleUpdateStatus(order.order_id, nextStatus);
     }
+  };
 
-    try {
+  const handleDelete = (orderId) => {
+    setConfirmMessage('Bạn có chắc chắn muốn xóa đơn hàng này?');
+    setConfirmAction(() => async () => {
+      try {
       const response = await fetch(`/api/orders/${orderId}`, {
         method: 'DELETE',
       });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (data.success) {
-        setSuccess('Đã xóa đơn hàng thành công!');
-        fetchOrders();
-      } else {
-        setError(data.error || 'Không thể xóa đơn hàng');
+        if (data.success) {
+          setSuccess('Đã xóa đơn hàng thành công!');
+          fetchOrders();
+        } else {
+          setError(data.error || 'Không thể xóa đơn hàng');
+        }
+      } catch (err) {
+        console.error('Error deleting order:', err);
+        setError('Lỗi khi xóa đơn hàng');
       }
-    } catch (err) {
-      console.error('Error deleting order:', err);
-      setError('Lỗi khi xóa đơn hàng');
+    });
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmAction = async () => {
+    if (confirmAction) {
+      await confirmAction();
+      setShowConfirmModal(false);
+      setConfirmAction(null);
+      setConfirmMessage('');
     }
   };
 
@@ -272,6 +324,52 @@ export default function AdminOrders() {
           >
             Tìm kiếm
           </button>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-4">
+          {/* Date From */}
+          <div className="relative flex-1">
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => {
+                setDateFrom(e.target.value);
+                setPagination(prev => ({ ...prev, page: 1 }));
+              }}
+              className="w-full pl-10 pr-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Từ ngày"
+            />
+          </div>
+
+          {/* Date To */}
+          <div className="relative flex-1">
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => {
+                setDateTo(e.target.value);
+                setPagination(prev => ({ ...prev, page: 1 }));
+              }}
+              className="w-full pl-10 pr-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Đến ngày"
+            />
+          </div>
+
+          {/* Clear Date Filter Button */}
+          {(dateFrom || dateTo) && (
+            <button
+              onClick={() => {
+                setDateFrom('');
+                setDateTo('');
+                setPagination(prev => ({ ...prev, page: 1 }));
+              }}
+              className="px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium whitespace-nowrap"
+            >
+              Xóa lọc ngày
+            </button>
+          )}
 
           {/* Status Filter */}
           <div className="relative">
@@ -289,6 +387,24 @@ export default function AdminOrders() {
                   {option.label}
                 </option>
               ))}
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          </div>
+
+          {/* Customer Type Filter */}
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <select
+              value={customerTypeFilter}
+              onChange={(e) => {
+                setCustomerTypeFilter(e.target.value);
+                setPagination(prev => ({ ...prev, page: 1 }));
+              }}
+              className="pl-10 pr-8 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring appearance-none"
+            >
+              <option value="all">Tất cả KH</option>
+              <option value="logged_in">Đã đăng nhập</option>
+              <option value="guest">Vãng lai</option>
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
           </div>
@@ -317,7 +433,10 @@ export default function AdminOrders() {
                   Tổng tiền
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Status
+                  Trạng thái
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Loại KH
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Thao tác
@@ -327,7 +446,7 @@ export default function AdminOrders() {
             <tbody className="divide-y divide-border">
               {orders.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-8 text-center text-muted-foreground">
+                  <td colSpan="8" className="px-6 py-8 text-center text-muted-foreground">
                     {searchTerm || statusFilter !== 'all' ? 'Không tìm thấy đơn hàng' : 'Chưa có đơn hàng nào'}
                   </td>
                 </tr>
@@ -363,10 +482,35 @@ export default function AdminOrders() {
                         {formatCurrency(order.total_price || 0)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full border ${STATUS_CONFIG[order.status]?.color || 'bg-gray-500/20 text-gray-600 border-gray-500/50'}`}>
-                          <StatusIcon className="w-3 h-3" />
-                          {STATUS_CONFIG[order.status]?.label || order.status}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full border ${STATUS_CONFIG[order.status]?.color || 'bg-gray-500/20 text-gray-600 border-gray-500/50'}`}>
+                            <StatusIcon className="w-3 h-3" />
+                            {STATUS_CONFIG[order.status]?.label || order.status}
+                          </span>
+                          {order.status !== 'cancelled' && getNextStatus(order.status) && (
+                            <button
+                              onClick={() => handleQuickUpdateStatus(order)}
+                              className="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                              title={`Chuyển sang ${STATUS_CONFIG[getNextStatus(order.status)]?.label}`}
+                              aria-label="Cập nhật trạng thái"
+                            >
+                              <ArrowRight className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {order.user_id ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-600 border border-blue-500/50">
+                            <User className="w-3 h-3" />
+                            Đăng nhập
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-gray-500/20 text-gray-600 border border-gray-500/50">
+                            <UserX className="w-3 h-3" />
+                            Vãng lai
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end gap-2">
@@ -421,12 +565,35 @@ export default function AdminOrders() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
                       <span className="text-sm font-semibold text-card-foreground">{order.order_id}</span>
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full border shrink-0 ${STATUS_CONFIG[order.status]?.color || 'bg-gray-500/20 text-gray-600 border-gray-500/50'}`}>
-                        <StatusIcon className="w-3 h-3" />
-                        {STATUS_CONFIG[order.status]?.label || order.status}
-                      </span>
+                      <div className="flex items-center gap-1">
+                        <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full border shrink-0 ${STATUS_CONFIG[order.status]?.color || 'bg-gray-500/20 text-gray-600 border-gray-500/50'}`}>
+                          <StatusIcon className="w-3 h-3" />
+                          {STATUS_CONFIG[order.status]?.label || order.status}
+                        </span>
+                        {order.status !== 'cancelled' && getNextStatus(order.status) && (
+                          <button
+                            onClick={() => handleQuickUpdateStatus(order)}
+                            className="p-1 text-primary hover:bg-primary/10 rounded transition-colors"
+                            title={`Chuyển sang ${STATUS_CONFIG[getNextStatus(order.status)]?.label}`}
+                            aria-label="Cập nhật trạng thái"
+                          >
+                            <ArrowRight className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                      {order.user_id ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-600 border border-blue-500/50 shrink-0">
+                          <User className="w-3 h-3" />
+                          Đã đăng nhập
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-gray-500/20 text-gray-600 border border-gray-500/50 shrink-0">
+                          <UserX className="w-3 h-3" />
+                          Khách vãng lai
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
@@ -503,8 +670,18 @@ export default function AdminOrders() {
 
       {/* Detail Modal */}
       {showDetailModal && selectedOrder && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto relative">
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => {
+            setShowDetailModal(false);
+            setSelectedOrder(null);
+          }}
+        >
+          <div 
+            ref={detailModalRef}
+            className="bg-card rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto relative"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={() => {
                 setShowDetailModal(false);
@@ -533,7 +710,7 @@ export default function AdminOrders() {
                     <p className="font-medium text-card-foreground">{formatDate(selectedOrder.created_at)}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Status</p>
+                    <p className="text-sm text-muted-foreground mb-1">Trạng thái</p>
                     {(() => {
                       const StatusIcon = STATUS_CONFIG[selectedOrder.status]?.icon || Clock;
                       return (
@@ -612,8 +789,19 @@ export default function AdminOrders() {
 
       {/* Edit Modal */}
       {showEditModal && selectedOrder && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-lg max-w-md w-full p-6 border border-border relative">
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => {
+            setShowEditModal(false);
+            setSelectedOrder(null);
+            setEditingStatus('');
+          }}
+        >
+          <div 
+            ref={editModalRef}
+            className="bg-card rounded-lg max-w-md w-full p-6 border border-border relative"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={() => {
                 setShowEditModal(false);
@@ -633,7 +821,7 @@ export default function AdminOrders() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Status
+                  Trạng thái
                 </label>
                 <select
                   value={editingStatus}
@@ -651,6 +839,7 @@ export default function AdminOrders() {
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={() => {
+                    setShowEditModal(false);
                     handleUpdateStatus(selectedOrder.order_id, editingStatus);
                   }}
                   className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium"
@@ -668,6 +857,45 @@ export default function AdminOrders() {
                   Hủy
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Modal */}
+      {showConfirmModal && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => {
+            setShowConfirmModal(false);
+            setConfirmAction(null);
+            setConfirmMessage('');
+          }}
+        >
+          <div 
+            ref={confirmModalRef}
+            className="bg-card rounded-lg max-w-md w-full p-6 border border-border"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-xl font-bold text-card-foreground mb-4">Xác nhận</h2>
+            <p className="text-card-foreground mb-6">{confirmMessage}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={handleConfirmAction}
+                className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium"
+              >
+                Xác nhận
+              </button>
+              <button
+                onClick={() => {
+                  setShowConfirmModal(false);
+                  setConfirmAction(null);
+                  setConfirmMessage('');
+                }}
+                className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium"
+              >
+                Hủy
+              </button>
             </div>
           </div>
         </div>
