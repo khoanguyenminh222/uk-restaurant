@@ -5,9 +5,10 @@ import { X, Eye, EyeOff, Mail, Phone, User, MapPin, Lock } from "lucide-react"
 import { saveUser } from "@/utils/user"
 
 export default function Auth({ isOpen, onClose, initialTab = "login" }) {
-  const [activeTab, setActiveTab] = useState(initialTab) // "login" or "register" or "verify"
+  const [activeTab, setActiveTab] = useState(initialTab) // "login" or "register" or "verify" or "forgot-password"
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [successMessage, setSuccessMessage] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
@@ -34,6 +35,12 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
     confirmPassword: "",
     address: "",
   })
+
+  // Forgot password form state
+  const [forgotPasswordForm, setForgotPasswordForm] = useState({
+    phone: "",
+  })
+  const [forgotPasswordErrors, setForgotPasswordErrors] = useState({})
 
   // Validation errors
   const [loginErrors, setLoginErrors] = useState({})
@@ -63,13 +70,16 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
     if (isOpen) {
       setActiveTab(initialTab)
       setError("")
+      setSuccessMessage("")
       setLoginErrors({})
       setRegisterErrors({})
+      setForgotPasswordErrors({})
       setVerificationCode(["", "", "", "", "", ""])
       setRegisteredUser(null)
       setShowChangeEmail(false)
       setNewEmail("")
       setEmailError("")
+      setForgotPasswordForm({ phone: "" })
     }
   }, [isOpen, initialTab])
 
@@ -437,6 +447,71 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
     }
   }
 
+  // Handle forgot password form change
+  const handleForgotPasswordChange = (e) => {
+    const { name, value } = e.target
+    setForgotPasswordForm((prev) => ({ ...prev, [name]: value }))
+    if (forgotPasswordErrors[name]) {
+      setForgotPasswordErrors((prev) => ({ ...prev, [name]: "" }))
+    }
+    setError("")
+    setSuccessMessage("")
+  }
+
+  // Validate forgot password form
+  const validateForgotPassword = () => {
+    const errors = {}
+    if (!forgotPasswordForm.phone.trim()) {
+      errors.phone = "Số điện thoại là bắt buộc"
+    } else if (!validatePhone(forgotPasswordForm.phone)) {
+      errors.phone = "Số điện thoại không hợp lệ"
+    }
+    setForgotPasswordErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  // Handle forgot password submit
+  const handleForgotPassword = async (e) => {
+    e.preventDefault()
+    setError("")
+    setSuccessMessage("")
+
+    if (!validateForgotPassword()) {
+      return
+    }
+
+    setLoading(true)
+    try {
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phone: forgotPasswordForm.phone.replace(/\s+/g, ""),
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setSuccessMessage(data.message || "Đã gửi email hướng dẫn đặt lại mật khẩu. Vui lòng kiểm tra hộp thư của bạn.")
+        setError("")
+        // Reset form
+        setForgotPasswordForm({ phone: "" })
+      } else {
+        setError(data.error || "Không thể gửi email. Vui lòng thử lại sau.")
+        setSuccessMessage("")
+      }
+    } catch (err) {
+      console.error("Forgot password error:", err)
+      setError("Lỗi kết nối. Vui lòng thử lại sau.")
+      setSuccessMessage("")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // Handle verify email
   const handleVerifyEmail = async (e) => {
     e.preventDefault()
@@ -527,8 +602,8 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
         ref={modalRef}
         className="relative w-full max-w-md bg-gray-900 rounded-xl shadow-2xl border border-gray-800 overflow-hidden animate-fade-in-up"
       >
-        {/* Tabs - Chỉ hiển thị khi không ở verification screen */}
-        {activeTab !== "verify" && (
+        {/* Tabs - Chỉ hiển thị khi không ở verification screen và forgot-password */}
+        {activeTab !== "verify" && activeTab !== "forgot-password" && (
           <div className="flex border-b border-gray-800">
             <button
               onClick={() => {
@@ -568,12 +643,26 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
           </div>
         )}
 
+        {/* Forgot Password Header */}
+        {activeTab === "forgot-password" && (
+          <div className="border-b border-gray-800 bg-green-950/20 py-4 px-6">
+            <h3 className="text-lg font-semibold text-gray-50 text-center">Quên mật khẩu</h3>
+          </div>
+        )}
+
         {/* Content */}
         <div className="p-6 md:p-8">
           {/* Error Message */}
           {error && (
             <div className="mb-4 p-3 bg-red-950/50 border border-red-500/50 rounded-lg text-red-400 text-sm">
               {error}
+            </div>
+          )}
+
+          {/* Success Message */}
+          {successMessage && (
+            <div className="mb-4 p-3 bg-green-950/50 border border-green-500/50 rounded-lg text-green-400 text-sm">
+              {successMessage}
             </div>
           )}
 
@@ -650,8 +739,9 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                   type="button"
                   className="text-sm text-green-400 hover:text-green-300 transition-colors"
                   onClick={() => {
-                    // TODO: Implement forgot password
-                    setError("Tính năng quên mật khẩu đang được phát triển")
+                    setActiveTab("forgot-password")
+                    setError("")
+                    setSuccessMessage("")
                   }}
                 >
                   Quên mật khẩu?
@@ -857,6 +947,75 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                 <button
                   type="button"
                   onClick={() => setActiveTab("login")}
+                  className="text-green-400 hover:text-green-300 font-medium transition-colors"
+                >
+                  Đăng nhập
+                </button>
+              </p>
+            </form>
+          )}
+
+          {/* Forgot Password Form */}
+          {activeTab === "forgot-password" && (
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div className="text-center mb-6">
+                <Lock className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-50 mb-2">Quên mật khẩu?</h3>
+                <p className="text-gray-400 text-sm">
+                  Nhập số điện thoại của bạn, chúng tôi sẽ gửi email hướng dẫn đặt lại mật khẩu.
+                </p>
+              </div>
+
+              {/* Phone */}
+              <div>
+                <label htmlFor="forgot-phone" className="block text-sm font-medium text-gray-300 mb-2">
+                  Số điện thoại <span className="text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    id="forgot-phone"
+                    name="phone"
+                    type="tel"
+                    value={forgotPasswordForm.phone}
+                    onChange={handleForgotPasswordChange}
+                    placeholder="0901234567"
+                    className={`w-full pl-10 pr-4 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                      forgotPasswordErrors.phone ? "border-red-500" : "border-gray-700"
+                    }`}
+                  />
+                </div>
+                {forgotPasswordErrors.phone && (
+                  <p className="mt-1 text-sm text-red-400">{forgotPasswordErrors.phone}</p>
+                )}
+              </div>
+
+              {/* Info Text */}
+              <p className="text-xs text-gray-500 text-center">
+                Chúng tôi sẽ gửi link đặt lại mật khẩu đến email đã đăng ký của bạn. Link sẽ hết hạn sau 30 phút.
+              </p>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? "Đang gửi..." : "Gửi email đặt lại mật khẩu"}
+              </button>
+
+              {/* Back to Login */}
+              <p className="text-center text-sm text-gray-400">
+                Nhớ mật khẩu?{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab("login")
+                    setError("")
+                    setSuccessMessage("")
+                    setForgotPasswordForm({ phone: "" })
+                    setForgotPasswordErrors({})
+                  }}
                   className="text-green-400 hover:text-green-300 font-medium transition-colors"
                 >
                   Đăng nhập
