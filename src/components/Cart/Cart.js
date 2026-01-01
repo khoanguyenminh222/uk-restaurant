@@ -11,6 +11,7 @@ export default function Cart({ isOpen, onClose, onCheckout }) {
   const [isAnimating, setIsAnimating] = useState(false)
   const [removingItemId, setRemovingItemId] = useState(null)
   const [showConfirmDelete, setShowConfirmDelete] = useState(null)
+  const [showConfirmClearCart, setShowConfirmClearCart] = useState(false)
   const [deletedItem, setDeletedItem] = useState(null)
 
   useEffect(() => {
@@ -110,10 +111,14 @@ export default function Cart({ isOpen, onClose, onCheckout }) {
   }
 
   const handleClearCart = () => {
-    if (confirm("Bạn có chắc muốn xóa toàn bộ giỏ hàng?")) {
-      clearCart()
-      updateCart()
-    }
+    setShowConfirmClearCart(true)
+  }
+
+  const confirmClearCart = () => {
+    clearCart()
+    updateCart()
+    setShowConfirmClearCart(false)
+    window.dispatchEvent(new CustomEvent("cartUpdated"))
   }
 
   const handleCheckout = () => {
@@ -151,7 +156,7 @@ export default function Cart({ isOpen, onClose, onCheckout }) {
           </h2>
           <button
             onClick={onClose}
-            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors shrink-0"
+            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors shrink-0 cursor-pointer"
             aria-label="Đóng giỏ hàng"
           >
             <X className="w-5 h-5" />
@@ -214,7 +219,7 @@ export default function Cart({ isOpen, onClose, onCheckout }) {
                           <div className="flex items-center gap-2 bg-card border border-border rounded-lg">
                             <button
                               onClick={() => handleDecreaseQuantity(item.id)}
-                              className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors"
+                              className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors cursor-pointer"
                               aria-label="Giảm số lượng"
                             >
                               <Minus className="w-4 h-4" />
@@ -224,7 +229,7 @@ export default function Cart({ isOpen, onClose, onCheckout }) {
                             </span>
                             <button
                               onClick={() => handleIncreaseQuantity(item.id)}
-                              className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors"
+                              className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors cursor-pointer"
                               aria-label="Tăng số lượng"
                             >
                               <Plus className="w-4 h-4" />
@@ -233,7 +238,7 @@ export default function Cart({ isOpen, onClose, onCheckout }) {
 
                           <button
                             onClick={() => handleRemoveItem(item.id)}
-                            className="p-1.5 text-destructive hover:text-destructive/80 hover:bg-muted rounded-lg transition-all duration-200 hover:scale-110 active:scale-95 group relative"
+                            className="p-1.5 text-destructive hover:text-destructive/80 hover:bg-muted rounded-lg transition-all duration-200 hover:scale-110 active:scale-95 group relative cursor-pointer"
                             aria-label="Xóa món"
                             title="Xóa món này"
                           >
@@ -257,7 +262,7 @@ export default function Cart({ isOpen, onClose, onCheckout }) {
           )}
         </div>
 
-        {/* Confirmation Dialog */}
+        {/* Confirmation Dialog - Delete Item */}
         {showConfirmDelete && (
           <div 
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
@@ -279,16 +284,54 @@ export default function Cart({ isOpen, onClose, onCheckout }) {
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowConfirmDelete(null)}
-                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg font-medium transition-colors duration-200"
+                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg font-medium transition-colors duration-200 cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
                   onClick={() => confirmRemoveItem(showConfirmDelete)}
-                  className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4" />
                   Xóa
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Confirmation Dialog - Clear Cart */}
+        {showConfirmClearCart && (
+          <div 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setShowConfirmClearCart(false)}
+          >
+            <div 
+              className="bg-card rounded-lg border border-border shadow-xl max-w-sm w-full p-6 animate-fade-in-scale"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-destructive/10 rounded-lg">
+                  <Trash2 className="w-6 h-6 text-destructive" />
+                </div>
+                <h3 className="text-lg font-semibold text-card-foreground">Xác nhận xóa giỏ hàng</h3>
+              </div>
+              <p className="text-card-foreground mb-6">
+                Bạn có chắc muốn xóa <span className="font-semibold text-destructive">toàn bộ giỏ hàng</span>? Hành động này không thể hoàn tác.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowConfirmClearCart(false)}
+                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg font-medium transition-colors duration-200 cursor-pointer"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={confirmClearCart}
+                  className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Xóa tất cả
                 </button>
               </div>
             </div>
@@ -310,7 +353,7 @@ export default function Cart({ isOpen, onClose, onCheckout }) {
               </div>
               <button
                 onClick={handleUndoDelete}
-                className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-medium rounded-lg transition-colors duration-200 whitespace-nowrap"
+                className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-medium rounded-lg transition-colors duration-200 whitespace-nowrap cursor-pointer"
               >
                 Hoàn tác
               </button>
@@ -333,13 +376,13 @@ export default function Cart({ isOpen, onClose, onCheckout }) {
             <div className="space-y-2">
               <button
                 onClick={handleCheckout}
-                className="w-full px-6 py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors duration-300 shadow-md shadow-primary/30 hover:shadow-lg hover:shadow-primary/40 transform hover:scale-105 active:scale-95"
+                className="w-full px-6 py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors duration-300 shadow-md shadow-primary/30 hover:shadow-lg hover:shadow-primary/40 transform hover:scale-105 active:scale-95 cursor-pointer"
               >
                 Thanh toán
               </button>
               <button
                 onClick={handleClearCart}
-                className="w-full px-6 py-2 bg-muted hover:bg-muted/80 text-card-foreground font-medium rounded-lg transition-colors duration-300"
+                className="w-full px-6 py-2 bg-muted hover:bg-background text-card-foreground font-medium rounded-lg transition-colors duration-300 cursor-pointer"
               >
                 Xóa giỏ hàng
               </button>

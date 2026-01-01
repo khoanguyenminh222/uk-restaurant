@@ -304,7 +304,7 @@ export default function MenuPage() {
           <div className="mb-6">
             <button
               onClick={() => router.back()}
-              className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4 transition-colors cursor-pointer"
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4 transition-colors cursor-pointer hover:scale-105"
             >
               <ArrowLeft className="w-5 h-5" />
               <span>Quay lại</span>
@@ -319,7 +319,7 @@ export default function MenuPage() {
 
           {/* Search Bar */}
           <div className="mb-6">
-            <div className="relative max-w-2xl">
+            <div className="relative max-w-2xl mx-auto">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
               <input
                 type="text"
