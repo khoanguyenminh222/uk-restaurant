@@ -3,6 +3,7 @@ import clientPromise from '@/lib/mongodb';
 import { validateUserRegistration } from '@/lib/models/User';
 import bcrypt from 'bcryptjs';
 import { sendVerificationEmail } from '@/lib/email';
+import { checkBlacklist } from '@/lib/blacklist';
 
 /**
  * POST /api/auth/register
@@ -32,8 +33,22 @@ export async function POST(request) {
       );
     }
 
+    // Check if email is blacklisted
+    const normalizedEmail = body.email.trim().toLowerCase();
+    const blacklistCheck = await checkBlacklist(normalizedEmail);
+    if (blacklistCheck.isBlocked) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Email này đã bị chặn. Vui lòng liên hệ hỗ trợ.',
+          error_code: 'BLACKLISTED',
+        },
+        { status: 403 }
+      );
+    }
+
     // Check if email already exists
-    const existingEmail = await db.collection('users').findOne({ email: body.email });
+    const existingEmail = await db.collection('users').findOne({ email: normalizedEmail });
     if (existingEmail) {
       return NextResponse.json(
         { success: false, error: 'Email đã được sử dụng' },
@@ -56,7 +71,7 @@ export async function POST(request) {
       user_id,
       phone: body.phone,
       name: body.name.trim(),
-      email: body.email.trim().toLowerCase(),
+      email: normalizedEmail,
       password: hashedPassword,
       address: body.address?.trim() || '',
       role: 'user', // Default role for regular users

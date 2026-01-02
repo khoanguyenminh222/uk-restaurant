@@ -25,9 +25,9 @@ function createTransporter() {
 }
 
 /**
- * Gửi email verification code
+ * Gửi email verification code cho đặt hàng (không cần name)
  */
-export async function sendVerificationEmail(email, name, code) {
+export async function sendVerificationEmail(email, code, name = null) {
   try {
     const transporter = createTransporter();
 
@@ -43,11 +43,11 @@ export async function sendVerificationEmail(email, name, code) {
           </div>
           <div style="background-color: white; padding: 30px; border-radius: 0 0 8px 8px;">
             <h2 style="color: #1f2937; margin-top: 0;">Xác thực email của bạn</h2>
-            <p style="color: #4b5563; line-height: 1.6;">
+            ${name ? `<p style="color: #4b5563; line-height: 1.6;">
               Xin chào <strong>${name}</strong>,
-            </p>
+            </p>` : ''}
             <p style="color: #4b5563; line-height: 1.6;">
-              Cảm ơn bạn đã đăng ký tài khoản tại UK Restaurant. Vui lòng sử dụng mã xác thực sau để hoàn tất đăng ký:
+              ${name ? 'Cảm ơn bạn đã đăng ký tài khoản tại UK Restaurant. Vui lòng sử dụng mã xác thực sau để hoàn tất đăng ký:' : 'Cảm ơn bạn đã đặt hàng tại UK Restaurant. Vui lòng sử dụng mã xác thực sau để xác nhận email của bạn:'}
             </p>
             <div style="background-color: #f3f4f6; border: 2px dashed #16a34a; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0;">
               <p style="color: #6b7280; margin: 0 0 10px 0; font-size: 14px;">Mã xác thực của bạn:</p>
@@ -56,7 +56,7 @@ export async function sendVerificationEmail(email, name, code) {
               </h1>
             </div>
             <p style="color: #4b5563; line-height: 1.6;">
-              Mã này sẽ hết hạn sau <strong>15 phút</strong>. Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này.
+              Mã này sẽ hết hạn sau <strong>10 phút</strong>. Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này.
             </p>
             <p style="color: #4b5563; line-height: 1.6; margin-top: 30px;">
               Trân trọng,<br>
@@ -71,12 +71,12 @@ export async function sendVerificationEmail(email, name, code) {
       text: `
         Xác thực email - UK Restaurant
         
-        Xin chào ${name},
+        ${name ? `Xin chào ${name},` : ''}
         
-        Cảm ơn bạn đã đăng ký tài khoản tại UK Restaurant. 
+        ${name ? 'Cảm ơn bạn đã đăng ký tài khoản tại UK Restaurant.' : 'Cảm ơn bạn đã đặt hàng tại UK Restaurant.'}
         Mã xác thực của bạn là: ${code}
         
-        Mã này sẽ hết hạn sau 15 phút.
+        Mã này sẽ hết hạn sau 10 phút.
         
         Trân trọng,
         Đội ngũ UK Restaurant

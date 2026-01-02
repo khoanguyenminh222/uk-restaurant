@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, Menu, X, LayoutDashboard, FolderOpen, UtensilsCrossed, Users, LogOut, ShoppingCart, UserCircle, Image as ImageIcon, TrendingUp, Settings, ChevronDown, ChevronRight } from 'lucide-react';
+import { Home, Menu, X, LayoutDashboard, FolderOpen, UtensilsCrossed, Users, LogOut, ShoppingCart, UserCircle, Image as ImageIcon, TrendingUp, Settings, ChevronDown, ChevronRight, Shield } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle/ThemeToggle';
 
 export default function AdminLayout({ children }) {
@@ -64,7 +64,8 @@ export default function AdminLayout({ children }) {
   // Check if current path is in config submenu
   const isConfigPath = pathname.startsWith('/admin/banners') || 
                        pathname.startsWith('/admin/popular-config') || 
-                       pathname.startsWith('/admin/landing-config');
+                       pathname.startsWith('/admin/landing-config') ||
+                       pathname.startsWith('/admin/blacklist');
   
   // Auto expand config menu if on config page
   useEffect(() => {
@@ -95,18 +96,19 @@ export default function AdminLayout({ children }) {
     { href: '/admin/categories', label: 'Danh mục', icon: FolderOpen },
     { href: '/admin/food', label: 'Món ăn', icon: UtensilsCrossed },
     { href: '/admin/orders', label: 'Đơn hàng', icon: ShoppingCart },
-    { 
-      type: 'group',
-      label: 'Cấu hình',
-      icon: Settings,
-      isOpen: configMenuOpen,
-      onToggle: () => setConfigMenuOpen(!configMenuOpen),
-      children: [
-        { href: '/admin/banners', label: 'Banner', icon: ImageIcon },
-        { href: '/admin/popular-config', label: 'Cấu hình Ngưỡng', icon: TrendingUp },
-        { href: '/admin/landing-config', label: 'Cấu hình Landing', icon: Settings },
-      ]
-    },
+        {
+          type: 'group',
+          label: 'Cấu hình',
+          icon: Settings,
+          isOpen: configMenuOpen,
+          onToggle: () => setConfigMenuOpen(!configMenuOpen),
+          children: [
+            { href: '/admin/banners', label: 'Banner', icon: ImageIcon },
+            { href: '/admin/popular-config', label: 'Cấu hình Ngưỡng', icon: TrendingUp },
+            { href: '/admin/landing-config', label: 'Cấu hình Landing', icon: Settings },
+            { href: '/admin/blacklist', label: 'Blacklist Email', icon: Shield },
+          ]
+        },
     { href: '/admin/users', label: 'Người dùng', icon: UserCircle },
     ...(adminInfo && adminInfo.role === 'super_admin' 
       ? [{ href: '/admin/admins', label: 'Quản lý Admin', icon: Users }]
@@ -184,7 +186,7 @@ export default function AdminLayout({ children }) {
                   <li key={`group-${index}`}>
                     <button
                       onClick={item.onToggle}
-                      className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-colors ${
+                      className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-colors cursor-pointer ${
                         hasActiveChild
                           ? 'bg-primary/10 text-primary'
                           : 'text-muted-foreground hover:bg-muted hover:text-card-foreground'

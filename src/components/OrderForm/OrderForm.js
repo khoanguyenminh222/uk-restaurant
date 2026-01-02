@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { X, User, Phone, MapPin, FileText, ShoppingBag, Loader2, CheckCircle, Copy, ExternalLink, History, XCircle } from "lucide-react"
+import { X, User, Phone, MapPin, FileText, ShoppingBag, Loader2, CheckCircle, Copy, ExternalLink, History, XCircle, Mail, ShieldCheck } from "lucide-react"
 import { getUser } from "@/utils/user"
 import { getCustomerInfo, saveCustomerInfo } from "@/utils/customer"
 import { clearCart, getCartTotal } from "@/utils/cart"
@@ -9,6 +9,8 @@ import { formatCurrency } from "@/utils/helpers"
 import Image from "next/image"
 
 export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) {
+  // Verified session TTL state (lấy từ API)
+  const [verifiedSessionTTL, setVerifiedSessionTTL] = useState(1800 * 1000) // Default 30 phút (ms)
   // items: null = từ cart, hoặc array items từ cart, hoặc single item object
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -18,12 +20,40 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
   const [formData, setFormData] = useState({
     customer_name: "",
     customer_phone: "",
+    customer_email: "",
     customer_address: "",
     notes: "",
   })
 
+  // Email verification state
+  const [emailVerification, setEmailVerification] = useState({
+    step: 'input', // 'input' | 'send_code' | 'verify_code' | 'verified'
+    code: "",
+    sendingCode: false,
+    verifyingCode: false,
+    error: "",
+    verified: false,
+  })
+
   // Validation errors
   const [errors, setErrors] = useState({})
+
+  // Fetch spam config from API (chỉ fetch 1 lần khi component mount)
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const response = await fetch('/api/config/spam')
+        const data = await response.json()
+        if (data.success && data.data.verified_session_ttl) {
+          setVerifiedSessionTTL(data.data.verified_session_ttl * 1000) // Convert to milliseconds
+        }
+      } catch (err) {
+        console.error('Error fetching spam config:', err)
+        // Keep default value (1800 * 1000 = 30 phút)
+      }
+    }
+    fetchConfig()
+  }, [])
 
   // Order items (từ cart hoặc single item)
   const [orderItems, setOrderItems] = useState([])
@@ -76,19 +106,52 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
       setFormData({
         customer_name: user.name || "",
         customer_phone: user.phone || "",
+        customer_email: user.email || "",
         customer_address: user.address || "",
         notes: "",
       })
+      // If user has email, mark as verified (user email already verified during registration)
+      if (user.email) {
+        setEmailVerification(prev => ({ ...prev, verified: true, step: 'verified' }))
+      }
     } else {
       // Fill from localStorage (previous orders)
       const customerInfo = getCustomerInfo()
       if (customerInfo) {
+        const email = customerInfo.customer_email || ""
         setFormData({
           customer_name: customerInfo.customer_name || "",
           customer_phone: customerInfo.customer_phone || "",
+          customer_email: email,
           customer_address: customerInfo.customer_address || "",
           notes: "",
         })
+        
+        // Kiểm tra xem email có đã verified trong localStorage không
+        if (email && typeof window !== "undefined") {
+          const verifiedEmails = JSON.parse(localStorage.getItem('verified_emails') || '{}')
+          const emailKey = email.toLowerCase().trim()
+          const verifiedInfo = verifiedEmails[emailKey]
+          
+          if (verifiedInfo && verifiedInfo.verified) {
+            // Kiểm tra xem có hết hạn không (theo VERIFIED_SESSION_TTL)
+            const expiresAt = new Date(verifiedInfo.expiresAt)
+            const now = new Date()
+            
+            if (now < expiresAt) {
+              // Email vẫn còn hiệu lực, mark as verified
+              setEmailVerification(prev => ({ 
+                ...prev, 
+                verified: true, 
+                step: 'verified' 
+              }))
+            } else {
+              // Đã hết hạn, xóa khỏi localStorage
+              delete verifiedEmails[emailKey]
+              localStorage.setItem('verified_emails', JSON.stringify(verifiedEmails))
+            }
+          }
+        }
       }
     }
   }
@@ -221,11 +284,18 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
   // Handle form change
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    // Ensure value is always a string, never undefined
+    setFormData((prev) => ({ ...prev, [name]: value || "" }))
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }))
     }
     setError("")
+  }
+
+  // Validate email format
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
   }
 
   // Validate form
@@ -244,6 +314,14 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
       newErrors.customer_phone = "Số điện thoại không hợp lệ (ví dụ: 0901234567)"
     }
 
+    if (!formData.customer_email.trim()) {
+      newErrors.customer_email = "Email là bắt buộc"
+    } else if (!validateEmail(formData.customer_email)) {
+      newErrors.customer_email = "Email không hợp lệ"
+    } else if (!emailVerification.verified) {
+      newErrors.customer_email = "Email chưa được xác thực"
+    }
+
     if (!formData.customer_address.trim()) {
       newErrors.customer_address = "Địa chỉ là bắt buộc"
     } else if (formData.customer_address.trim().length < 5) {
@@ -252,6 +330,131 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
+  }
+
+  // Send verification code
+  const handleSendVerificationCode = async () => {
+    if (!formData.customer_email.trim()) {
+      setErrors(prev => ({ ...prev, customer_email: "Email là bắt buộc" }))
+      return
+    }
+
+    if (!validateEmail(formData.customer_email)) {
+      setErrors(prev => ({ ...prev, customer_email: "Email không hợp lệ" }))
+      return
+    }
+
+    setEmailVerification(prev => ({ ...prev, sendingCode: true, error: "" }))
+
+    try {
+      const response = await fetch("/api/orders/send-verification-code", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: formData.customer_email.trim() }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setEmailVerification(prev => ({ ...prev, step: 'verify_code', sendingCode: false }))
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("showToast", {
+              detail: {
+                message: "Mã xác thực đã được gửi đến email của bạn.",
+                type: "success",
+              },
+            })
+          )
+        }
+      } else {
+        setEmailVerification(prev => ({ 
+          ...prev, 
+          sendingCode: false, 
+          error: data.error || "Không thể gửi mã xác thực" 
+        }))
+        if (data.error_code === 'BLACKLISTED') {
+          setErrors(prev => ({ ...prev, customer_email: data.error }))
+        }
+      }
+    } catch (err) {
+      console.error("Error sending verification code:", err)
+      setEmailVerification(prev => ({ 
+        ...prev, 
+        sendingCode: false, 
+        error: "Lỗi kết nối. Vui lòng thử lại sau." 
+      }))
+    }
+  }
+
+  // Verify email code
+  const handleVerifyEmailCode = async () => {
+    if (!emailVerification.code.trim() || emailVerification.code.length !== 6) {
+      setEmailVerification(prev => ({ ...prev, error: "Mã xác thực phải là 6 chữ số" }))
+      return
+    }
+
+    setEmailVerification(prev => ({ ...prev, verifyingCode: true, error: "" }))
+
+    try {
+      const response = await fetch("/api/orders/verify-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ 
+          email: formData.customer_email.trim(),
+          code: emailVerification.code.trim()
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setEmailVerification(prev => ({ 
+          ...prev, 
+          verified: true, 
+          step: 'verified', 
+          verifyingCode: false,
+          error: ""
+        }))
+        
+        // Lưu email đã verified vào localStorage để dùng cho lần sau
+        if (typeof window !== "undefined") {
+          const verifiedEmails = JSON.parse(localStorage.getItem('verified_emails') || '{}')
+          verifiedEmails[formData.customer_email.trim().toLowerCase()] = {
+            verified: true,
+            verifiedAt: new Date().toISOString(),
+            expiresAt: new Date(Date.now() + verifiedSessionTTL).toISOString()
+          }
+          localStorage.setItem('verified_emails', JSON.stringify(verifiedEmails))
+          
+          window.dispatchEvent(
+            new CustomEvent("showToast", {
+              detail: {
+                message: "Email đã được xác thực thành công!",
+                type: "success",
+              },
+            })
+          )
+        }
+      } else {
+        setEmailVerification(prev => ({ 
+          ...prev, 
+          verifyingCode: false, 
+          error: data.error || "Mã xác thực không đúng" 
+        }))
+      }
+    } catch (err) {
+      console.error("Error verifying email:", err)
+      setEmailVerification(prev => ({ 
+        ...prev, 
+        verifyingCode: false, 
+        error: "Lỗi kết nối. Vui lòng thử lại sau." 
+      }))
+    }
   }
 
   // Handle submit
@@ -279,6 +482,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
         user_id: user_id,
         customer_name: formData.customer_name.trim(),
         customer_phone: formData.customer_phone.replace(/\s+/g, ""),
+        customer_email: formData.customer_email.trim().toLowerCase(),
         customer_address: formData.customer_address.trim(),
         notes: formData.notes.trim() || "",
         total_price: totalPrice,
@@ -317,14 +521,26 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
       })
 
       const data = await response.json()
-
       if (data.success) {
         // Save customer info to localStorage for next time
         saveCustomerInfo({
           customer_name: formData.customer_name.trim(),
           customer_phone: formData.customer_phone.replace(/\s+/g, ""),
+          customer_email: formData.customer_email.trim().toLowerCase(),
           customer_address: formData.customer_address.trim(),
         })
+        
+        // Lưu email đã verified vào localStorage (nếu đã verified)
+        if (emailVerification.verified && formData.customer_email && typeof window !== "undefined") {
+          const verifiedEmails = JSON.parse(localStorage.getItem('verified_emails') || '{}')
+          const emailKey = formData.customer_email.trim().toLowerCase()
+          verifiedEmails[emailKey] = {
+            verified: true,
+            verifiedAt: new Date().toISOString(),
+            expiresAt: new Date(Date.now() + verifiedSessionTTL).toISOString()
+          }
+          localStorage.setItem('verified_emails', JSON.stringify(verifiedEmails))
+        }
 
         // Clear cart if checkout from cart
         if (items === null || Array.isArray(items)) {
@@ -604,19 +820,6 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
 
         {/* Content */}
         <div className="p-6">
-          {/* Error Message */}
-          {error && (
-            <div className="mb-4 p-3 bg-destructive/10 border border-destructive/50 rounded-lg text-destructive text-sm">
-              {error}
-              <button
-                onClick={() => setError("")}
-                className="ml-2 text-destructive hover:text-destructive/80"
-              >
-                <X className="w-4 h-4 inline" />
-              </button>
-            </div>
-          )}
-
           {/* Order Summary */}
           <div className="mb-6 bg-muted rounded-lg p-4 border border-border">
             <h3 className="text-sm font-semibold text-card-foreground mb-3">Đơn hàng của bạn</h3>
@@ -677,7 +880,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                   id="customer_name"
                   name="customer_name"
                   type="text"
-                  value={formData.customer_name}
+                  value={formData.customer_name || ""}
                   onChange={handleChange}
                   placeholder="Nguyễn Văn A"
                   className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
@@ -701,7 +904,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                   id="customer_phone"
                   name="customer_phone"
                   type="tel"
-                  value={formData.customer_phone}
+                  value={formData.customer_phone || ""}
                   onChange={handleChange}
                   placeholder="0901234567"
                   className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
@@ -712,6 +915,121 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
               {errors.customer_phone && (
                 <p className="mt-1 text-sm text-destructive">{errors.customer_phone}</p>
               )}
+            </div>
+
+            {/* Customer Email with Verification */}
+            <div>
+              <label htmlFor="customer_email" className="block text-sm font-medium text-card-foreground mb-2">
+                <Mail className="inline w-4 h-4 mr-1" />
+                Email <span className="text-destructive">*</span>
+                {emailVerification.verified && (
+                  <ShieldCheck className="inline w-4 h-4 ml-2 text-green-500" />
+                )}
+              </label>
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <input
+                      id="customer_email"
+                      name="customer_email"
+                      type="email"
+                      value={formData.customer_email || ""}
+                      onChange={(e) => {
+                        handleChange(e)
+                        // Reset verification when email changes
+                        if (emailVerification.verified) {
+                          setEmailVerification({
+                            step: 'input',
+                            code: "",
+                            sendingCode: false,
+                            verifyingCode: false,
+                            error: "",
+                            verified: false,
+                          })
+                        }
+                      }}
+                      disabled={emailVerification.verified}
+                      placeholder="example@email.com"
+                      className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
+                        errors.customer_email ? "border-destructive" : emailVerification.verified ? "border-green-500" : "border-border"
+                      } ${emailVerification.verified ? "bg-green-500/10" : ""}`}
+                    />
+                  </div>
+                  {!emailVerification.verified && (
+                    <button
+                      type="button"
+                      onClick={handleSendVerificationCode}
+                      disabled={emailVerification.sendingCode || !formData.customer_email || !formData.customer_email.trim() || !validateEmail(formData.customer_email)}
+                      className="px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap flex items-center gap-2"
+                    >
+                      {emailVerification.sendingCode ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Đang gửi...
+                        </>
+                      ) : (
+                        "Gửi mã"
+                      )}
+                    </button>
+                  )}
+                </div>
+                {errors.customer_email && (
+                  <p className="text-sm text-destructive">{errors.customer_email}</p>
+                )}
+                {emailVerification.error && (
+                  <p className="text-sm text-destructive">{emailVerification.error}</p>
+                )}
+
+                {/* Verification Code Input */}
+                {emailVerification.step === 'verify_code' && !emailVerification.verified && (
+                  <div className="space-y-2 p-3 bg-muted rounded-lg border border-border">
+                    <label className="block text-sm font-medium text-card-foreground">
+                      Nhập mã xác thực (6 chữ số)
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        maxLength={6}
+                        value={emailVerification.code}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '')
+                          setEmailVerification(prev => ({ ...prev, code: value, error: "" }))
+                        }}
+                        className="flex-1 px-4 py-2.5 bg-background border border-border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-center text-lg tracking-widest font-mono"
+                        placeholder="000000"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleVerifyEmailCode}
+                        disabled={emailVerification.verifyingCode || emailVerification.code.length !== 6}
+                        className="px-4 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {emailVerification.verifyingCode ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          "Xác thực"
+                        )}
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setEmailVerification(prev => ({ ...prev, step: 'input', code: "", error: "" }))}
+                      className="text-sm text-muted-foreground hover:text-foreground"
+                    >
+                      Gửi lại mã
+                    </button>
+                  </div>
+                )}
+
+                {/* Verified Status */}
+                {emailVerification.verified && (
+                  <div className="flex items-center gap-2 p-2 bg-green-500/10 border border-green-500 rounded-lg">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span className="text-sm text-green-500">Email đã được xác thực</span>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Customer Address */}
@@ -725,7 +1043,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                   id="customer_address"
                   name="customer_address"
                   type="text"
-                  value={formData.customer_address}
+                  value={formData.customer_address || ""}
                   onChange={handleChange}
                   placeholder="123 Đường ABC, Quận XYZ"
                   className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
@@ -748,7 +1066,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                 <textarea
                   id="notes"
                   name="notes"
-                  value={formData.notes}
+                  value={formData.notes || ""}
                   onChange={handleChange}
                   placeholder="Ghi chú thêm cho đơn hàng..."
                   rows={3}
@@ -756,6 +1074,19 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                 />
               </div>
             </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 p-3 bg-destructive/10 border border-destructive/50 rounded-lg text-destructive text-sm">
+                {error}
+                <button
+                  onClick={() => setError("")}
+                  className="ml-2 text-destructive hover:text-destructive/80"
+                >
+                  <X className="w-4 h-4 inline" />
+                </button>
+              </div>
+            )}
 
             {/* Submit Button */}
             <button

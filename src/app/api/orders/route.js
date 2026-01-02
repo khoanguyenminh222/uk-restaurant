@@ -3,6 +3,9 @@ import clientPromise from '@/lib/mongodb';
 import { validateOrder } from '@/lib/models/Order';
 import { validateOrderLog } from '@/lib/models/OrderLog';
 import { sendOrderConfirmationEmail } from '@/lib/email';
+import { checkBlacklist, autoBlacklistIfNeeded } from '@/lib/blacklist';
+import { isEmailVerified } from '@/lib/emailVerification';
+import cache from '@/lib/cache';
 
 /**
  * GET /api/orders
@@ -146,6 +149,62 @@ export async function POST(request) {
     const client = await clientPromise;
     const db = client.db('uk-restaurant');
 
+    // Get email from body (required for spam check)
+    const email = body.customer_email || body.email;
+    if (!email) {
+      return NextResponse.json(
+        { success: false, error: 'Email là bắt buộc để đặt hàng' },
+        { status: 400 }
+      );
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Step 1: Check blacklist
+    const blacklistCheck = await checkBlacklist(normalizedEmail);
+    if (blacklistCheck.isBlocked) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Email này đã bị chặn. Vui lòng liên hệ hỗ trợ.',
+          error_code: 'BLACKLISTED',
+          reason: blacklistCheck.reason,
+        },
+        { status: 403 }
+      );
+    }
+
+    // Step 2: Check email verified
+    if (!isEmailVerified(normalizedEmail)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Email chưa được xác thực. Vui lòng xác thực email trước khi đặt hàng.',
+          error_code: 'EMAIL_NOT_VERIFIED',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Step 3: Check rate limit (5 đơn trong 30 phút)
+    const MAX_ORDERS_PER_30MIN = parseInt(process.env.SPAM_MAX_ORDERS_PER_30MIN || '5');
+    const rateLimitKey = `order_count:${normalizedEmail}:30min`;
+    const orderCount = cache.increment(rateLimitKey, 1800); // TTL: 30 phút
+
+    if (orderCount > MAX_ORDERS_PER_30MIN) {
+      // Auto blacklist email (24 hours)
+      await autoBlacklistIfNeeded(normalizedEmail, 'too_many_orders', 24);
+      
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Bạn đã đặt quá nhiều đơn trong thời gian ngắn. Vui lòng thử lại sau 24 giờ.',
+          error_code: 'RATE_LIMIT_EXCEEDED',
+        },
+        { status: 429 }
+      );
+    }
+
     // Validate order
     const validation = validateOrder(body);
     if (!validation.isValid) {
@@ -220,9 +279,9 @@ export async function POST(request) {
       }
     }
 
-    // Get user email if user_id exists
-    let customerEmail = null;
-    if (body.user_id) {
+    // Use email from body (required for spam check) or get from user if logged in
+    let customerEmail = normalizedEmail;
+    if (body.user_id && !normalizedEmail) {
       try {
         const user = await db.collection('users').findOne({ user_id: body.user_id });
         if (user && user.email) {
