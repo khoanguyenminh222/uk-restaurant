@@ -2,8 +2,16 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
+import { useLandingConfig } from "@/hooks/useLandingConfig"
 
 export default function Hero() {
+  const { config } = useLandingConfig()
+  const heroConfig = config?.hero || {}
+  const title = heroConfig.title || 'UK Restaurant'
+  const subtitle = heroConfig.subtitle || 'Ăn no khỏi "bàn"'
+  const description = heroConfig.description || 'Khám phá hương vị đặc biệt với thực đơn đa dạng, nguyên liệu tươi ngon và dịch vụ tận tâm'
+  const ctaButtonText = heroConfig.cta_button_text || 'Xem thực đơn'
+  
   const [heroImages, setHeroImages] = useState([])
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -113,13 +121,13 @@ export default function Hero() {
                   }}
                 />
               ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5"></div>
+                <div className="absolute inset-0 bg-linear-to-br from-primary/20 via-primary/10 to-primary/5"></div>
               )}
             </div>
           ))
         ) : (
           !loading && (
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5"></div>
+            <div className="absolute inset-0 bg-linear-to-br from-primary/20 via-primary/10 to-primary/5"></div>
           )
         )}
       </div>
@@ -139,17 +147,17 @@ export default function Hero() {
         <div className="max-w-4xl mx-auto text-center">
           {/* Title */}
           <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold font-display text-white mb-4 animate-fade-in-up text-balance drop-shadow-lg">
-            UK Restaurant
+            {title}
           </h1>
 
           {/* Subtitle */}
           <p className="text-xl md:text-2xl lg:text-3xl font-medium font-display text-white mb-6 animate-fade-in-up animation-delay-100 drop-shadow-md">
-            Ăn no khỏi &ldquo;bàn&rdquo;
+            {subtitle}
           </p>
 
           {/* Description */}
           <p className="text-base md:text-lg lg:text-xl text-white/90 max-w-2xl mx-auto mb-8 leading-relaxed animate-fade-in-up animation-delay-200 text-pretty drop-shadow-md">
-            Khám phá hương vị đặc biệt với thực đơn đa dạng, nguyên liệu tươi ngon và dịch vụ tận tâm
+            {description}
           </p>
 
           {/* CTA Buttons */}
@@ -158,7 +166,7 @@ export default function Hero() {
               onClick={scrollToMenu}
               className="w-full sm:w-auto px-8 py-3 md:px-10 md:py-4 cursor-pointer bg-primary hover:bg-primary-dark text-primary-foreground font-bold text-base md:text-lg lg:text-xl rounded-xl shadow-md hover:shadow-primary/50 transition-all duration-300 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-transparent whitespace-nowrap"
             >
-              Xem thực đơn
+              {ctaButtonText}
             </button>
             <button
               onClick={scrollToContact}

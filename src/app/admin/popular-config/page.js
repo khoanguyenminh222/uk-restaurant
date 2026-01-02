@@ -420,7 +420,7 @@ export default function AdminPopularConfig() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {threshold.value}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground text-2xl">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {threshold.icon}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

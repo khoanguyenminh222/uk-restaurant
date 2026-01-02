@@ -2,6 +2,7 @@
 
 import { Phone, Mail, MapPin, MessageCircle } from "lucide-react"
 import { useScrollAnimation } from "@/hooks/useScrollAnimation"
+import { useLandingConfig } from "@/hooks/useLandingConfig"
 
 // Facebook SVG Icon
 const FacebookIcon = ({ className }) => (
@@ -26,6 +27,13 @@ const InstagramIcon = ({ className }) => (
 )
 
 export default function Contact() {
+  const { config } = useLandingConfig()
+  const contactConfig = config?.contact || {}
+  const sectionTitle = contactConfig.section_title || 'Liên hệ'
+  const contactInfoConfig = contactConfig.info || {}
+  const mapEmbedUrl = contactConfig.map_embed_url || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.1234567890!2d106.6297!3d10.8231!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTDCsDQ5JzIzLjIiTiAxMDbCsDM3JzQ2LjkiRQ!5e0!3m2!1svi!2s!4v1234567890123!5m2!1svi!2s"
+  const socialMediaConfig = contactConfig.social_media || []
+  
   const [headerRef, isHeaderVisible] = useScrollAnimation({ threshold: 0.2 })
   const [contactCardRef, isContactCardVisible] = useScrollAnimation({ threshold: 0.2 })
   const [mapRef, isMapVisible] = useScrollAnimation({ threshold: 0.2 })
@@ -35,24 +43,31 @@ export default function Contact() {
     {
       icon: Phone,
       title: "Điện thoại",
-      value: "(+84) 096 960 6095",
-      href: "tel:+84096960609",
+      value: contactInfoConfig.phone || "(+84) 096 960 6095",
+      href: `tel:${(contactInfoConfig.phone || "").replace(/\D/g, "")}`,
     },
     {
       icon: Mail,
       title: "Email",
-      value: "khoanguyenminh222@gmail.com",
-      href: "mailto:khoanguyenminh222@gmail.com",
+      value: contactInfoConfig.email || "khoanguyenminh222@gmail.com",
+      href: `mailto:${contactInfoConfig.email || "khoanguyenminh222@gmail.com"}`,
     },
     {
       icon: MapPin,
       title: "Địa chỉ",
-      value: "123 Đường ABC, Quận 1, TP. Hồ Chí Minh",
+      value: contactInfoConfig.address || "123 Đường ABC, Quận 1, TP. Hồ Chí Minh",
       href: null,
     },
   ]
 
-  const socialMedia = [
+  // Map social media from config (simplified - would need proper icon mapping)
+  const socialMedia = socialMediaConfig.length > 0 ? socialMediaConfig.map(social => ({
+    name: social.name,
+    icon: social.icon === 'FacebookIcon' ? FacebookIcon : social.icon === 'InstagramIcon' ? InstagramIcon : MessageCircle,
+    href: social.url,
+    description: social.description || '',
+    color: social.color || 'text-blue-400',
+  })) : [
     {
       name: "Facebook",
       icon: FacebookIcon,
@@ -76,9 +91,6 @@ export default function Contact() {
     },
   ]
 
-  // Google Maps embed URL - Thay đổi địa chỉ này theo địa chỉ thực tế của nhà hàng
-  const mapEmbedUrl = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.1234567890!2d106.6297!3d10.8231!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTDCsDQ5JzIzLjIiTiAxMDbCsDM3JzQ2LjkiRQ!5e0!3m2!1svi!2s!4v1234567890123!5m2!1svi!2s"
-
   return (
     <section id="contact" className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-muted">
       <div className="max-w-7xl mx-auto overflow-hidden">
@@ -87,7 +99,7 @@ export default function Contact() {
           ref={headerRef}
           className={`text-center mb-12 scroll-fade-in ${isHeaderVisible ? "visible" : ""}`}
         >
-          <h2 className="text-3xl md:text-4xl font-bold font-display text-foreground mb-4">Liên hệ</h2>
+          <h2 className="text-3xl md:text-4xl font-bold font-display text-foreground mb-4">{sectionTitle}</h2>
           <div className="w-16 h-1 bg-primary mx-auto mb-6 rounded-full"></div>
           <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Hãy liên hệ với chúng tôi để được tư vấn và đặt món ngay hôm nay

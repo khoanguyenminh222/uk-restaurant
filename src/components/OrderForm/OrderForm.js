@@ -510,7 +510,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
       
       {/* Cancel Confirmation Modal - Hiển thị phía trên success screen */}
       {showCancelConfirm && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-2 sm:p-4">
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/70 backdrop-blur-sm p-2 sm:p-4">
         <div
           ref={modalRef}
           className="relative w-full max-w-md bg-card rounded-xl shadow-2xl border border-border overflow-hidden animate-fade-in-up"

@@ -5,8 +5,14 @@ import { Search, X, ArrowRight, TrendingUp } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useScrollAnimation } from "@/hooks/useScrollAnimation"
 import MenuCard from "./MenuCard"
+import { useLandingConfig } from "@/hooks/useLandingConfig"
 
 export default function Menu({ onAddToCart, onOrderClick }) {
+  const { config } = useLandingConfig()
+  const menuConfig = config?.menu || {}
+  const sectionTitle = menuConfig.section_title || 'Thực đơn'
+  const sectionDescription = menuConfig.section_description || 'Khám phá những món ăn được yêu thích nhất'
+  
   const router = useRouter()
   const [categories, setCategories] = useState([])
   const [foods, setFoods] = useState([])
@@ -355,11 +361,11 @@ export default function Menu({ onAddToCart, onOrderClick }) {
             
             <div className="relative px-8 py-6">
               <h2 className="text-2xl md:text-3xl font-bold font-display mb-2 bg-linear-to-r from-primary via-primary-light to-primary bg-clip-text text-transparent">
-            Thực đơn
+            {sectionTitle}
           </h2>
               <div className="w-16 h-0.5 bg-primary rounded-full mx-auto mb-2"></div>
               <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto">
-                Khám phá những món ăn được yêu thích nhất
+                {sectionDescription}
               </p>
             </div>
           </div>

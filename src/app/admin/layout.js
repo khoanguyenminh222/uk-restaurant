@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, Menu, X, LayoutDashboard, FolderOpen, UtensilsCrossed, Users, LogOut, ShoppingCart, UserCircle, Image as ImageIcon, TrendingUp } from 'lucide-react';
+import { Home, Menu, X, LayoutDashboard, FolderOpen, UtensilsCrossed, Users, LogOut, ShoppingCart, UserCircle, Image as ImageIcon, TrendingUp, Settings, ChevronDown, ChevronRight } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle/ThemeToggle';
 
 export default function AdminLayout({ children }) {
@@ -12,6 +12,7 @@ export default function AdminLayout({ children }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [adminInfo, setAdminInfo] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [configMenuOpen, setConfigMenuOpen] = useState(false);
 
   useEffect(() => {
     const checkAuth = () => {
@@ -60,6 +61,18 @@ export default function AdminLayout({ children }) {
     };
   }, [mobileMenuOpen]);
 
+  // Check if current path is in config submenu
+  const isConfigPath = pathname.startsWith('/admin/banners') || 
+                       pathname.startsWith('/admin/popular-config') || 
+                       pathname.startsWith('/admin/landing-config');
+  
+  // Auto expand config menu if on config page
+  useEffect(() => {
+    if (isConfigPath) {
+      setConfigMenuOpen(true);
+    }
+  }, [isConfigPath]);
+
   const handleLogout = () => {
     localStorage.removeItem('admin_data');
     localStorage.removeItem('admin_logged_in');
@@ -79,11 +92,21 @@ export default function AdminLayout({ children }) {
   // Navigation items based on role
   const navItems = [
     { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/admin/orders', label: 'Đơn hàng', icon: ShoppingCart },
-    { href: '/admin/banners', label: 'Banner', icon: ImageIcon },
     { href: '/admin/categories', label: 'Danh mục', icon: FolderOpen },
     { href: '/admin/food', label: 'Món ăn', icon: UtensilsCrossed },
-    { href: '/admin/popular-config', label: 'Cấu hình Ngưỡng', icon: TrendingUp },
+    { href: '/admin/orders', label: 'Đơn hàng', icon: ShoppingCart },
+    { 
+      type: 'group',
+      label: 'Cấu hình',
+      icon: Settings,
+      isOpen: configMenuOpen,
+      onToggle: () => setConfigMenuOpen(!configMenuOpen),
+      children: [
+        { href: '/admin/banners', label: 'Banner', icon: ImageIcon },
+        { href: '/admin/popular-config', label: 'Cấu hình Ngưỡng', icon: TrendingUp },
+        { href: '/admin/landing-config', label: 'Cấu hình Landing', icon: Settings },
+      ]
+    },
     { href: '/admin/users', label: 'Người dùng', icon: UserCircle },
     ...(adminInfo && adminInfo.role === 'super_admin' 
       ? [{ href: '/admin/admins', label: 'Quản lý Admin', icon: Users }]
@@ -128,8 +151,8 @@ export default function AdminLayout({ children }) {
         <div className="p-6 border-b border-border">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-xl font-bold text-card-foreground">UK Restaurant</h1>
-              <p className="text-sm text-muted-foreground">Admin Panel</p>
+              <h1 className="text-xl font-bold text-card-foreground">Admin Panel</h1>
+              {/* <p className="text-sm text-muted-foreground">Admin Panel</p> */}
             </div>
             <div className="hidden lg:block">
               <ThemeToggle />
@@ -152,7 +175,59 @@ export default function AdminLayout({ children }) {
 
         <nav className="p-4 flex-1 overflow-y-auto">
           <ul className="space-y-2">
-            {navItems.map((item) => {
+            {navItems.map((item, index) => {
+              // Menu group với submenu
+              if (item.type === 'group') {
+                const IconComponent = item.icon;
+                const hasActiveChild = item.children?.some(child => pathname === child.href);
+                return (
+                  <li key={`group-${index}`}>
+                    <button
+                      onClick={item.onToggle}
+                      className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-colors ${
+                        hasActiveChild
+                          ? 'bg-primary/10 text-primary'
+                          : 'text-muted-foreground hover:bg-muted hover:text-card-foreground'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <IconComponent className="w-5 h-5" />
+                        <span className="font-medium">{item.label}</span>
+                      </div>
+                      {item.isOpen ? (
+                        <ChevronDown className="w-4 h-4" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4" />
+                      )}
+                    </button>
+                    {item.isOpen && item.children && (
+                      <ul className="mt-1 ml-4 space-y-1 border-l-2 border-border pl-4">
+                        {item.children.map((child) => {
+                          const isActive = pathname === child.href;
+                          const ChildIcon = child.icon;
+                          return (
+                            <li key={child.href}>
+                              <Link
+                                href={child.href}
+                                className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
+                                  isActive
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'text-muted-foreground hover:bg-muted hover:text-card-foreground'
+                                }`}
+                              >
+                                <ChildIcon className="w-4 h-4" />
+                                <span className="text-sm font-medium">{child.label}</span>
+                              </Link>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </li>
+                );
+              }
+              
+              // Menu item thông thường
               const isActive = pathname === item.href;
               const IconComponent = item.icon;
               return (

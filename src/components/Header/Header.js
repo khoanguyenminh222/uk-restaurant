@@ -5,8 +5,12 @@ import { Utensils, Home, BookOpen, Phone, ShoppingCart, User, Menu as MenuIcon, 
 import { getCartItemCount } from "@/utils/cart"
 import { getUser, clearUser } from "@/utils/user"
 import ThemeToggle from "@/components/ThemeToggle/ThemeToggle"
+import { useLandingConfig } from "@/hooks/useLandingConfig"
 
 export default function Header({ onCartClick, onLoginClick, onProfileClick, onOrderHistoryClick }) {
+  const { config } = useLandingConfig()
+  const restaurantName = config?.header?.restaurant_name || 'UK Restaurant'
+  
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [activeSection, setActiveSection] = useState("home")
@@ -156,11 +160,11 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
           <button
             onClick={() => scrollToSection("home")}
             className="flex cursor-pointer items-center gap-2 text-xl sm:text-2xl md:text-3xl font-bold font-display text-primary hover:text-primary-light hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded-lg px-2 py-1 shrink-0"
-            aria-label="UK Restaurant - Về trang chủ"
+            aria-label={`${restaurantName} - Về trang chủ`}
           >
             <Utensils className="w-6 h-6 sm:w-8 sm:h-8 text-primary shrink-0" />
             <span className="text-primary whitespace-nowrap linear-to-r from-primary to-primary-light">
-              UK Restaurant
+              {restaurantName}
             </span>
           </button>
 

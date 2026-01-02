@@ -101,9 +101,9 @@ export default function AdminLogin() {
               <Shield className="w-8 h-8 text-primary" />
             </div>
             <h1 className="text-3xl font-bold text-card-foreground mb-2">
-              UK Restaurant
+              Admin Panel
             </h1>
-            <p className="text-muted-foreground">Admin Panel</p>
+            {/* <p className="text-muted-foreground">Admin Panel</p> */}
           </div>
 
           {/* Form */}

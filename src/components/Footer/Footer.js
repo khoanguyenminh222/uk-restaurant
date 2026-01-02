@@ -1,8 +1,16 @@
 "use client"
 
 import { Utensils } from "lucide-react"
+import { useLandingConfig } from "@/hooks/useLandingConfig"
 
 export default function Footer() {
+  const { config } = useLandingConfig()
+  const footerConfig = config?.footer || {}
+  const restaurantName = footerConfig.restaurant_name || 'UK Restaurant'
+  const slogan = footerConfig.slogan || 'Ăn no khỏi "bàn"'
+  const description = footerConfig.description || 'Khám phá hương vị đặc biệt với thực đơn đa dạng, nguyên liệu tươi ngon và dịch vụ tận tâm.'
+  const copyrightText = footerConfig.copyright_text || 'Tất cả quyền được bảo lưu.'
+  const links = footerConfig.links || []
   const currentYear = new Date().getFullYear()
 
   return (
@@ -12,13 +20,13 @@ export default function Footer() {
         <div className="space-y-4 max-w-2xl">
           <div className="flex items-center gap-2">
             <Utensils className="w-6 h-6 text-primary" />
-            <h3 className="text-xl font-bold font-display text-foreground">UK Restaurant</h3>
+            <h3 className="text-xl font-bold font-display text-foreground">{restaurantName}</h3>
           </div>
           <p className="text-muted-foreground text-sm leading-relaxed">
-            Ăn no khỏi &ldquo;bàn&rdquo;
+            {slogan}
           </p>
           <p className="text-muted-foreground text-sm">
-            Khám phá hương vị đặc biệt với thực đơn đa dạng, nguyên liệu tươi ngon và dịch vụ tận tâm.
+            {description}
           </p>
         </div>
 
@@ -26,16 +34,17 @@ export default function Footer() {
         <div className="mt-12 pt-8 border-t border-border">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-muted-foreground text-sm text-center md:text-left">
-              © {currentYear} UK Restaurant. Tất cả quyền được bảo lưu.
+              © {currentYear} {restaurantName}. {copyrightText}
             </p>
-            <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <a href="#" className="hover:text-primary transition-colors">
-                Chính sách bảo mật
-              </a>
-              <a href="#" className="hover:text-primary transition-colors">
-                Điều khoản sử dụng
-              </a>
-            </div>
+            {links.length > 0 && (
+              <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                {links.map((link, index) => (
+                  <a key={index} href={link.url} className="hover:text-primary transition-colors">
+                    {link.text}
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
