@@ -213,7 +213,7 @@ export default function OrderHistory({ isOpen, onClose }) {
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors z-10"
+          className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors z-10 cursor-pointer"
           aria-label="Đóng"
         >
           <X className="w-5 h-5" />
@@ -374,7 +374,7 @@ export default function OrderHistory({ isOpen, onClose }) {
                 setShowDetailModal(false)
                 setSelectedOrder(null)
               }}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors z-10"
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors z-10 cursor-pointer"
               aria-label="Đóng"
             >
               <X className="w-5 h-5" />
@@ -467,7 +467,7 @@ export default function OrderHistory({ isOpen, onClose }) {
 
                 {/* Cancel Button (only if status is pending) */}
                 {selectedOrder.status === 'pending' && (
-                  <div className="border-t border-border pt-4">
+                  <div className="border-t border-border pt-4 cursor-pointer">
                     <button
                       onClick={handleCancelOrder}
                       disabled={cancelling}

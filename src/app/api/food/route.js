@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
+import { validateFood } from '@/lib/models/Food';
+import { ObjectId } from 'mongodb';
 
 /**
  * GET /api/food
@@ -86,12 +88,27 @@ export async function POST(request) {
 
     // TODO: Add admin authentication check
 
-    // Validate
-    if (!body.name || !body.category_id || body.price === undefined) {
+    // Validate using Food model
+    const validation = validateFood(body);
+    if (!validation.isValid) {
       return NextResponse.json(
-        { success: false, error: 'Tên món, danh mục và giá là bắt buộc' },
+        { success: false, error: 'Dữ liệu không hợp lệ', errors: validation.errors },
         { status: 400 }
       );
+    }
+
+    // Validate manual_badge.threshold_id if provided
+    if (body.manual_badge && body.manual_badge.threshold_id) {
+      const threshold = await db
+        .collection('popularConfig')
+        .findOne({ _id: new ObjectId(body.manual_badge.threshold_id) });
+      
+      if (!threshold) {
+        return NextResponse.json(
+          { success: false, error: 'Ngưỡng không tồn tại' },
+          { status: 400 }
+        );
+      }
     }
 
     // Generate ID if not provided

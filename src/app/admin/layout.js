@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, Menu, X, LayoutDashboard, FolderOpen, UtensilsCrossed, Users, LogOut, ShoppingCart, UserCircle, Image as ImageIcon } from 'lucide-react';
+import { Home, Menu, X, LayoutDashboard, FolderOpen, UtensilsCrossed, Users, LogOut, ShoppingCart, UserCircle, Image as ImageIcon, TrendingUp } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle/ThemeToggle';
 
 export default function AdminLayout({ children }) {
@@ -83,6 +83,7 @@ export default function AdminLayout({ children }) {
     { href: '/admin/banners', label: 'Banner', icon: ImageIcon },
     { href: '/admin/categories', label: 'Danh mục', icon: FolderOpen },
     { href: '/admin/food', label: 'Món ăn', icon: UtensilsCrossed },
+    { href: '/admin/popular-config', label: 'Cấu hình Ngưỡng', icon: TrendingUp },
     { href: '/admin/users', label: 'Người dùng', icon: UserCircle },
     ...(adminInfo && adminInfo.role === 'super_admin' 
       ? [{ href: '/admin/admins', label: 'Quản lý Admin', icon: Users }]

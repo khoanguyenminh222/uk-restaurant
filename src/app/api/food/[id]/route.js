@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
+import { validateFood } from '@/lib/models/Food';
+import { ObjectId } from 'mongodb';
 
 /**
  * GET /api/food/:id
@@ -7,7 +9,7 @@ import clientPromise from '@/lib/mongodb';
  */
 export async function GET(request, { params }) {
   try {
-    const { id } = await await params;
+    const { id } = await params;
     const client = await clientPromise;
     const db = client.db('uk-restaurant');
     
@@ -48,19 +50,47 @@ export async function PUT(request, { params }) {
 
     // TODO: Add admin authentication check
 
-    // Validate
-    if (body.name !== undefined && (!body.name || typeof body.name !== 'string' || body.name.trim().length === 0)) {
+    // Get existing food to merge with update data
+    const existingFood = await db
+      .collection('food')
+      .findOne({ id: parseInt(id) });
+
+    if (!existingFood) {
       return NextResponse.json(
-        { success: false, error: 'Tên món không hợp lệ' },
+        { success: false, error: 'Không tìm thấy món ăn' },
+        { status: 404 }
+      );
+    }
+
+    // Merge existing data with update data
+    const mergedData = { ...existingFood, ...body };
+
+    // Validate using Food model
+    const validation = validateFood(mergedData);
+    if (!validation.isValid) {
+      return NextResponse.json(
+        { success: false, error: 'Dữ liệu không hợp lệ', errors: validation.errors },
         { status: 400 }
       );
     }
 
-    if (body.price !== undefined && (typeof body.price !== 'number' || body.price < 0)) {
-      return NextResponse.json(
-        { success: false, error: 'Giá phải là số và >= 0' },
-        { status: 400 }
-      );
+    // Validate manual_badge.threshold_id if provided
+    if (body.manual_badge && body.manual_badge.threshold_id) {
+      const threshold = await db
+        .collection('popularConfig')
+        .findOne({ _id: new ObjectId(body.manual_badge.threshold_id) });
+      
+      if (!threshold) {
+        return NextResponse.json(
+          { success: false, error: 'Ngưỡng không tồn tại' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // If manual_badge is explicitly set to null, remove it
+    if (body.manual_badge === null) {
+      body.manual_badge = null;
     }
 
     // Update timestamps

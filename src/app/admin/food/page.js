@@ -7,6 +7,7 @@ import { UtensilsCrossed, Plus, Edit2, Trash2, Loader2, Image as ImageIcon, X, C
 export default function AdminFood() {
   const [food, setFood] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [thresholds, setThresholds] = useState([]); // Danh sách ngưỡng để chọn badge
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingFood, setEditingFood] = useState(null);
@@ -21,6 +22,10 @@ export default function AdminFood() {
     image: '',
     description: '',
     is_available: true,
+    // Badge settings
+    badgeType: 'auto', // 'auto', 'manual', 'none'
+    manual_badge: null, // { threshold_id: '', label: '', icon: '', color: '' }
+    use_auto_badge: true,
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -31,7 +36,20 @@ export default function AdminFood() {
   useEffect(() => {
     fetchCategories();
     fetchFood();
+    fetchThresholds();
   }, [categoryFilter, availabilityFilter, pagination.page]);
+
+  const fetchThresholds = async () => {
+    try {
+      const res = await fetch('/api/config/popular?sortBy=order');
+      const data = await res.json();
+      if (data.success) {
+        setThresholds(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching thresholds:', error);
+    }
+  };
 
   const fetchCategories = async () => {
     try {
@@ -94,6 +112,14 @@ export default function AdminFood() {
   const handleOpenModal = (foodItem = null) => {
     if (foodItem) {
       setEditingFood(foodItem);
+      // Xác định badgeType dựa trên manual_badge
+      let badgeType = 'auto';
+      if (foodItem.manual_badge) {
+        badgeType = 'manual';
+      } else if (foodItem.use_auto_badge === false) {
+        badgeType = 'none';
+      }
+      
       setFormData({
         name: foodItem.name || '',
         category_id: foodItem.category_id || '',
@@ -101,6 +127,9 @@ export default function AdminFood() {
         image: foodItem.image || '',
         description: foodItem.description || '',
         is_available: foodItem.is_available !== undefined ? foodItem.is_available : true,
+        badgeType,
+        manual_badge: foodItem.manual_badge || null,
+        use_auto_badge: foodItem.use_auto_badge !== undefined ? foodItem.use_auto_badge : true,
       });
     } else {
       setEditingFood(null);
@@ -111,6 +140,9 @@ export default function AdminFood() {
         image: '',
         description: '',
         is_available: true,
+        badgeType: 'auto',
+        manual_badge: null,
+        use_auto_badge: true,
       });
     }
     setShowModal(true);
@@ -128,6 +160,9 @@ export default function AdminFood() {
       image: '',
       description: '',
       is_available: true,
+      badgeType: 'auto',
+      manual_badge: null,
+      use_auto_badge: true,
     });
     setError('');
     setSuccess('');
@@ -159,10 +194,32 @@ export default function AdminFood() {
         : '/api/food';
       const method = editingFood ? 'PUT' : 'POST';
 
+      // Xử lý badge settings
+      let badgeData = {};
+      if (formData.badgeType === 'manual') {
+        // Nếu chọn manual, set manual_badge và use_auto_badge
+        if (formData.manual_badge) {
+          badgeData.manual_badge = formData.manual_badge;
+        }
+        badgeData.use_auto_badge = false; // Tắt auto khi dùng manual
+      } else if (formData.badgeType === 'none') {
+        // Nếu chọn none, xóa manual_badge và tắt auto
+        badgeData.manual_badge = null;
+        badgeData.use_auto_badge = false;
+      } else {
+        // Nếu chọn auto, xóa manual_badge và bật auto
+        badgeData.manual_badge = null;
+        badgeData.use_auto_badge = true;
+      }
+
       const submitData = {
-        ...formData,
+        name: formData.name,
         category_id: parseInt(formData.category_id),
         price: parseFloat(formData.price),
+        image: formData.image || '',
+        description: formData.description || '',
+        is_available: formData.is_available,
+        ...badgeData,
       };
 
       const res = await fetch(url, {
@@ -225,6 +282,42 @@ export default function AdminFood() {
   const getCategoryName = (categoryId) => {
     const category = categories.find((c) => c.id === categoryId);
     return category ? category.name : 'N/A';
+  };
+
+  // Helper function để tính badge cho food (Kết hợp Tự động + Thủ công)
+  const getBadgeForFood = (foodItem) => {
+    // Bước 1: Kiểm tra manual_badge (Ưu tiên cao nhất)
+    if (foodItem.manual_badge) {
+      // Nếu có threshold_id → lấy badge từ ngưỡng đó
+      if (foodItem.manual_badge.threshold_id) {
+        const threshold = thresholds.find(t => t._id === foodItem.manual_badge.threshold_id)
+        if (threshold) {
+          return {
+            ...threshold,
+            isManual: true
+          }
+        }
+      }
+      // Nếu không có threshold_id → dùng badge tùy chỉnh
+      if (foodItem.manual_badge.label && foodItem.manual_badge.icon && foodItem.manual_badge.color) {
+        return {
+          label: foodItem.manual_badge.label,
+          icon: foodItem.manual_badge.icon,
+          color: foodItem.manual_badge.color,
+          isManual: true
+        }
+      }
+    }
+    
+    // Bước 2: Hệ thống tự động (Fallback) - Trong admin không có popularFoodsMap nên chỉ hiển thị manual
+    // Nếu use_auto_badge === false → không có badge
+    if (foodItem.use_auto_badge === false) {
+      return null
+    }
+    
+    // Trong admin, không tính auto badge (cần popularFoodsMap)
+    // Chỉ hiển thị "Tự động" indicator
+    return { isAuto: true }
   };
 
   if (loading) {
@@ -351,6 +444,9 @@ export default function AdminFood() {
                   Hình ảnh
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Badge
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Trạng thái
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -361,7 +457,7 @@ export default function AdminFood() {
             <tbody className="divide-y divide-border">
               {food.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-8 text-center text-muted-foreground">
+                  <td colSpan="8" className="px-6 py-8 text-center text-muted-foreground">
                     {searchTerm || categoryFilter !== 'all' || availabilityFilter !== 'all' ? 'Không tìm thấy món ăn' : 'Chưa có món ăn nào'}
                   </td>
                 </tr>
@@ -395,6 +491,33 @@ export default function AdminFood() {
                           <ImageIcon className="w-6 h-6 text-muted-foreground" />
                         </div>
                       )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {(() => {
+                        const badge = getBadgeForFood(item)
+                        if (badge && badge.isAuto) {
+                          return (
+                            <span className="text-xs px-2 py-1 bg-blue-500/20 text-blue-500 rounded-full">
+                              Tự động
+                            </span>
+                          )
+                        } else if (badge && badge.isManual) {
+                          return (
+                            <div
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold"
+                              style={{
+                                backgroundColor: `${badge.color}30`,
+                                color: badge.color,
+                              }}
+                            >
+                              <span>{badge.icon}</span>
+                              <span>{badge.label}</span>
+                              <span className="text-[10px] text-yellow-500">(Thủ công)</span>
+                            </div>
+                          )
+                        }
+                        return <span className="text-xs text-muted-foreground">-</span>
+                      })()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
@@ -640,21 +763,217 @@ export default function AdminFood() {
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                  rows="3"
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring min-h-[100px]"
+                  placeholder="Mô tả về món ăn..."
                 />
               </div>
 
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="is_available"
-                  checked={formData.is_available}
-                  onChange={(e) => setFormData({ ...formData, is_available: e.target.checked })}
-                  className="w-4 h-4 text-primary bg-input border-border rounded focus:ring-ring"
-                />
-                <label htmlFor="is_available" className="ml-2 text-sm text-card-foreground">
-                  Món đang có sẵn
+              {/* Badge Settings */}
+              <div className="border-t border-border pt-4">
+                <label className="block text-sm font-medium text-card-foreground mb-3">
+                  Cài đặt Badge
+                </label>
+                <div className="space-y-4">
+                  {/* Radio buttons cho badge type */}
+                  <div className="flex flex-col gap-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="badgeType"
+                        value="auto"
+                        checked={formData.badgeType === 'auto'}
+                        onChange={(e) => setFormData({ ...formData, badgeType: e.target.value, manual_badge: null })}
+                        className="w-4 h-4 text-primary focus:ring-primary"
+                      />
+                      <span className="text-sm text-card-foreground">Tự động (dựa trên số lượng đặt)</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="badgeType"
+                        value="manual"
+                        checked={formData.badgeType === 'manual'}
+                        onChange={(e) => {
+                          setFormData({ 
+                            ...formData, 
+                            badgeType: e.target.value,
+                            manual_badge: formData.manual_badge || { threshold_id: '', label: '', icon: '', color: '#FF0000' }
+                          })
+                        }}
+                        className="w-4 h-4 text-primary focus:ring-primary"
+                      />
+                      <span className="text-sm text-card-foreground">Thủ công (admin gắn)</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="badgeType"
+                        value="none"
+                        checked={formData.badgeType === 'none'}
+                        onChange={(e) => setFormData({ ...formData, badgeType: e.target.value, manual_badge: null })}
+                        className="w-4 h-4 text-primary focus:ring-primary"
+                      />
+                      <span className="text-sm text-card-foreground">Không có badge</span>
+                    </label>
+                  </div>
+
+                  {/* Manual badge settings */}
+                  {formData.badgeType === 'manual' && (
+                    <div className="bg-muted/50 p-4 rounded-lg space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-card-foreground mb-2">
+                          Chọn từ ngưỡng có sẵn
+                        </label>
+                        <select
+                          value={formData.manual_badge?.threshold_id || ''}
+                          onChange={(e) => {
+                            const thresholdId = e.target.value
+                            if (thresholdId) {
+                              const threshold = thresholds.find(t => t._id === thresholdId)
+                              if (threshold) {
+                                setFormData({
+                                  ...formData,
+                                  manual_badge: { threshold_id: thresholdId, label: '', icon: '', color: '' }
+                                })
+                              }
+                            } else {
+                              setFormData({
+                                ...formData,
+                                manual_badge: { threshold_id: '', label: formData.manual_badge?.label || '', icon: formData.manual_badge?.icon || '', color: formData.manual_badge?.color || '#FF0000' }
+                              })
+                            }
+                          }}
+                          className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        >
+                          <option value="">Tùy chỉnh badge</option>
+                          {thresholds.map((threshold) => (
+                            <option key={threshold._id} value={threshold._id}>
+                              {threshold.icon} {threshold.label} (≥{threshold.value})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {(!formData.manual_badge?.threshold_id) && (
+                        <>
+                          <div>
+                            <label className="block text-sm font-medium text-card-foreground mb-2">
+                              Label <span className="text-destructive">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={formData.manual_badge?.label || ''}
+                              onChange={(e) => setFormData({
+                                ...formData,
+                                manual_badge: { ...formData.manual_badge, label: e.target.value, threshold_id: '', icon: formData.manual_badge?.icon || '', color: formData.manual_badge?.color || '#FF0000' }
+                              })}
+                              className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                              placeholder="Ví dụ: Món mới"
+                              required={!formData.manual_badge?.threshold_id}
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-card-foreground mb-2">
+                              Icon (Emoji) <span className="text-destructive">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={formData.manual_badge?.icon || ''}
+                              onChange={(e) => setFormData({
+                                ...formData,
+                                manual_badge: { ...formData.manual_badge, icon: e.target.value, threshold_id: '', label: formData.manual_badge?.label || '', color: formData.manual_badge?.color || '#FF0000' }
+                              })}
+                              className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                              placeholder="🔥"
+                              required={!formData.manual_badge?.threshold_id}
+                            />
+                            <p className="text-sm text-muted-foreground">Ví dụ: 🔥, ⭐, ⚡, 🏆, 👑, 💎, ❤️, ✨, 🚀</p>
+                            <p className="text-sm text-muted-foreground"> Truy cập <a href="https://emojipedia.org/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">emojipedia.org</a> để tìm emoji</p>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-card-foreground mb-2">
+                              Màu sắc (Hex) <span className="text-destructive">*</span>
+                            </label>
+                            <div className="flex gap-2">
+                              <input
+                                type="color"
+                                value={formData.manual_badge?.color || '#FF0000'}
+                                onChange={(e) => setFormData({
+                                  ...formData,
+                                  manual_badge: { ...formData.manual_badge, color: e.target.value, threshold_id: '', label: formData.manual_badge?.label || '', icon: formData.manual_badge?.icon || '' }
+                                })}
+                                className="w-16 h-10 rounded border border-border cursor-pointer"
+                              />
+                              <input
+                                type="text"
+                                value={formData.manual_badge?.color || '#FF0000'}
+                                onChange={(e) => setFormData({
+                                  ...formData,
+                                  manual_badge: { ...formData.manual_badge, color: e.target.value, threshold_id: '', label: formData.manual_badge?.label || '', icon: formData.manual_badge?.icon || '' }
+                                })}
+                                className="flex-1 px-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                placeholder="#FF0000"
+                                pattern="^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
+                                required={!formData.manual_badge?.threshold_id}
+                              />
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Preview badge */}
+                      {formData.manual_badge && (
+                        <div className="pt-4 border-t border-border">
+                          <label className="block text-sm font-medium text-card-foreground mb-2">
+                            Preview Badge
+                          </label>
+                          <div className="flex items-center gap-2">
+                            {(() => {
+                              let badge = null
+                              if (formData.manual_badge.threshold_id) {
+                                const threshold = thresholds.find(t => t._id === formData.manual_badge.threshold_id)
+                                if (threshold) badge = threshold
+                              } else if (formData.manual_badge.label && formData.manual_badge.icon && formData.manual_badge.color) {
+                                badge = formData.manual_badge
+                              }
+                              
+                              if (badge) {
+                                return (
+                                  <div
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border backdrop-blur-sm"
+                                    style={{
+                                      backgroundColor: `${badge.color}50`,
+                                      borderColor: `${badge.color}50`,
+                                    }}
+                                  >
+                                    <span className="text-base">{badge.icon}</span>
+                                    <span className="text-xs font-semibold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                                      {badge.label}
+                                    </span>
+                                  </div>
+                                )
+                              }
+                              return <span className="text-sm text-muted-foreground">Chưa có badge</span>
+                            })()}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.is_available}
+                    onChange={(e) => setFormData({ ...formData, is_available: e.target.checked })}
+                    className="w-4 h-4 text-primary focus:ring-primary"
+                  />
+                  <span className="text-sm text-card-foreground">Món đang bán</span>
                 </label>
               </div>
 

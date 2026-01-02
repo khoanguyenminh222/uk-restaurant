@@ -33,6 +33,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
   // Success state
   const [successOrder, setSuccessOrder] = useState(null)
   const [cancelling, setCancelling] = useState(false)
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
 
   // Load items and calculate totals
   useEffect(() => {
@@ -120,19 +121,25 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
   // Handle close success screen
   const handleCloseSuccess = () => {
     setSuccessOrder(null)
+    setShowCancelConfirm(false)
     onClose()
   }
 
-  // Handle cancel order
-  const handleCancelOrder = async () => {
+  // Handle cancel order click - mở modal xác nhận
+  const handleCancelClick = () => {
+    if (!successOrder || successOrder.status !== 'pending') {
+      return
+    }
+    setShowCancelConfirm(true)
+  }
+
+  // Xác nhận hủy đơn hàng
+  const handleConfirmCancel = async () => {
     if (!successOrder || successOrder.status !== 'pending') {
       return
     }
 
-    if (!confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
-      return
-    }
-
+    setShowCancelConfirm(false)
     setCancelling(true)
     try {
       const response = await fetch(`/api/orders/${successOrder.order_id}`, {
@@ -172,6 +179,11 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
     } finally {
       setCancelling(false)
     }
+  }
+
+  // Hủy bỏ modal xác nhận
+  const handleCancelCancel = () => {
+    setShowCancelConfirm(false)
   }
 
   // Get order history URL
@@ -356,109 +368,114 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
     const trackOrderUrl = getTrackOrderUrl()
     
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4">
         <div
           ref={modalRef}
-          className="relative w-full max-w-2xl bg-card rounded-xl shadow-2xl border border-border overflow-hidden animate-fade-in-up"
+          className="relative w-full max-w-2xl bg-card rounded-xl shadow-2xl border border-border overflow-hidden animate-fade-in-up max-h-[95vh] overflow-y-auto"
         >
           {/* Close Button */}
           <button
             onClick={handleCloseSuccess}
-            className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors z-10"
+            className="absolute top-2 right-2 sm:top-4 sm:right-4 p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors z-10 cursor-pointer"
             aria-label="Đóng"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
 
           {/* Success Content */}
-          <div className="p-8 text-center">
+          <div className="p-4 sm:p-6 md:p-8 text-center">
             {/* Success Icon */}
-            <div className="flex justify-center mb-6">
-              <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center">
-                <CheckCircle className="w-12 h-12 text-primary" />
+            <div className="flex justify-center mb-4 sm:mb-6">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-primary/20 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-10 h-10 sm:w-12 sm:h-12 text-primary" />
               </div>
             </div>
 
             {/* Success Title */}
-            <h2 className="text-2xl font-bold text-card-foreground mb-2">Đặt món thành công!</h2>
-            <p className="text-muted-foreground mb-6">Đơn hàng của bạn đã được tiếp nhận và đang được xử lý.</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-card-foreground mb-2">Đặt món thành công!</h2>
+            <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 px-2">
+              Đơn hàng của bạn đã được tiếp nhận và đang được xử lý.
+            </p>
 
             {/* Order ID */}
-            <div className="bg-muted rounded-lg p-6 mb-6 border border-border">
-              <p className="text-sm text-muted-foreground mb-2">Mã đơn hàng của bạn</p>
-              <div className="flex items-center justify-center gap-3">
-                <p className="text-2xl font-mono font-bold text-primary">{successOrder.order_id}</p>
+            <div className="bg-muted rounded-lg p-4 sm:p-6 mb-4 sm:mb-6 border border-border">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-2">Mã đơn hàng của bạn</p>
+              <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
+                <p className="text-lg sm:text-xl md:text-2xl font-mono font-bold text-primary break-all">
+                  {successOrder.order_id}
+                </p>
                 <button
                   onClick={() => copyToClipboard(successOrder.order_id)}
-                  className="p-2 text-muted-foreground hover:text-primary hover:bg-muted rounded-lg transition-colors"
+                  className="p-1.5 sm:p-2 text-muted-foreground hover:text-primary hover:bg-muted rounded-lg transition-colors cursor-pointer shrink-0"
                   title="Sao chép mã đơn hàng"
                 >
-                  <Copy className="w-5 h-5" />
+                  <Copy className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </div>
             </div>
 
             {/* Track Order Link */}
-            <div className="bg-muted rounded-lg p-6 mb-6 border border-border">
-              <p className="text-sm text-muted-foreground mb-3">Theo dõi đơn hàng</p>
-              <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="bg-muted rounded-lg p-4 sm:p-6 mb-4 sm:mb-6 border border-border">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-3">Theo dõi đơn hàng</p>
+              <div className="flex items-start sm:items-center justify-center gap-2 sm:gap-3 mb-4 flex-wrap">
                 <a
                   href={trackOrderUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-primary hover:text-primary-light font-medium break-all text-sm"
+                  className="text-primary hover:text-primary-light font-medium break-all text-xs sm:text-sm flex-1 min-w-0"
                 >
                   {trackOrderUrl}
                 </a>
                 <button
                   onClick={() => copyToClipboard(trackOrderUrl)}
-                  className="p-2 text-muted-foreground hover:text-primary hover:bg-muted rounded-lg transition-colors shrink-0"
+                  className="p-1.5 sm:p-2 text-muted-foreground hover:text-primary hover:bg-muted rounded-lg transition-colors shrink-0 cursor-pointer"
                   title="Sao chép link"
                 >
-                  <Copy className="w-5 h-5" />
+                  <Copy className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </div>
               <a
                 href={trackOrderUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors text-sm sm:text-base w-full sm:w-auto"
               >
-                <ExternalLink className="w-5 h-5" />
-                Mở trang theo dõi đơn hàng
+                <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="whitespace-nowrap">Mở trang theo dõi đơn hàng</span>
               </a>
             </div>
 
             {/* Order History Link */}
-            <div className="bg-muted rounded-lg p-6 mb-6 border border-border">
-              <p className="text-sm text-muted-foreground mb-3">Xem lịch sử đơn hàng</p>
+            <div className="bg-muted rounded-lg p-4 sm:p-6 mb-4 sm:mb-6 border border-border">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-3">Xem lịch sử đơn hàng</p>
               <a
                 href={getOrderHistoryUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-primary/10 hover:bg-primary/20 text-primary font-semibold rounded-lg transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-primary/10 hover:bg-primary/20 text-primary font-semibold rounded-lg transition-colors text-sm sm:text-base w-full sm:w-auto"
               >
-                <History className="w-5 h-5" />
-                Xem lịch sử đơn hàng
+                <History className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="whitespace-nowrap">Xem lịch sử đơn hàng</span>
               </a>
             </div>
 
             {/* Cancel Order Button (only if status is pending) */}
             {successOrder.status === 'pending' && (
-              <div className="mb-6">
+              <div className="mb-4 sm:mb-6 cursor-pointer">
                 <button
-                  onClick={handleCancelOrder}
+                  onClick={handleCancelClick}
                   disabled={cancelling}
-                  className="w-full py-3 bg-destructive/10 hover:bg-destructive/20 text-destructive font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full py-2.5 sm:py-3 bg-destructive/10 hover:bg-destructive/20 text-destructive font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-base" 
                 >
                   {cancelling ? (
                     <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                       <span>Đang hủy...</span>
                     </>
                   ) : (
                     <>
-                      <XCircle className="w-5 h-5" />
+                      <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                       <span>Hủy đơn hàng</span>
                     </>
                   )}
@@ -468,28 +485,96 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
 
             {/* Status Badge */}
             {successOrder.status === 'cancelled' && (
-              <div className="mb-6 p-4 bg-destructive/10 border border-destructive/50 rounded-lg">
-                <p className="text-destructive font-medium">Đơn hàng đã được hủy</p>
+              <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-destructive/10 border border-destructive/50 rounded-lg">
+                <p className="text-destructive font-medium text-sm sm:text-base">Đơn hàng đã được hủy</p>
               </div>
             )}
 
             {/* Info */}
-            <p className="text-sm text-muted-foreground mb-6">
+            <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 px-2">
               Chúng tôi đã gửi thông tin đơn hàng đến email của bạn (nếu bạn đã đăng nhập).
-              <br />
-              Bạn có thể sử dụng mã đơn hàng hoặc link trên để theo dõi trạng thái đơn hàng.
+              <br className="hidden sm:block" />
+              <span className="block sm:inline"> Bạn có thể sử dụng mã đơn hàng hoặc link trên để theo dõi trạng thái đơn hàng.</span>
             </p>
 
             {/* Close Button */}
             <button
               onClick={handleCloseSuccess}
-              className="w-full py-3 bg-muted hover:bg-muted/80 text-card-foreground font-semibold rounded-lg transition-colors"
+              className="w-full py-2.5 sm:py-3 bg-muted hover:bg-muted/80 text-card-foreground font-semibold rounded-lg transition-colors cursor-pointer text-sm sm:text-base"
             >
               Đóng
             </button>
           </div>
         </div>
       </div>
+      
+      {/* Cancel Confirmation Modal - Hiển thị phía trên success screen */}
+      {showCancelConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-2 sm:p-4">
+        <div
+          ref={modalRef}
+          className="relative w-full max-w-md bg-card rounded-xl shadow-2xl border border-border overflow-hidden animate-fade-in-up"
+        >
+          {/* Close Button */}
+          <button
+            onClick={handleCancelCancel}
+            className="absolute top-2 right-2 sm:top-4 sm:right-4 p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors z-10 cursor-pointer"
+            aria-label="Đóng"
+          >
+            <X className="w-4 h-4 sm:w-5 sm:h-5" />
+          </button>
+
+          {/* Modal Content */}
+          <div className="p-4 sm:p-6 text-center">
+            {/* Warning Icon */}
+            <div className="flex justify-center mb-4 sm:mb-6">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-destructive/20 rounded-full flex items-center justify-center">
+                <XCircle className="w-10 h-10 sm:w-12 sm:h-12 text-destructive" />
+              </div>
+            </div>
+
+            {/* Title */}
+            <h2 className="text-xl sm:text-2xl font-bold text-card-foreground mb-2">
+              Xác nhận hủy đơn hàng
+            </h2>
+            <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
+              Bạn có chắc chắn muốn hủy đơn hàng <span className="font-semibold text-card-foreground">{successOrder?.order_id}</span>?
+            </p>
+            <p className="text-xs sm:text-sm text-muted-foreground mb-6">
+              Hành động này không thể hoàn tác.
+            </p>
+
+            {/* Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-3">
+              <button
+                onClick={handleCancelCancel}
+                className="flex-1 py-2.5 sm:py-3 bg-muted hover:bg-muted/80 text-card-foreground font-semibold rounded-lg transition-colors cursor-pointer text-sm sm:text-base"
+              >
+                Không, giữ lại
+              </button>
+              <button
+                onClick={handleConfirmCancel}
+                disabled={cancelling}
+                className="flex-1 py-2.5 sm:py-3 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-base"
+              >
+                {cancelling ? (
+                  <>
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                    <span>Đang hủy...</span>
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span>Có, hủy đơn hàng</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      )}
+      </>
     )
   }
 
@@ -503,7 +588,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors z-10"
+          className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors z-10 cursor-pointer"
           aria-label="Đóng"
         >
           <X className="w-5 h-5" />
@@ -676,7 +761,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
             >
               {loading ? (
                 <>

@@ -67,6 +67,27 @@ export default function Cart({ isOpen, onClose, onCheckout }) {
     }
   }
 
+  const handleQuantityChange = (itemId, newQuantity) => {
+    // Chuyển đổi sang số và validate
+    const quantity = parseInt(newQuantity)
+    if (!isNaN(quantity) && quantity > 0) {
+      updateCartItem(itemId, quantity)
+      updateCart()
+    }
+  }
+
+  const handleQuantityBlur = (itemId, currentValue) => {
+    const item = cart.find((item) => item.id === itemId)
+    if (item) {
+      const quantity = parseInt(currentValue)
+      if (isNaN(quantity) || quantity < 1) {
+        // Nếu không hợp lệ, reset về số lượng hiện tại
+        updateCartItem(itemId, item.quantity)
+        updateCart()
+      }
+    }
+  }
+
   const handleRemoveItem = (itemId) => {
     const item = cart.find((item) => item.id === itemId)
     if (item) {
@@ -224,9 +245,19 @@ export default function Cart({ isOpen, onClose, onCheckout }) {
                             >
                               <Minus className="w-4 h-4" />
                             </button>
-                            <span className="px-3 py-1 text-card-foreground font-medium min-w-8 text-center">
-                              {item.quantity}
-                            </span>
+                            <input
+                              type="number"
+                              min="1"
+                              value={item.quantity}
+                              onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                              onBlur={(e) => handleQuantityBlur(item.id, e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.target.blur()
+                                }
+                              }}
+                              className="w-12 px-2 py-1 text-card-foreground font-medium text-center border-0 focus:outline-none focus:ring-0 bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            />
                             <button
                               onClick={() => handleIncreaseQuantity(item.id)}
                               className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors cursor-pointer"

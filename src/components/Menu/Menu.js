@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Search, X, ArrowRight } from "lucide-react"
+import { Search, X, ArrowRight, TrendingUp } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useScrollAnimation } from "@/hooks/useScrollAnimation"
 import MenuCard from "./MenuCard"
@@ -17,6 +17,9 @@ export default function Menu({ onAddToCart, onOrderClick }) {
   const [error, setError] = useState(null)
   const [isTransitioning, setIsTransitioning] = useState(false) // Trạng thái đang chuyển category
   const [isSticky, setIsSticky] = useState(false) // Sticky search và category bar
+  const [isShowingPopular, setIsShowingPopular] = useState(false) // Đang hiển thị món nổi bật
+  const [thresholds, setThresholds] = useState([]) // Danh sách ngưỡng
+  const [popularFoodsMap, setPopularFoodsMap] = useState({}) // Map food_id -> total_quantity
   const menuSectionRef = useRef(null)
   const stickyBarRef = useRef(null)
   const categoryTabsRef = useRef(null) // Ref cho category tabs gốc
@@ -43,16 +46,196 @@ export default function Menu({ onAddToCart, onOrderClick }) {
     fetchCategories()
   }, [])
 
-  // Fetch foods
+  // Helper function để tính badge cho food (Kết hợp Tự động + Thủ công)
+  const getBadgeForFood = (food, thresholds, popularFoodsMap) => {
+    // Bước 1: Kiểm tra manual_badge (Ưu tiên cao nhất)
+    if (food.manual_badge) {
+      // Nếu có threshold_id → lấy badge từ ngưỡng đó
+      if (food.manual_badge.threshold_id) {
+        const threshold = thresholds.find(t => t._id === food.manual_badge.threshold_id)
+        if (threshold) {
+          return {
+            ...threshold,
+            isManual: true
+          }
+        }
+      }
+      // Nếu không có threshold_id → dùng badge tùy chỉnh
+      if (food.manual_badge.label && food.manual_badge.icon && food.manual_badge.color) {
+        return {
+          label: food.manual_badge.label,
+          icon: food.manual_badge.icon,
+          color: food.manual_badge.color,
+          value: 0,
+          order: 0,
+          isManual: true
+        }
+      }
+    }
+    
+    // Bước 2: Hệ thống tự động (Fallback)
+    if (food.use_auto_badge !== false) {
+      const totalQuantity = popularFoodsMap[food.id] || food.total_quantity || 0
+      if (totalQuantity > 0 && thresholds.length > 0) {
+        const matchedThreshold = thresholds.find(t => totalQuantity >= t.value)
+        if (matchedThreshold) {
+          return {
+            ...matchedThreshold,
+            isManual: false
+          }
+        }
+      }
+    }
+    
+    // Bước 3: Không có badge
+    return null
+  }
+
+  // Fetch thresholds và popular foods song song
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [thresholdsResponse, popularFoodsResponse] = await Promise.all([
+          fetch('/api/config/popular?sortBy=value'),
+          fetch('/api/food/popular?limit=1000')
+        ])
+
+        const [thresholdsResult, popularFoodsResult] = await Promise.all([
+          thresholdsResponse.json(),
+          popularFoodsResponse.json()
+        ])
+
+        if (thresholdsResult.success && Array.isArray(thresholdsResult.data)) {
+          const sorted = [...thresholdsResult.data].sort((a, b) => b.value - a.value)
+          setThresholds(sorted)
+        }
+
+        if (popularFoodsResult.success && Array.isArray(popularFoodsResult.data)) {
+          const map = {}
+          popularFoodsResult.data.forEach(food => {
+            if (food.id && food.total_quantity) {
+              map[food.id] = food.total_quantity
+            }
+          })
+          setPopularFoodsMap(map)
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  // Fetch foods - ưu tiên món nổi bật khi không chọn category, fallback về thứ tự mặc định
   useEffect(() => {
     const fetchFoods = async () => {
       try {
         setIsTransitioning(true)
+        
+        // Nếu đã chọn category → fetch theo category (không dùng món nổi bật)
+        if (selectedCategory !== null) {
+          setIsShowingPopular(false) // Không phải món nổi bật khi chọn category
+          const url = `/api/food?category_id=${selectedCategory}`
+          const response = await fetch(url)
+          const data = await response.json()
+          if (data.success) {
+            setFoods(data.data || [])
+            applyFilters(data.data || [], searchQuery)
+          } else {
+            setError(data.error || "Không thể tải danh sách món ăn")
+          }
+          setLoading(false)
+          setTimeout(() => {
+            setIsTransitioning(false)
+          }, 150)
+          return
+        }
+        
+        // Nếu chưa chọn category (selectedCategory === null) → Ưu tiên món có badge thủ công
+        if (selectedCategory === null) {
+          // Fetch tất cả món để có thể sắp xếp theo badge thủ công
+          const response = await fetch("/api/food?limit=100")
+          const data = await response.json()
+          
+          if (data.success && data.data) {
+            const availableFoods = data.data.filter((food) => food.is_available !== false)
+            
+            // Tính badge cho mỗi food và thêm total_quantity
+            const foodsWithBadge = availableFoods.map(food => {
+              const totalQuantity = popularFoodsMap[food.id] || 0
+              const badge = getBadgeForFood(food, thresholds, popularFoodsMap)
+              return {
+                ...food,
+                total_quantity: totalQuantity,
+                matchedThreshold: badge
+              }
+            })
+            
+            // Sắp xếp: Ưu tiên món có manual_badge lên đầu, sau đó là món có auto badge
+            const sortedFoods = foodsWithBadge.sort((a, b) => {
+              // Ưu tiên 1: Món có manual_badge
+              const aHasManual = a.matchedThreshold?.isManual === true
+              const bHasManual = b.matchedThreshold?.isManual === true
+              if (aHasManual && !bHasManual) return -1
+              if (!aHasManual && bHasManual) return 1
+              
+              // Ưu tiên 2: Món có auto badge (total_quantity cao hơn)
+              if (!aHasManual && !bHasManual) {
+                const aHasAuto = a.matchedThreshold && !a.matchedThreshold.isManual
+                const bHasAuto = b.matchedThreshold && !b.matchedThreshold.isManual
+                if (aHasAuto && !bHasAuto) return -1
+                if (!aHasAuto && bHasAuto) return 1
+                if (aHasAuto && bHasAuto) {
+                  return (b.total_quantity || 0) - (a.total_quantity || 0)
+                }
+              }
+              
+              // Ưu tiên 3: Món có manual_badge với order cao hơn (nếu có)
+              if (aHasManual && bHasManual) {
+                const aOrder = a.matchedThreshold?.order || 0
+                const bOrder = b.matchedThreshold?.order || 0
+                if (aOrder !== bOrder) return bOrder - aOrder
+              }
+              
+              return 0
+            })
+            
+            // Giới hạn 6 món
+            const top6Foods = sortedFoods.slice(0, 6)
+            
+            // Kiểm tra xem có món nào có badge không
+            const hasBadge = top6Foods.some(f => f.matchedThreshold)
+            setIsShowingPopular(hasBadge)
+            
+            setFoods(top6Foods)
+            applyFilters(top6Foods, searchQuery)
+            setLoading(false)
+            setTimeout(() => {
+              setIsTransitioning(false)
+            }, 150)
+            return
+          }
+        }
+        
+        // Fallback: Lấy tất cả món theo thứ tự mặc định
+        setIsShowingPopular(false)
         const response = await fetch("/api/food")
         const data = await response.json()
         if (data.success) {
-          setFoods(data.data || [])
-          applyFilters(data.data || [], searchQuery)
+          const availableFoods = data.data.filter((food) => food.is_available !== false)
+          // Tính badge cho mỗi food
+          const foodsWithBadge = availableFoods.map(food => {
+            const totalQuantity = popularFoodsMap[food.id] || 0
+            const badge = getBadgeForFood(food, thresholds, popularFoodsMap)
+            return {
+              ...food,
+              total_quantity: totalQuantity,
+              matchedThreshold: badge
+            }
+          })
+          setFoods(foodsWithBadge)
+          applyFilters(foodsWithBadge, searchQuery)
         } else {
           setError(data.error || "Không thể tải danh sách món ăn")
         }
@@ -68,7 +251,8 @@ export default function Menu({ onAddToCart, onOrderClick }) {
     }
 
     fetchFoods()
-  }, [selectedCategory])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategory, thresholds, popularFoodsMap])
 
   // Apply filters when search query changes
   useEffect(() => {
@@ -158,227 +342,30 @@ export default function Menu({ onAddToCart, onOrderClick }) {
   }, [])
 
   return (
-    <section id="menu" ref={menuSectionRef} className="py-8 md:py-12 px-4 sm:px-6 lg:px-8 bg-muted relative">
+    <section id="menu" ref={menuSectionRef} className="pt-6 pb-8 md:pt-6 md:pb-12 px-4 sm:px-6 lg:px-8 bg-muted relative">
       <div className="max-w-7xl mx-auto overflow-hidden">
-        {/* Sticky Search and Category Bar - Chỉ hiện khi scroll */}
-        <div
-          ref={stickyBarRef}
-          className={`fixed top-16 sm:top-20 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border shadow-md py-3 px-4 sm:px-6 lg:px-8 transition-all duration-300 ease-in-out ${
-            isSticky 
-              ? 'opacity-100 translate-y-0 pointer-events-auto' 
-              : 'opacity-0 -translate-y-4 pointer-events-none'
-          }`}
-        >
-            <div className="max-w-7xl mx-auto">
-              {/* Search Bar */}
-              <div className="mb-3">
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 md:w-6 md:h-6 text-primary" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={handleSearchChange}
-                    placeholder="Tìm kiếm món ăn..."
-                    className="w-full pl-12 pr-12 py-2.5 md:py-3 bg-card border-2 border-primary/30 rounded-xl text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary shadow-sm shadow-primary/10 transition-all text-sm md:text-base font-medium"
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={handleClearSearch}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
-                      aria-label="Xóa tìm kiếm"
-                    >
-                      <X className="w-4 h-4 md:w-5 md:h-5" />
-                    </button>
-                  )}
-                </div>
-                {searchQuery && (
-                  <p className="mt-1.5 text-xs md:text-sm text-muted-foreground text-right">
-                    Tìm thấy {filteredFoods.length} món{filteredFoods.length !== 1 ? "" : ""}
-                  </p>
-                )}
-              </div>
-
-              {/* Category Tabs */}
-              <div className="relative">
-                <div className="flex items-center px-2 gap-2 md:gap-3 overflow-x-auto pb-2 scrollbar-hide md:justify-center md:flex-wrap md:overflow-x-visible md:pb-0">
-                  {/* Tab "Tất cả" */}
-                  <button
-                    onClick={() => handleCategoryClick(null)}
-                    className={`shrink-0 px-3 md:px-6 py-1.5 md:py-2 rounded-full font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background cursor-pointer text-sm md:text-base ${
-                      selectedCategory === null
-                        ? "bg-primary text-primary-foreground shadow-md shadow-primary/40 scale-105"
-                        : "bg-card text-card-foreground hover:bg-primary/10 border border-border hover:scale-105 hover:border-primary/50"
-                    }`}
-                  >
-                    Tất cả
-                  </button>
-
-                  {/* Category Tabs */}
-                  {categories.length > 0 ? (
-                    categories.map((category, index) => (
-                      <button
-                        key={category.id || category._id}
-                        onClick={() => handleCategoryClick(category.id)}
-                        className={`shrink-0 px-3 md:px-6 py-1.5 md:py-2 rounded-full font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background active:scale-95 category-tab cursor-pointer hover:scale-105 text-sm md:text-base ${
-                          selectedCategory === category.id
-                            ? "text-primary-foreground shadow-md shadow-primary/40 scale-105"
-                            : "bg-card text-card-foreground border border-border"
-                        }`}
-                        style={{
-                          ...(selectedCategory === category.id && category.color ? { 
-                            backgroundColor: category.color,
-                            borderColor: category.color 
-                          } : {}),
-                          ...(selectedCategory !== category.id && category.color ? { 
-                            borderColor: category.color,
-                            '--hover-color': category.color
-                          } : {}),
-                          animationDelay: `${index * 0.05}s`
-                        }}
-                        onMouseEnter={(e) => {
-                          if (selectedCategory !== category.id && category.color) {
-                            e.currentTarget.style.backgroundColor = `${category.color}20`
-                            e.currentTarget.style.borderColor = category.color
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (selectedCategory !== category.id) {
-                            e.currentTarget.style.backgroundColor = ''
-                            if (category.color) {
-                              e.currentTarget.style.borderColor = category.color
-                            } else {
-                              e.currentTarget.style.borderColor = ''
-                            }
-                          }
-                        }}
-                      >
-                        {category.icon && <span className="mr-2 inline-block animate-bounce-subtle">{category.icon}</span>}
-                        {category.name}
-                      </button>
-                    ))
-                  ) : (
-                    <div className="text-muted-foreground text-sm">Đang tải danh mục...</div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-        {/* Section Header - Luôn hiển thị */}
+        {/* Section Header - Design đặc biệt cho landing page */}
         <div
           ref={headerRef}
-          className={`scroll-fade-in ${isHeaderVisible ? "visible" : ""} mb-6`}
+          className={`scroll-fade-in ${isHeaderVisible ? "visible" : ""} mb-6 md:mb-8 text-center`}
         >
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6">
-            {/* Section Header - Left Side */}
-            <div className="shrink-0">
-              <h2 className="text-2xl md:text-3xl font-bold font-display text-foreground mb-1">
-                Thực đơn
-              </h2>
-              <div className="w-40 h-0.5 bg-primary rounded-full"></div>
-              <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                Khám phá thực đơn đa dạng với các món ăn được chế biến từ nguyên liệu tươi ngon nhất
+          <div className="relative inline-block">
+            {/* Decorative background */}
+            <div className="absolute inset-0 bg-linear-to-r from-primary/10 via-primary/20 to-primary/10 rounded-3xl blur-2xl -z-10 transform scale-110"></div>
+            
+            <div className="relative px-8 py-6">
+              <h2 className="text-2xl md:text-3xl font-bold font-display mb-2 bg-linear-to-r from-primary via-primary-light to-primary bg-clip-text text-transparent">
+            Thực đơn
+          </h2>
+              <div className="w-16 h-0.5 bg-primary rounded-full mx-auto mb-2"></div>
+              <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto">
+                Khám phá những món ăn được yêu thích nhất
               </p>
             </div>
-
-            {/* Search Bar - Right Side, Prominent */}
-            <div
-              ref={contentRef}
-              className={`flex-1 max-w-2xl scroll-fade-in p-3 ${isContentVisible ? "visible" : ""}`}
-            >
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 md:w-6 md:h-6 text-primary" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  placeholder="Tìm kiếm món ăn..."
-                  className="w-full pl-12 pr-12 py-3 md:py-4 bg-card border-2 border-primary/30 rounded-xl text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary shadow-sm shadow-primary/10 transition-all text-base md:text-lg font-medium"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={handleClearSearch}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
-                    aria-label="Xóa tìm kiếm"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                )}
-              </div>
-              {searchQuery && (
-                <p className="mt-2 text-sm text-muted-foreground text-right">
-                  Tìm thấy {filteredFoods.length} món{filteredFoods.length !== 1 ? "" : ""}
-                </p>
-              )}
-            </div>
           </div>
         </div>
 
-        {/* Category Tabs - Luôn hiển thị */}
-        <div ref={categoryTabsRef} className="relative mb-6">
-          <div className="max-w-7xl mx-auto py-3">
-            <div className="flex items-center px-2 gap-2 md:gap-3 overflow-x-auto pb-2 scrollbar-hide md:justify-center md:flex-wrap md:overflow-x-visible md:pb-0">
-              {/* Tab "Tất cả" - Luôn hiển thị */}
-              <button
-                onClick={() => handleCategoryClick(null)}
-                className={`shrink-0 px-4 md:px-6 py-2 md:py-2.5 rounded-full font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background cursor-pointer ${
-                  selectedCategory === null
-                    ? "bg-primary text-primary-foreground shadow-md shadow-primary/40 scale-105"
-                    : "bg-card text-card-foreground hover:bg-primary/10 border border-border hover:scale-105 hover:border-primary/50"
-                }`}
-              >
-                Tất cả
-              </button>
-
-              {/* Category Tabs - Hiển thị tất cả categories */}
-              {categories.length > 0 ? (
-                categories.map((category, index) => (
-                  <button
-                    key={category.id || category._id}
-                    onClick={() => handleCategoryClick(category.id)}
-                    className={`shrink-0 px-4 md:px-6 py-2 md:py-2.5 rounded-full font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background active:scale-95 category-tab cursor-pointer hover:scale-105 ${
-                      selectedCategory === category.id
-                        ? "text-primary-foreground shadow-md shadow-primary/40 scale-105"
-                        : "bg-card text-card-foreground border border-border"
-                    }`}
-                    style={{
-                      ...(selectedCategory === category.id && category.color ? { 
-                        backgroundColor: category.color,
-                        borderColor: category.color 
-                      } : {}),
-                      ...(selectedCategory !== category.id && category.color ? { 
-                        borderColor: category.color,
-                        '--hover-color': category.color
-                      } : {}),
-                      animationDelay: `${index * 0.05}s`
-                    }}
-                    onMouseEnter={(e) => {
-                      if (selectedCategory !== category.id && category.color) {
-                        e.currentTarget.style.backgroundColor = `${category.color}20`
-                        e.currentTarget.style.borderColor = category.color
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (selectedCategory !== category.id) {
-                        e.currentTarget.style.backgroundColor = ''
-                        if (category.color) {
-                          e.currentTarget.style.borderColor = category.color
-                        } else {
-                          e.currentTarget.style.borderColor = ''
-                        }
-                      }
-                    }}
-                  >
-                    {category.icon && <span className="mr-2 inline-block animate-bounce-subtle">{category.icon}</span>}
-                    {category.name}
-                  </button>
-                ))
-              ) : (
-                <div className="text-muted-foreground text-sm">Đang tải danh mục...</div>
-              )}
-            </div>
-          </div>
-        </div>
+        {/* Category Tabs và Search Bar - Ẩn trên landing page để tập trung vào preview */}
 
         {/* Loading State */}
         {loading && (
@@ -409,47 +396,101 @@ export default function Menu({ onAddToCart, onOrderClick }) {
           </div>
         )}
 
-        {/* Menu Grid - Preview trên landing page */}
+        {/* Section Header - Món nổi bật - Gọn gàng */}
+        {!loading && !error && isShowingPopular && selectedCategory === null && !searchQuery && (
+          <>
+            <div className="mb-4 md:mb-6 flex items-center justify-center gap-2">
+              <TrendingUp className="w-5 h-5 text-primary" />
+              <h3 className="text-lg md:text-xl font-bold font-display text-primary">
+                Món nổi bật
+              </h3>
+              <span className="text-lg">🔥</span>
+            </div>
+            
+            {/* Hiển thị giá trị các ngưỡng */}
+            {thresholds.length > 0 && (
+              <div className="mb-6 flex flex-wrap items-center justify-center gap-3 md:gap-4">
+                {thresholds.map((threshold) => (
+                  <div
+                    key={threshold._id}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border backdrop-blur-sm"
+                  style={{
+                      backgroundColor: `${threshold.color}10`,
+                      borderColor: `${threshold.color}30`,
+                  }}
+                >
+                    <span className="text-sm">{threshold.icon}</span>
+                    <span 
+                      className="text-xs font-semibold"
+                        style={{
+                        color: threshold.color,
+                        }}
+                      >
+                      {threshold.label}
+                    </span>
+                    <span className="text-xs text-muted-foreground font-medium">
+                      (≥{threshold.value})
+                    </span>
+                      </div>
+                    ))}
+                </div>
+            )}
+          </>
+        )}
+
+        {/* Menu Preview - Grid 3 cột cân bằng (Giải pháp tối ưu) */}
         {!loading && !error && (
           <>
-            {filteredFoods.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-5">
-                {filteredFoods.slice(0, 12).map((food) => (
-                  <MenuCard
-                    key={food.id || food._id}
-                    food={food}
-                    onAddToCart={onAddToCart}
-                    onOrderClick={onOrderClick}
-                  />
-                ))}
-              </div>
+              {filteredFoods.length > 0 ? (
+              <>
+                {/* Grid responsive: 2 cột mobile, 3 cột tablet/desktop - Cân bằng tốt nhất */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-5">
+                  {filteredFoods.slice(0, 6).map((food, index) => (
+                    <div
+                      key={food.id || food._id}
+                      className="menu-item animate-fade-in-scale"
+                      style={{
+                        animationDelay: `${index * 0.08}s`,
+                        animationFillMode: 'both'
+                      }}
+                    >
+                      <MenuCard
+                        food={food}
+                        onAddToCart={onAddToCart}
+                        onOrderClick={onOrderClick}
+                        isPopular={food.matchedThreshold !== null}
+                        thresholds={thresholds}
+                        matchedThreshold={food.matchedThreshold}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* View All Button - Ngay sau 6 items (2 hàng x 3 cột) */}
+                <div className="flex justify-center mt-6 md:mt-8">
+                  <button
+                    onClick={handleViewAllMenu}
+                    className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg font-medium transition-all duration-200 hover:scale-105 active:scale-95 shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 cursor-pointer"
+                  >
+                    Xem tất cả
+                    <ArrowRight className="w-5 h-5" />
+                  </button>
+                </div>
+              </>
             ) : (
               <div className="flex items-center justify-center py-20">
                 <div className="text-center">
-                  <p className="text-muted-foreground text-lg mb-2">
+                    <p className="text-muted-foreground text-lg mb-2">
                     {searchQuery || selectedCategory
                       ? "Không tìm thấy món ăn nào"
-                      : "Chưa có món ăn nào"}
-                  </p>
-                  <p className="text-muted-foreground text-sm">
+                        : "Chưa có món ăn nào"}
+                    </p>
+                    <p className="text-muted-foreground text-sm">
                     {searchQuery || selectedCategory
                       ? "Thử tìm kiếm với từ khóa khác hoặc xóa bộ lọc"
                       : "Vui lòng quay lại sau hoặc thử danh mục khác"}
-                  </p>
+                    </p>
                 </div>
-              </div>
-            )}
-
-            {/* View All Button - Chỉ hiển thị khi có nhiều hơn 12 món */}
-            {filteredFoods.length > 12 && (
-              <div className="flex justify-center mt-8">
-                <button
-                  onClick={handleViewAllMenu}
-                  className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg font-medium transition-colors cursor-pointer"
-                >
-                  Xem tất cả {filteredFoods.length} món
-                  <ArrowRight className="w-5 h-5" />
-                </button>
               </div>
             )}
           </>
