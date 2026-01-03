@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { getAdminFromToken } from '@/lib/auth';
+import cache from '@/lib/cache';
 
 /**
  * PUT /api/admin/blacklist/[email]
@@ -62,6 +63,18 @@ export async function PUT(request, { params }) {
       email: normalizedEmail,
     });
 
+    // Nếu unblock (blocked_until = null hoặc trong quá khứ, và is_permanent = false), reset cache rate limit
+    const isUnblocked = updated && 
+      !updated.is_permanent && 
+      (!updated.blocked_until || new Date(updated.blocked_until) < new Date());
+    
+    if (isUnblocked) {
+      const ORDER_RATE_LIMIT_TTL = parseInt(process.env.SPAM_ORDER_RATE_LIMIT_TTL || '1800');
+      const rateLimitKey = `order_count:${normalizedEmail}:${ORDER_RATE_LIMIT_TTL}s`;
+      cache.delete(rateLimitKey);
+      console.log(`[Update Blacklist] ✅ Đã unblock và reset cache rate limit cho email: ${normalizedEmail}`);
+    }
+
     return NextResponse.json(
       {
         success: true,
@@ -109,6 +122,12 @@ export async function DELETE(request, { params }) {
         { status: 404 }
       );
     }
+
+    // Reset cache rate limit khi xóa blacklist
+    const ORDER_RATE_LIMIT_TTL = parseInt(process.env.SPAM_ORDER_RATE_LIMIT_TTL || '1800');
+    const rateLimitKey = `order_count:${normalizedEmail}:${ORDER_RATE_LIMIT_TTL}s`;
+    cache.delete(rateLimitKey);
+    console.log(`[Delete Blacklist] ✅ Đã xóa blacklist và reset cache rate limit cho email: ${normalizedEmail}`);
 
     return NextResponse.json(
       {

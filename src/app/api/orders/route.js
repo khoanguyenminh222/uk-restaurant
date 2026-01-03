@@ -163,12 +163,33 @@ export async function POST(request) {
     // Step 1: Check blacklist
     const blacklistCheck = await checkBlacklist(normalizedEmail);
     if (blacklistCheck.isBlocked) {
+      let errorMessage = 'Email này đã bị chặn.';
+      
+      // Nếu không phải permanent và có blocked_until, hiển thị thời gian hết hạn
+      if (!blacklistCheck.is_permanent && blacklistCheck.blocked_until) {
+        const blockedUntil = new Date(blacklistCheck.blocked_until);
+        const now = new Date();
+        const hoursRemaining = Math.ceil((blockedUntil - now) / (1000 * 60 * 60));
+        
+        if (hoursRemaining > 0) {
+          errorMessage += ` Email sẽ được mở khóa sau ${hoursRemaining} giờ.`;
+        } else {
+          errorMessage += ' Email sẽ được mở khóa sớm.';
+        }
+      } else if (blacklistCheck.is_permanent) {
+        errorMessage += ' Email bị chặn vĩnh viễn. Vui lòng liên hệ hỗ trợ.';
+      } else {
+        errorMessage += ' Vui lòng liên hệ hỗ trợ.';
+      }
+      
       return NextResponse.json(
         {
           success: false,
-          error: 'Email này đã bị chặn. Vui lòng liên hệ hỗ trợ.',
+          error: errorMessage,
           error_code: 'BLACKLISTED',
           reason: blacklistCheck.reason,
+          blocked_until: blacklistCheck.blocked_until,
+          is_permanent: blacklistCheck.is_permanent,
         },
         { status: 403 }
       );
@@ -186,19 +207,22 @@ export async function POST(request) {
       );
     }
 
-    // Step 3: Check rate limit (5 đơn trong 30 phút)
-    const MAX_ORDERS_PER_30MIN = parseInt(process.env.SPAM_MAX_ORDERS_PER_30MIN || '5');
-    const rateLimitKey = `order_count:${normalizedEmail}:30min`;
-    const orderCount = cache.increment(rateLimitKey, 1800); // TTL: 30 phút
+    // Step 3: Check rate limit
+    const MAX_ORDERS = parseInt(process.env.SPAM_MAX_ORDERS || '5');
+    const ORDER_RATE_LIMIT_TTL = parseInt(process.env.SPAM_ORDER_RATE_LIMIT_TTL || '1800'); // Default: 30 phút (có thể set 3600 = 1 giờ, 7200 = 2 giờ, ...)
+    const ORDER_RATE_LIMIT_BLACKLIST_HOURS = parseInt(process.env.SPAM_ORDER_RATE_LIMIT_BLACKLIST_HOURS || '24'); // 24 giờ
+    
+    const rateLimitKey = `order_count:${normalizedEmail}:${ORDER_RATE_LIMIT_TTL}s`;
+    const orderCount = cache.increment(rateLimitKey, ORDER_RATE_LIMIT_TTL);
 
-    if (orderCount > MAX_ORDERS_PER_30MIN) {
-      // Auto blacklist email (24 hours)
-      await autoBlacklistIfNeeded(normalizedEmail, 'too_many_orders', 24);
+    if (orderCount > MAX_ORDERS) {
+      // Auto blacklist email
+      await autoBlacklistIfNeeded(normalizedEmail, 'too_many_orders', ORDER_RATE_LIMIT_BLACKLIST_HOURS);
       
       return NextResponse.json(
         {
           success: false,
-          error: 'Bạn đã đặt quá nhiều đơn trong thời gian ngắn. Vui lòng thử lại sau 24 giờ.',
+          error: `Bạn đã đặt quá nhiều đơn trong thời gian ngắn. Vui lòng thử lại sau ${ORDER_RATE_LIMIT_BLACKLIST_HOURS} giờ.`,
           error_code: 'RATE_LIMIT_EXCEEDED',
         },
         { status: 429 }

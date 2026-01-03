@@ -26,8 +26,12 @@ function createTransporter() {
 
 /**
  * Gửi email verification code cho đặt hàng (không cần name)
+ * @param {string} email - Email address
+ * @param {string} code - Verification code
+ * @param {string|null} name - User name (optional)
+ * @param {number} expiresInMinutes - Thời gian hết hạn (phút), mặc định 10 phút
  */
-export async function sendVerificationEmail(email, code, name = null) {
+export async function sendVerificationEmail(email, code, name = null, expiresInMinutes = 10) {
   try {
     const transporter = createTransporter();
 
@@ -56,7 +60,7 @@ export async function sendVerificationEmail(email, code, name = null) {
               </h1>
             </div>
             <p style="color: #4b5563; line-height: 1.6;">
-              Mã này sẽ hết hạn sau <strong>10 phút</strong>. Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này.
+              Mã này sẽ hết hạn sau <strong>${expiresInMinutes} phút</strong>. Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này.
             </p>
             <p style="color: #4b5563; line-height: 1.6; margin-top: 30px;">
               Trân trọng,<br>
@@ -76,7 +80,7 @@ export async function sendVerificationEmail(email, code, name = null) {
         ${name ? 'Cảm ơn bạn đã đăng ký tài khoản tại UK Restaurant.' : 'Cảm ơn bạn đã đặt hàng tại UK Restaurant.'}
         Mã xác thực của bạn là: ${code}
         
-        Mã này sẽ hết hạn sau 10 phút.
+        Mã này sẽ hết hạn sau ${expiresInMinutes} phút.
         
         Trân trọng,
         Đội ngũ UK Restaurant
@@ -94,8 +98,12 @@ export async function sendVerificationEmail(email, code, name = null) {
 
 /**
  * Gửi email reset password
+ * @param {string} email - Email address
+ * @param {string} name - User name
+ * @param {string} resetToken - Reset password token
+ * @param {number} expiresInMinutes - Thời gian hết hạn (phút), mặc định 30 phút
  */
-export async function sendResetPasswordEmail(email, name, resetToken) {
+export async function sendResetPasswordEmail(email, name, resetToken, expiresInMinutes = 30) {
   try {
     const transporter = createTransporter();
     const resetUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
@@ -128,7 +136,7 @@ export async function sendResetPasswordEmail(email, name, resetToken) {
               <a href="${resetUrl}" style="color: #16a34a; word-break: break-all;">${resetUrl}</a>
             </p>
             <p style="color: #4b5563; line-height: 1.6;">
-              Link này sẽ hết hạn sau <strong>30 phút</strong>. Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.
+              Link này sẽ hết hạn sau <strong>${expiresInMinutes} phút</strong>. Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.
             </p>
             <p style="color: #4b5563; line-height: 1.6; margin-top: 30px;">
               Trân trọng,<br>
@@ -148,7 +156,7 @@ export async function sendResetPasswordEmail(email, name, resetToken) {
         Bạn đã yêu cầu đặt lại mật khẩu. Vui lòng truy cập link sau:
         ${resetUrl}
         
-        Link này sẽ hết hạn sau 30 phút.
+        Link này sẽ hết hạn sau ${expiresInMinutes} phút.
         
         Trân trọng,
         Đội ngũ UK Restaurant

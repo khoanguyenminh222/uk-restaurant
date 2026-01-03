@@ -69,10 +69,13 @@ export async function POST(request) {
     );
 
     // Send verification email to new email
+    // Verification code expires in 15 minutes (from verificationCodeExpires)
+    const expiresInMinutes = 15;
     const emailResult = await sendVerificationEmail(
       newEmail.trim().toLowerCase(),
+      verificationCode,
       user.name,
-      verificationCode
+      expiresInMinutes
     );
 
     if (!emailResult.success) {

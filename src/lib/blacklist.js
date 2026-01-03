@@ -61,20 +61,21 @@ export async function autoBlacklistIfNeeded(email, reason = 'too_many_orders', b
     const db = client.db('uk-restaurant');
     const now = new Date();
     const blockedUntil = new Date(now.getTime() + blockDurationHours * 60 * 60 * 1000);
+    const normalizedEmail = email.toLowerCase().trim();
 
-    await db.collection('spamBlacklist').updateOne(
-      { email: email.toLowerCase().trim() },
+    const result = await db.collection('spamBlacklist').updateOne(
+      { email: normalizedEmail },
       {
         $setOnInsert: {
-          email: email.toLowerCase().trim(),
-          blocked_until: blockedUntil,
+          email: normalizedEmail,
           is_permanent: false,
-          reason: reason,
           created_at: now,
           created_by: 'system',
         },
         $set: {
+          blocked_until: blockedUntil, // Update blocked_until mỗi lần auto blacklist
           updated_at: now,
+          reason: reason, // Update reason mỗi lần auto blacklist
         },
       },
       { upsert: true }
@@ -133,9 +134,22 @@ export async function removeFromBlacklist(email) {
 
   const client = await clientPromise;
   const db = client.db('uk-restaurant');
+  const normalizedEmail = email.toLowerCase().trim();
 
   await db.collection('spamBlacklist').deleteOne({
-    email: email.toLowerCase().trim(),
+    email: normalizedEmail,
   });
+
+  // Reset cache rate limit khi xóa blacklist
+  // Import cache ở đây để tránh circular dependency
+  const cache = (await import('./cache')).default;
+  const ORDER_RATE_LIMIT_TTL = parseInt(process.env.SPAM_ORDER_RATE_LIMIT_TTL || '1800');
+  
+  // Xóa tất cả các cache keys liên quan đến email này
+  // Cache key format: `order_count:${email}:${TTL}s`
+  const rateLimitKey = `order_count:${normalizedEmail}:${ORDER_RATE_LIMIT_TTL}s`;
+  cache.delete(rateLimitKey);
+  
+  console.log(`[Remove Blacklist] ✅ Đã xóa blacklist và reset cache rate limit cho email: ${normalizedEmail}`);
 }
 

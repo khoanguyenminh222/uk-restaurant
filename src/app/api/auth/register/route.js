@@ -86,11 +86,14 @@ export async function POST(request) {
     const result = await db.collection('users').insertOne(user);
 
     // Send verification email
+    // Verification code expires in 15 minutes (from verificationCodeExpires)
+    const expiresInMinutes = 15;
     try {
       await sendVerificationEmail(
         user.email,
+        verificationCode,
         user.name,
-        verificationCode
+        expiresInMinutes
       );
     } catch (emailError) {
       console.error('Error sending verification email:', emailError);

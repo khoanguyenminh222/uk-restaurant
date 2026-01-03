@@ -45,15 +45,57 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
         const response = await fetch('/api/config/spam')
         const data = await response.json()
         if (data.success && data.data.verified_session_ttl) {
-          setVerifiedSessionTTL(data.data.verified_session_ttl * 1000) // Convert to milliseconds
+          // Lấy từ API và convert từ giây sang milliseconds
+          const ttlSeconds = data.data.verified_session_ttl
+          setVerifiedSessionTTL(ttlSeconds * 1000)
+          console.log('✅ Đã lấy config từ API:', { verified_session_ttl: ttlSeconds, verified_session_ttl_ms: ttlSeconds * 1000 })
+        } else {
+          console.warn('⚠️ API không trả về verified_session_ttl, dùng default:', 1800 * 1000)
         }
       } catch (err) {
-        console.error('Error fetching spam config:', err)
+        console.error('❌ Lỗi khi fetch config từ API:', err)
+        console.warn('⚠️ Dùng default value:', 1800 * 1000, 'ms (30 phút)')
         // Keep default value (1800 * 1000 = 30 phút)
       }
     }
     fetchConfig()
   }, [])
+
+  // Check verification expiry định kỳ (mỗi 1 phút)
+  useEffect(() => {
+    if (!isOpen) return
+
+    const interval = setInterval(() => {
+      if (emailVerification.verified && formData.customer_email && typeof window !== "undefined") {
+        const verifiedEmails = JSON.parse(localStorage.getItem('verified_emails') || '{}')
+        const emailKey = formData.customer_email.trim().toLowerCase()
+        const verifiedInfo = verifiedEmails[emailKey]
+        
+        if (verifiedInfo && verifiedInfo.expiresAt) {
+          const expiresAt = new Date(verifiedInfo.expiresAt)
+          const now = new Date()
+          
+          if (now >= expiresAt) {
+            // Đã hết hạn, reset verification state
+            setEmailVerification({
+              step: 'input',
+              code: "",
+              sendingCode: false,
+              verifyingCode: false,
+              error: "",
+              verified: false,
+            })
+            // Xóa khỏi localStorage
+            delete verifiedEmails[emailKey]
+            localStorage.setItem('verified_emails', JSON.stringify(verifiedEmails))
+            console.log(`[Email Verification] ⏰ Session đã hết hạn cho email: ${emailKey}`)
+          }
+        }
+      }
+    }, 60000) // Check mỗi 1 phút
+
+    return () => clearInterval(interval)
+  }, [isOpen, emailVerification.verified, formData.customer_email])
 
   // Order items (từ cart hoặc single item)
   const [orderItems, setOrderItems] = useState([])
@@ -64,6 +106,36 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
   const [successOrder, setSuccessOrder] = useState(null)
   const [cancelling, setCancelling] = useState(false)
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+
+  // Check và reset verification state nếu hết hạn
+  const checkVerificationExpiry = () => {
+    if (emailVerification.verified && formData.customer_email && typeof window !== "undefined") {
+      const verifiedEmails = JSON.parse(localStorage.getItem('verified_emails') || '{}')
+      const emailKey = formData.customer_email.trim().toLowerCase()
+      const verifiedInfo = verifiedEmails[emailKey]
+      
+      if (verifiedInfo && verifiedInfo.expiresAt) {
+        const expiresAt = new Date(verifiedInfo.expiresAt)
+        const now = new Date()
+        
+        if (now >= expiresAt) {
+          // Đã hết hạn, reset verification state
+          setEmailVerification({
+            step: 'input',
+            code: "",
+            sendingCode: false,
+            verifyingCode: false,
+            error: "",
+            verified: false,
+          })
+          // Xóa khỏi localStorage
+          delete verifiedEmails[emailKey]
+          localStorage.setItem('verified_emails', JSON.stringify(verifiedEmails))
+          console.log(`[Email Verification] ⏰ Session đã hết hạn cho email: ${emailKey}`)
+        }
+      }
+    }
+  }
 
   // Load items and calculate totals
   useEffect(() => {
@@ -94,6 +166,9 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
 
       // Auto-fill form
       autoFillForm()
+      
+      // Check verification expiry khi mở modal
+      checkVerificationExpiry()
     }
   }, [isOpen, items])
 
@@ -947,16 +1022,48 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                             error: "",
                             verified: false,
                           })
+                          // Xóa verified email khỏi localStorage khi đổi email
+                          if (typeof window !== "undefined") {
+                            const verifiedEmails = JSON.parse(localStorage.getItem('verified_emails') || '{}')
+                            const oldEmail = formData.customer_email.trim().toLowerCase()
+                            if (oldEmail) {
+                              delete verifiedEmails[oldEmail]
+                              localStorage.setItem('verified_emails', JSON.stringify(verifiedEmails))
+                            }
+                          }
                         }
                       }}
-                      disabled={emailVerification.verified}
                       placeholder="example@email.com"
                       className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
                         errors.customer_email ? "border-destructive" : emailVerification.verified ? "border-green-500" : "border-border"
                       } ${emailVerification.verified ? "bg-green-500/10" : ""}`}
                     />
                   </div>
-                  {!emailVerification.verified && (
+                  {emailVerification.verified ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEmailVerification({
+                          step: 'input',
+                          code: "",
+                          sendingCode: false,
+                          verifyingCode: false,
+                          error: "",
+                          verified: false,
+                        })
+                        // Xóa verified email khỏi localStorage
+                        if (typeof window !== "undefined" && formData.customer_email) {
+                          const verifiedEmails = JSON.parse(localStorage.getItem('verified_emails') || '{}')
+                          delete verifiedEmails[formData.customer_email.trim().toLowerCase()]
+                          localStorage.setItem('verified_emails', JSON.stringify(verifiedEmails))
+                        }
+                      }}
+                      className="px-4 py-3 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors whitespace-nowrap flex items-center gap-2 border border-border"
+                    >
+                      <X className="w-4 h-4" />
+                      Đổi email
+                    </button>
+                  ) : (
                     <button
                       type="button"
                       onClick={handleSendVerificationCode}

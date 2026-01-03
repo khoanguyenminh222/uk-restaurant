@@ -59,10 +59,13 @@ export async function POST(request) {
     );
 
     // Send reset password email
+    // Reset token expires in 15 minutes (from resetTokenExpires)
+    const expiresInMinutes = 15;
     const emailResult = await sendResetPasswordEmail(
       user.email,
       user.name,
-      resetToken
+      resetToken,
+      expiresInMinutes
     );
 
     if (!emailResult.success) {
