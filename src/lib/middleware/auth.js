@@ -20,9 +20,9 @@ export async function isAdmin(userId) {
   if (!userId) return false;
   
   try {
-    const clientPromise = (await import('@/lib/mongodb')).default;
+    const { default: clientPromise, getDatabaseName } = await import('@/lib/mongodb');
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
     const user = await db.collection('users').findOne({ user_id: userId });
     
     if (!user) return false;
@@ -41,9 +41,9 @@ export async function isSuperAdmin(userId) {
   if (!userId) return false;
   
   try {
-    const clientPromise = (await import('@/lib/mongodb')).default;
+    const { default: clientPromise, getDatabaseName } = await import('@/lib/mongodb');
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
     const user = await db.collection('users').findOne({ user_id: userId });
     
     if (!user) return false;

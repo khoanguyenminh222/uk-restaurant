@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
+import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 
 /**
  * GET /api/banners
@@ -13,7 +13,7 @@ export async function GET(request) {
     const isActive = searchParams.get('is_active');
 
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     const query = {};
     
@@ -79,7 +79,7 @@ export async function POST(request) {
     }
 
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     // Get next ID
     const lastBanner = await db

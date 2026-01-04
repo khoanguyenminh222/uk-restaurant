@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
+import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { validateUserRegistration } from '@/lib/models/User';
 import bcrypt from 'bcryptjs';
 import { sendVerificationEmail } from '@/lib/email';
@@ -13,7 +13,7 @@ export async function POST(request) {
   try {
     const body = await request.json();
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     // Validate input
     const validation = validateUserRegistration(body);

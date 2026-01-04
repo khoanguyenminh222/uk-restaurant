@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
+import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 
 /**
  * GET /api/users
@@ -22,7 +22,7 @@ export async function GET(request) {
     const sortOrder = searchParams.get('sortOrder') || 'desc';
 
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     // Build query - include all users (including soft-deleted) for admin view
     const query = {};

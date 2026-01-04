@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
+import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { getAdminFromToken } from '@/lib/auth';
 import cache from '@/lib/cache';
 
@@ -21,7 +21,7 @@ export async function PUT(request, { params }) {
     const { email } = await params;
     const body = await request.json();
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     const normalizedEmail = decodeURIComponent(email).toLowerCase().trim();
     const now = new Date();
@@ -108,7 +108,7 @@ export async function DELETE(request, { params }) {
 
     const { email } = await params;
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     const normalizedEmail = decodeURIComponent(email).toLowerCase().trim();
 

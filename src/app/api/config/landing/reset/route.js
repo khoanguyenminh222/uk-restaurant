@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
+import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { defaultLandingConfig } from '@/lib/models/LandingConfig';
 
 /**
@@ -19,7 +19,7 @@ export async function POST(request) {
     // }
 
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     const now = new Date();
 

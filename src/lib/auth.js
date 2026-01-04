@@ -3,7 +3,7 @@
  * Helper functions for admin authentication
  */
 
-import clientPromise from '@/lib/mongodb';
+import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 
 /**
  * Get admin from request
@@ -36,7 +36,7 @@ export async function getAdminFromToken(request) {
 
     // Tìm admin theo phone
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
     
     const admin = await db.collection('users').findOne({
       phone: phone,

@@ -3,7 +3,9 @@
  * Lưu thông tin khách hàng vào localStorage để auto-fill form đặt món
  */
 
-const CUSTOMER_STORAGE_KEY = 'uk-restaurant-customer';
+import { getStorageKey, STORAGE_KEYS } from './storage';
+
+const CUSTOMER_STORAGE_KEY = getStorageKey(STORAGE_KEYS.CUSTOMER);
 
 /**
  * Lấy thông tin khách hàng từ localStorage

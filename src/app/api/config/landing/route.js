@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
+import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { defaultLandingConfig, validateLandingConfig, mergeWithDefaults } from '@/lib/models/LandingConfig';
 
 /**
@@ -11,7 +11,7 @@ import { defaultLandingConfig, validateLandingConfig, mergeWithDefaults } from '
 export async function GET(request) {
   try {
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     // Lấy document duy nhất (singleton pattern)
     const config = await db
@@ -90,7 +90,7 @@ export async function PUT(request) {
     }
 
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     // Kiểm tra document đã tồn tại chưa
     const existing = await db
@@ -123,6 +123,14 @@ export async function PUT(request) {
 
       // Deep merge: chỉ update các fields được gửi lên
       const updateData = { ...mergedExisting };
+
+      if (body.restaurant_name !== undefined) {
+        updateData.restaurant_name = body.restaurant_name;
+      }
+
+      if (body.slogan !== undefined) {
+        updateData.slogan = body.slogan;
+      }
 
       if (body.header) {
         updateData.header = { ...updateData.header, ...body.header };

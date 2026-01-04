@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
+import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import bcrypt from 'bcryptjs';
 
 /**
@@ -27,7 +27,7 @@ export async function POST(request) {
     }
 
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     // Find user by reset token
     const user = await db.collection('users').findOne({

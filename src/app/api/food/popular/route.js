@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
+import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 
 /**
  * GET /api/food/popular
@@ -21,7 +21,7 @@ export async function GET(request) {
     const limit = parseInt(searchParams.get('limit') || '6');
 
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     // Bước 1: Lấy tất cả orders không bị hủy
     const validOrders = await db

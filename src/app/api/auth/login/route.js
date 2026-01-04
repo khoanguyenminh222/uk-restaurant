@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
+import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import bcrypt from 'bcryptjs';
 
 /**
@@ -10,7 +10,7 @@ export async function POST(request) {
   try {
     const body = await request.json();
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     // Validate input
     if (!body.phone || !body.password) {

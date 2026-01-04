@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Home, Menu, X, LayoutDashboard, FolderOpen, UtensilsCrossed, Users, LogOut, ShoppingCart, UserCircle, Image as ImageIcon, TrendingUp, Settings, ChevronDown, ChevronRight, Shield } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle/ThemeToggle';
+import { useLandingConfig } from '@/hooks/useLandingConfig';
 
 export default function AdminLayout({ children }) {
   const router = useRouter();
@@ -13,6 +14,8 @@ export default function AdminLayout({ children }) {
   const [adminInfo, setAdminInfo] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [configMenuOpen, setConfigMenuOpen] = useState(false);
+  const { config } = useLandingConfig();
+  const restaurantName = config?.restaurant_name || 'UK Restaurant';
 
   useEffect(() => {
     const checkAuth = () => {
@@ -129,7 +132,7 @@ export default function AdminLayout({ children }) {
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
           <div>
-            <h1 className="text-lg font-bold text-card-foreground">UK Restaurant</h1>
+            <h1 className="text-lg font-bold text-card-foreground">{restaurantName}</h1>
             <p className="text-xs text-muted-foreground">Admin Panel</p>
           </div>
         </div>

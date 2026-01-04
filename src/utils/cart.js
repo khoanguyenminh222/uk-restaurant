@@ -3,7 +3,9 @@
  * Quản lý giỏ hàng với localStorage
  */
 
-const CART_STORAGE_KEY = 'uk-restaurant-cart';
+import { getStorageKey, STORAGE_KEYS } from './storage';
+
+const CART_STORAGE_KEY = getStorageKey(STORAGE_KEYS.CART);
 
 /**
  * Lấy giỏ hàng từ localStorage

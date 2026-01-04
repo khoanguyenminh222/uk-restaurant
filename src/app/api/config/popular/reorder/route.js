@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
-import clientPromise from '@/lib/mongodb';
+import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 
 /**
  * PUT /api/config/popular/reorder
@@ -38,7 +38,7 @@ export async function PUT(request) {
     }
 
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     // Cập nhật order cho từng ngưỡng
     const updatePromises = thresholdIds.map((id, index) => {

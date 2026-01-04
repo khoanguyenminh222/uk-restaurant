@@ -3,7 +3,7 @@
  * Check và quản lý email blacklist
  */
 
-import clientPromise from '@/lib/mongodb';
+import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 
 /**
  * Check if email is blacklisted
@@ -17,7 +17,7 @@ export async function checkBlacklist(email) {
 
   try {
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
     const now = new Date();
 
     const blacklistEntry = await db.collection('spamBlacklist').findOne({
@@ -58,7 +58,7 @@ export async function autoBlacklistIfNeeded(email, reason = 'too_many_orders', b
 
   try {
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
     const now = new Date();
     const blockedUntil = new Date(now.getTime() + blockDurationHours * 60 * 60 * 1000);
     const normalizedEmail = email.toLowerCase().trim();
@@ -100,7 +100,7 @@ export async function addToBlacklist(email, reason, blockedUntil = null, isPerma
   }
 
   const client = await clientPromise;
-  const db = client.db('uk-restaurant');
+  const db = client.db(getDatabaseName());
   const now = new Date();
 
   await db.collection('spamBlacklist').updateOne(
@@ -133,7 +133,7 @@ export async function removeFromBlacklist(email) {
   }
 
   const client = await clientPromise;
-  const db = client.db('uk-restaurant');
+  const db = client.db(getDatabaseName());
   const normalizedEmail = email.toLowerCase().trim();
 
   await db.collection('spamBlacklist').deleteOne({

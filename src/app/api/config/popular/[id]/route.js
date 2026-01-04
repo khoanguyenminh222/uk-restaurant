@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
-import clientPromise from '@/lib/mongodb';
+import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { validateThreshold } from '@/lib/models/PopularConfig';
 
 /**
@@ -39,7 +39,7 @@ export async function PUT(request, { params }) {
     }
 
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     // Kiểm tra ngưỡng có tồn tại không
     const existing = await db
@@ -118,7 +118,7 @@ export async function DELETE(request, { params }) {
     }
 
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     const result = await db
       .collection('popularConfig')

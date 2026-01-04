@@ -3,7 +3,9 @@
  * Quản lý thông tin user với localStorage (optional login)
  */
 
-const USER_STORAGE_KEY = 'uk-restaurant-user';
+import { getStorageKey, STORAGE_KEYS } from './storage';
+
+const USER_STORAGE_KEY = getStorageKey(STORAGE_KEYS.USER);
 
 /**
  * Lấy thông tin user từ localStorage

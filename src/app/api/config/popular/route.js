@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
+import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { validateThreshold } from '@/lib/models/PopularConfig';
 
 /**
@@ -13,7 +13,7 @@ export async function GET(request) {
     const sortBy = searchParams.get('sortBy') || 'order'; // 'order' hoặc 'value'
 
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     // Lấy tất cả ngưỡng
     let thresholds = await db
@@ -73,7 +73,7 @@ export async function POST(request) {
     }
 
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     // Tự động gán order nếu không có
     let finalOrder = order;

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
+import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { validateSpamBlacklist } from '@/lib/models/SpamBlacklist';
 import { getAdminFromToken } from '@/lib/auth';
 
@@ -26,7 +26,7 @@ export async function GET(request) {
     const limit = parseInt(searchParams.get('limit') || '20');
 
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     const query = {};
 
@@ -96,7 +96,7 @@ export async function POST(request) {
 
     const body = await request.json();
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     // Validate input
     const validation = validateSpamBlacklist(body);

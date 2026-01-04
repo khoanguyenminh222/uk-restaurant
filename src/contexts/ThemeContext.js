@@ -1,6 +1,9 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState } from "react"
+import { getStorageKey, STORAGE_KEYS } from "@/utils/storage"
+
+const THEME_STORAGE_KEY = getStorageKey(STORAGE_KEYS.THEME)
 
 const ThemeContext = createContext({
   theme: "light",
@@ -13,7 +16,7 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     // Load theme from localStorage
-    const savedTheme = localStorage.getItem("uk-restaurant-theme")
+    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY)
     
     // Default to light theme if no saved theme
     if (!savedTheme) {
@@ -45,7 +48,7 @@ export function ThemeProvider({ children }) {
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light"
     setTheme(newTheme)
-    localStorage.setItem("uk-restaurant-theme", newTheme)
+    localStorage.setItem(THEME_STORAGE_KEY, newTheme)
     applyTheme(newTheme)
   }
 
@@ -54,7 +57,7 @@ export function ThemeProvider({ children }) {
     if (!mounted) return
 
     const handleStorageChange = (e) => {
-      if (e.key === "uk-restaurant-theme") {
+      if (e.key === THEME_STORAGE_KEY) {
         const newTheme = e.newValue || "light"
         setTheme(newTheme)
         applyTheme(newTheme)

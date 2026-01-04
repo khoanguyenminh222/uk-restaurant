@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
+import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 
 /**
  * GET /api/orders/:id
@@ -9,7 +9,7 @@ export async function GET(request, { params }) {
   try {
     const { id } = await params;
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     const order = await db.collection('orders').findOne({ order_id: id });
 
@@ -42,7 +42,7 @@ export async function PUT(request, { params }) {
     const { id } = await params;
     const body = await request.json();
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     // Find order
     const order = await db.collection('orders').findOne({ order_id: id });
@@ -162,7 +162,7 @@ export async function DELETE(request, { params }) {
   try {
     const { id } = await params;
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     // Soft delete: set status to deleted
     const result = await db.collection('orders').updateOne(

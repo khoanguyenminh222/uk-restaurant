@@ -164,7 +164,7 @@ export default function Contact() {
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
                 className="absolute inset-0"
-                title="UK Restaurant Location"
+                title={`${config?.restaurant_name || 'UK Restaurant'} Location`}
               ></iframe>
             </div>
           </div>

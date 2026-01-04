@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
+import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 
 /**
  * GET /api/admin/admins/:id
@@ -9,7 +9,7 @@ export async function GET(request, { params }) {
   try {
     const { id } = await params;
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     const admin = await db.collection('users').findOne({ 
       $or: [
@@ -52,7 +52,7 @@ export async function PUT(request, { params }) {
     const { id } = await params;
     const body = await request.json();
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     // Find admin
     const admin = await db.collection('users').findOne({ 
@@ -152,7 +152,7 @@ export async function DELETE(request, { params }) {
   try {
     const { id } = await params;
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     // Find admin
     const admin = await db.collection('users').findOne({ 

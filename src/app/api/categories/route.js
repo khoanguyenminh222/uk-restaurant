@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
+import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 
 /**
  * GET /api/categories
@@ -17,7 +17,7 @@ export async function GET(request) {
     const limit = parseInt(searchParams.get('limit') || '20');
 
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     // Build query
     const query = {};
@@ -71,7 +71,7 @@ export async function POST(request) {
   try {
     const body = await request.json();
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     // TODO: Add admin authentication check
 

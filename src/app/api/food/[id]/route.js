@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
+import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { validateFood } from '@/lib/models/Food';
 import { ObjectId } from 'mongodb';
 
@@ -11,7 +11,7 @@ export async function GET(request, { params }) {
   try {
     const { id } = await params;
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
     
     const food = await db
       .collection('food')
@@ -46,7 +46,7 @@ export async function PUT(request, { params }) {
     const { id } = await params;
     const body = await request.json();
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     // TODO: Add admin authentication check
 
@@ -135,7 +135,7 @@ export async function DELETE(request, { params }) {
   try {
     const { id } = await params;
     const client = await clientPromise;
-    const db = client.db('uk-restaurant');
+    const db = client.db(getDatabaseName());
 
     // TODO: Add admin authentication check
 

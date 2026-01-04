@@ -4,6 +4,7 @@
  */
 
 import nodemailer from 'nodemailer';
+import { getRestaurantName, getSlogan } from '@/lib/restaurantConfig';
 
 /**
  * Tạo transporter cho nodemailer
@@ -34,16 +35,18 @@ function createTransporter() {
 export async function sendVerificationEmail(email, code, name = null, expiresInMinutes = 10) {
   try {
     const transporter = createTransporter();
+    const restaurantName = await getRestaurantName();
+    const slogan = await getSlogan();
 
     const mailOptions = {
-      from: `"UK Restaurant" <${process.env.EMAIL_USER}>`,
+      from: `"${restaurantName}" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: 'Xác thực email - UK Restaurant',
+      subject: `Xác thực email - ${restaurantName}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
           <div style="background-color: #16a34a; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
-            <h1 style="color: white; margin: 0;">UK Restaurant</h1>
-            <p style="color: #e5e7eb; margin: 5px 0 0 0;">Ăn no khỏi "bàn"</p>
+            <h1 style="color: white; margin: 0;">${restaurantName}</h1>
+            <p style="color: #e5e7eb; margin: 5px 0 0 0;">${slogan}</p>
           </div>
           <div style="background-color: white; padding: 30px; border-radius: 0 0 8px 8px;">
             <h2 style="color: #1f2937; margin-top: 0;">Xác thực email của bạn</h2>
@@ -51,7 +54,7 @@ export async function sendVerificationEmail(email, code, name = null, expiresInM
               Xin chào <strong>${name}</strong>,
             </p>` : ''}
             <p style="color: #4b5563; line-height: 1.6;">
-              ${name ? 'Cảm ơn bạn đã đăng ký tài khoản tại UK Restaurant. Vui lòng sử dụng mã xác thực sau để hoàn tất đăng ký:' : 'Cảm ơn bạn đã đặt hàng tại UK Restaurant. Vui lòng sử dụng mã xác thực sau để xác nhận email của bạn:'}
+              ${name ? `Cảm ơn bạn đã đăng ký tài khoản tại ${restaurantName}. Vui lòng sử dụng mã xác thực sau để hoàn tất đăng ký:` : `Cảm ơn bạn đã đặt hàng tại ${restaurantName}. Vui lòng sử dụng mã xác thực sau để xác nhận email của bạn:`}
             </p>
             <div style="background-color: #f3f4f6; border: 2px dashed #16a34a; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0;">
               <p style="color: #6b7280; margin: 0 0 10px 0; font-size: 14px;">Mã xác thực của bạn:</p>
@@ -64,7 +67,7 @@ export async function sendVerificationEmail(email, code, name = null, expiresInM
             </p>
             <p style="color: #4b5563; line-height: 1.6; margin-top: 30px;">
               Trân trọng,<br>
-              <strong>Đội ngũ UK Restaurant</strong>
+              <strong>Đội ngũ ${restaurantName}</strong>
             </p>
           </div>
           <div style="text-align: center; margin-top: 20px; color: #9ca3af; font-size: 12px;">
@@ -73,17 +76,17 @@ export async function sendVerificationEmail(email, code, name = null, expiresInM
         </div>
       `,
       text: `
-        Xác thực email - UK Restaurant
+        Xác thực email - ${restaurantName}
         
         ${name ? `Xin chào ${name},` : ''}
         
-        ${name ? 'Cảm ơn bạn đã đăng ký tài khoản tại UK Restaurant.' : 'Cảm ơn bạn đã đặt hàng tại UK Restaurant.'}
+        ${name ? `Cảm ơn bạn đã đăng ký tài khoản tại ${restaurantName}.` : `Cảm ơn bạn đã đặt hàng tại ${restaurantName}.`}
         Mã xác thực của bạn là: ${code}
         
         Mã này sẽ hết hạn sau ${expiresInMinutes} phút.
         
         Trân trọng,
-        Đội ngũ UK Restaurant
+        Đội ngũ ${restaurantName}
       `,
     };
 
@@ -106,17 +109,19 @@ export async function sendVerificationEmail(email, code, name = null, expiresInM
 export async function sendResetPasswordEmail(email, name, resetToken, expiresInMinutes = 30) {
   try {
     const transporter = createTransporter();
+    const restaurantName = await getRestaurantName();
+    const slogan = await getSlogan();
     const resetUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
 
     const mailOptions = {
-      from: `"UK Restaurant" <${process.env.EMAIL_USER}>`,
+      from: `"${restaurantName}" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: 'Đặt lại mật khẩu - UK Restaurant',
+      subject: `Đặt lại mật khẩu - ${restaurantName}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
           <div style="background-color: #16a34a; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
-            <h1 style="color: white; margin: 0;">UK Restaurant</h1>
-            <p style="color: #e5e7eb; margin: 5px 0 0 0;">Ăn no khỏi "bàn"</p>
+            <h1 style="color: white; margin: 0;">${restaurantName}</h1>
+            <p style="color: #e5e7eb; margin: 5px 0 0 0;">${slogan}</p>
           </div>
           <div style="background-color: white; padding: 30px; border-radius: 0 0 8px 8px;">
             <h2 style="color: #1f2937; margin-top: 0;">Đặt lại mật khẩu</h2>
@@ -140,7 +145,7 @@ export async function sendResetPasswordEmail(email, name, resetToken, expiresInM
             </p>
             <p style="color: #4b5563; line-height: 1.6; margin-top: 30px;">
               Trân trọng,<br>
-              <strong>Đội ngũ UK Restaurant</strong>
+              <strong>Đội ngũ ${restaurantName}</strong>
             </p>
           </div>
           <div style="text-align: center; margin-top: 20px; color: #9ca3af; font-size: 12px;">
@@ -149,7 +154,7 @@ export async function sendResetPasswordEmail(email, name, resetToken, expiresInM
         </div>
       `,
       text: `
-        Đặt lại mật khẩu - UK Restaurant
+        Đặt lại mật khẩu - ${restaurantName}
         
         Xin chào ${name},
         
@@ -159,7 +164,7 @@ export async function sendResetPasswordEmail(email, name, resetToken, expiresInM
         Link này sẽ hết hạn sau ${expiresInMinutes} phút.
         
         Trân trọng,
-        Đội ngũ UK Restaurant
+        Đội ngũ ${restaurantName}
       `,
     };
 
@@ -178,6 +183,8 @@ export async function sendResetPasswordEmail(email, name, resetToken, expiresInM
 export async function sendOrderConfirmationEmail(email, name, orderId, trackOrderUrl, orderData) {
   try {
     const transporter = createTransporter();
+    const restaurantName = await getRestaurantName();
+    const slogan = await getSlogan();
 
     // Format order items
     let itemsHtml = '';
@@ -222,14 +229,14 @@ export async function sendOrderConfirmationEmail(email, name, orderId, trackOrde
       : new Date().toLocaleString('vi-VN');
 
     const mailOptions = {
-      from: `"UK Restaurant" <${process.env.EMAIL_USER}>`,
+      from: `"${restaurantName}" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: `Xác nhận đơn hàng #${orderId} - UK Restaurant`,
+      subject: `Xác nhận đơn hàng #${orderId} - ${restaurantName}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
           <div style="background-color: #16a34a; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
-            <h1 style="color: white; margin: 0;">UK Restaurant</h1>
-            <p style="color: #e5e7eb; margin: 5px 0 0 0;">Ăn no khỏi "bàn"</p>
+            <h1 style="color: white; margin: 0;">${restaurantName}</h1>
+            <p style="color: #e5e7eb; margin: 5px 0 0 0;">${slogan}</p>
           </div>
           <div style="background-color: white; padding: 30px; border-radius: 0 0 8px 8px;">
             <h2 style="color: #1f2937; margin-top: 0;">Cảm ơn bạn đã đặt hàng!</h2>
@@ -295,7 +302,7 @@ export async function sendOrderConfirmationEmail(email, name, orderId, trackOrde
             </p>
             <p style="color: #4b5563; line-height: 1.6; margin-top: 30px;">
               Trân trọng,<br>
-              <strong>Đội ngũ UK Restaurant</strong>
+              <strong>Đội ngũ ${restaurantName}</strong>
             </p>
           </div>
           <div style="text-align: center; margin-top: 20px; color: #9ca3af; font-size: 12px;">
@@ -304,7 +311,7 @@ export async function sendOrderConfirmationEmail(email, name, orderId, trackOrde
         </div>
       `,
       text: `
-        Xác nhận đơn hàng - UK Restaurant
+        Xác nhận đơn hàng - ${restaurantName}
         
         Xin chào ${name},
         
@@ -326,7 +333,7 @@ export async function sendOrderConfirmationEmail(email, name, orderId, trackOrde
         Chúng tôi sẽ thông báo cho bạn khi đơn hàng được xác nhận và giao hàng.
         
         Trân trọng,
-        Đội ngũ UK Restaurant
+        Đội ngũ ${restaurantName}
       `,
     };
 
