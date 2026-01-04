@@ -9,6 +9,8 @@
  */
 export const defaultLandingConfig = {
   config_type: 'landing',
+  restaurant_name: 'UK Restaurant', // Tên cửa hàng chính (dùng cho email, metadata, admin panel)
+  slogan: 'Ăn no khỏi "bàn"', // Slogan/tagline của cửa hàng (dùng cho email, metadata)
   header: {
     restaurant_name: 'UK Restaurant',
   },
@@ -99,6 +101,22 @@ export const defaultLandingConfig = {
       },
     ],
   },
+  seo: {
+    meta_title: '', // Nếu để trống sẽ dùng: {restaurant_name} - {slogan}
+    meta_description: '', // Nếu để trống sẽ dùng description mặc định
+    meta_keywords: '', // Keywords cho SEO
+    og_title: '', // Open Graph title (nếu để trống dùng meta_title)
+    og_description: '', // Open Graph description (nếu để trống dùng meta_description)
+    og_image: '/og-image.jpg', // Open Graph image URL
+    og_type: 'website',
+    og_locale: 'vi_VN',
+    twitter_card: 'summary_large_image', // summary, summary_large_image
+    twitter_title: '', // Twitter title (nếu để trống dùng og_title)
+    twitter_description: '', // Twitter description (nếu để trống dùng og_description)
+    twitter_image: '', // Twitter image (nếu để trống dùng og_image)
+    robots_index: true, // Cho phép search engine index
+    robots_follow: true, // Cho phép search engine follow links
+  },
 };
 
 /**
@@ -106,6 +124,24 @@ export const defaultLandingConfig = {
  */
 export function validateLandingConfig(data) {
   const errors = [];
+
+  // Validate restaurant_name (root level)
+  if (data.restaurant_name !== undefined) {
+    if (!data.restaurant_name || typeof data.restaurant_name !== 'string' || data.restaurant_name.trim().length === 0) {
+      errors.push('Restaurant name là bắt buộc');
+    } else if (data.restaurant_name.length > 50) {
+      errors.push('Restaurant name không được vượt quá 50 ký tự');
+    }
+  }
+
+  // Validate slogan (root level)
+  if (data.slogan !== undefined) {
+    if (!data.slogan || typeof data.slogan !== 'string' || data.slogan.trim().length === 0) {
+      errors.push('Slogan là bắt buộc');
+    } else if (data.slogan.length > 100) {
+      errors.push('Slogan không được vượt quá 100 ký tự');
+    }
+  }
 
   // Validate header
   if (data.header) {
@@ -309,6 +345,49 @@ export function validateLandingConfig(data) {
     }
   }
 
+  // Validate SEO
+  if (data.seo) {
+    if (data.seo.meta_title && data.seo.meta_title.length > 100) {
+      errors.push('SEO: Meta title không được vượt quá 100 ký tự');
+    }
+
+    if (data.seo.meta_description && data.seo.meta_description.length > 200) {
+      errors.push('SEO: Meta description không được vượt quá 200 ký tự');
+    }
+
+    if (data.seo.meta_keywords && data.seo.meta_keywords.length > 500) {
+      errors.push('SEO: Meta keywords không được vượt quá 500 ký tự');
+    }
+
+    if (data.seo.og_title && data.seo.og_title.length > 100) {
+      errors.push('SEO: OG title không được vượt quá 100 ký tự');
+    }
+
+    if (data.seo.og_description && data.seo.og_description.length > 200) {
+      errors.push('SEO: OG description không được vượt quá 200 ký tự');
+    }
+
+    if (data.seo.og_image && !data.seo.og_image.startsWith('/') && !data.seo.og_image.startsWith('http://') && !data.seo.og_image.startsWith('https://')) {
+      errors.push('SEO: OG image phải là đường dẫn tương đối (bắt đầu với /) hoặc URL đầy đủ');
+    }
+
+    if (data.seo.twitter_title && data.seo.twitter_title.length > 100) {
+      errors.push('SEO: Twitter title không được vượt quá 100 ký tự');
+    }
+
+    if (data.seo.twitter_description && data.seo.twitter_description.length > 200) {
+      errors.push('SEO: Twitter description không được vượt quá 200 ký tự');
+    }
+
+    if (data.seo.twitter_image && !data.seo.twitter_image.startsWith('/') && !data.seo.twitter_image.startsWith('http://') && !data.seo.twitter_image.startsWith('https://')) {
+      errors.push('SEO: Twitter image phải là đường dẫn tương đối (bắt đầu với /) hoặc URL đầy đủ');
+    }
+
+    if (data.seo.twitter_card && !['summary', 'summary_large_image'].includes(data.seo.twitter_card)) {
+      errors.push('SEO: Twitter card phải là "summary" hoặc "summary_large_image"');
+    }
+  }
+
   return {
     isValid: errors.length === 0,
     errors,
@@ -320,6 +399,14 @@ export function validateLandingConfig(data) {
  */
 export function mergeWithDefaults(config) {
   const merged = JSON.parse(JSON.stringify(defaultLandingConfig));
+
+  if (config.restaurant_name !== undefined) {
+    merged.restaurant_name = config.restaurant_name;
+  }
+
+  if (config.slogan !== undefined) {
+    merged.slogan = config.slogan;
+  }
 
   if (config.header) {
     merged.header = { ...merged.header, ...config.header };
@@ -355,6 +442,10 @@ export function mergeWithDefaults(config) {
     if (config.footer.links) {
       merged.footer.links = config.footer.links;
     }
+  }
+
+  if (config.seo) {
+    merged.seo = { ...merged.seo, ...config.seo };
   }
 
   return merged;

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { Search, Package, Clock, CheckCircle, XCircle, Loader2 } from "lucide-react"
 import { formatCurrency } from "@/utils/helpers"
@@ -50,7 +50,7 @@ const statusConfig = {
   },
 }
 
-export default function TrackOrderPage() {
+function TrackOrderForm() {
   const searchParams = useSearchParams()
   const orderIdFromUrl = searchParams.get("order_id")
   
@@ -261,3 +261,27 @@ export default function TrackOrderPage() {
   )
 }
 
+export default function TrackOrderPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background py-12 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <div className="animate-pulse">
+              <div className="h-8 w-64 bg-muted rounded mx-auto mb-2"></div>
+              <div className="h-4 w-96 bg-muted rounded mx-auto"></div>
+            </div>
+          </div>
+          <div className="bg-card rounded-xl p-6 border border-border">
+            <div className="animate-pulse">
+              <div className="h-12 bg-muted rounded mb-4"></div>
+              <div className="h-10 bg-muted rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <TrackOrderForm />
+    </Suspense>
+  )
+}
