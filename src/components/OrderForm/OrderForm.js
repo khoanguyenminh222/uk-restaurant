@@ -178,16 +178,40 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
     
     if (user) {
       // Fill from logged-in user
+      const email = user.email || ""
       setFormData({
         customer_name: user.name || "",
         customer_phone: user.phone || "",
-        customer_email: user.email || "",
+        customer_email: email,
         customer_address: user.address || "",
         notes: "",
       })
-      // If user has email, mark as verified (user email already verified during registration)
-      if (user.email) {
-        setEmailVerification(prev => ({ ...prev, verified: true, step: 'verified' }))
+      
+      // Chỉ mark as verified nếu email có trong verified_emails localStorage và chưa hết hạn
+      // Không tự động mark as verified chỉ vì user có email (admin có thể có email nhưng chưa verify)
+      if (email && typeof window !== "undefined") {
+        const verifiedEmails = JSON.parse(localStorage.getItem('verified_emails') || '{}')
+        const emailKey = email.toLowerCase().trim()
+        const verifiedInfo = verifiedEmails[emailKey]
+        
+        if (verifiedInfo && verifiedInfo.verified) {
+          // Kiểm tra xem có hết hạn không (theo VERIFIED_SESSION_TTL)
+          const expiresAt = new Date(verifiedInfo.expiresAt)
+          const now = new Date()
+          
+          if (now < expiresAt) {
+            // Email vẫn còn hiệu lực, mark as verified
+            setEmailVerification(prev => ({ 
+              ...prev, 
+              verified: true, 
+              step: 'verified' 
+            }))
+          } else {
+            // Đã hết hạn, xóa khỏi localStorage
+            delete verifiedEmails[emailKey]
+            localStorage.setItem('verified_emails', JSON.stringify(verifiedEmails))
+          }
+        }
       }
     } else {
       // Fill from localStorage (previous orders)
