@@ -19,6 +19,8 @@ export default function OrderHistory({ isOpen, onClose }) {
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [cancelling, setCancelling] = useState(false)
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [cancelReason, setCancelReason] = useState('')
   const detailModalRef = useRef(null)
 
   // Load user info and orders
@@ -149,16 +151,21 @@ export default function OrderHistory({ isOpen, onClose }) {
     setShowDetailModal(true)
   }
 
+  // Handle cancel order click
+  const handleCancelClick = () => {
+    if (!selectedOrder || selectedOrder.status !== 'pending') {
+      return
+    }
+    setShowCancelModal(true)
+  }
+
   // Handle cancel order
   const handleCancelOrder = async () => {
     if (!selectedOrder || selectedOrder.status !== 'pending') {
       return
     }
 
-    if (!confirm("Bạn có chắc chắn muốn hủy đơn hàng này?")) {
-      return
-    }
-
+    setShowCancelModal(false)
     setCancelling(true)
     try {
       const response = await fetch(`/api/orders/${selectedOrder.order_id}`, {
@@ -166,7 +173,11 @@ export default function OrderHistory({ isOpen, onClose }) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ status: "cancelled", changed_by: "customer" }),
+        body: JSON.stringify({ 
+          status: "cancelled", 
+          changed_by: "customer",
+          cancel_reason: cancelReason.trim() || '',
+        }),
       })
 
       const data = await response.json()
@@ -199,6 +210,7 @@ export default function OrderHistory({ isOpen, onClose }) {
       setError("Lỗi kết nối. Vui lòng thử lại sau.")
     } finally {
       setCancelling(false)
+      setCancelReason('')
     }
   }
 
@@ -479,21 +491,12 @@ export default function OrderHistory({ isOpen, onClose }) {
                 {selectedOrder.status === 'pending' && (
                   <div className="border-t border-border pt-4 cursor-pointer">
                     <button
-                      onClick={handleCancelOrder}
+                      onClick={handleCancelClick}
                       disabled={cancelling}
                       className="w-full py-3 bg-destructive/10 hover:bg-destructive/20 text-destructive font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                      {cancelling ? (
-                        <>
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                          <span>Đang hủy...</span>
-                        </>
-                      ) : (
-                        <>
-                          <XCircle className="w-5 h-5" />
-                          <span>Hủy đơn hàng</span>
-                        </>
-                      )}
+                      <XCircle className="w-5 h-5" />
+                      <span>Hủy đơn hàng</span>
                     </button>
                   </div>
                 )}
@@ -502,14 +505,92 @@ export default function OrderHistory({ isOpen, onClose }) {
                 {selectedOrder.status === 'cancelled' && (
                   <div className="border-t border-border pt-4">
                     <div className="p-4 bg-destructive/10 border border-destructive/50 rounded-lg">
-                      <p className="text-destructive font-medium flex items-center gap-2">
+                      <p className="text-destructive font-medium flex items-center gap-2 mb-2">
                         <XCircle className="w-5 h-5" />
                         Đơn hàng đã được hủy
                       </p>
+                      {selectedOrder.cancel_reason && (
+                        <div className="mt-2">
+                          <p className="text-sm text-muted-foreground mb-1">Lý do hủy:</p>
+                          <p className="text-sm text-card-foreground">{selectedOrder.cancel_reason}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Confirmation Modal */}
+      {showCancelModal && (
+        <div 
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-70 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowCancelModal(false)
+              setCancelReason('')
+            }
+          }}
+        >
+          <div 
+            className="bg-card rounded-lg max-w-md w-full p-6 border border-border"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-xl font-bold text-card-foreground mb-4">Xác nhận hủy đơn hàng</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Bạn có chắc chắn muốn hủy đơn hàng <span className="font-semibold text-card-foreground">{selectedOrder?.order_id}</span>?
+            </p>
+            <p className="text-xs text-muted-foreground mb-4">
+              Hành động này không thể hoàn tác.
+            </p>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-card-foreground mb-2">
+                Lý do hủy đơn hàng <span className="text-muted-foreground text-xs">(Tùy chọn)</span>
+              </label>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="Nhập lý do hủy đơn hàng (nếu có)..."
+                rows={3}
+                className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none text-sm"
+                maxLength={500}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                {cancelReason.length}/500 ký tự
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowCancelModal(false)
+                  setCancelReason('')
+                }}
+                className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium cursor-pointer"
+              >
+                Không, giữ lại
+              </button>
+              <button
+                onClick={handleCancelOrder}
+                disabled={cancelling}
+                className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {cancelling ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Đang hủy...
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="w-4 h-4" />
+                    Có, hủy đơn hàng
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

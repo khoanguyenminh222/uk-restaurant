@@ -448,3 +448,337 @@ export async function sendTestEmail(email) {
   }
 }
 
+/**
+ * Format order items cho email
+ * @param {object|array} items - Order items
+ * @returns {object} {html, text}
+ */
+function formatOrderItemsForEmail(items) {
+  let itemsHtml = '';
+  let itemsText = '';
+  
+  if (!items) {
+    return { html: '<p style="color: #6b7280;">Không có món nào.</p>', text: 'Không có món nào.' };
+  }
+  
+  let itemsArray = [];
+  if (Array.isArray(items)) {
+    itemsArray = items;
+  } else if (typeof items === 'object' && items.tên_món) {
+    itemsArray = [items];
+  }
+  
+  if (itemsArray.length === 0) {
+    return { html: '<p style="color: #6b7280;">Không có món nào.</p>', text: 'Không có món nào.' };
+  }
+  
+  itemsHtml = itemsArray.map(item => {
+    const quantity = item.quantity || 1;
+    const price = item.giá || 0;
+    const totalItemPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price * quantity);
+    return `
+      <tr>
+        <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">${item.tên_món}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: center;">${quantity}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: right;">${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price)}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: right;">${totalItemPrice}</td>
+      </tr>
+    `;
+  }).join('');
+  
+  itemsText = itemsArray.map(item => {
+    const quantity = item.quantity || 1;
+    const price = item.giá || 0;
+    const totalItemPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price * quantity);
+    return `- ${item.tên_món} (x${quantity}): ${totalItemPrice}`;
+  }).join('\n');
+  
+  return { html: itemsHtml, text: itemsText };
+}
+
+/**
+ * Lấy subject và nội dung email theo status
+ * @param {string} status - Order status
+ * @param {string} orderId - Order ID
+ * @param {string} restaurantName - Restaurant name
+ * @returns {object} {subject, title, message, color}
+ */
+function getStatusEmailContent(status, orderId, restaurantName) {
+  const statusConfig = {
+    confirmed: {
+      subject: `Đơn hàng #${orderId} đã được xác nhận - ${restaurantName}`,
+      title: 'Đơn hàng đã được xác nhận!',
+      message: 'Đơn hàng của bạn đã được xác nhận và đang được chuẩn bị.',
+      color: '#16a34a',
+    },
+    preparing: {
+      subject: `Đơn hàng #${orderId} đang được chuẩn bị - ${restaurantName}`,
+      title: 'Đơn hàng đang được chuẩn bị!',
+      message: 'Đơn hàng của bạn đang được chuẩn bị. Chúng tôi sẽ thông báo khi đơn hàng sẵn sàng.',
+      color: '#f59e0b',
+    },
+    ready: {
+      subject: `Đơn hàng #${orderId} đã sẵn sàng - ${restaurantName}`,
+      title: 'Đơn hàng đã sẵn sàng!',
+      message: 'Đơn hàng của bạn đã sẵn sàng. Vui lòng đến nhận hàng hoặc đợi shipper giao hàng.',
+      color: '#3b82f6',
+    },
+    delivered: {
+      subject: `Đơn hàng #${orderId} đã được giao - ${restaurantName}`,
+      title: 'Đơn hàng đã được giao!',
+      message: 'Đơn hàng của bạn đã được giao thành công. Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!',
+      color: '#10b981',
+    },
+    completed: {
+      subject: `Cảm ơn bạn đã đặt hàng tại ${restaurantName}`,
+      title: 'Cảm ơn bạn đã đặt hàng!',
+      message: 'Đơn hàng của bạn đã hoàn thành. Chúng tôi rất vui được phục vụ bạn và mong được gặp lại bạn lần sau!',
+      color: '#8b5cf6',
+    },
+    cancelled: {
+      subject: `Đơn hàng #${orderId} đã bị hủy - ${restaurantName}`,
+      title: 'Đơn hàng đã bị hủy',
+      message: 'Rất tiếc, đơn hàng của bạn đã bị hủy. Nếu có thắc mắc, vui lòng liên hệ với chúng tôi.',
+      color: '#ef4444',
+    },
+  };
+  
+  return statusConfig[status] || {
+    subject: `Cập nhật đơn hàng #${orderId} - ${restaurantName}`,
+    title: 'Cập nhật đơn hàng',
+    message: 'Trạng thái đơn hàng của bạn đã được cập nhật.',
+    color: '#6b7280',
+  };
+}
+
+/**
+ * Gửi email thông báo trạng thái đơn hàng
+ * @param {object} order - Order object từ database
+ * @param {string} newStatus - Status mới
+ * @param {string} previousStatus - Status cũ (optional)
+ * @returns {Promise<{success: boolean, messageId?: string, error?: string}>}
+ */
+export async function sendOrderStatusEmail(order, newStatus, previousStatus = null) {
+  try {
+    // Lấy email config một lần
+    const emailConfig = await getEmailConfig();
+    
+    // Kiểm tra xem có được phép gửi email cho status này không
+    const emailNotifications = emailConfig.email_notifications || {};
+    
+    // Mặc định chỉ gửi cho confirmed, cancelled, delivered nếu không có config
+    const defaultEnabled = {
+      confirmed: true,
+      cancelled: true,
+      delivered: true,
+    };
+    
+    const isEnabled = emailNotifications[newStatus] !== undefined 
+      ? emailNotifications[newStatus] 
+      : (defaultEnabled[newStatus] || false);
+    
+    if (!isEnabled) {
+      console.log(`[Email] Email notification for status "${newStatus}" is disabled. Skipping.`);
+      return { success: true, message: `Email notification for ${newStatus} is disabled` };
+    }
+    
+    // Lấy email từ order hoặc từ user collection
+    let customerEmail = order.customer_email;
+    
+    // Nếu không có email trong order, thử lấy từ user collection
+    if (!customerEmail && order.user_id) {
+      try {
+        const clientPromise = (await import('@/lib/mongodb')).default;
+        const { getDatabaseName } = await import('@/lib/mongodb');
+        const client = await clientPromise;
+        const db = client.db(getDatabaseName());
+        
+        const user = await db.collection('users').findOne({ user_id: order.user_id });
+        if (user && user.email) {
+          customerEmail = user.email;
+        }
+      } catch (userError) {
+        console.error('[Email] Error fetching user email:', userError);
+        // Continue without email
+      }
+    }
+    
+    // Chỉ gửi email nếu có email của khách hàng
+    if (!customerEmail) {
+      console.log('[Email] No customer email, skipping status email');
+      return { success: true, message: 'No customer email' };
+    }
+    
+    // Không gửi email nếu status không thay đổi
+    if (previousStatus && previousStatus === newStatus) {
+      console.log('[Email] Status unchanged, skipping email');
+      return { success: true, message: 'Status unchanged' };
+    }
+    
+    const transporter = await createTransporter();
+    const restaurantName = await getRestaurantName();
+    const slogan = await getSlogan();
+    
+    const orderId = order.order_id || 'N/A';
+    const customerName = order.customer_name || 'Khách hàng';
+    const statusContent = getStatusEmailContent(newStatus, orderId, restaurantName);
+    
+    // Format order items
+    const { html: itemsHtml, text: itemsText } = formatOrderItemsForEmail(order.items || order);
+    const totalPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.total_price || 0);
+    
+    // Format thời gian
+    const updateDate = new Date().toLocaleString('vi-VN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    
+    // Track order URL
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const trackOrderUrl = `${baseUrl}/track-order?order_id=${orderId}`;
+    
+    // Lý do hủy (nếu có)
+    const cancelReason = newStatus === 'cancelled' ? (order.admin_notes || order.notes || '') : '';
+    
+    const mailOptions = {
+      from: `"${restaurantName}" <${emailConfig.sender_email}>`,
+      to: customerEmail,
+      subject: statusContent.subject,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+          <div style="background-color: ${statusContent.color}; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="color: white; margin: 0;">${restaurantName}</h1>
+            <p style="color: #e5e7eb; margin: 5px 0 0 0;">${slogan}</p>
+          </div>
+          <div style="background-color: white; padding: 30px; border-radius: 0 0 8px 8px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h2 style="color: #1f2937; margin-top: 0; color: ${statusContent.color};">${statusContent.title}</h2>
+            </div>
+            
+            <p style="color: #4b5563; line-height: 1.6;">
+              Xin chào <strong>${customerName}</strong>,
+            </p>
+            <p style="color: #4b5563; line-height: 1.6;">
+              ${statusContent.message}
+            </p>
+            
+            <!-- Order ID -->
+            <div style="background-color: #f3f4f6; border: 2px dashed ${statusContent.color}; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0;">
+              <p style="color: #6b7280; margin: 0 0 10px 0; font-size: 14px;">Mã đơn hàng:</p>
+              <h1 style="color: ${statusContent.color}; font-size: 28px; letter-spacing: 2px; margin: 0; font-family: 'Courier New', monospace;">
+                ${orderId}
+              </h1>
+            </div>
+            
+            ${newStatus !== 'cancelled' ? `
+            <!-- Order Details -->
+            <div style="margin: 30px 0;">
+              <h3 style="color: #1f2937; margin-bottom: 15px; font-size: 18px;">Thông tin đơn hàng</h3>
+              <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                <thead>
+                  <tr style="background-color: #f9fafb;">
+                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb; color: #374151;">Món</th>
+                    <th style="padding: 10px; text-align: center; border-bottom: 2px solid #e5e7eb; color: #374151;">SL</th>
+                    <th style="padding: 10px; text-align: right; border-bottom: 2px solid #e5e7eb; color: #374151;">Đơn giá</th>
+                    <th style="padding: 10px; text-align: right; border-bottom: 2px solid #e5e7eb; color: #374151;">Thành tiền</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${itemsHtml}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td colspan="3" style="padding: 15px 10px; text-align: right; font-weight: bold; border-top: 2px solid #e5e7eb; color: #374151;">Tổng tiền:</td>
+                    <td style="padding: 15px 10px; text-align: right; font-weight: bold; font-size: 18px; color: ${statusContent.color}; border-top: 2px solid #e5e7eb;">${totalPrice}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            ` : ''}
+            
+            ${cancelReason ? `
+            <!-- Cancel Reason -->
+            <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 15px; border-radius: 4px; margin: 20px 0;">
+              <p style="margin: 0; color: #991b1b;"><strong>Lý do hủy:</strong> ${cancelReason}</p>
+            </div>
+            ` : ''}
+            
+            <!-- Customer Info -->
+            <div style="background-color: #f9fafb; padding: 15px; border-radius: 6px; margin: 20px 0;">
+              <p style="margin: 5px 0; color: #4b5563;"><strong>Thời gian cập nhật:</strong> ${updateDate}</p>
+              ${order.customer_address ? `<p style="margin: 5px 0; color: #4b5563;"><strong>Địa chỉ giao hàng:</strong> ${order.customer_address}</p>` : ''}
+            </div>
+            
+            ${newStatus !== 'cancelled' ? `
+            <!-- Track Order Button -->
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${trackOrderUrl}" style="display: inline-block; background-color: ${statusContent.color}; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                Theo dõi đơn hàng
+              </a>
+            </div>
+            <p style="color: #4b5563; line-height: 1.6; font-size: 14px; text-align: center;">
+              Hoặc copy link sau vào trình duyệt:<br>
+              <a href="${trackOrderUrl}" style="color: ${statusContent.color}; word-break: break-all;">${trackOrderUrl}</a>
+            </p>
+            ` : `
+            <!-- Contact Info -->
+            <div style="background-color: #f0f9ff; border-left: 4px solid #3b82f6; padding: 15px; border-radius: 4px; margin: 20px 0;">
+              <p style="margin: 0; color: #1e40af;">
+                Nếu có thắc mắc về việc hủy đơn hàng, vui lòng liên hệ với chúng tôi qua số điện thoại hoặc email.
+              </p>
+            </div>
+            `}
+            
+            <p style="color: #4b5563; line-height: 1.6; margin-top: 30px;">
+              Trân trọng,<br>
+              <strong>Đội ngũ ${restaurantName}</strong>
+            </p>
+          </div>
+          <div style="text-align: center; margin-top: 20px; color: #9ca3af; font-size: 12px;">
+            <p>Email này được gửi tự động, vui lòng không trả lời.</p>
+          </div>
+        </div>
+      `,
+      text: `
+        ${restaurantName}
+        ${slogan}
+        
+        ${statusContent.title}
+        
+        Xin chào ${customerName},
+        
+        ${statusContent.message}
+        
+        Mã đơn hàng: ${orderId}
+        
+        ${newStatus !== 'cancelled' ? `
+        Chi tiết đơn hàng:
+        ${itemsText}
+        
+        Tổng tiền: ${totalPrice}
+        ` : ''}
+        
+        ${cancelReason ? `Lý do hủy: ${cancelReason}` : ''}
+        
+        Thời gian cập nhật: ${updateDate}
+        ${order.customer_address ? `Địa chỉ giao hàng: ${order.customer_address}` : ''}
+        
+        ${newStatus !== 'cancelled' ? `Theo dõi đơn hàng tại: ${trackOrderUrl}` : 'Nếu có thắc mắc, vui lòng liên hệ với chúng tôi.'}
+        
+        Trân trọng,
+        Đội ngũ ${restaurantName}
+      `,
+    };
+    
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`[Email] Order status email sent (${newStatus}):`, info.messageId);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('[Email] Error sending order status email:', error);
+    return { success: false, error: error.message };
+  }
+}
+

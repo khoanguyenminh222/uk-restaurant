@@ -87,6 +87,16 @@ export const defaultLandingConfig = {
     // Email gửi đi từ hệ thống (dùng cho xác thực, đặt hàng, etc)
     sender_email: process.env.EMAIL_USER || 'no-reply@restaurant.com',
     sender_password: process.env.EMAIL_PASSWORD || '',
+    // Cấu hình gửi email thông báo trạng thái đơn hàng
+    // Mặc định chỉ gửi cho các status quan trọng để tránh spam
+    email_notifications: {
+      confirmed: true,      // Đơn hàng đã được xác nhận
+      preparing: false,     // Đơn hàng đang được chuẩn bị
+      ready: false,        // Đơn hàng đã sẵn sàng
+      delivered: true,     // Đơn hàng đã được giao
+      completed: false,    // Đơn hàng đã hoàn thành
+      cancelled: true,     // Đơn hàng bị hủy
+    },
   },
   telegram_config: {
     // Telegram Bot configuration
@@ -340,6 +350,24 @@ export function validateLandingConfig(data) {
     if (data.email_config.sender_password && typeof data.email_config.sender_password === 'string') {
       if (data.email_config.sender_password.length > 200) {
         errors.push('Email Config: Sender password không được vượt quá 200 ký tự');
+      }
+    }
+
+    // Validate email_notifications
+    if (data.email_config.email_notifications) {
+      const validStatuses = ['confirmed', 'preparing', 'ready', 'delivered', 'completed', 'cancelled'];
+      const notifications = data.email_config.email_notifications;
+      
+      if (typeof notifications !== 'object') {
+        errors.push('Email Config: email_notifications phải là object');
+      } else {
+        Object.keys(notifications).forEach(status => {
+          if (!validStatuses.includes(status)) {
+            errors.push(`Email Config: email_notifications.${status} không phải là status hợp lệ`);
+          } else if (typeof notifications[status] !== 'boolean') {
+            errors.push(`Email Config: email_notifications.${status} phải là boolean`);
+          }
+        });
       }
     }
   }

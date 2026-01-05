@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { sendCancelledOrderNotification } from '@/lib/telegram';
 import { getAdminFromToken } from '@/lib/auth';
+import { sendOrderStatusEmail } from '@/lib/email';
 
 /**
  * GET /api/orders/:id
@@ -125,6 +126,11 @@ export async function PUT(request, { params }) {
       updateData.admin_notes = body.admin_notes;
     }
 
+    // Lưu lý do hủy đơn hàng
+    if (body.cancel_reason !== undefined) {
+      updateData.cancel_reason = body.cancel_reason;
+    }
+
     if (body.customer_name) {
       updateData.customer_name = body.customer_name;
     }
@@ -163,11 +169,21 @@ export async function PUT(request, { params }) {
           cancelledBy = adminInfo.name || adminInfo.phone || cancelledBy;
         }
         
-        const reason = body.admin_notes || body.notes || '';
+        const reason = body.cancel_reason || body.admin_notes || body.notes || updatedOrder.cancel_reason || '';
         await sendCancelledOrderNotification(updatedOrder, cancelledBy, reason, adminInfo);
       } catch (telegramError) {
         console.error('Error sending Telegram notification for cancelled order:', telegramError);
         // Continue even if Telegram fails
+      }
+    }
+
+    // Send email notification if status changed (fire and forget)
+    if (body.status && body.status !== order.status) {
+      try {
+        await sendOrderStatusEmail(updatedOrder, body.status, order.status);
+      } catch (emailError) {
+        console.error('Error sending order status email:', emailError);
+        // Continue even if email fails
       }
     }
 

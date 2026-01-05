@@ -106,6 +106,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
   const [successOrder, setSuccessOrder] = useState(null)
   const [cancelling, setCancelling] = useState(false)
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+  const [cancelReason, setCancelReason] = useState('')
 
   // Check và reset verification state nếu hết hạn
   const checkVerificationExpiry = () => {
@@ -312,6 +313,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
         body: JSON.stringify({
           status: 'cancelled',
           changed_by: 'customer',
+          cancel_reason: cancelReason.trim() || '',
         }),
       })
 
@@ -346,6 +348,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
   // Hủy bỏ modal xác nhận
   const handleCancelCancel = () => {
     setShowCancelConfirm(false)
+    setCancelReason('')
   }
 
   // Get order history URL
@@ -855,9 +858,27 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
             <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
               Bạn có chắc chắn muốn hủy đơn hàng <span className="font-semibold text-card-foreground">{successOrder?.order_id}</span>?
             </p>
-            <p className="text-xs sm:text-sm text-muted-foreground mb-6">
+            <p className="text-xs sm:text-sm text-muted-foreground mb-4">
               Hành động này không thể hoàn tác.
             </p>
+
+            {/* Cancel Reason Input */}
+            <div className="mb-4 sm:mb-6 text-left">
+              <label className="block text-sm font-medium text-card-foreground mb-2">
+                Lý do hủy đơn hàng <span className="text-muted-foreground text-xs">(Tùy chọn)</span>
+              </label>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="Nhập lý do hủy đơn hàng (nếu có)..."
+                rows={3}
+                className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none text-sm"
+                maxLength={500}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                {cancelReason.length}/500 ký tự
+              </p>
+            </div>
 
             {/* Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-3">
@@ -1150,6 +1171,8 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                     >
                       Gửi lại mã
                     </button>
+                    {/* Trạng thía đơn hàng sẽ được gửi qua email này */}
+                    <p className="text-xs text-muted-foreground">Trạng thái đơn hàng sẽ được gửi qua email này</p>
                   </div>
                 )}
 

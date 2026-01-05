@@ -32,6 +32,14 @@ export default function AdminNotificationConfig() {
   const [emailData, setEmailData] = useState({
     sender_email: '',
     sender_password: '',
+    email_notifications: {
+      confirmed: true,
+      preparing: false,
+      ready: false,
+      delivered: true,
+      completed: false,
+      cancelled: true,
+    },
   });
 
   // Telegram configuration state
@@ -62,6 +70,14 @@ export default function AdminNotificationConfig() {
         setEmailData({
           sender_email: data.email_config.sender_email || '',
           sender_password: data.email_config.sender_password || '',
+          email_notifications: data.email_config.email_notifications || {
+            confirmed: true,
+            preparing: false,
+            ready: false,
+            delivered: true,
+            completed: false,
+            cancelled: true,
+          },
         });
       }
 
@@ -117,6 +133,7 @@ export default function AdminNotificationConfig() {
         updateData.email_config = {
           sender_email: emailData.sender_email.trim(),
           sender_password: emailData.sender_password,
+          email_notifications: emailData.email_notifications,
         };
       }
 
@@ -379,6 +396,58 @@ export default function AdminNotificationConfig() {
                 <p className="text-sm text-yellow-400">
                   <strong>Bảo mật:</strong> Mật khẩu sẽ được lưu an toàn trong database. Không chia sẻ thông tin này với bất kỳ ai.
                 </p>
+              </div>
+
+              {/* Email Notifications Configuration */}
+              <div className="border-t border-border pt-6">
+                <h3 className="text-lg font-medium text-card-foreground mb-3">Cấu hình thông báo email theo trạng thái đơn hàng</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Chọn các trạng thái đơn hàng mà bạn muốn gửi email thông báo cho khách hàng. Mặc định chỉ gửi cho các trạng thái quan trọng để tránh spam.
+                </p>
+
+                <div className="space-y-3">
+                  {[
+                    { key: 'confirmed', label: 'Đơn hàng đã được xác nhận', description: 'Gửi email khi đơn hàng được xác nhận' },
+                    { key: 'preparing', label: 'Đơn hàng đang được chuẩn bị', description: 'Gửi email khi đơn hàng đang được chuẩn bị' },
+                    { key: 'ready', label: 'Đơn hàng đã sẵn sàng', description: 'Gửi email khi đơn hàng đã sẵn sàng' },
+                    { key: 'delivered', label: 'Đơn hàng đã được giao', description: 'Gửi email khi đơn hàng đã được giao' },
+                    { key: 'completed', label: 'Đơn hàng đã hoàn thành', description: 'Gửi email khi đơn hàng đã hoàn thành' },
+                    { key: 'cancelled', label: 'Đơn hàng bị hủy', description: 'Gửi email khi đơn hàng bị hủy' },
+                  ].map((status) => (
+                    <div key={status.key} className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg border border-border">
+                      <input
+                        type="checkbox"
+                        id={`email-notification-${status.key}`}
+                        checked={emailData.email_notifications[status.key] || false}
+                        onChange={(e) => {
+                          setEmailData({
+                            ...emailData,
+                            email_notifications: {
+                              ...emailData.email_notifications,
+                              [status.key]: e.target.checked,
+                            },
+                          });
+                        }}
+                        className="mt-1 w-4 h-4 text-primary bg-input border-border rounded focus:ring-primary"
+                      />
+                      <div className="flex-1">
+                        <label htmlFor={`email-notification-${status.key}`} className="text-sm font-medium text-card-foreground cursor-pointer block">
+                          {status.label}
+                        </label>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {status.description}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/50 rounded-lg">
+                  <p className="text-xs text-blue-400">
+                    <strong>Lưu ý:</strong> Nếu tắt email cho một trạng thái, khách hàng sẽ không nhận được email thông báo khi đơn hàng chuyển sang trạng thái đó. 
+                    Chỉ nên tắt các trạng thái không quan trọng để tránh làm phiền khách hàng.
+                  </p>
+                </div>
               </div>
 
               {/* Test Email Section (Optional - for future enhancement) */}

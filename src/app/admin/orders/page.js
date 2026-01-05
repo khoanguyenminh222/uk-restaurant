@@ -140,7 +140,21 @@ export default function AdminOrders() {
     fetchOrders();
   };
 
+  const [cancelReason, setCancelReason] = useState('');
+  const [showCancelReasonModal, setShowCancelReasonModal] = useState(false);
+  const [pendingCancelOrderId, setPendingCancelOrderId] = useState(null);
+  const [pendingCancelStatus, setPendingCancelStatus] = useState(null);
+
   const handleUpdateStatus = (orderId, newStatus) => {
+    // Nếu là hủy đơn, hiển thị modal nhập lý do
+    if (newStatus === 'cancelled') {
+      setPendingCancelOrderId(orderId);
+      setPendingCancelStatus(newStatus);
+      setCancelReason('');
+      setShowCancelReasonModal(true);
+      return;
+    }
+
     setConfirmMessage(`Bạn có chắc chắn muốn đổi status sang "${STATUS_CONFIG[newStatus]?.label}"?`);
     setConfirmAction(() => async () => {
       try {
@@ -198,6 +212,67 @@ export default function AdminOrders() {
     if (nextStatus) {
       handleUpdateStatus(order.order_id, nextStatus);
     }
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!pendingCancelOrderId || !pendingCancelStatus) return;
+
+    setShowCancelReasonModal(false);
+    setConfirmMessage(`Bạn có chắc chắn muốn hủy đơn hàng này?`);
+    setConfirmAction(() => async () => {
+      try {
+        // Lấy thông tin admin từ localStorage
+        const adminData = localStorage.getItem('admin_data');
+        let adminPhone = null;
+        if (adminData) {
+          try {
+            const admin = JSON.parse(adminData);
+            adminPhone = admin.phone;
+          } catch (e) {
+            console.error('Error parsing admin data:', e);
+          }
+        }
+
+        const headers = {
+          'Content-Type': 'application/json',
+        };
+        
+        // Gửi admin phone trong header
+        if (adminPhone) {
+          headers['x-admin-phone'] = adminPhone;
+        }
+
+        const response = await fetch(`/api/orders/${pendingCancelOrderId}`, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify({
+            status: pendingCancelStatus,
+            changed_by: 'admin',
+            currentAdminPhone: adminPhone,
+            cancel_reason: cancelReason.trim() || '',
+            admin_notes: cancelReason.trim() || '', // Lưu lý do hủy vào admin_notes
+          }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          setSuccess(`Đã hủy đơn hàng thành công!`);
+          fetchOrders();
+          setTimeout(() => setSuccess(''), 3000);
+        } else {
+          setError(data.error || 'Không thể hủy đơn hàng');
+        }
+      } catch (err) {
+        console.error('Error cancelling order:', err);
+        setError('Lỗi khi hủy đơn hàng');
+      } finally {
+        setPendingCancelOrderId(null);
+        setPendingCancelStatus(null);
+        setCancelReason('');
+      }
+    });
+    setShowConfirmModal(true);
   };
 
   const handleDelete = (orderId) => {
@@ -946,6 +1021,64 @@ export default function AdminOrders() {
                 className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium cursor-pointer"
               >
                 Hủy
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Reason Modal */}
+      {showCancelReasonModal && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => {
+            setShowCancelReasonModal(false);
+            setPendingCancelOrderId(null);
+            setPendingCancelStatus(null);
+            setCancelReason('');
+          }}
+        >
+          <div 
+            ref={confirmModalRef}
+            className="bg-card rounded-lg max-w-md w-full p-6 border border-border"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-xl font-bold text-card-foreground mb-4">Hủy đơn hàng</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Vui lòng nhập lý do hủy đơn hàng (tùy chọn):
+            </p>
+
+            <div className="mb-4">
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="Nhập lý do hủy đơn hàng..."
+                rows={4}
+                className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none text-sm"
+                maxLength={500}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                {cancelReason.length}/500 ký tự
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowCancelReasonModal(false);
+                  setPendingCancelOrderId(null);
+                  setPendingCancelStatus(null);
+                  setCancelReason('');
+                }}
+                className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium cursor-pointer"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleConfirmCancel}
+                className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg transition-colors font-medium cursor-pointer"
+              >
+                Xác nhận hủy
               </button>
             </div>
           </div>

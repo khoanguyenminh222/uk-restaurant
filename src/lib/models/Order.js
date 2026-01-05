@@ -30,7 +30,9 @@ export const OrderSchema = {
   // Thông tin đơn hàng:
   total_price: Number, // required - tổng tiền
   status: String, // required - pending, confirmed, preparing, ready, delivered, cancelled
-  notes: String, // optional - ghi chú từ khách hàng
+  notes: String, // optional - ghi chú từ khách hàng khi đặt hàng (không thay đổi)
+  admin_notes: String, // optional - ghi chú từ admin (riêng biệt với notes)
+  cancel_reason: String, // optional - lý do hủy đơn hàng (riêng biệt)
   created_at: Date,
   updated_at: Date,
 };
