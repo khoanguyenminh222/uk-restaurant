@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRoleCheck } from '@/hooks/useRoleCheck';
-import { Settings, Save, Loader2, RotateCcw, Mail } from 'lucide-react';
+import { Settings, Save, Loader2, RotateCcw, Mail, MessageSquare } from 'lucide-react';
 
 const TABS = [
   { id: 'email', label: 'Email', icon: Mail },
+  { id: 'telegram', label: 'Telegram', icon: MessageSquare },
 ];
 
 export default function AdminNotificationConfig() {
@@ -22,10 +23,22 @@ export default function AdminNotificationConfig() {
   const [testSuccess, setTestSuccess] = useState('');
   const [testError, setTestError] = useState('');
 
+  // Test Telegram state
+  const [sendingTelegramTest, setSendingTelegramTest] = useState(false);
+  const [telegramTestSuccess, setTelegramTestSuccess] = useState('');
+  const [telegramTestError, setTelegramTestError] = useState('');
+
   // Email configuration state
   const [emailData, setEmailData] = useState({
     sender_email: '',
     sender_password: '',
+  });
+
+  // Telegram configuration state
+  const [telegramData, setTelegramData] = useState({
+    enabled: true,
+    bot_token: '',
+    chat_id: '',
   });
 
   // Fetch current configuration
@@ -51,6 +64,15 @@ export default function AdminNotificationConfig() {
           sender_password: data.email_config.sender_password || '',
         });
       }
+
+      // Set Telegram configuration
+      if (data.telegram_config) {
+        setTelegramData({
+          enabled: data.telegram_config.enabled !== false,
+          bot_token: data.telegram_config.bot_token || '',
+          chat_id: data.telegram_config.chat_id || '',
+        });
+      }
     } catch (err) {
       console.error('Error fetching config:', err);
       setError('Không thể tải cấu hình');
@@ -65,15 +87,46 @@ export default function AdminNotificationConfig() {
       setError('');
       setSuccess('');
 
-      // Validate email
-      if (!emailData.sender_email || !emailData.sender_email.includes('@')) {
-        setError('Email không hợp lệ');
-        return;
+      // Validate based on active tab
+      if (activeTab === 'email') {
+        if (!emailData.sender_email || !emailData.sender_email.includes('@')) {
+          setError('Email không hợp lệ');
+          return;
+        }
+
+        if (!emailData.sender_password) {
+          setError('Vui lòng nhập mật khẩu email');
+          return;
+        }
+      } else if (activeTab === 'telegram') {
+        if (!telegramData.bot_token) {
+          setError('Vui lòng nhập Bot Token');
+          return;
+        }
+
+        if (!telegramData.chat_id) {
+          setError('Vui lòng nhập Chat ID');
+          return;
+        }
       }
 
-      if (!emailData.sender_password) {
-        setError('Vui lòng nhập mật khẩu email');
-        return;
+      const updateData = {};
+
+      // Only include email_config if we're on email tab or both tabs have data
+      if (activeTab === 'email' || emailData.sender_email || emailData.sender_password) {
+        updateData.email_config = {
+          sender_email: emailData.sender_email.trim(),
+          sender_password: emailData.sender_password,
+        };
+      }
+
+      // Only include telegram_config if we're on telegram tab or both tabs have data
+      if (activeTab === 'telegram' || telegramData.bot_token || telegramData.chat_id) {
+        updateData.telegram_config = {
+          enabled: telegramData.enabled,
+          bot_token: telegramData.bot_token.trim(),
+          chat_id: telegramData.chat_id.trim(),
+        };
       }
 
       const response = await fetch('/api/config/landing', {
@@ -81,12 +134,7 @@ export default function AdminNotificationConfig() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          email_config: {
-            sender_email: emailData.sender_email.trim(),
-            sender_password: emailData.sender_password,
-          },
-        }),
+        body: JSON.stringify(updateData),
       });
 
       if (!response.ok) {
@@ -124,6 +172,49 @@ export default function AdminNotificationConfig() {
       setError('Có lỗi xảy ra khi reset cấu hình');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSendTestTelegram = async () => {
+    try {
+      setSendingTelegramTest(true);
+      setTelegramTestError('');
+      setTelegramTestSuccess('');
+
+      // Validate Telegram config
+      if (!telegramData.bot_token) {
+        setTelegramTestError('Vui lòng nhập Bot Token trước khi test');
+        return;
+      }
+
+      if (!telegramData.chat_id) {
+        setTelegramTestError('Vui lòng nhập Chat ID trước khi test');
+        return;
+      }
+
+      // Save config first
+      await handleSave();
+
+      const response = await fetch('/api/config/test-telegram', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send test Telegram message');
+      }
+
+      setTelegramTestSuccess('Thông báo Telegram đã được gửi thành công! Vui lòng kiểm tra Telegram group/channel của bạn.');
+      setTimeout(() => setTelegramTestSuccess(''), 5000);
+    } catch (err) {
+      console.error('Error sending test Telegram message:', err);
+      setTelegramTestError(err.message || 'Có lỗi xảy ra khi gửi thông báo Telegram thử nghiệm');
+    } finally {
+      setSendingTelegramTest(false);
     }
   };
 
@@ -336,6 +427,127 @@ export default function AdminNotificationConfig() {
                     )}
                   </button>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Telegram Tab */}
+          {activeTab === 'telegram' && (
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold text-card-foreground mb-4">Cấu hình Telegram</h2>
+              
+              <div className="bg-blue-500/10 border border-blue-500/50 rounded-lg p-4 mb-6">
+                <p className="text-sm text-blue-400 mb-2">
+                  <strong>Lưu ý quan trọng:</strong>
+                </p>
+                <ul className="text-sm text-blue-400 space-y-1 list-disc list-inside">
+                  <li>Telegram bot sẽ tự động thông báo khi có đơn hàng mới hoặc đơn hàng bị hủy</li>
+                  <li>Bạn cần tạo bot mới qua @BotFather trên Telegram</li>
+                  <li>Thêm bot vào Telegram group/channel của bạn</li>
+                  <li>Lấy Chat ID của group/channel (có thể dùng bot @userinfobot hoặc API)</li>
+                </ul>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="telegram-enabled"
+                  checked={telegramData.enabled}
+                  onChange={(e) => setTelegramData({ ...telegramData, enabled: e.target.checked })}
+                  className="w-4 h-4 text-primary bg-input border-border rounded focus:ring-primary"
+                />
+                <label htmlFor="telegram-enabled" className="text-sm font-medium text-card-foreground cursor-pointer">
+                  Bật thông báo Telegram
+                </label>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Bot Token <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={telegramData.bot_token}
+                  onChange={(e) => setTelegramData({ ...telegramData, bot_token: e.target.value })}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
+                  maxLength={200}
+                />
+                <p className="text-xs text-muted-foreground mt-2">
+                  Bot Token từ @BotFather trên Telegram. Ví dụ: 1234567890:ABCdefGHIjklMNOpqrsTUVwxyz
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Chat ID <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={telegramData.chat_id}
+                  onChange={(e) => setTelegramData({ ...telegramData, chat_id: e.target.value })}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="-1001234567890"
+                  maxLength={50}
+                />
+                <p className="text-xs text-muted-foreground mt-2">
+                  Chat ID của Telegram group/channel. Có thể là số dương (user) hoặc số âm (group/channel).
+                </p>
+                <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-border">
+                  <p className="text-xs text-muted-foreground mb-2">
+                    <strong>Cách lấy Chat ID:</strong>
+                  </p>
+                  <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
+                    <li>Thêm bot @userinfobot vào group/channel của bạn</li>
+                    <li>Bot sẽ tự động trả về Chat ID</li>
+                    <li>Hoặc gửi tin nhắn bất kỳ trong group, sau đó truy cập: <code className="bg-muted px-1 rounded">https://api.telegram.org/bot&lt;YOUR_BOT_TOKEN&gt;/getUpdates</code></li>
+                    <li>Tìm <code className="bg-muted px-1 rounded">chat.id</code> trong response</li>
+                  </ol>
+                </div>
+              </div>
+
+              <div className="bg-yellow-500/10 border border-yellow-500/50 rounded-lg p-4">
+                <p className="text-sm text-yellow-400">
+                  <strong>Bảo mật:</strong> Bot Token và Chat ID sẽ được lưu an toàn trong database. Không chia sẻ thông tin này với bất kỳ ai.
+                </p>
+              </div>
+
+              {/* Test Telegram Section */}
+              <div className="border-t border-border pt-6">
+                <h3 className="text-lg font-medium text-card-foreground mb-3">Kiểm tra Telegram</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Sau khi lưu cấu hình, bạn có thể gửi thông báo thử nghiệm để kiểm tra kết nối.
+                </p>
+
+                {/* Test Success/Error Messages */}
+                {telegramTestSuccess && (
+                  <div className="mb-4 p-4 bg-green-500/10 border border-green-500/50 rounded-lg text-green-400 text-sm">
+                    {telegramTestSuccess}
+                  </div>
+                )}
+                {telegramTestError && (
+                  <div className="mb-4 p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400 text-sm">
+                    {telegramTestError}
+                  </div>
+                )}
+
+                <button
+                  onClick={handleSendTestTelegram}
+                  disabled={sendingTelegramTest || !telegramData.bot_token || !telegramData.chat_id}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {sendingTelegramTest ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Đang gửi...
+                    </>
+                  ) : (
+                    <>
+                      <MessageSquare className="w-4 h-4" />
+                      Gửi thông báo thử
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           )}

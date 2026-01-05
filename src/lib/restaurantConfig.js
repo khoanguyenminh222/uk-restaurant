@@ -96,3 +96,15 @@ export async function getEmailConfig() {
   const emailConfig = config.email_config || defaultLandingConfig.email_config;
   return emailConfig;
 }
+
+/**
+ * Lấy Telegram config từ database (server-side only)
+ * @returns {Promise<object>} Telegram config object với bot_token, chat_id, enabled
+ */
+export async function getTelegramConfig() {
+  const config = await getConfig();
+  return config.telegram_config || defaultLandingConfig.telegram_config;
+}
+
+// Export getConfig để các module khác có thể sử dụng
+export { getConfig };

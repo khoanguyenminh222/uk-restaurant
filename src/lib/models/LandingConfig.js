@@ -88,6 +88,12 @@ export const defaultLandingConfig = {
     sender_email: process.env.EMAIL_USER || 'no-reply@restaurant.com',
     sender_password: process.env.EMAIL_PASSWORD || '',
   },
+  telegram_config: {
+    // Telegram Bot configuration
+    enabled: process.env.TELEGRAM_ENABLED !== 'false', // Default: true
+    bot_token: process.env.TELEGRAM_BOT_TOKEN || '',
+    chat_id: process.env.TELEGRAM_CHAT_ID || '',
+  },
   footer: {
     restaurant_name: 'UK Restaurant',
     slogan: 'Ăn no khỏi "bàn"',
@@ -338,6 +344,25 @@ export function validateLandingConfig(data) {
     }
   }
 
+  // Validate telegram config
+  if (data.telegram_config) {
+    if (data.telegram_config.bot_token && typeof data.telegram_config.bot_token === 'string') {
+      if (data.telegram_config.bot_token.length > 200) {
+        errors.push('Telegram Config: Bot token không được vượt quá 200 ký tự');
+      }
+    }
+
+    if (data.telegram_config.chat_id && typeof data.telegram_config.chat_id === 'string') {
+      if (data.telegram_config.chat_id.length > 50) {
+        errors.push('Telegram Config: Chat ID không được vượt quá 50 ký tự');
+      }
+    }
+
+    if (data.telegram_config.enabled !== undefined && typeof data.telegram_config.enabled !== 'boolean') {
+      errors.push('Telegram Config: Enabled phải là boolean');
+    }
+  }
+
   // Validate footer
   if (data.footer) {
     if (!data.footer.restaurant_name || typeof data.footer.restaurant_name !== 'string' || data.footer.restaurant_name.trim().length === 0) {
@@ -560,6 +585,10 @@ export function mergeWithDefaults(config) {
 
   if (config.email_config) {
     merged.email_config = { ...merged.email_config, ...config.email_config };
+  }
+
+  if (config.telegram_config) {
+    merged.telegram_config = { ...merged.telegram_config, ...config.telegram_config };
   }
 
   return merged;

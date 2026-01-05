@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
+import { sendCancelledOrderNotification } from '@/lib/telegram';
+import { getAdminFromToken } from '@/lib/auth';
 
 /**
  * GET /api/orders/:id
@@ -41,6 +43,16 @@ export async function PUT(request, { params }) {
   try {
     const { id } = await params;
     const body = await request.json();
+    
+    // Lấy thông tin admin từ request (nếu có)
+    let adminInfo = null;
+    try {
+      adminInfo = await getAdminFromToken(request);
+    } catch (adminError) {
+      console.error('Error getting admin info:', adminError);
+      // Continue without admin info
+    }
+    
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
 
@@ -140,6 +152,24 @@ export async function PUT(request, { params }) {
 
     // Get updated order
     const updatedOrder = await db.collection('orders').findOne({ order_id: id });
+
+    // Send Telegram notification if order is cancelled (fire and forget)
+    if (body.status === 'cancelled') {
+      try {
+        let cancelledBy = body.changed_by || 'admin';
+        
+        // Nếu là admin/manager/super_admin và có thông tin admin, sử dụng tên admin
+        if ((cancelledBy === 'admin' || cancelledBy === 'manager' || cancelledBy === 'super_admin') && adminInfo) {
+          cancelledBy = adminInfo.name || adminInfo.phone || cancelledBy;
+        }
+        
+        const reason = body.admin_notes || body.notes || '';
+        await sendCancelledOrderNotification(updatedOrder, cancelledBy, reason, adminInfo);
+      } catch (telegramError) {
+        console.error('Error sending Telegram notification for cancelled order:', telegramError);
+        // Continue even if Telegram fails
+      }
+    }
 
     return NextResponse.json(
       { success: true, data: updatedOrder },

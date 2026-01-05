@@ -144,16 +144,36 @@ export default function AdminOrders() {
     setConfirmMessage(`Bạn có chắc chắn muốn đổi status sang "${STATUS_CONFIG[newStatus]?.label}"?`);
     setConfirmAction(() => async () => {
       try {
-      const response = await fetch(`/api/orders/${orderId}`, {
-        method: 'PUT',
-        headers: {
+        // Lấy thông tin admin từ localStorage
+        const adminData = localStorage.getItem('admin_data');
+        let adminPhone = null;
+        if (adminData) {
+          try {
+            const admin = JSON.parse(adminData);
+            adminPhone = admin.phone;
+          } catch (e) {
+            console.error('Error parsing admin data:', e);
+          }
+        }
+
+        const headers = {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          status: newStatus,
-          changed_by: 'admin',
-        }),
-      });
+        };
+        
+        // Gửi admin phone trong header
+        if (adminPhone) {
+          headers['x-admin-phone'] = adminPhone;
+        }
+
+        const response = await fetch(`/api/orders/${orderId}`, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify({
+            status: newStatus,
+            changed_by: 'admin',
+            currentAdminPhone: adminPhone, // Gửi trong body để backup
+          }),
+        });
 
         const data = await response.json();
 

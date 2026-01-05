@@ -40,7 +40,7 @@ export async function getAdminFromToken(request) {
     
     const admin = await db.collection('users').findOne({
       phone: phone,
-      role: { $in: ['admin', 'super_admin'] },
+      role: { $in: ['admin', 'super_admin', 'manager'] },
       is_deleted: { $ne: true }
     });
 

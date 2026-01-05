@@ -171,6 +171,9 @@ export async function PUT(request) {
       if (body.email_config) {
         updateData.email_config = { ...updateData.email_config, ...body.email_config };
       }
+      if (body.telegram_config) {
+        updateData.telegram_config = { ...updateData.telegram_config, ...body.telegram_config };
+      }
 
       updateData.updated_at = now;
 

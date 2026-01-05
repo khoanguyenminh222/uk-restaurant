@@ -7,6 +7,7 @@ import { checkBlacklist, autoBlacklistIfNeeded } from '@/lib/blacklist';
 import { isEmailVerified } from '@/lib/emailVerification';
 import cache from '@/lib/cache';
 import { getSpamConfig } from '@/lib/restaurantConfig';
+import { sendNewOrderNotification } from '@/lib/telegram';
 
 /**
  * GET /api/orders
@@ -355,6 +356,14 @@ export async function POST(request) {
         console.error('Error sending order confirmation email:', emailError);
         // Continue even if email fails
       }
+    }
+
+    // Send Telegram notification for new order (fire and forget)
+    try {
+      await sendNewOrderNotification(body);
+    } catch (telegramError) {
+      console.error('Error sending Telegram notification:', telegramError);
+      // Continue even if Telegram fails
     }
 
     return NextResponse.json(
