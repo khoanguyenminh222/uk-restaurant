@@ -130,6 +130,11 @@ export function formatNewOrderMessage(order) {
     ? `${process.env.NEXT_PUBLIC_SITE_URL}/admin/orders?order_id=${orderId}`
     : '';
   
+  // Format ghi chú từ khách hàng (nếu có)
+  const notesText = order.notes && order.notes.trim() 
+    ? `\n<b>Ghi chú:</b> ${order.notes.trim()}` 
+    : '';
+
   const message = `🆕 <b>ĐƠN HÀNG MỚI</b>
 
 <b>Mã đơn:</b> <code>${orderId}</code>
@@ -140,7 +145,7 @@ export function formatNewOrderMessage(order) {
 🍽️ <b>Đơn hàng:</b>
 ${itemsText}
 
-💰 <b>Tổng tiền:</b> <b>${totalPrice}</b>
+💰 <b>Tổng tiền:</b> <b>${totalPrice}</b>${notesText}
 ⏰ <b>Thời gian:</b> ${orderDate}${adminUrl ? `\n\n🔗 <a href="${adminUrl}">Xem chi tiết</a>` : ''}`;
 
   return message;
