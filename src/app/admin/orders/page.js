@@ -12,6 +12,7 @@ import {
   Edit2, 
   Trash2, 
   Phone, 
+  Mail,
   Calendar,
   ChevronDown,
   CheckCircle2,
@@ -430,6 +431,9 @@ export default function AdminOrders() {
                   Khách hàng
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Email
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Tổng tiền
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -477,6 +481,15 @@ export default function AdminOrders() {
                             {order.customer_phone}
                           </a>
                         </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                        {order.customer_email ? (
+                          <a href={`mailto:${order.customer_email}`} className="hover:text-primary">
+                            {order.customer_email}
+                          </a>
+                        ) : (
+                          'N/A'
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary">
                         {formatCurrency(order.total_price || 0)}
@@ -607,6 +620,14 @@ export default function AdminOrders() {
                           {order.customer_phone}
                         </a>
                       </p>
+                      {order.customer_email && (
+                        <p className="flex items-center gap-1">
+                          <Mail className="w-3 h-3" />
+                          <a href={`mailto:${order.customer_email}`} className="hover:text-primary">
+                            {order.customer_email}
+                          </a>
+                        </p>
+                      )}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       <p className="truncate">{getItemNames(order)}</p>
@@ -740,6 +761,16 @@ export default function AdminOrders() {
                       <a href={`tel:${selectedOrder.customer_phone}`} className="font-medium text-primary hover:underline">
                         {selectedOrder.customer_phone}
                       </a>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Email</p>
+                      {selectedOrder.customer_email ? (
+                        <a href={`mailto:${selectedOrder.customer_email}`} className="font-medium text-primary hover:underline">
+                          {selectedOrder.customer_email}
+                        </a>
+                      ) : (
+                        <p className="font-medium text-card-foreground">N/A</p>
+                      )}
                     </div>
                     <div className="md:col-span-2">
                       <p className="text-sm text-muted-foreground mb-1">Địa chỉ</p>

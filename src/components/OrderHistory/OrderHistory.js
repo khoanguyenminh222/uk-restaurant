@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { X, Package, Calendar, DollarSign, Filter, Loader2, Eye, XCircle, Clock, CheckCircle } from "lucide-react"
+import { X, Package, Calendar, DollarSign, Filter, Loader2, Eye, XCircle, Clock, CheckCircle, Mail } from "lucide-react"
 import { getUser } from "@/utils/user"
 import { formatCurrency } from "@/utils/helpers"
 
@@ -70,15 +70,15 @@ export default function OrderHistory({ isOpen, onClose }) {
   // Close modal when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Don't close if clicking inside detail modal
-      if (detailModalRef.current && detailModalRef.current.contains(event.target)) {
+      // Don't close main modal if detail modal is open
+      if (showDetailModal) {
         return
       }
       // Don't close if clicking inside main modal
       if (modalRef.current && modalRef.current.contains(event.target)) {
         return
       }
-      // Close main modal only if clicking outside both modals
+      // Close main modal only if clicking outside and detail modal is not open
       if (modalRef.current && !modalRef.current.contains(event.target)) {
         onClose()
       }
@@ -93,7 +93,7 @@ export default function OrderHistory({ isOpen, onClose }) {
       document.removeEventListener("mousedown", handleClickOutside)
       document.body.style.overflow = "unset"
     }
-  }, [isOpen, onClose])
+  }, [isOpen, onClose, showDetailModal])
 
   // Format date
   const formatDate = (dateString) => {
@@ -426,6 +426,16 @@ export default function OrderHistory({ isOpen, onClose }) {
                       <a href={`tel:${selectedOrder.customer_phone}`} className="font-medium text-primary hover:underline">
                         {selectedOrder.customer_phone}
                       </a>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Email</p>
+                      {selectedOrder.customer_email ? (
+                        <a href={`mailto:${selectedOrder.customer_email}`} className="font-medium text-primary hover:underline">
+                          {selectedOrder.customer_email}
+                        </a>
+                      ) : (
+                        <p className="font-medium text-card-foreground">N/A</p>
+                      )}
                     </div>
                     <div className="md:col-span-2">
                       <p className="text-sm text-muted-foreground mb-1">Địa chỉ</p>
