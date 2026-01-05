@@ -133,7 +133,7 @@ export default function Hero() {
       </div>
 
       {/* Overlay để text dễ đọc */}
-      <div className="absolute inset-0 bg-black/50" style={{ zIndex: 1 }}></div>
+      <div className="absolute inset-0 bg-black/5" style={{ zIndex: 1 }}></div>
       <div
         className="absolute inset-0"
         style={{

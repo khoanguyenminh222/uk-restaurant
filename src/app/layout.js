@@ -1,8 +1,13 @@
 import { Inter, Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import { getRestaurantName, getSlogan, getSEOConfig } from "@/lib/restaurantConfig";
+import { getRestaurantName, getSlogan, getSEOConfig, getIconConfig } from "@/lib/restaurantConfig";
 import { getStorageKey, STORAGE_KEYS } from "@/utils/storage";
+
+// Force dynamic rendering để metadata (bao gồm icons) được reload mỗi lần request
+// Điều này đảm bảo khi thay đổi icon trong admin panel, nó sẽ được cập nhật ngay mà không cần restart
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 const inter = Inter({
   variable: "--font-inter",
@@ -23,15 +28,14 @@ export async function generateMetadata() {
   const restaurantName = await getRestaurantName();
   const slogan = await getSlogan();
   const seoConfig = await getSEOConfig();
+  const iconConfig = await getIconConfig();
   const defaultName = "UK Restaurant";
   const defaultSlogan = "Ăn no khỏi 'bàn'";
   const name = restaurantName || defaultName;
   const tagline = slogan || defaultSlogan;
   
   // Lấy base URL từ environment variable hoặc dùng localhost cho development
-  const metadataBase = process.env.NEXT_PUBLIC_SITE_URL 
-    ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
-    : new URL(process.env.NODE_ENV === 'production' ? 'https://yourdomain.com' : 'http://localhost:3000');
+  const metadataBase = process.env.NEXT_PUBLIC_BASE_URL;
   
   // Sử dụng SEO config từ database, fallback về giá trị mặc định
   const metaTitle = seoConfig.meta_title || `${name} - ${tagline}`;
@@ -51,6 +55,15 @@ export async function generateMetadata() {
   
   const robotsIndex = seoConfig.robots_index !== false;
   const robotsFollow = seoConfig.robots_follow !== false;
+  
+  // Xử lý icon URLs - luôn export icons trong metadata
+  // Nếu là absolute URL (http/https) thì dùng trực tiếp, nếu không thì resolve với metadataBase
+  const faviconUrl = iconConfig.favicon.startsWith('http://') || iconConfig.favicon.startsWith('https://')
+    ? iconConfig.favicon
+    : new URL(iconConfig.favicon, metadataBase).toString();
+  const appleIconUrl = iconConfig.apple.startsWith('http://') || iconConfig.apple.startsWith('https://')
+    ? iconConfig.apple
+    : new URL(iconConfig.apple, metadataBase).toString();
   
   return {
     metadataBase,
@@ -92,12 +105,10 @@ export async function generateMetadata() {
         "max-snippet": -1,
       },
     },
+    // Luôn export icons từ config (đã đổi tên file favicon.ico thành favicon-default.ico để Next.js không tự động inject)
     icons: {
-      icon: "/favicon.ico",
-      apple: "/apple-icon.png",
-    },
-    other: {
-      "theme-color": "#ffffff",
+      icon: faviconUrl,
+      apple: appleIconUrl,
     },
   };
 }

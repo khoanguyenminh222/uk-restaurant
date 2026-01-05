@@ -146,13 +146,13 @@ const getLucideIcon = (iconName) => {
 
 const TABS = [
   { id: 'general', label: 'Cấu hình chung', icon: Settings },
+  { id: 'seo', label: 'Cấu hình SEO', icon: Settings },
   { id: 'header', label: 'Header', icon: Home },
   { id: 'hero', label: 'Hero', icon: Sparkles },
   { id: 'menu', label: 'Menu', icon: BookOpen },
   { id: 'about', label: 'About', icon: Info },
   { id: 'contact', label: 'Contact', icon: Phone },
   { id: 'footer', label: 'Footer', icon: LinkIcon },
-  { id: 'seo', label: 'SEO', icon: Settings },
 ];
 
 // Default icons cho features (lucide-react)
@@ -213,6 +213,8 @@ export default function AdminLandingConfig() {
     twitter_image: '',
     robots_index: true,
     robots_follow: true,
+    icon_favicon: '/favicon.ico',
+    icon_apple: '/apple-icon.png',
   });
 
   // Modal states
@@ -1118,6 +1120,61 @@ export default function AdminLandingConfig() {
           {activeTab === 'seo' && (
             <div className="space-y-6">
               <h2 className="text-xl font-semibold text-card-foreground mb-4">Cấu hình SEO</h2>
+
+              {/* Icons */}
+              <div className="space-y-4 border-t border-b border-border pt-6 pb-6">
+                <h3 className="text-lg font-medium text-card-foreground">Icons (Favicon & Apple Icon)</h3>
+                
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Favicon URL <span className="text-muted-foreground font-normal">(Icon hiển thị trên tab browser)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={seoData.icon_favicon || ''}
+                    onChange={(e) => setSeoData({ ...seoData, icon_favicon: e.target.value })}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="/favicon.ico"
+                  />
+                  <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-border">
+                    <p className="text-xs text-muted-foreground mb-2">
+                      <strong>Hướng dẫn:</strong>
+                    </p>
+                    <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                      <li>Đường dẫn tương đối: <code className="bg-background px-1 rounded">/favicon.ico</code> (file trong thư mục <code className="bg-background px-1 rounded">public</code>)</li>
+                      <li>URL đầy đủ: <code className="bg-background px-1 rounded">https://example.com/favicon.ico</code></li>
+                      <li>Kích thước khuyến nghị: <strong>32x32px</strong> hoặc <strong>16x16px</strong></li>
+                      <li>Định dạng: ICO, PNG, hoặc SVG</li>
+                      <li>Ví dụ: <code className="bg-background px-1 rounded">/images/favicon.ico</code></li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Apple Touch Icon URL <span className="text-muted-foreground font-normal">(Icon hiển thị khi thêm vào home screen trên iOS)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={seoData.icon_apple || ''}
+                    onChange={(e) => setSeoData({ ...seoData, icon_apple: e.target.value })}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="/apple-icon.png"
+                  />
+                  <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-border">
+                    <p className="text-xs text-muted-foreground mb-2">
+                      <strong>Hướng dẫn:</strong>
+                    </p>
+                    <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                      <li>Đường dẫn tương đối: <code className="bg-background px-1 rounded">/apple-icon.png</code> (file trong thư mục <code className="bg-background px-1 rounded">public</code>)</li>
+                      <li>URL đầy đủ: <code className="bg-background px-1 rounded">https://example.com/apple-icon.png</code></li>
+                      <li>Kích thước khuyến nghị: <strong>180x180px</strong> (cho iPhone)</li>
+                      <li>Định dạng: PNG (không trong suốt)</li>
+                      <li>Ví dụ: <code className="bg-background px-1 rounded">/images/apple-icon.png</code></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
               
               {/* Basic Meta Tags */}
               <div className="space-y-4">
@@ -1215,7 +1272,7 @@ export default function AdminLandingConfig() {
 
                 <div>
                   <label className="block text-sm font-medium text-card-foreground mb-2">
-                    OG Image URL
+                    OG Image URL <span className="text-muted-foreground font-normal">(Hình ảnh hiển thị khi chia sẻ trên Facebook, LinkedIn...)</span>
                   </label>
                   <input
                     type="text"
@@ -1224,25 +1281,37 @@ export default function AdminLandingConfig() {
                     className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="/og-image.jpg"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Đường dẫn tương đối (bắt đầu với /) hoặc URL đầy đủ. Kích thước khuyến nghị: 1200x630px
-                  </p>
+                  <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-border">
+                    <p className="text-xs text-muted-foreground mb-2">
+                      <strong>Hướng dẫn:</strong>
+                    </p>
+                    <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                      <li>Đường dẫn tương đối: <code className="bg-background px-1 rounded">/og-image.jpg</code> (file trong thư mục <code className="bg-background px-1 rounded">public</code>)</li>
+                      <li>URL đầy đủ: <code className="bg-background px-1 rounded">https://example.com/image.jpg</code></li>
+                      <li>Kích thước khuyến nghị: <strong>1200x630px</strong> (tỷ lệ 1.91:1)</li>
+                      <li>Định dạng: JPG, PNG, hoặc WebP</li>
+                      <li>Ví dụ: <code className="bg-background px-1 rounded">/images/og-image.jpg</code> hoặc <code className="bg-background px-1 rounded">https://yourdomain.com/og-image.jpg</code></li>
+                    </ul>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-card-foreground mb-2">
-                      OG Type
+                      OG Type <span className="text-muted-foreground font-normal text-xs">(Loại nội dung)</span>
                     </label>
                     <select
                       value={seoData.og_type || 'website'}
                       onChange={(e) => setSeoData({ ...seoData, og_type: e.target.value })}
                       className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                     >
-                      <option value="website">Website</option>
-                      <option value="article">Article</option>
-                      <option value="product">Product</option>
+                      <option value="website">Website - Trang web thông thường (Khuyến nghị)</option>
+                      <option value="article">Article - Bài viết/Blog</option>
+                      <option value="product">Product - Sản phẩm</option>
                     </select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Chọn "Website" cho trang chủ/landing page
+                    </p>
                   </div>
 
                   <div>
@@ -1266,16 +1335,28 @@ export default function AdminLandingConfig() {
                 
                 <div>
                   <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Twitter Card Type
+                    Twitter Card Type <span className="text-muted-foreground font-normal">(Định dạng hiển thị khi chia sẻ trên Twitter/X)</span>
                   </label>
                   <select
                     value={seoData.twitter_card || 'summary_large_image'}
                     onChange={(e) => setSeoData({ ...seoData, twitter_card: e.target.value })}
                     className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   >
-                    <option value="summary">Summary</option>
-                    <option value="summary_large_image">Summary Large Image</option>
+                    <option value="summary">Summary - Hiển thị nhỏ (120x120px)</option>
+                    <option value="summary_large_image">Summary Large Image - Hiển thị lớn (1200x628px) - Khuyến nghị</option>
                   </select>
+                  <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-border">
+                    <p className="text-xs text-muted-foreground mb-2">
+                      <strong>Giải thích:</strong>
+                    </p>
+                    <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                      <li><strong>Summary:</strong> Hiển thị hình ảnh nhỏ (120x120px) bên cạnh nội dung</li>
+                      <li><strong>Summary Large Image:</strong> Hiển thị hình ảnh lớn (1200x628px) phía trên nội dung - <strong>Khuyến nghị dùng</strong></li>
+                    </ul>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      💡 <strong>Lưu ý:</strong> Nên chọn "Summary Large Image" để hình ảnh hiển thị đẹp và thu hút hơn khi chia sẻ trên Twitter/X.
+                    </p>
+                  </div>
                 </div>
 
                 <div>
@@ -1314,7 +1395,7 @@ export default function AdminLandingConfig() {
 
                 <div>
                   <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Twitter Image URL
+                    Twitter Image URL <span className="text-muted-foreground font-normal">(Tùy chọn - để trống sẽ dùng OG Image)</span>
                   </label>
                   <input
                     type="text"
@@ -1324,7 +1405,7 @@ export default function AdminLandingConfig() {
                     placeholder="Để trống sẽ dùng OG Image"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Đường dẫn tương đối (bắt đầu với /) hoặc URL đầy đủ
+                    Đường dẫn tương đối (bắt đầu với /) hoặc URL đầy đủ. Nếu để trống, Twitter sẽ tự động dùng hình ảnh từ OG Image.
                   </p>
                 </div>
               </div>

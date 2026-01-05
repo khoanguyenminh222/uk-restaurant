@@ -162,6 +162,9 @@ export async function PUT(request) {
           updateData.footer.links = body.footer.links;
         }
       }
+      if (body.seo) {
+        updateData.seo = { ...updateData.seo, ...body.seo };
+      }
 
       updateData.updated_at = now;
 

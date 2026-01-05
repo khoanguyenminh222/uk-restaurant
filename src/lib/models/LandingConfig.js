@@ -116,6 +116,8 @@ export const defaultLandingConfig = {
     twitter_image: '', // Twitter image (nếu để trống dùng og_image)
     robots_index: true, // Cho phép search engine index
     robots_follow: true, // Cho phép search engine follow links
+    icon_favicon: '/favicon.ico', // Favicon URL (hiển thị trên tab browser)
+    icon_apple: '/apple-icon.png', // Apple touch icon (hiển thị khi thêm vào home screen trên iOS)
   },
 };
 
@@ -385,6 +387,14 @@ export function validateLandingConfig(data) {
 
     if (data.seo.twitter_card && !['summary', 'summary_large_image'].includes(data.seo.twitter_card)) {
       errors.push('SEO: Twitter card phải là "summary" hoặc "summary_large_image"');
+    }
+
+    if (data.seo.icon_favicon && !data.seo.icon_favicon.startsWith('/') && !data.seo.icon_favicon.startsWith('http://') && !data.seo.icon_favicon.startsWith('https://')) {
+      errors.push('SEO: Icon favicon phải là đường dẫn tương đối (bắt đầu với /) hoặc URL đầy đủ');
+    }
+
+    if (data.seo.icon_apple && !data.seo.icon_apple.startsWith('/') && !data.seo.icon_apple.startsWith('http://') && !data.seo.icon_apple.startsWith('https://')) {
+      errors.push('SEO: Icon apple phải là đường dẫn tương đối (bắt đầu với /) hoặc URL đầy đủ');
     }
   }
 

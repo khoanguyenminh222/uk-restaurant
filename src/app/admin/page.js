@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Phone, Lock, Eye, EyeOff, Loader2, Shield } from 'lucide-react';
+import Toast from '@/components/Toast/Toast';
 
 export default function AdminLogin() {
   const [phone, setPhone] = useState('');
@@ -10,6 +11,7 @@ export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState({ message: '', isVisible: false, type: 'success' });
   const router = useRouter();
 
   useEffect(() => {

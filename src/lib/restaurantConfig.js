@@ -57,3 +57,15 @@ export async function getSEOConfig() {
   return config.seo || defaultLandingConfig.seo;
 }
 
+/**
+ * Lấy Icon config từ database (server-side only)
+ * @returns {Promise<object>} Icon config object với favicon và apple icon
+ */
+export async function getIconConfig() {
+  const seoConfig = await getSEOConfig();
+  return {
+    favicon: seoConfig.icon_favicon || '/favicon.ico',
+    apple: seoConfig.icon_apple || '/apple-icon.png',
+  };
+}
+
