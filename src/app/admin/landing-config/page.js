@@ -148,7 +148,7 @@ const getLucideIcon = (iconName) => {
 const TABS = [
   { id: 'general', label: 'Cấu hình chung', icon: Settings },
   { id: 'seo', label: 'Cấu hình SEO', icon: Settings },
-  { id: 'spam', label: 'Bảo vệ Spam', icon: Shield },
+  { id: 'spam', label: 'Ngăn chặn Spam', icon: Shield },
   { id: 'header', label: 'Header', icon: Home },
   { id: 'hero', label: 'Hero', icon: Sparkles },
   { id: 'menu', label: 'Menu', icon: BookOpen },
@@ -1466,7 +1466,7 @@ export default function AdminLandingConfig() {
 
           {activeTab === 'spam' && (
             <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-card-foreground mb-4">Cấu hình Bảo vệ Spam</h2>
+              <h2 className="text-xl font-semibold text-card-foreground mb-4">Cấu hình ngăn chặn Spam</h2>
               <p className="text-sm text-muted-foreground mb-6">
                 Cấu hình các giới hạn và thời gian hiệu lực để bảo vệ hệ thống khỏi spam và lạm dụng.
               </p>
