@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { formatCurrency } from '@/utils/helpers';
+import Toast from '@/components/Toast/Toast';
 import { UtensilsCrossed, Plus, Edit2, Trash2, Loader2, Image as ImageIcon, X, CheckCircle2, XCircle, Search, Filter, ChevronDown } from 'lucide-react';
 
 export default function AdminFood() {
@@ -27,9 +28,10 @@ export default function AdminFood() {
     manual_badge: null, // { threshold_id: '', label: '', icon: '', color: '' }
     use_auto_badge: true,
   });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [toast, setToast] = useState({ message: '', isVisible: false });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [searching, setSearching] = useState(false);
   const [deletingFoodId, setDeletingFoodId] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -38,6 +40,20 @@ export default function AdminFood() {
     fetchFood();
     fetchThresholds();
   }, [categoryFilter, availabilityFilter, pagination.page]);
+
+  // Listen for toast events
+  useEffect(() => {
+    const handleShowToast = (event) => {
+      setToast({
+        message: event.detail.message,
+        isVisible: true,
+        type: event.detail.type || 'success',
+      });
+    };
+
+    window.addEventListener('showToast', handleShowToast);
+    return () => window.removeEventListener('showToast', handleShowToast);
+  }, []);
 
   const fetchThresholds = async () => {
     try {
@@ -94,17 +110,37 @@ export default function AdminFood() {
           totalPages: foodData.pagination?.totalPages || 0,
         }));
       } else {
-        setError('Lỗi khi tải dữ liệu');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: 'Lỗi khi tải dữ liệu', type: 'error' },
+            })
+          );
+        }
       }
     } catch (error) {
       console.error('Error fetching food:', error);
-      setError('Lỗi khi tải dữ liệu');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi khi tải dữ liệu', type: 'error' },
+          })
+        );
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
+    setSearching(true);
+    try {
+      setPagination(prev => ({ ...prev, page: 1 }));
+      await fetchFood();
+    } finally {
+      setSearching(false);
+    }
+  };
     setPagination(prev => ({ ...prev, page: 1 }));
     fetchFood();
   };
@@ -146,8 +182,6 @@ export default function AdminFood() {
       });
     }
     setShowModal(true);
-    setError('');
-    setSuccess('');
   };
 
   const handleCloseModal = () => {
@@ -164,30 +198,45 @@ export default function AdminFood() {
       manual_badge: null,
       use_auto_badge: true,
     });
-    setError('');
-    setSuccess('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
 
     if (!formData.name.trim()) {
-      setError('Tên món là bắt buộc');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Tên món là bắt buộc', type: 'error' },
+          })
+        );
+      }
       return;
     }
 
     if (!formData.category_id) {
-      setError('Danh mục là bắt buộc');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Danh mục là bắt buộc', type: 'error' },
+          })
+        );
+      }
       return;
     }
 
     if (!formData.price || formData.price < 0) {
-      setError('Giá phải lớn hơn 0');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Giá phải lớn hơn 0', type: 'error' },
+          })
+        );
+      }
       return;
     }
 
+    setSaving(true);
     try {
       const url = editingFood
         ? `/api/food/${editingFood.id}`
@@ -233,17 +282,37 @@ export default function AdminFood() {
       const data = await res.json();
 
       if (data.success) {
-        setSuccess(editingFood ? 'Cập nhật thành công!' : 'Thêm mới thành công!');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: editingFood ? 'Cập nhật thành công!' : 'Thêm mới thành công!', type: 'success' },
+            })
+          );
+        }
         fetchFood();
         setTimeout(() => {
           handleCloseModal();
         }, 1000);
       } else {
-        setError(data.error || 'Có lỗi xảy ra');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: data.error || 'Có lỗi xảy ra', type: 'error' },
+            })
+          );
+        }
       }
     } catch (error) {
       console.error('Error saving food:', error);
-      setError('Lỗi khi lưu món ăn');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi khi lưu món ăn', type: 'error' },
+          })
+        );
+      }
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -264,16 +333,34 @@ export default function AdminFood() {
       const data = await res.json();
 
       if (data.success) {
-        setSuccess('Xóa thành công!');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: 'Xóa thành công!', type: 'success' },
+            })
+          );
+        }
         fetchFood();
         setShowDeleteModal(false);
         setDeletingFoodId(null);
       } else {
-        setError(data.error || 'Không thể xóa món ăn');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: data.error || 'Không thể xóa món ăn', type: 'error' },
+            })
+          );
+        }
       }
     } catch (error) {
       console.error('Error deleting food:', error);
-      setError('Lỗi khi xóa món ăn');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi khi xóa món ăn', type: 'error' },
+          })
+        );
+      }
     } finally {
       setDeleting(false);
     }
@@ -347,18 +434,6 @@ export default function AdminFood() {
         </button>
       </div>
 
-      {error && (
-        <div className="mb-4 bg-destructive/10 border border-destructive/50 text-destructive px-4 py-3 rounded-lg">
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="mb-4 bg-success/10 border border-success/50 text-success px-4 py-3 rounded-lg">
-          {success}
-        </div>
-      )}
-
       {/* Filters */}
       <div className="bg-card rounded-lg border border-border p-4 space-y-4">
         <div className="flex flex-col sm:flex-row gap-4">
@@ -376,9 +451,17 @@ export default function AdminFood() {
           </div>
           <button
             onClick={handleSearch}
-            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium"
+            disabled={searching}
+            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            Tìm kiếm
+            {searching ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Đang tìm...</span>
+              </>
+            ) : (
+              'Tìm kiếm'
+            )}
           </button>
 
           {/* Category Filter */}
@@ -980,9 +1063,17 @@ export default function AdminFood() {
               <div className="flex gap-4 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer"
+                  disabled={saving}
+                  className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {editingFood ? 'Cập nhật' : 'Thêm mới'}
+                  {saving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Đang lưu...</span>
+                    </>
+                  ) : (
+                    editingFood ? 'Cập nhật' : 'Thêm mới'
+                  )}
                 </button>
                 <button
                   type="button"
@@ -1021,9 +1112,16 @@ export default function AdminFood() {
               <button
                 onClick={handleConfirmDelete}
                 disabled={deleting}
-                className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
               >
-                {deleting ? 'Đang xóa...' : 'Xóa'}
+                {deleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Đang xóa...</span>
+                  </>
+                ) : (
+                  'Xóa'
+                )}
               </button>
               <button
                 onClick={() => {
@@ -1039,6 +1137,13 @@ export default function AdminFood() {
           </div>
         </div>
       )}
+
+      <Toast
+        message={toast.message}
+        isVisible={toast.isVisible}
+        onClose={() => setToast({ message: '', isVisible: false })}
+        type={toast.type || 'success'}
+      />
     </div>
   );
 }

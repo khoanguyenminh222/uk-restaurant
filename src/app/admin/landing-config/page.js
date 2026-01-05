@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRoleCheck } from '@/hooks/useRoleCheck';
+import Toast from '@/components/Toast/Toast';
 import {
   Settings, Save, RotateCcw, Loader2, X, Plus, Edit2, Trash2,
   ArrowUp, ArrowDown, Home, Sparkles, BookOpen, Info, Phone,
@@ -177,8 +178,8 @@ export default function AdminLandingConfig() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [config, setConfig] = useState(null);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [toast, setToast] = useState({ message: '', isVisible: false });
+  const [saving, setSaving] = useState(false);
 
   // Form states cho từng section
   const [restaurantName, setRestaurantName] = useState('');
@@ -255,6 +256,20 @@ export default function AdminLandingConfig() {
     fetchConfig();
   }, []);
 
+  // Listen for toast events
+  useEffect(() => {
+    const handleShowToast = (event) => {
+      setToast({
+        message: event.detail.message,
+        isVisible: true,
+        type: event.detail.type || 'success',
+      });
+    };
+
+    window.addEventListener('showToast', handleShowToast);
+    return () => window.removeEventListener('showToast', handleShowToast);
+  }, []);
+
   const fetchConfig = async () => {
     try {
       setLoading(true);
@@ -274,11 +289,23 @@ export default function AdminLandingConfig() {
         if (data.data.seo) setSeoData(data.data.seo);
         if (data.data.spam) setSpamData(data.data.spam);
       } else {
-        setError('Lỗi khi tải cấu hình');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: 'Lỗi khi tải cấu hình', type: 'error' },
+            })
+          );
+        }
       }
     } catch (error) {
       console.error('Error fetching config:', error);
-      setError('Lỗi khi tải cấu hình');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi khi tải cấu hình', type: 'error' },
+          })
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -287,8 +314,6 @@ export default function AdminLandingConfig() {
   const handleSave = async () => {
     try {
       setSaving(true);
-      setError('');
-      setSuccess('');
 
       const updateData = {
         restaurant_name: restaurantName,
@@ -311,18 +336,32 @@ export default function AdminLandingConfig() {
 
       const data = await res.json();
       if (data.success) {
-        setSuccess('Lưu thành công!');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: 'Lưu thành công!', type: 'success' },
+            })
+          );
+        }
         setConfig(data.data);
-        setTimeout(() => setSuccess(''), 3000);
       } else {
-        setError(data.error || 'Lỗi khi lưu cấu hình');
-        if (data.errors) {
-          setError(data.errors.join(', '));
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: data.errors ? data.errors.join(', ') : (data.error || 'Lỗi khi lưu cấu hình'), type: 'error' },
+            })
+          );
         }
       }
     } catch (error) {
       console.error('Error saving config:', error);
-      setError('Lỗi khi lưu cấu hình');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi khi lưu cấu hình', type: 'error' },
+          })
+        );
+      }
     } finally {
       setSaving(false);
     }
@@ -338,15 +377,32 @@ export default function AdminLandingConfig() {
       const res = await fetch('/api/config/landing/reset', { method: 'POST' });
       const data = await res.json();
       if (data.success) {
-        setSuccess('Đã reset về mặc định!');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: 'Đã reset về mặc định!', type: 'success' },
+            })
+          );
+        }
         fetchConfig();
-        setTimeout(() => setSuccess(''), 3000);
       } else {
-        setError(data.error || 'Lỗi khi reset');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: data.error || 'Lỗi khi reset', type: 'error' },
+            })
+          );
+        }
       }
     } catch (error) {
       console.error('Error resetting config:', error);
-      setError('Lỗi khi reset');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi khi reset', type: 'error' },
+          })
+        );
+      }
     } finally {
       setSaving(false);
     }
@@ -387,7 +443,13 @@ export default function AdminLandingConfig() {
 
   const handleSaveFeature = () => {
     if (!featureForm.title || !featureForm.description) {
-      setError('Vui lòng điền đầy đủ thông tin');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Vui lòng điền đầy đủ thông tin', type: 'error' },
+          })
+        );
+      }
       return;
     }
 
@@ -448,7 +510,13 @@ export default function AdminLandingConfig() {
 
   const handleSaveSocial = () => {
     if (!socialForm.name || !socialForm.url) {
-      setError('Vui lòng điền đầy đủ thông tin');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Vui lòng điền đầy đủ thông tin', type: 'error' },
+          })
+        );
+      }
       return;
     }
 
@@ -491,7 +559,13 @@ export default function AdminLandingConfig() {
 
   const handleSaveLink = () => {
     if (!linkForm.text || !linkForm.url) {
-      setError('Vui lòng điền đầy đủ thông tin');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Vui lòng điền đầy đủ thông tin', type: 'error' },
+          })
+        );
+      }
       return;
     }
 
@@ -542,18 +616,6 @@ export default function AdminLandingConfig() {
           </div>
           <p className="text-muted-foreground">Quản lý tất cả nội dung text động trên landing page</p>
         </div>
-
-        {/* Success/Error Messages */}
-        {success && (
-          <div className="mb-4 p-4 bg-green-500/10 border border-green-500/50 rounded-lg text-green-400">
-            {success}
-          </div>
-        )}
-        {error && (
-          <div className="mb-4 p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400">
-            {error}
-          </div>
-        )}
 
         {/* Tabs */}
         <div className="mb-6 border-b border-border">
@@ -1651,10 +1713,19 @@ export default function AdminLandingConfig() {
           <button
             onClick={handleReset}
             disabled={saving}
-            className="flex cursor-pointer items-center gap-2 px-6 py-3 bg-muted text-foreground rounded-lg hover:bg-muted/80 disabled:opacity-50"
+            className="flex cursor-pointer items-center gap-2 px-6 py-3 bg-muted text-foreground rounded-lg hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <RotateCcw className="w-4 h-4" />
-            Reset về mặc định
+            {saving ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Đang reset...</span>
+              </>
+            ) : (
+              <>
+                <RotateCcw className="w-4 h-4" />
+                <span>Reset về mặc định</span>
+              </>
+            )}
           </button>
           <button
             onClick={handleSave}
@@ -2135,6 +2206,13 @@ export default function AdminLandingConfig() {
           </div>
         </div>
       )}
+
+      <Toast
+        message={toast.message}
+        isVisible={toast.isVisible}
+        onClose={() => setToast({ message: '', isVisible: false })}
+        type={toast.type || 'success'}
+      />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { formatCurrency } from '@/utils/helpers';
+import Toast from '@/components/Toast/Toast';
 import { 
   ShoppingCart, 
   Loader2, 
@@ -61,8 +62,7 @@ const getNextStatus = (currentStatus) => {
 export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [toast, setToast] = useState({ message: '', isVisible: false });
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [customerTypeFilter, setCustomerTypeFilter] = useState('all');
@@ -85,6 +85,20 @@ export default function AdminOrders() {
   useEffect(() => {
     fetchOrders();
   }, [statusFilter, customerTypeFilter, dateFrom, dateTo, pagination.page]);
+
+  // Listen for toast events
+  useEffect(() => {
+    const handleShowToast = (event) => {
+      setToast({
+        message: event.detail.message,
+        isVisible: true,
+        type: event.detail.type || 'success',
+      });
+    };
+
+    window.addEventListener('showToast', handleShowToast);
+    return () => window.removeEventListener('showToast', handleShowToast);
+  }, []);
 
   const fetchOrders = async () => {
     try {
@@ -125,25 +139,47 @@ export default function AdminOrders() {
           totalPages: data.pagination?.totalPages || 0,
         }));
       } else {
-        setError(data.error || 'Lỗi khi tải danh sách đơn hàng');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: data.error || 'Lỗi khi tải danh sách đơn hàng', type: 'error' },
+            })
+          );
+        }
       }
     } catch (err) {
       console.error('Error fetching orders:', err);
-      setError('Lỗi kết nối. Vui lòng thử lại sau.');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi kết nối. Vui lòng thử lại sau.', type: 'error' },
+          })
+        );
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSearch = () => {
+  const [searching, setSearching] = useState(false);
+
+  const handleSearch = async () => {
     setPagination(prev => ({ ...prev, page: 1 }));
-    fetchOrders();
+    setSearching(true);
+    try {
+      await fetchOrders();
+    } finally {
+      setSearching(false);
+    }
   };
 
   const [cancelReason, setCancelReason] = useState('');
   const [showCancelReasonModal, setShowCancelReasonModal] = useState(false);
   const [pendingCancelOrderId, setPendingCancelOrderId] = useState(null);
   const [pendingCancelStatus, setPendingCancelStatus] = useState(null);
+  const [updatingOrderId, setUpdatingOrderId] = useState(null);
+  const [deletingOrderId, setDeletingOrderId] = useState(null);
+  const [isConfirmingAction, setIsConfirmingAction] = useState(false);
 
   const handleUpdateStatus = (orderId, newStatus) => {
     // Nếu là hủy đơn, hiển thị modal nhập lý do
@@ -158,6 +194,9 @@ export default function AdminOrders() {
     setConfirmMessage(`Bạn có chắc chắn muốn đổi status sang "${STATUS_CONFIG[newStatus]?.label}"?`);
     setConfirmAction(() => async () => {
       try {
+        setUpdatingOrderId(orderId);
+        setIsConfirmingAction(true);
+        
         // Lấy thông tin admin từ localStorage
         const adminData = localStorage.getItem('admin_data');
         let adminPhone = null;
@@ -192,15 +231,35 @@ export default function AdminOrders() {
         const data = await response.json();
 
         if (data.success) {
-          setSuccess(`Đã cập nhật status thành công!`);
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(
+              new CustomEvent('showToast', {
+                detail: { message: 'Đã cập nhật status thành công!', type: 'success' },
+              })
+            );
+          }
           fetchOrders();
-          setTimeout(() => setSuccess(''), 3000);
         } else {
-          setError(data.error || 'Không thể cập nhật status');
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(
+              new CustomEvent('showToast', {
+                detail: { message: data.error || 'Không thể cập nhật status', type: 'error' },
+              })
+            );
+          }
         }
       } catch (err) {
         console.error('Error updating order:', err);
-        setError('Lỗi khi cập nhật đơn hàng');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: 'Lỗi khi cập nhật đơn hàng', type: 'error' },
+            })
+          );
+        }
+      } finally {
+        setUpdatingOrderId(null);
+        setIsConfirmingAction(false);
       }
     });
     setShowConfirmModal(true);
@@ -221,6 +280,9 @@ export default function AdminOrders() {
     setConfirmMessage(`Bạn có chắc chắn muốn hủy đơn hàng này?`);
     setConfirmAction(() => async () => {
       try {
+        setUpdatingOrderId(pendingCancelOrderId);
+        setIsConfirmingAction(true);
+        
         // Lấy thông tin admin từ localStorage
         const adminData = localStorage.getItem('admin_data');
         let adminPhone = null;
@@ -257,16 +319,35 @@ export default function AdminOrders() {
         const data = await response.json();
 
         if (data.success) {
-          setSuccess(`Đã hủy đơn hàng thành công!`);
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(
+              new CustomEvent('showToast', {
+                detail: { message: 'Đã hủy đơn hàng thành công!', type: 'success' },
+              })
+            );
+          }
           fetchOrders();
-          setTimeout(() => setSuccess(''), 3000);
         } else {
-          setError(data.error || 'Không thể hủy đơn hàng');
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(
+              new CustomEvent('showToast', {
+                detail: { message: data.error || 'Không thể hủy đơn hàng', type: 'error' },
+              })
+            );
+          }
         }
       } catch (err) {
         console.error('Error cancelling order:', err);
-        setError('Lỗi khi hủy đơn hàng');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: 'Lỗi khi hủy đơn hàng', type: 'error' },
+            })
+          );
+        }
       } finally {
+        setUpdatingOrderId(null);
+        setIsConfirmingAction(false);
         setPendingCancelOrderId(null);
         setPendingCancelStatus(null);
         setCancelReason('');
@@ -279,28 +360,52 @@ export default function AdminOrders() {
     setConfirmMessage('Bạn có chắc chắn muốn xóa đơn hàng này?');
     setConfirmAction(() => async () => {
       try {
-      const response = await fetch(`/api/orders/${orderId}`, {
-        method: 'DELETE',
-      });
+        setDeletingOrderId(orderId);
+        setIsConfirmingAction(true);
+        
+        const response = await fetch(`/api/orders/${orderId}`, {
+          method: 'DELETE',
+        });
 
         const data = await response.json();
 
         if (data.success) {
-          setSuccess('Đã xóa đơn hàng thành công!');
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(
+              new CustomEvent('showToast', {
+                detail: { message: 'Đã xóa đơn hàng thành công!', type: 'success' },
+              })
+            );
+          }
           fetchOrders();
         } else {
-          setError(data.error || 'Không thể xóa đơn hàng');
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(
+              new CustomEvent('showToast', {
+                detail: { message: data.error || 'Không thể xóa đơn hàng', type: 'error' },
+              })
+            );
+          }
         }
       } catch (err) {
         console.error('Error deleting order:', err);
-        setError('Lỗi khi xóa đơn hàng');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: 'Lỗi khi xóa đơn hàng', type: 'error' },
+            })
+          );
+        }
+      } finally {
+        setDeletingOrderId(null);
+        setIsConfirmingAction(false);
       }
     });
     setShowConfirmModal(true);
   };
 
   const handleConfirmAction = async () => {
-    if (confirmAction) {
+    if (confirmAction && !isConfirmingAction) {
       await confirmAction();
       setShowConfirmModal(false);
       setConfirmAction(null);
@@ -308,8 +413,11 @@ export default function AdminOrders() {
     }
   };
 
+  const [viewingDetailId, setViewingDetailId] = useState(null);
+
   const handleViewDetail = async (orderId) => {
     try {
+      setViewingDetailId(orderId);
       const response = await fetch(`/api/orders/${orderId}`);
       const data = await response.json();
 
@@ -317,11 +425,25 @@ export default function AdminOrders() {
         setSelectedOrder(data.data);
         setShowDetailModal(true);
       } else {
-        setError(data.error || 'Không thể lấy chi tiết đơn hàng');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: data.error || 'Không thể lấy chi tiết đơn hàng', type: 'error' },
+            })
+          );
+        }
       }
     } catch (err) {
       console.error('Error fetching order detail:', err);
-      setError('Lỗi khi lấy chi tiết đơn hàng');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi khi lấy chi tiết đơn hàng', type: 'error' },
+          })
+        );
+      }
+    } finally {
+      setViewingDetailId(null);
     }
   };
 
@@ -380,24 +502,20 @@ export default function AdminOrders() {
         <div className="flex items-center gap-2">
           <button
             onClick={fetchOrders}
-            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium text-sm cursor-pointer"
+            disabled={loading}
+            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            Làm mới
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Đang tải...</span>
+              </>
+            ) : (
+              'Làm mới'
+            )}
           </button>
         </div>
       </div>
-
-      {/* Messages */}
-      {error && (
-        <div className="p-3 bg-destructive/10 border border-destructive/50 rounded-lg text-destructive text-sm">
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="p-3 bg-success/10 border border-success/50 rounded-lg text-success text-sm">
-          {success}
-        </div>
-      )}
 
       {/* Filters */}
       <div className="bg-card rounded-lg border border-border p-4 space-y-4">
@@ -416,9 +534,17 @@ export default function AdminOrders() {
           </div>
           <button
             onClick={handleSearch}
-            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer"
+            disabled={searching}
+            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            Tìm kiếm
+            {searching ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Đang tìm...</span>
+              </>
+            ) : (
+              'Tìm kiếm'
+            )}
           </button>
         </div>
         
@@ -598,11 +724,16 @@ export default function AdminOrders() {
                           {order.status !== 'cancelled' && getNextStatus(order.status) && (
                             <button
                               onClick={() => handleQuickUpdateStatus(order)}
-                              className="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
+                              disabled={updatingOrderId === order.order_id}
+                              className="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                               title={`Chuyển sang ${STATUS_CONFIG[getNextStatus(order.status)]?.label}`}
                               aria-label="Cập nhật trạng thái"
                             >
-                              <ArrowRight className="w-4 h-4" />
+                              {updatingOrderId === order.order_id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <ArrowRight className="w-4 h-4" />
+                              )}
                             </button>
                           )}
                         </div>
@@ -624,10 +755,15 @@ export default function AdminOrders() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleViewDetail(order.order_id)}
-                            className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
+                            disabled={viewingDetailId === order.order_id}
+                            className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             aria-label="Xem chi tiết"
                           >
-                            <Eye className="w-4 h-4" />
+                            {viewingDetailId === order.order_id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Eye className="w-4 h-4" />
+                            )}
                           </button>
                           <button
                             onClick={() => handleEdit(order)}
@@ -638,10 +774,15 @@ export default function AdminOrders() {
                           </button>
                           <button
                             onClick={() => handleDelete(order.order_id)}
-                            className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors cursor-pointer"
+                            disabled={deletingOrderId === order.order_id}
+                            className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             aria-label="Xóa"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            {deletingOrderId === order.order_id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
                           </button>
                         </div>
                       </td>
@@ -683,11 +824,16 @@ export default function AdminOrders() {
                         {order.status !== 'cancelled' && getNextStatus(order.status) && (
                           <button
                             onClick={() => handleQuickUpdateStatus(order)}
-                            className="p-1 text-primary hover:bg-primary/10 rounded transition-colors cursor-pointer"
+                            disabled={updatingOrderId === order.order_id}
+                            className="p-1 text-primary hover:bg-primary/10 rounded transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             title={`Chuyển sang ${STATUS_CONFIG[getNextStatus(order.status)]?.label}`}
                             aria-label="Cập nhật trạng thái"
                           >
-                            <ArrowRight className="w-3 h-3" />
+                            {updatingOrderId === order.order_id ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <ArrowRight className="w-3 h-3" />
+                            )}
                           </button>
                         )}
                       </div>
@@ -736,10 +882,20 @@ export default function AdminOrders() {
                 <div className="flex items-center gap-2 pt-2 border-t border-border">
                   <button
                     onClick={() => handleViewDetail(order.order_id)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium cursor-pointer"
+                    disabled={viewingDetailId === order.order_id}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Eye className="w-4 h-4" />
-                    <span>Chi tiết</span>
+                    {viewingDetailId === order.order_id ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Đang tải...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="w-4 h-4" />
+                        <span>Chi tiết</span>
+                      </>
+                    )}
                   </button>
                   <button
                     onClick={() => handleEdit(order)}
@@ -750,9 +906,14 @@ export default function AdminOrders() {
                   </button>
                   <button
                     onClick={() => handleDelete(order.order_id)}
-                    className="px-4 py-2 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg transition-colors cursor-pointer"
+                    disabled={deletingOrderId === order.order_id}
+                    className="px-4 py-2 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    {deletingOrderId === order.order_id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -1008,17 +1169,28 @@ export default function AdminOrders() {
             <div className="flex gap-3">
               <button
                 onClick={handleConfirmAction}
-                className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer"
+                disabled={isConfirmingAction}
+                className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                Xác nhận
+                {isConfirmingAction ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Đang xử lý...</span>
+                  </>
+                ) : (
+                  'Xác nhận'
+                )}
               </button>
               <button
                 onClick={() => {
-                  setShowConfirmModal(false);
-                  setConfirmAction(null);
-                  setConfirmMessage('');
+                  if (!isConfirmingAction) {
+                    setShowConfirmModal(false);
+                    setConfirmAction(null);
+                    setConfirmMessage('');
+                  }
                 }}
-                className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium cursor-pointer"
+                disabled={isConfirmingAction}
+                className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Hủy
               </button>
@@ -1065,25 +1237,43 @@ export default function AdminOrders() {
             <div className="flex gap-3">
               <button
                 onClick={() => {
-                  setShowCancelReasonModal(false);
-                  setPendingCancelOrderId(null);
-                  setPendingCancelStatus(null);
-                  setCancelReason('');
+                  if (!isConfirmingAction && updatingOrderId !== pendingCancelOrderId) {
+                    setShowCancelReasonModal(false);
+                    setPendingCancelOrderId(null);
+                    setPendingCancelStatus(null);
+                    setCancelReason('');
+                  }
                 }}
-                className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium cursor-pointer"
+                disabled={isConfirmingAction || updatingOrderId === pendingCancelOrderId}
+                className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Hủy
               </button>
               <button
                 onClick={handleConfirmCancel}
-                className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg transition-colors font-medium cursor-pointer"
+                disabled={isConfirmingAction || updatingOrderId === pendingCancelOrderId}
+                className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                Xác nhận hủy
+                {isConfirmingAction || updatingOrderId === pendingCancelOrderId ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Đang xử lý...</span>
+                  </>
+                ) : (
+                  'Xác nhận hủy'
+                )}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      <Toast
+        message={toast.message}
+        isVisible={toast.isVisible}
+        onClose={() => setToast({ message: '', isVisible: false })}
+        type={toast.type || 'success'}
+      />
     </div>
   );
 }

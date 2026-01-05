@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Toast from '@/components/Toast/Toast';
 import { FolderOpen, Plus, Edit2, Trash2, Loader2, X, Palette, Search, ChevronDown } from 'lucide-react';
 
 export default function AdminCategories() {
@@ -17,15 +18,30 @@ export default function AdminCategories() {
     icon: '',
     color: '#16a34a',
   });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [toast, setToast] = useState({ message: '', isVisible: false });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [searching, setSearching] = useState(false);
   const [deletingCategoryId, setDeletingCategoryId] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchCategories();
   }, [pagination.page]);
+
+  // Listen for toast events
+  useEffect(() => {
+    const handleShowToast = (event) => {
+      setToast({
+        message: event.detail.message,
+        isVisible: true,
+        type: event.detail.type || 'success',
+      });
+    };
+
+    window.addEventListener('showToast', handleShowToast);
+    return () => window.removeEventListener('showToast', handleShowToast);
+  }, []);
 
   const fetchCategories = async () => {
     try {
@@ -49,19 +65,36 @@ export default function AdminCategories() {
           totalPages: data.pagination?.totalPages || 0,
         }));
       } else {
-        setError('Lỗi khi tải danh sách danh mục');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: 'Lỗi khi tải danh sách danh mục', type: 'error' },
+            })
+          );
+        }
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
-      setError('Lỗi khi tải danh sách danh mục');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi khi tải danh sách danh mục', type: 'error' },
+          })
+        );
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSearch = () => {
-    setPagination(prev => ({ ...prev, page: 1 }));
-    fetchCategories();
+  const handleSearch = async () => {
+    setSearching(true);
+    try {
+      setPagination(prev => ({ ...prev, page: 1 }));
+      await fetchCategories();
+    } finally {
+      setSearching(false);
+    }
   };
 
   const handleOpenModal = (category = null) => {
@@ -85,8 +118,6 @@ export default function AdminCategories() {
       });
     }
     setShowModal(true);
-    setError('');
-    setSuccess('');
   };
 
   const handleCloseModal = () => {
@@ -99,20 +130,23 @@ export default function AdminCategories() {
       icon: '',
       color: '#16a34a',
     });
-    setError('');
-    setSuccess('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
 
     if (!formData.name.trim()) {
-      setError('Tên danh mục là bắt buộc');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Tên danh mục là bắt buộc', type: 'error' },
+          })
+        );
+      }
       return;
     }
 
+    setSaving(true);
     try {
       const url = editingCategory
         ? `/api/categories/${editingCategory.id}`
@@ -130,17 +164,37 @@ export default function AdminCategories() {
       const data = await res.json();
 
       if (data.success) {
-        setSuccess(editingCategory ? 'Cập nhật thành công!' : 'Thêm mới thành công!');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: editingCategory ? 'Cập nhật thành công!' : 'Thêm mới thành công!', type: 'success' },
+            })
+          );
+        }
         fetchCategories();
         setTimeout(() => {
           handleCloseModal();
         }, 1000);
       } else {
-        setError(data.error || 'Có lỗi xảy ra');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: data.error || 'Có lỗi xảy ra', type: 'error' },
+            })
+          );
+        }
       }
     } catch (error) {
       console.error('Error saving category:', error);
-      setError('Lỗi khi lưu danh mục');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi khi lưu danh mục', type: 'error' },
+          })
+        );
+      }
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -161,16 +215,34 @@ export default function AdminCategories() {
       const data = await res.json();
 
       if (data.success) {
-        setSuccess('Xóa thành công!');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: 'Xóa thành công!', type: 'success' },
+            })
+          );
+        }
         fetchCategories();
         setShowDeleteModal(false);
         setDeletingCategoryId(null);
       } else {
-        setError(data.error || 'Không thể xóa danh mục');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: data.error || 'Không thể xóa danh mục', type: 'error' },
+            })
+          );
+        }
       }
     } catch (error) {
       console.error('Error deleting category:', error);
-      setError('Lỗi khi xóa danh mục');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi khi xóa danh mục', type: 'error' },
+          })
+        );
+      }
     } finally {
       setDeleting(false);
     }
@@ -203,18 +275,6 @@ export default function AdminCategories() {
         </button>
       </div>
 
-      {error && (
-        <div className="mb-4 bg-destructive/10 border border-destructive/50 text-destructive px-4 py-3 rounded-lg">
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="mb-4 bg-success/10 border border-success/50 text-success px-4 py-3 rounded-lg">
-          {success}
-        </div>
-      )}
-
       {/* Filters */}
       <div className="bg-card rounded-lg border border-border p-4 space-y-4">
         <div className="flex flex-col sm:flex-row gap-4">
@@ -232,9 +292,17 @@ export default function AdminCategories() {
           </div>
           <button
             onClick={handleSearch}
-            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer"
+            disabled={searching}
+            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            Tìm kiếm
+            {searching ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Đang tìm...</span>
+              </>
+            ) : (
+              'Tìm kiếm'
+            )}
           </button>
         </div>
       </div>
@@ -520,9 +588,17 @@ export default function AdminCategories() {
               <div className="flex gap-4 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer"
+                  disabled={saving}
+                  className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {editingCategory ? 'Cập nhật' : 'Thêm mới'}
+                  {saving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Đang lưu...</span>
+                    </>
+                  ) : (
+                    editingCategory ? 'Cập nhật' : 'Thêm mới'
+                  )}
                 </button>
                 <button
                   type="button"
@@ -561,9 +637,16 @@ export default function AdminCategories() {
               <button
                 onClick={handleConfirmDelete}
                 disabled={deleting}
-                className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
               >
-                {deleting ? 'Đang xóa...' : 'Xóa'}
+                {deleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Đang xóa...</span>
+                  </>
+                ) : (
+                  'Xóa'
+                )}
               </button>
               <button
                 onClick={() => {
@@ -579,6 +662,13 @@ export default function AdminCategories() {
           </div>
         </div>
       )}
+
+      <Toast
+        message={toast.message}
+        isVisible={toast.isVisible}
+        onClose={() => setToast({ message: '', isVisible: false })}
+        type={toast.type || 'success'}
+      />
     </div>
   );
 }

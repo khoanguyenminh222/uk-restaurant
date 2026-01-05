@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRoleCheck } from '@/hooks/useRoleCheck';
 import { formatCurrency } from '@/utils/helpers';
+import Toast from '@/components/Toast/Toast';
 import {
   Users,
   Loader2,
@@ -29,8 +30,7 @@ export default function AdminUsers() {
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [toast, setToast] = useState({ message: '', isVisible: false });
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState(null);
@@ -72,6 +72,20 @@ export default function AdminUsers() {
     }
   }, [roleFilter, pagination.page, currentAdmin]);
 
+  // Listen for toast events
+  useEffect(() => {
+    const handleShowToast = (event) => {
+      setToast({
+        message: event.detail.message,
+        isVisible: true,
+        type: event.detail.type || 'success',
+      });
+    };
+
+    window.addEventListener('showToast', handleShowToast);
+    return () => window.removeEventListener('showToast', handleShowToast);
+  }, []);
+
   const fetchUsers = async () => {
     try {
       setLoading(true);
@@ -101,26 +115,50 @@ export default function AdminUsers() {
           totalPages: data.pagination?.totalPages || 0,
         }));
       } else {
-        setError(data.error || 'Lỗi khi tải danh sách người dùng');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: data.error || 'Lỗi khi tải danh sách người dùng', type: 'error' },
+            })
+          );
+        }
       }
     } catch (err) {
       console.error('Error fetching users:', err);
-      setError('Lỗi kết nối. Vui lòng thử lại sau.');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi kết nối. Vui lòng thử lại sau.', type: 'error' },
+          })
+        );
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSearch = () => {
+  const [searching, setSearching] = useState(false);
+
+  const handleSearch = async () => {
     setPagination(prev => ({ ...prev, page: 1 }));
-    fetchUsers();
+    setSearching(true);
+    try {
+      await fetchUsers();
+    } finally {
+      setSearching(false);
+    }
   };
 
   const handleEdit = (user) => {
     // Prevent editing admin/super_admin if current admin is admin (not super_admin)
     if (currentAdmin && currentAdmin.role === 'admin' && (user.role === 'admin' || user.role === 'super_admin')) {
-      setError('Bạn không có quyền sửa tài khoản admin/super_admin');
-      setTimeout(() => setError(''), 3000);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Bạn không có quyền sửa tài khoản admin/super_admin', type: 'error' },
+          })
+        );
+      }
       return;
     }
     setSelectedUser(user);
@@ -149,17 +187,34 @@ export default function AdminUsers() {
       const data = await response.json();
 
       if (data.success) {
-        setSuccess('Đã cập nhật thông tin người dùng thành công!');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: 'Đã cập nhật thông tin người dùng thành công!', type: 'success' },
+            })
+          );
+        }
         fetchUsers();
         setShowEditModal(false);
         setSelectedUser(null);
-        setTimeout(() => setSuccess(''), 3000);
       } else {
-        setError(data.error || 'Không thể cập nhật thông tin người dùng');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: data.error || 'Không thể cập nhật thông tin người dùng', type: 'error' },
+            })
+          );
+        }
       }
     } catch (err) {
       console.error('Error updating user:', err);
-      setError('Lỗi khi cập nhật người dùng');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi khi cập nhật người dùng', type: 'error' },
+          })
+        );
+      }
     } finally {
       setEditing(false);
     }
@@ -168,8 +223,13 @@ export default function AdminUsers() {
   const handleDelete = (user) => {
     // Prevent deleting admin/super_admin if current admin is admin (not super_admin)
     if (currentAdmin && currentAdmin.role === 'admin' && (user.role === 'admin' || user.role === 'super_admin')) {
-      setError('Bạn không có quyền xóa tài khoản admin/super_admin');
-      setTimeout(() => setError(''), 3000);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Bạn không có quyền xóa tài khoản admin/super_admin', type: 'error' },
+          })
+        );
+      }
       return;
     }
     setSelectedUser(user);
@@ -188,17 +248,34 @@ export default function AdminUsers() {
       const data = await response.json();
 
       if (data.success) {
-        setSuccess(`Đã xóa người dùng thành công!${data.has_orders ? ` (Người dùng có ${data.order_count} đơn hàng)` : ''}`);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: `Đã xóa người dùng thành công!${data.has_orders ? ` (Người dùng có ${data.order_count} đơn hàng)` : ''}`, type: 'success' },
+            })
+          );
+        }
         fetchUsers();
         setShowDeleteModal(false);
         setSelectedUser(null);
-        setTimeout(() => setSuccess(''), 3000);
       } else {
-        setError(data.error || 'Không thể xóa người dùng');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: data.error || 'Không thể xóa người dùng', type: 'error' },
+            })
+          );
+        }
       }
     } catch (err) {
       console.error('Error deleting user:', err);
-      setError('Lỗi khi xóa người dùng');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi khi xóa người dùng', type: 'error' },
+          })
+        );
+      }
     } finally {
       setDeleting(false);
     }
@@ -222,15 +299,32 @@ export default function AdminUsers() {
       const data = await response.json();
 
       if (data.success) {
-        setSuccess('Đã khôi phục người dùng thành công!');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: 'Đã khôi phục người dùng thành công!', type: 'success' },
+            })
+          );
+        }
         fetchUsers();
-        setTimeout(() => setSuccess(''), 3000);
       } else {
-        setError(data.error || 'Không thể khôi phục người dùng');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: data.error || 'Không thể khôi phục người dùng', type: 'error' },
+            })
+          );
+        }
       }
     } catch (err) {
       console.error('Error restoring user:', err);
-      setError('Lỗi khi khôi phục người dùng');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi khi khôi phục người dùng', type: 'error' },
+          })
+        );
+      }
     } finally {
       setEditing(false);
     }
@@ -315,18 +409,6 @@ export default function AdminUsers() {
         </div>
       </div>
 
-      {/* Messages */}
-      {error && (
-        <div className="p-3 bg-destructive/10 border border-destructive/50 rounded-lg text-destructive text-sm">
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="p-3 bg-success/10 border border-success/50 rounded-lg text-success text-sm">
-          {success}
-        </div>
-      )}
-
       {/* Filters */}
       <div className="bg-card rounded-lg border border-border p-4 space-y-4">
         <div className="flex flex-col sm:flex-row gap-4">
@@ -344,9 +426,17 @@ export default function AdminUsers() {
           </div>
           <button
             onClick={handleSearch}
-            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer"
+            disabled={searching}
+            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            Tìm kiếm
+            {searching ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Đang tìm...</span>
+              </>
+            ) : (
+              'Tìm kiếm'
+            )}
           </button>
 
           {/* Role Filter */}
@@ -947,6 +1037,13 @@ export default function AdminUsers() {
           </div>
         </div>
       )}
+
+      <Toast
+        message={toast.message}
+        isVisible={toast.isVisible}
+        onClose={() => setToast({ message: '', isVisible: false })}
+        type={toast.type || 'success'}
+      />
     </div>
   );
 }

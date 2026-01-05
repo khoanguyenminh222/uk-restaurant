@@ -10,7 +10,9 @@ export default function AdminBlacklist() {
 
   const [blacklist, setBlacklist] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
+  const [adding, setAdding] = useState(false)
+  const [updating, setUpdating] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [search, setSearch] = useState("")
   const [filterReason, setFilterReason] = useState("")
   const [filterPermanent, setFilterPermanent] = useState("")
@@ -46,7 +48,6 @@ export default function AdminBlacklist() {
   // Fetch blacklist
   const fetchBlacklist = async () => {
     setLoading(true)
-    setError("")
     try {
       const params = new URLSearchParams({
         page: page.toString(),
@@ -74,11 +75,23 @@ export default function AdminBlacklist() {
         setTotalPages(data.pagination.totalPages)
         setTotal(data.pagination.total)
       } else {
-        setError(data.error || "Lỗi khi lấy danh sách blacklist")
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("showToast", {
+              detail: { message: data.error || "Lỗi khi lấy danh sách blacklist", type: "error" },
+            })
+          )
+        }
       }
     } catch (err) {
       console.error("Error fetching blacklist:", err)
-      setError("Lỗi kết nối. Vui lòng thử lại sau.")
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("showToast", {
+            detail: { message: "Lỗi kết nối. Vui lòng thử lại sau.", type: "error" },
+          })
+        )
+      }
     } finally {
       setLoading(false)
     }
@@ -91,8 +104,8 @@ export default function AdminBlacklist() {
   // Handle add to blacklist
   const handleAdd = async (e) => {
     e.preventDefault()
-    setError("")
 
+    setAdding(true)
     try {
       const adminPhone = getAdminPhone()
       const headers = {
@@ -134,11 +147,25 @@ export default function AdminBlacklist() {
           )
         }
       } else {
-        setError(data.error || "Lỗi khi thêm vào blacklist")
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("showToast", {
+              detail: { message: data.error || "Lỗi khi thêm vào blacklist", type: "error" },
+            })
+          )
+        }
       }
     } catch (err) {
       console.error("Error adding to blacklist:", err)
-      setError("Lỗi kết nối. Vui lòng thử lại sau.")
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("showToast", {
+            detail: { message: "Lỗi kết nối. Vui lòng thử lại sau.", type: "error" },
+          })
+        )
+      }
+    } finally {
+      setAdding(false)
     }
   }
 
@@ -163,8 +190,8 @@ export default function AdminBlacklist() {
   // Handle update
   const handleUpdate = async (e) => {
     e.preventDefault()
-    setError("")
 
+    setUpdating(true)
     try {
       const adminPhone = getAdminPhone()
       const headers = {
@@ -209,11 +236,25 @@ export default function AdminBlacklist() {
           )
         }
       } else {
-        setError(data.error || "Lỗi khi cập nhật blacklist")
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("showToast", {
+              detail: { message: data.error || "Lỗi khi cập nhật blacklist", type: "error" },
+            })
+          )
+        }
       }
     } catch (err) {
       console.error("Error updating blacklist:", err)
-      setError("Lỗi kết nối. Vui lòng thử lại sau.")
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("showToast", {
+            detail: { message: "Lỗi kết nối. Vui lòng thử lại sau.", type: "error" },
+          })
+        )
+      }
+    } finally {
+      setUpdating(false)
     }
   }
 
@@ -223,6 +264,7 @@ export default function AdminBlacklist() {
       return
     }
 
+    setDeleting(true)
     try {
       const adminPhone = getAdminPhone()
       const headers = {}
@@ -250,11 +292,25 @@ export default function AdminBlacklist() {
           )
         }
       } else {
-        setError(data.error || "Lỗi khi xóa khỏi blacklist")
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("showToast", {
+              detail: { message: data.error || "Lỗi khi xóa khỏi blacklist", type: "error" },
+            })
+          )
+        }
       }
     } catch (err) {
       console.error("Error deleting from blacklist:", err)
-      setError("Lỗi kết nối. Vui lòng thử lại sau.")
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("showToast", {
+            detail: { message: "Lỗi kết nối. Vui lòng thử lại sau.", type: "error" },
+          })
+        )
+      }
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -361,19 +417,6 @@ export default function AdminBlacklist() {
         </div>
       </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="p-3 bg-destructive/10 border border-destructive/50 rounded-lg text-destructive text-sm">
-          {error}
-          <button
-            onClick={() => setError("")}
-            className="ml-2 text-destructive hover:text-destructive/80"
-          >
-            <X className="w-4 h-4 inline" />
-          </button>
-        </div>
-      )}
-
       {/* Table */}
       <div className="bg-card border border-border rounded-lg overflow-hidden">
         {loading ? (
@@ -447,10 +490,15 @@ export default function AdminBlacklist() {
                           </button>
                           <button
                             onClick={() => handleDelete(entry.email)}
-                            className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                            disabled={deleting}
+                            className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Xóa"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            {deleting ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
                           </button>
                         </div>
                       </td>
@@ -508,7 +556,6 @@ export default function AdminBlacklist() {
                       blocked_until: "",
                       admin_notes: "",
                     })
-                    setError("")
                   }}
                   className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
                 >
@@ -586,12 +633,6 @@ export default function AdminBlacklist() {
                   />
                 </div>
 
-                {error && (
-                  <div className="p-3 bg-destructive/10 border border-destructive/50 rounded-lg text-destructive text-sm">
-                    {error}
-                  </div>
-                )}
-
                 <div className="flex gap-3">
                   <button
                     type="button"
@@ -604,17 +645,25 @@ export default function AdminBlacklist() {
                         blocked_until: "",
                         admin_notes: "",
                       })
-                      setError("")
                     }}
-                    className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors"
+                    disabled={adding}
+                    className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Hủy
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark transition-colors"
+                    disabled={adding}
+                    className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    Thêm
+                    {adding ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Đang thêm...</span>
+                      </>
+                    ) : (
+                      'Thêm'
+                    )}
                   </button>
                 </div>
               </form>
@@ -720,12 +769,6 @@ export default function AdminBlacklist() {
                   />
                 </div>
 
-                {error && (
-                  <div className="p-3 bg-destructive/10 border border-destructive/50 rounded-lg text-destructive text-sm">
-                    {error}
-                  </div>
-                )}
-
                 <div className="flex gap-3">
                   <button
                     type="button"
@@ -739,17 +782,25 @@ export default function AdminBlacklist() {
                         blocked_until: "",
                         admin_notes: "",
                       })
-                      setError("")
                     }}
-                    className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors"
+                    disabled={updating}
+                    className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Hủy
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark transition-colors"
+                    disabled={updating}
+                    className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    Cập nhật
+                    {updating ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Đang cập nhật...</span>
+                      </>
+                    ) : (
+                      'Cập nhật'
+                    )}
                   </button>
                 </div>
               </form>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRoleCheck } from '@/hooks/useRoleCheck';
+import Toast from '@/components/Toast/Toast';
 import { Settings, Save, Loader2, RotateCcw, Mail, MessageSquare } from 'lucide-react';
 
 const TABS = [
@@ -14,19 +15,14 @@ export default function AdminNotificationConfig() {
   const [activeTab, setActiveTab] = useState('email');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [success, setSuccess] = useState('');
-  const [error, setError] = useState('');
+  const [toast, setToast] = useState({ message: '', isVisible: false });
 
   // Test email state
   const [testEmail, setTestEmail] = useState('');
   const [sendingTest, setSendingTest] = useState(false);
-  const [testSuccess, setTestSuccess] = useState('');
-  const [testError, setTestError] = useState('');
 
   // Test Telegram state
   const [sendingTelegramTest, setSendingTelegramTest] = useState(false);
-  const [telegramTestSuccess, setTelegramTestSuccess] = useState('');
-  const [telegramTestError, setTelegramTestError] = useState('');
 
   // Email configuration state
   const [emailData, setEmailData] = useState({
@@ -54,6 +50,20 @@ export default function AdminNotificationConfig() {
     if (roleLoading) return;
     fetchConfig();
   }, [roleLoading]);
+
+  // Listen for toast events
+  useEffect(() => {
+    const handleShowToast = (event) => {
+      setToast({
+        message: event.detail.message,
+        isVisible: true,
+        type: event.detail.type || 'success',
+      });
+    };
+
+    window.addEventListener('showToast', handleShowToast);
+    return () => window.removeEventListener('showToast', handleShowToast);
+  }, []);
 
   const fetchConfig = async () => {
     try {
@@ -91,7 +101,13 @@ export default function AdminNotificationConfig() {
       }
     } catch (err) {
       console.error('Error fetching config:', err);
-      setError('Không thể tải cấu hình');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Không thể tải cấu hình', type: 'error' },
+          })
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -100,28 +116,50 @@ export default function AdminNotificationConfig() {
   const handleSave = async () => {
     try {
       setSaving(true);
-      setError('');
-      setSuccess('');
 
       // Validate based on active tab
       if (activeTab === 'email') {
         if (!emailData.sender_email || !emailData.sender_email.includes('@')) {
-          setError('Email không hợp lệ');
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(
+              new CustomEvent('showToast', {
+                detail: { message: 'Email không hợp lệ', type: 'error' },
+              })
+            );
+          }
           return;
         }
 
         if (!emailData.sender_password) {
-          setError('Vui lòng nhập mật khẩu email');
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(
+              new CustomEvent('showToast', {
+                detail: { message: 'Vui lòng nhập mật khẩu email', type: 'error' },
+              })
+            );
+          }
           return;
         }
       } else if (activeTab === 'telegram') {
         if (!telegramData.bot_token) {
-          setError('Vui lòng nhập Bot Token');
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(
+              new CustomEvent('showToast', {
+                detail: { message: 'Vui lòng nhập Bot Token', type: 'error' },
+              })
+            );
+          }
           return;
         }
 
         if (!telegramData.chat_id) {
-          setError('Vui lòng nhập Chat ID');
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(
+              new CustomEvent('showToast', {
+                detail: { message: 'Vui lòng nhập Chat ID', type: 'error' },
+              })
+            );
+          }
           return;
         }
       }
@@ -159,11 +197,22 @@ export default function AdminNotificationConfig() {
         throw new Error(data.error || 'Failed to save configuration');
       }
 
-      setSuccess('Cấu hình đã được lưu thành công!');
-      setTimeout(() => setSuccess(''), 3000);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Cấu hình đã được lưu thành công!', type: 'success' },
+          })
+        );
+      }
     } catch (err) {
       console.error('Error saving config:', err);
-      setError(err.message || 'Có lỗi xảy ra khi lưu cấu hình');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: err.message || 'Có lỗi xảy ra khi lưu cấu hình', type: 'error' },
+          })
+        );
+      }
     } finally {
       setSaving(false);
     }
@@ -174,8 +223,6 @@ export default function AdminNotificationConfig() {
     
     try {
       setSaving(true);
-      setError('');
-      setSuccess('');
 
       // Reset to default values (from env)
       setEmailData({
@@ -183,10 +230,22 @@ export default function AdminNotificationConfig() {
         sender_password: '',
       });
 
-      setSuccess('Đã reset về cấu hình mặc định. Nhấn "Lưu cấu hình" để áp dụng.');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Đã reset về cấu hình mặc định. Nhấn "Lưu cấu hình" để áp dụng.', type: 'success' },
+          })
+        );
+      }
     } catch (err) {
       console.error('Error resetting config:', err);
-      setError('Có lỗi xảy ra khi reset cấu hình');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Có lỗi xảy ra khi reset cấu hình', type: 'error' },
+          })
+        );
+      }
     } finally {
       setSaving(false);
     }
@@ -195,17 +254,27 @@ export default function AdminNotificationConfig() {
   const handleSendTestTelegram = async () => {
     try {
       setSendingTelegramTest(true);
-      setTelegramTestError('');
-      setTelegramTestSuccess('');
 
       // Validate Telegram config
       if (!telegramData.bot_token) {
-        setTelegramTestError('Vui lòng nhập Bot Token trước khi test');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: 'Vui lòng nhập Bot Token trước khi test', type: 'error' },
+            })
+          );
+        }
         return;
       }
 
       if (!telegramData.chat_id) {
-        setTelegramTestError('Vui lòng nhập Chat ID trước khi test');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: 'Vui lòng nhập Chat ID trước khi test', type: 'error' },
+            })
+          );
+        }
         return;
       }
 
@@ -225,11 +294,22 @@ export default function AdminNotificationConfig() {
         throw new Error(data.error || 'Failed to send test Telegram message');
       }
 
-      setTelegramTestSuccess('Thông báo Telegram đã được gửi thành công! Vui lòng kiểm tra Telegram group/channel của bạn.');
-      setTimeout(() => setTelegramTestSuccess(''), 5000);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Thông báo Telegram đã được gửi thành công! Vui lòng kiểm tra Telegram group/channel của bạn.', type: 'success' },
+          })
+        );
+      }
     } catch (err) {
       console.error('Error sending test Telegram message:', err);
-      setTelegramTestError(err.message || 'Có lỗi xảy ra khi gửi thông báo Telegram thử nghiệm');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: err.message || 'Có lỗi xảy ra khi gửi thông báo Telegram thử nghiệm', type: 'error' },
+          })
+        );
+      }
     } finally {
       setSendingTelegramTest(false);
     }
@@ -243,7 +323,13 @@ export default function AdminNotificationConfig() {
 
       // Validate test email
       if (!testEmail || !testEmail.includes('@')) {
-        setTestError('Email không hợp lệ');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: 'Email không hợp lệ', type: 'error' },
+            })
+          );
+        }
         return;
       }
 
@@ -263,11 +349,22 @@ export default function AdminNotificationConfig() {
         throw new Error(data.error || 'Failed to send test email');
       }
 
-      setTestSuccess(`Email đã được gửi thành công đến ${testEmail}. Vui lòng kiểm tra hộp thư đến hoặc spam.`);
-      setTimeout(() => setTestSuccess(''), 5000);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: `Email đã được gửi thành công đến ${testEmail}. Vui lòng kiểm tra hộp thư đến hoặc spam.`, type: 'success' },
+          })
+        );
+      }
     } catch (err) {
       console.error('Error sending test email:', err);
-      setTestError(err.message || 'Có lỗi xảy ra khi gửi email thử nghiệm');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: err.message || 'Có lỗi xảy ra khi gửi email thử nghiệm', type: 'error' },
+          })
+        );
+      }
     } finally {
       setSendingTest(false);
     }
@@ -292,18 +389,6 @@ export default function AdminNotificationConfig() {
           </div>
           <p className="text-muted-foreground">Quản lý cấu hình email và các kênh thông báo khác</p>
         </div>
-
-        {/* Success/Error Messages */}
-        {success && (
-          <div className="mb-4 p-4 bg-green-500/10 border border-green-500/50 rounded-lg text-green-400">
-            {success}
-          </div>
-        )}
-        {error && (
-          <div className="mb-4 p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400">
-            {error}
-          </div>
-        )}
 
         {/* Tabs */}
         <div className="mb-6 border-b border-border">
@@ -457,18 +542,6 @@ export default function AdminNotificationConfig() {
                   Sau khi lưu cấu hình, bạn có thể gửi email thử nghiệm để kiểm tra kết nối.
                 </p>
 
-                {/* Test Success/Error Messages */}
-                {testSuccess && (
-                  <div className="mb-4 p-4 bg-green-500/10 border border-green-500/50 rounded-lg text-green-400 text-sm">
-                    {testSuccess}
-                  </div>
-                )}
-                {testError && (
-                  <div className="mb-4 p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400 text-sm">
-                    {testError}
-                  </div>
-                )}
-
                 <div className="flex gap-3">
                   <input
                     type="email"
@@ -588,18 +661,6 @@ export default function AdminNotificationConfig() {
                   Sau khi lưu cấu hình, bạn có thể gửi thông báo thử nghiệm để kiểm tra kết nối.
                 </p>
 
-                {/* Test Success/Error Messages */}
-                {telegramTestSuccess && (
-                  <div className="mb-4 p-4 bg-green-500/10 border border-green-500/50 rounded-lg text-green-400 text-sm">
-                    {telegramTestSuccess}
-                  </div>
-                )}
-                {telegramTestError && (
-                  <div className="mb-4 p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400 text-sm">
-                    {telegramTestError}
-                  </div>
-                )}
-
                 <button
                   onClick={handleSendTestTelegram}
                   disabled={sendingTelegramTest || !telegramData.bot_token || !telegramData.chat_id}
@@ -651,6 +712,13 @@ export default function AdminNotificationConfig() {
           </button>
         </div>
       </div>
+
+      <Toast
+        message={toast.message}
+        isVisible={toast.isVisible}
+        onClose={() => setToast({ message: '', isVisible: false })}
+        type={toast.type || 'success'}
+      />
     </div>
   );
 }

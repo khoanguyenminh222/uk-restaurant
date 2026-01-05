@@ -2,14 +2,14 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Toast from '@/components/Toast/Toast';
 import { UserPlus, X, Mail, Phone, User, Shield, ShieldCheck, Loader2, Edit2, Trash2, Search, Filter, ChevronDown, Eye } from 'lucide-react';
 
 export default function AdminsPage() {
   const router = useRouter();
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [toast, setToast] = useState({ message: '', isVisible: false });
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [creating, setCreating] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -73,6 +73,20 @@ export default function AdminsPage() {
     }
   }, [roleFilter, pagination.page, currentAdmin]);
 
+  // Listen for toast events
+  useEffect(() => {
+    const handleShowToast = (event) => {
+      setToast({
+        message: event.detail.message,
+        isVisible: true,
+        type: event.detail.type || 'success',
+      });
+    };
+
+    window.addEventListener('showToast', handleShowToast);
+    return () => window.removeEventListener('showToast', handleShowToast);
+  }, []);
+
   const fetchAdmins = async () => {
     try {
       setLoading(true);
@@ -100,19 +114,38 @@ export default function AdminsPage() {
           totalPages: data.pagination?.totalPages || 0,
         }));
       } else {
-        setError(data.error || 'Không thể tải danh sách admin');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: data.error || 'Không thể tải danh sách admin', type: 'error' },
+            })
+          );
+        }
       }
     } catch (err) {
       console.error('Error fetching admins:', err);
-      setError('Lỗi khi tải danh sách admin');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi khi tải danh sách admin', type: 'error' },
+          })
+        );
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSearch = () => {
+  const [searching, setSearching] = useState(false);
+
+  const handleSearch = async () => {
     setPagination(prev => ({ ...prev, page: 1 }));
-    fetchAdmins();
+    setSearching(true);
+    try {
+      await fetchAdmins();
+    } finally {
+      setSearching(false);
+    }
   };
 
   const handleEdit = (admin) => {
@@ -142,17 +175,34 @@ export default function AdminsPage() {
       const data = await response.json();
 
       if (data.success) {
-        setSuccess('Đã cập nhật thông tin admin thành công!');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: 'Đã cập nhật thông tin admin thành công!', type: 'success' },
+            })
+          );
+        }
         fetchAdmins();
         setShowEditModal(false);
         setEditingAdmin(null);
-        setTimeout(() => setSuccess(''), 3000);
       } else {
-        setError(data.error || 'Không thể cập nhật thông tin admin');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: data.error || 'Không thể cập nhật thông tin admin', type: 'error' },
+            })
+          );
+        }
       }
     } catch (err) {
       console.error('Error updating admin:', err);
-      setError('Lỗi khi cập nhật admin');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi khi cập nhật admin', type: 'error' },
+          })
+        );
+      }
     } finally {
       setEditing(false);
     }
@@ -175,17 +225,34 @@ export default function AdminsPage() {
       const data = await response.json();
 
       if (data.success) {
-        setSuccess('Đã xóa admin thành công!');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: 'Đã xóa admin thành công!', type: 'success' },
+            })
+          );
+        }
         fetchAdmins();
         setShowDeleteModal(false);
         setEditingAdmin(null);
-        setTimeout(() => setSuccess(''), 3000);
       } else {
-        setError(data.error || 'Không thể xóa admin');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: data.error || 'Không thể xóa admin', type: 'error' },
+            })
+          );
+        }
       }
     } catch (err) {
       console.error('Error deleting admin:', err);
-      setError('Lỗi khi xóa admin');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi khi xóa admin', type: 'error' },
+          })
+        );
+      }
     } finally {
       setDeleting(false);
     }
@@ -232,13 +299,10 @@ export default function AdminsPage() {
     if (formErrors[name]) {
       setFormErrors((prev) => ({ ...prev, [name]: '' }));
     }
-    setError('');
   };
 
   const handleCreateAdmin = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
 
     if (!validateForm()) {
       return;
@@ -265,7 +329,13 @@ export default function AdminsPage() {
       const data = await response.json();
 
       if (data.success) {
-        setSuccess(data.message || 'Đã tạo tài khoản admin thành công');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: data.message || 'Đã tạo tài khoản admin thành công', type: 'success' },
+            })
+          );
+        }
         setFormData({
           phone: '',
           name: '',
@@ -277,13 +347,24 @@ export default function AdminsPage() {
         });
         setShowCreateForm(false);
         fetchAdmins(); // Refresh list
-        setTimeout(() => setSuccess(''), 3000);
       } else {
-        setError(data.error || 'Không thể tạo tài khoản admin');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: data.error || 'Không thể tạo tài khoản admin', type: 'error' },
+            })
+          );
+        }
       }
     } catch (err) {
       console.error('Error creating admin:', err);
-      setError('Lỗi kết nối. Vui lòng thử lại sau.');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi kết nối. Vui lòng thử lại sau.', type: 'error' },
+          })
+        );
+      }
     } finally {
       setCreating(false);
     }
@@ -332,18 +413,6 @@ export default function AdminsPage() {
         </button>
       </div>
 
-      {/* Messages */}
-      {error && (
-        <div className="p-3 bg-destructive/10 border border-destructive/50 rounded-lg text-destructive text-sm">
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="p-3 bg-success/10 border border-success/50 rounded-lg text-success text-sm">
-          {success}
-        </div>
-      )}
-
       {/* Filters */}
       <div className="bg-card rounded-lg border border-border p-4 space-y-4">
         <div className="flex flex-col sm:flex-row gap-4">
@@ -361,9 +430,17 @@ export default function AdminsPage() {
           </div>
           <button
             onClick={handleSearch}
-            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer"
+            disabled={searching}
+            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            Tìm kiếm
+            {searching ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Đang tìm...</span>
+              </>
+            ) : (
+              'Tìm kiếm'
+            )}
           </button>
 
           {/* Role Filter */}
@@ -404,7 +481,6 @@ export default function AdminsPage() {
                   role: 'admin',
                 });
                 setFormErrors({});
-                setError('');
               }}
               className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors z-10"
             >
@@ -595,7 +671,6 @@ export default function AdminsPage() {
                         role: 'admin',
                       });
                       setFormErrors({});
-                      setError('');
                     }}
                     className="px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors"
                   >
@@ -975,6 +1050,13 @@ export default function AdminsPage() {
           </div>
         </div>
       )}
+
+      <Toast
+        message={toast.message}
+        isVisible={toast.isVisible}
+        onClose={() => setToast({ message: '', isVisible: false })}
+        type={toast.type || 'success'}
+      />
     </div>
   );
 }

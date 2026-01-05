@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRoleCheck } from '@/hooks/useRoleCheck';
+import Toast from '@/components/Toast/Toast';
 import { Image as ImageIcon, Plus, Edit2, Trash2, Loader2, X, Search, Eye, EyeOff } from 'lucide-react';
 
 export default function AdminBanners() {
@@ -21,9 +22,10 @@ export default function AdminBanners() {
     order: 0,
     is_active: true,
   });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [toast, setToast] = useState({ message: '', isVisible: false });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [searching, setSearching] = useState(false);
   const [deletingBannerId, setDeletingBannerId] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const modalRef = useRef(null);
@@ -31,6 +33,20 @@ export default function AdminBanners() {
 
   useEffect(() => {
     fetchBanners();
+  }, []);
+
+  // Listen for toast events
+  useEffect(() => {
+    const handleShowToast = (event) => {
+      setToast({
+        message: event.detail.message,
+        isVisible: true,
+        type: event.detail.type || 'success',
+      });
+    };
+
+    window.addEventListener('showToast', handleShowToast);
+    return () => window.removeEventListener('showToast', handleShowToast);
   }, []);
 
   const fetchBanners = async () => {
@@ -50,18 +66,35 @@ export default function AdminBanners() {
         }
         setBanners(filtered);
       } else {
-        setError('Lỗi khi tải danh sách banner');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: 'Lỗi khi tải danh sách banner', type: 'error' },
+            })
+          );
+        }
       }
     } catch (error) {
       console.error('Error fetching banners:', error);
-      setError('Lỗi khi tải danh sách banner');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi khi tải danh sách banner', type: 'error' },
+          })
+        );
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSearch = () => {
-    fetchBanners();
+  const handleSearch = async () => {
+    setSearching(true);
+    try {
+      await fetchBanners();
+    } finally {
+      setSearching(false);
+    }
   };
 
   const handleOpenModal = (banner = null) => {
@@ -87,8 +120,6 @@ export default function AdminBanners() {
       });
     }
     setShowModal(true);
-    setError('');
-    setSuccess('');
   };
 
   const handleCloseModal = () => {
@@ -106,14 +137,19 @@ export default function AdminBanners() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
 
     if (!formData.image.trim()) {
-      setError('Hình ảnh banner là bắt buộc');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Hình ảnh banner là bắt buộc', type: 'error' },
+          })
+        );
+      }
       return;
     }
 
+    setSaving(true);
     try {
       const url = editingBanner
         ? `/api/banners/${editingBanner.id}`
@@ -131,17 +167,37 @@ export default function AdminBanners() {
       const data = await res.json();
 
       if (data.success) {
-        setSuccess(editingBanner ? 'Cập nhật thành công!' : 'Thêm mới thành công!');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: editingBanner ? 'Cập nhật thành công!' : 'Thêm mới thành công!', type: 'success' },
+            })
+          );
+        }
         fetchBanners();
         setTimeout(() => {
           handleCloseModal();
         }, 1000);
       } else {
-        setError(data.error || 'Có lỗi xảy ra');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: data.error || 'Có lỗi xảy ra', type: 'error' },
+            })
+          );
+        }
       }
     } catch (error) {
       console.error('Error saving banner:', error);
-      setError('Lỗi khi lưu banner');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi khi lưu banner', type: 'error' },
+          })
+        );
+      }
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -162,16 +218,34 @@ export default function AdminBanners() {
       const data = await res.json();
 
       if (data.success) {
-        setSuccess('Xóa thành công!');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: 'Xóa thành công!', type: 'success' },
+            })
+          );
+        }
         fetchBanners();
         setShowDeleteModal(false);
         setDeletingBannerId(null);
       } else {
-        setError(data.error || 'Không thể xóa banner');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: data.error || 'Không thể xóa banner', type: 'error' },
+            })
+          );
+        }
       }
     } catch (error) {
       console.error('Error deleting banner:', error);
-      setError('Lỗi khi xóa banner');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi khi xóa banner', type: 'error' },
+          })
+        );
+      }
     } finally {
       setDeleting(false);
     }
@@ -210,18 +284,6 @@ export default function AdminBanners() {
         </button>
       </div>
 
-      {error && (
-        <div className="mb-4 bg-destructive/10 border border-destructive/50 text-destructive px-4 py-3 rounded-lg">
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="mb-4 bg-success/10 border border-success/50 text-success px-4 py-3 rounded-lg">
-          {success}
-        </div>
-      )}
-
       {/* Filters */}
       <div className="bg-card rounded-lg border border-border p-4 space-y-4">
         <div className="flex flex-col sm:flex-row gap-4">
@@ -239,9 +301,17 @@ export default function AdminBanners() {
           </div>
           <button
             onClick={handleSearch}
-            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer"
+            disabled={searching}
+            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            Tìm kiếm
+            {searching ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Đang tìm...</span>
+              </>
+            ) : (
+              'Tìm kiếm'
+            )}
           </button>
         </div>
       </div>
@@ -560,9 +630,17 @@ export default function AdminBanners() {
               <div className="flex gap-4 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer"
+                  disabled={saving}
+                  className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {editingBanner ? 'Cập nhật' : 'Thêm mới'}
+                  {saving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Đang lưu...</span>
+                    </>
+                  ) : (
+                    editingBanner ? 'Cập nhật' : 'Thêm mới'
+                  )}
                 </button>
                 <button
                   type="button"
@@ -602,9 +680,16 @@ export default function AdminBanners() {
               <button
                 onClick={handleConfirmDelete}
                 disabled={deleting}
-                className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
               >
-                {deleting ? 'Đang xóa...' : 'Xóa'}
+                {deleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Đang xóa...</span>
+                  </>
+                ) : (
+                  'Xóa'
+                )}
               </button>
               <button
                 onClick={() => {
@@ -620,6 +705,13 @@ export default function AdminBanners() {
           </div>
         </div>
       )}
+
+      <Toast
+        message={toast.message}
+        isVisible={toast.isVisible}
+        onClose={() => setToast({ message: '', isVisible: false })}
+        type={toast.type || 'success'}
+      />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRoleCheck } from '@/hooks/useRoleCheck';
+import Toast from '@/components/Toast/Toast';
 import { TrendingUp, Plus, Edit2, Trash2, Loader2, X, ArrowUp, ArrowDown, Eye } from 'lucide-react';
 
 export default function AdminPopularConfig() {
@@ -19,9 +20,9 @@ export default function AdminPopularConfig() {
     color: '#FF0000',
     order: 1,
   });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [toast, setToast] = useState({ message: '', isVisible: false });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [deletingThresholdId, setDeletingThresholdId] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [testQuantity, setTestQuantity] = useState('');
@@ -31,6 +32,20 @@ export default function AdminPopularConfig() {
 
   useEffect(() => {
     fetchThresholds();
+  }, []);
+
+  // Listen for toast events
+  useEffect(() => {
+    const handleShowToast = (event) => {
+      setToast({
+        message: event.detail.message,
+        isVisible: true,
+        type: event.detail.type || 'success',
+      });
+    };
+
+    window.addEventListener('showToast', handleShowToast);
+    return () => window.removeEventListener('showToast', handleShowToast);
   }, []);
 
   // Close modal when clicking outside
@@ -46,8 +61,6 @@ export default function AdminPopularConfig() {
           color: '#FF0000',
           order: 1,
         });
-        setError('');
-        setSuccess('');
       }
       if (showDeleteModal && deleteModalRef.current && !deleteModalRef.current.contains(event.target)) {
         setShowDeleteModal(false);
@@ -74,11 +87,23 @@ export default function AdminPopularConfig() {
       if (data.success) {
         setThresholds(data.data || []);
       } else {
-        setError('Lỗi khi tải danh sách ngưỡng');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: 'Lỗi khi tải danh sách ngưỡng', type: 'error' },
+            })
+          );
+        }
       }
     } catch (error) {
       console.error('Error fetching thresholds:', error);
-      setError('Lỗi khi tải danh sách ngưỡng');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi khi tải danh sách ngưỡng', type: 'error' },
+          })
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -108,8 +133,6 @@ export default function AdminPopularConfig() {
       });
     }
     setShowModal(true);
-    setError('');
-    setSuccess('');
   };
 
   const handleCloseModal = () => {
@@ -122,35 +145,56 @@ export default function AdminPopularConfig() {
       color: '#FF0000',
       order: 1,
     });
-    setError('');
-    setSuccess('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
 
     if (!formData.label.trim()) {
-      setError('Label là bắt buộc');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Label là bắt buộc', type: 'error' },
+          })
+        );
+      }
       return;
     }
 
     if (formData.value < 1) {
-      setError('Value phải >= 1');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Value phải >= 1', type: 'error' },
+          })
+        );
+      }
       return;
     }
 
     if (!formData.icon.trim()) {
-      setError('Icon là bắt buộc');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Icon là bắt buộc', type: 'error' },
+          })
+        );
+      }
       return;
     }
 
     if (!formData.color.trim() || !formData.color.startsWith('#')) {
-      setError('Color phải là mã hex hợp lệ (ví dụ: #FF0000)');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Color phải là mã hex hợp lệ (ví dụ: #FF0000)', type: 'error' },
+          })
+        );
+      }
       return;
     }
 
+    setSaving(true);
     try {
       const url = editingThreshold
         ? `/api/config/popular/${editingThreshold._id}`
@@ -168,17 +212,37 @@ export default function AdminPopularConfig() {
       const data = await res.json();
 
       if (data.success) {
-        setSuccess(editingThreshold ? 'Cập nhật thành công!' : 'Thêm mới thành công!');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: editingThreshold ? 'Cập nhật thành công!' : 'Thêm mới thành công!', type: 'success' },
+            })
+          );
+        }
         fetchThresholds();
         setTimeout(() => {
           handleCloseModal();
         }, 1000);
       } else {
-        setError(data.error || data.errors?.join(', ') || 'Có lỗi xảy ra');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: data.error || data.errors?.join(', ') || 'Có lỗi xảy ra', type: 'error' },
+            })
+          );
+        }
       }
     } catch (error) {
       console.error('Error saving threshold:', error);
-      setError('Lỗi khi lưu ngưỡng');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi khi lưu ngưỡng', type: 'error' },
+          })
+        );
+      }
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -199,16 +263,34 @@ export default function AdminPopularConfig() {
       const data = await res.json();
 
       if (data.success) {
-        setSuccess('Xóa thành công!');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: 'Xóa thành công!', type: 'success' },
+            })
+          );
+        }
         fetchThresholds();
         setShowDeleteModal(false);
         setDeletingThresholdId(null);
       } else {
-        setError(data.error || 'Không thể xóa ngưỡng');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: data.error || 'Không thể xóa ngưỡng', type: 'error' },
+            })
+          );
+        }
       }
     } catch (error) {
       console.error('Error deleting threshold:', error);
-      setError('Lỗi khi xóa ngưỡng');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi khi xóa ngưỡng', type: 'error' },
+          })
+        );
+      }
     } finally {
       setDeleting(false);
     }
@@ -246,7 +328,13 @@ export default function AdminPopularConfig() {
       fetchThresholds();
     } catch (error) {
       console.error('Error moving order:', error);
-      setError('Lỗi khi sắp xếp lại thứ tự');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi khi sắp xếp lại thứ tự', type: 'error' },
+          })
+        );
+      }
     }
   };
 
@@ -302,18 +390,6 @@ export default function AdminPopularConfig() {
           <span>Thêm ngưỡng</span>
         </button>
       </div>
-
-      {error && (
-        <div className="mb-4 bg-destructive/10 border border-destructive/50 text-destructive px-4 py-3 rounded-lg">
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="mb-4 bg-green-500/10 border border-green-500/50 text-green-500 px-4 py-3 rounded-lg">
-          {success}
-        </div>
-      )}
 
       {/* Testing Section */}
       <div className="bg-card rounded-lg border border-border p-6">
@@ -614,31 +690,28 @@ export default function AdminPopularConfig() {
                 </p>
               </div>
 
-              {error && (
-                <div className="bg-destructive/10 border border-destructive/50 text-destructive px-4 py-3 rounded-lg text-sm">
-                  {error}
-                </div>
-              )}
-
-              {success && (
-                <div className="bg-green-500/10 border border-green-500/50 text-green-500 px-4 py-3 rounded-lg text-sm">
-                  {success}
-                </div>
-              )}
-
               <div className="flex gap-3 justify-end">
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium cursor-pointer"
+                  disabled={saving}
+                  className="px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer"
+                  disabled={saving}
+                  className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  {editingThreshold ? 'Cập nhật' : 'Thêm mới'}
+                  {saving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Đang lưu...</span>
+                    </>
+                  ) : (
+                    editingThreshold ? 'Cập nhật' : 'Thêm mới'
+                  )}
                 </button>
               </div>
             </form>
@@ -687,6 +760,13 @@ export default function AdminPopularConfig() {
           </div>
         </div>
       )}
+
+      <Toast
+        message={toast.message}
+        isVisible={toast.isVisible}
+        onClose={() => setToast({ message: '', isVisible: false })}
+        type={toast.type || 'success'}
+      />
     </div>
   );
 }
