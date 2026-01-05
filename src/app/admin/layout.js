@@ -21,12 +21,12 @@ export default function AdminLayout({ children }) {
     const checkAuth = () => {
       const adminData = localStorage.getItem('admin_data');
       const loggedIn = localStorage.getItem('admin_logged_in');
-      
+
       if (loggedIn === 'true' && adminData) {
         try {
           const admin = JSON.parse(adminData);
-          // Check if user is admin or super_admin
-          if (admin.role === 'admin' || admin.role === 'super_admin') {
+          // Check if user is admin, manager, or super_admin
+          if (admin.role === 'admin' || admin.role === 'super_admin' || admin.role === 'manager') {
             setIsLoggedIn(true);
             setAdminInfo(admin);
             return;
@@ -37,7 +37,7 @@ export default function AdminLayout({ children }) {
           localStorage.removeItem('admin_logged_in');
         }
       }
-      
+
       // Not logged in, redirect to login
       if (pathname !== '/admin') {
         router.push('/admin');
@@ -95,11 +95,15 @@ export default function AdminLayout({ children }) {
 
   // Navigation items based on role
   const navItems = [
+    // Items available for all roles (manager, admin, super_admin)
     { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/admin/categories', label: 'Danh mục', icon: FolderOpen },
     { href: '/admin/food', label: 'Món ăn', icon: UtensilsCrossed },
     { href: '/admin/orders', label: 'Đơn hàng', icon: ShoppingCart },
-        {
+
+    // Config menu - only for admin and super_admin (not manager)
+    ...(adminInfo && (adminInfo.role === 'admin' || adminInfo.role === 'super_admin')
+      ? [{
           type: 'group',
           label: 'Cấu hình',
           icon: Settings,
@@ -111,9 +115,18 @@ export default function AdminLayout({ children }) {
             { href: '/admin/landing-config', label: 'Cấu hình Landing', icon: Settings },
             { href: '/admin/blacklist', label: 'Blacklist Email', icon: Shield },
           ]
-        },
-    { href: '/admin/users', label: 'Người dùng', icon: UserCircle },
-    ...(adminInfo && adminInfo.role === 'super_admin' 
+        }]
+      : []
+    ),
+
+    // Users - only for admin and super_admin (not manager)
+    ...(adminInfo && (adminInfo.role === 'admin' || adminInfo.role === 'super_admin')
+      ? [{ href: '/admin/users', label: 'Người dùng', icon: UserCircle }]
+      : []
+    ),
+
+    // Admins management - only for super_admin
+    ...(adminInfo && adminInfo.role === 'super_admin'
       ? [{ href: '/admin/admins', label: 'Quản lý Admin', icon: Users }]
       : []
     ),
@@ -156,8 +169,8 @@ export default function AdminLayout({ children }) {
         <div className="p-6 border-b border-border">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-xl font-bold text-card-foreground">Admin Panel</h1>
-              {/* <p className="text-sm text-muted-foreground">Admin Panel</p> */}
+              <h1 className="text-xl font-bold text-card-foreground">{restaurantName}</h1>
+              <p className="text-sm text-muted-foreground">Admin Panel</p>
             </div>
             <div className="hidden lg:block">
               <ThemeToggle />
@@ -170,9 +183,11 @@ export default function AdminLayout({ children }) {
               <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${
                 adminInfo.role === 'super_admin'
                   ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50'
-                  : 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
+                  : adminInfo.role === 'admin'
+                  ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
+                  : 'bg-green-500/20 text-green-400 border border-green-500/50'
               }`}>
-                {adminInfo.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+                {adminInfo.role === 'super_admin' ? 'Super Admin' : adminInfo.role === 'admin' ? 'Admin' : 'Manager'}
               </span>
             </div>
           )}

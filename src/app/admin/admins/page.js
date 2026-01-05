@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { UserPlus, X, Mail, Phone, User, Shield, ShieldCheck, Loader2, Edit2, Trash2, Search, Filter, ChevronDown, Eye } from 'lucide-react';
 
 export default function AdminsPage() {
+  const router = useRouter();
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -22,6 +24,7 @@ export default function AdminsPage() {
     role: 'admin',
   });
   const [currentAdmin, setCurrentAdmin] = useState(null); // Current logged-in admin
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // Check auth state
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
@@ -32,27 +35,43 @@ export default function AdminsPage() {
     password: '',
     confirmPassword: '',
     address: '',
+    role: 'admin', // Default role
   });
   const [formErrors, setFormErrors] = useState({});
-  
+
   // Refs for modals
   const editModalRef = useRef(null);
   const deleteModalRef = useRef(null);
 
+  // Check if user is super_admin, redirect if not
   useEffect(() => {
-    // Get current admin info
     try {
       const adminData = localStorage.getItem('admin_data');
       if (adminData) {
         const admin = JSON.parse(adminData);
+        // Only super_admin can access this page
+        if (admin.role !== 'super_admin') {
+          router.push('/admin/dashboard');
+          return;
+        }
         setCurrentAdmin(admin);
+        setIsCheckingAuth(false);
+      } else {
+        // No admin data, redirect to login
+        router.push('/admin');
       }
     } catch (e) {
-      console.error('Error getting admin data:', e);
+      console.error('Error checking admin role:', e);
+      router.push('/admin');
     }
-    
-    fetchAdmins();
-  }, [roleFilter, pagination.page]);
+  }, [router]);
+
+  useEffect(() => {
+    // Only fetch if currentAdmin is set and is super_admin
+    if (currentAdmin && currentAdmin.role === 'super_admin') {
+      fetchAdmins();
+    }
+  }, [roleFilter, pagination.page, currentAdmin]);
 
   const fetchAdmins = async () => {
     try {
@@ -238,6 +257,7 @@ export default function AdminsPage() {
           email: formData.email.trim().toLowerCase(),
           password: formData.password,
           address: formData.address.trim() || '',
+          role: formData.role, // Send role
           currentAdminPhone: currentAdmin?.phone, // Send current admin phone for auth check
         }),
       });
@@ -253,6 +273,7 @@ export default function AdminsPage() {
           password: '',
           confirmPassword: '',
           address: '',
+          role: 'admin',
         });
         setShowCreateForm(false);
         fetchAdmins(); // Refresh list
@@ -280,12 +301,18 @@ export default function AdminsPage() {
     });
   };
 
-  if (loading) {
+  // Show loading while checking auth or fetching data
+  if (isCheckingAuth || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
+  }
+
+  // Don't render anything if not super_admin (will be redirected)
+  if (!currentAdmin || currentAdmin.role !== 'super_admin') {
+    return null;
   }
 
   return (
@@ -328,7 +355,7 @@ export default function AdminsPage() {
               placeholder="Tìm theo tên, SĐT, email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               className="w-full pl-10 pr-4 py-2 bg-input border border-border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
@@ -351,6 +378,7 @@ export default function AdminsPage() {
               className="pl-10 pr-8 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring appearance-none"
             >
               <option value="all">Tất cả</option>
+              <option value="manager">Manager</option>
               <option value="admin">Admin</option>
               <option value="super_admin">Super Admin</option>
             </select>
@@ -373,6 +401,7 @@ export default function AdminsPage() {
                   password: '',
                   confirmPassword: '',
                   address: '',
+                  role: 'admin',
                 });
                 setFormErrors({});
                 setError('');
@@ -513,6 +542,29 @@ export default function AdminsPage() {
                   />
                 </div>
 
+                {/* Role */}
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Vai trò <span className="text-destructive">*</span>
+                  </label>
+                  <div className="relative">
+                    <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <select
+                      name="role"
+                      value={formData.role}
+                      onChange={handleInputChange}
+                      className="w-full pl-10 pr-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring appearance-none"
+                    >
+                      <option value="manager">Manager (Dashboard, Danh mục, Món ăn, Đơn hàng)</option>
+                      <option value="admin">Admin (Toàn quyền trừ quản lý Admin)</option>
+                    </select>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Manager: Chỉ truy cập Dashboard, Danh mục, Món ăn, Đơn hàng<br/>
+                    Admin: Truy cập tất cả trừ quản lý Admin
+                  </p>
+                </div>
+
                 {/* Buttons */}
                 <div className="flex gap-3 pt-4">
                   <button
@@ -540,6 +592,7 @@ export default function AdminsPage() {
                         password: '',
                         confirmPassword: '',
                         address: '',
+                        role: 'admin',
                       });
                       setFormErrors({});
                       setError('');
@@ -588,7 +641,9 @@ export default function AdminsPage() {
                         className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
                           admin.role === 'super_admin'
                             ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50'
-                            : 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
+                            : admin.role === 'admin'
+                            ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
+                            : 'bg-green-500/20 text-green-400 border border-green-500/50'
                         }`}
                       >
                         {admin.role === 'super_admin' ? (
@@ -596,7 +651,7 @@ export default function AdminsPage() {
                         ) : (
                           <Shield className="w-3 h-3" />
                         )}
-                        {admin.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+                        {admin.role === 'super_admin' ? 'Super Admin' : admin.role === 'admin' ? 'Admin' : 'Manager'}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-muted-foreground">
@@ -807,9 +862,13 @@ export default function AdminsPage() {
                   onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value })}
                   className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 >
+                  <option value="manager">Manager</option>
                   <option value="admin">Admin</option>
                   <option value="super_admin">Super Admin</option>
                 </select>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Manager: Dashboard, Danh mục, Món ăn, Đơn hàng | Admin: Toàn quyền trừ quản lý Admin
+                </p>
               </div>
 
               <div className="flex gap-3 pt-4">

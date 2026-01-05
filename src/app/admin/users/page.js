@@ -1,17 +1,18 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRoleCheck } from '@/hooks/useRoleCheck';
 import { formatCurrency } from '@/utils/helpers';
-import { 
-  Users, 
-  Loader2, 
-  Search, 
-  Filter, 
-  X, 
-  Eye, 
-  Edit2, 
-  Trash2, 
-  Phone, 
+import {
+  Users,
+  Loader2,
+  Search,
+  Filter,
+  X,
+  Eye,
+  Edit2,
+  Trash2,
+  Phone,
   Mail,
   Calendar,
   ChevronDown,
@@ -23,6 +24,9 @@ import {
 } from 'lucide-react';
 
 export default function AdminUsers() {
+  // Check if user has permission (only admin and super_admin)
+  const { isAuthorized, isChecking, currentAdmin: adminFromHook } = useRoleCheck(['admin', 'super_admin']);
+
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -43,7 +47,7 @@ export default function AdminUsers() {
   });
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
   const [currentAdmin, setCurrentAdmin] = useState(null);
-  
+
   // Refs for modals
   const detailModalRef = useRef(null);
   const editModalRef = useRef(null);
@@ -270,6 +274,12 @@ export default function AdminUsers() {
         color: 'bg-blue-500/20 text-blue-400 border-blue-500/50',
         icon: Shield,
       };
+    } else if (role === 'manager') {
+      return {
+        label: 'Manager',
+        color: 'bg-green-500/20 text-green-400 border border-green-500/50',
+        icon: Shield,
+      };
     }
     return {
       label: 'User',
@@ -278,7 +288,8 @@ export default function AdminUsers() {
     };
   };
 
-  if (loading && users.length === 0) {
+  // Show loading while checking auth or fetching data
+  if (isChecking || (loading && users.length === 0)) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3">
@@ -287,6 +298,11 @@ export default function AdminUsers() {
         </div>
       </div>
     );
+  }
+
+  // Don't render if not authorized
+  if (!isAuthorized) {
+    return null;
   }
 
   return (
@@ -346,6 +362,7 @@ export default function AdminUsers() {
             >
               <option value="all">Tất cả</option>
               <option value="user">User</option>
+              <option value="manager">Manager</option>
               <option value="admin">Admin</option>
               <option value="super_admin">Super Admin</option>
             </select>
@@ -818,8 +835,11 @@ export default function AdminUsers() {
                   className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   <option value="user">User</option>
+                  <option value="manager">Manager</option>
                   <option value="admin">Admin</option>
-                  <option value="super_admin">Super Admin</option>
+                  {currentAdmin?.role === 'super_admin' && (
+                    <option value="super_admin">Super Admin</option>
+                  )}
                 </select>
               </div>
 

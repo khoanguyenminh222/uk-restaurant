@@ -55,12 +55,12 @@ export async function PUT(request, { params }) {
     const db = client.db(getDatabaseName());
 
     // Find admin
-    const admin = await db.collection('users').findOne({ 
+    const admin = await db.collection('users').findOne({
       $or: [
         { user_id: id },
         { _id: id }
       ],
-      role: { $in: ['admin', 'super_admin'] },
+      role: { $in: ['admin', 'super_admin', 'manager'] },
       is_deleted: { $ne: true }
     });
 
@@ -109,7 +109,7 @@ export async function PUT(request, { params }) {
     if (body.role !== undefined) {
       // TODO: Check if current user is super_admin
       // For now, allow role update
-      if (['admin', 'super_admin'].includes(body.role)) {
+      if (['admin', 'super_admin', 'manager'].includes(body.role)) {
         updateData.role = body.role;
       }
     }

@@ -1,9 +1,13 @@
 "use client"
 
 import { useState, useEffect } from 'react'
+import { useRoleCheck } from '@/hooks/useRoleCheck'
 import { Shield, Search, Plus, Edit, Trash2, Filter, X, Loader2, CheckCircle, XCircle, Calendar, FileText } from 'lucide-react'
 
 export default function AdminBlacklist() {
+  // Check if user has permission (only admin and super_admin)
+  const { isAuthorized, isChecking } = useRoleCheck(['admin', 'super_admin'])
+
   const [blacklist, setBlacklist] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -267,6 +271,23 @@ export default function AdminBlacklist() {
       return new Date(entry.blocked_until) > new Date()
     }
     return false
+  }
+
+  // Show loading while checking auth or fetching data
+  if (isChecking || loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <div className="text-muted-foreground">Đang tải...</div>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render if not authorized
+  if (!isAuthorized) {
+    return null
   }
 
   return (

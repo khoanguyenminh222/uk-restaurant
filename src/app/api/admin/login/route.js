@@ -40,8 +40,8 @@ export async function POST(request) {
       );
     }
 
-    // Check if user is admin or super_admin
-    if (user.role !== 'admin' && user.role !== 'super_admin') {
+    // Check if user is admin, manager, or super_admin
+    if (user.role !== 'admin' && user.role !== 'super_admin' && user.role !== 'manager') {
       return NextResponse.json(
         { success: false, error: 'Bạn không có quyền truy cập trang admin' },
         { status: 403 }

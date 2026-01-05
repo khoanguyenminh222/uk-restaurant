@@ -1,9 +1,13 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRoleCheck } from '@/hooks/useRoleCheck';
 import { Image as ImageIcon, Plus, Edit2, Trash2, Loader2, X, Search, Eye, EyeOff } from 'lucide-react';
 
 export default function AdminBanners() {
+  // Check if user has permission (only admin and super_admin)
+  const { isAuthorized, isChecking } = useRoleCheck(['admin', 'super_admin']);
+
   const [banners, setBanners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -173,7 +177,8 @@ export default function AdminBanners() {
     }
   };
 
-  if (loading) {
+  // Show loading while checking auth or fetching data
+  if (isChecking || loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3">
@@ -182,6 +187,11 @@ export default function AdminBanners() {
         </div>
       </div>
     );
+  }
+
+  // Don't render if not authorized
+  if (!isAuthorized) {
+    return null;
   }
 
   return (
@@ -223,7 +233,7 @@ export default function AdminBanners() {
               placeholder="Tìm theo tiêu đề, mô tả..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               className="w-full pl-10 pr-4 py-2 bg-input border border-border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
             />
           </div>

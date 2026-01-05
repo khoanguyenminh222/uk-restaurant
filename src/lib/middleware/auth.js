@@ -14,20 +14,20 @@ export function isAuthenticated(request) {
 }
 
 /**
- * Check if user is admin
+ * Check if user is admin (includes admin, manager, and super_admin)
  */
 export async function isAdmin(userId) {
   if (!userId) return false;
-  
+
   try {
     const { default: clientPromise, getDatabaseName } = await import('@/lib/mongodb');
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
     const user = await db.collection('users').findOne({ user_id: userId });
-    
+
     if (!user) return false;
-    
-    return user.role === 'admin' || user.role === 'super_admin';
+
+    return user.role === 'admin' || user.role === 'super_admin' || user.role === 'manager';
   } catch (error) {
     console.error('Error checking admin:', error);
     return false;

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Phone, Lock, Eye, EyeOff, Loader2, Shield } from 'lucide-react';
 import Toast from '@/components/Toast/Toast';
+import { useLandingConfig } from '@/hooks/useLandingConfig';
 
 export default function AdminLogin() {
   const [phone, setPhone] = useState('');
@@ -13,6 +14,8 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ message: '', isVisible: false, type: 'success' });
   const router = useRouter();
+  const { config } = useLandingConfig();
+  const restaurantName = config?.restaurant_name || 'UK Restaurant';
 
   useEffect(() => {
     // Kiểm tra nếu đã đăng nhập
@@ -105,7 +108,7 @@ export default function AdminLogin() {
             <h1 className="text-3xl font-bold text-card-foreground mb-2">
               Admin Panel
             </h1>
-            {/* <p className="text-muted-foreground">Admin Panel</p> */}
+            <p className="text-muted-foreground">{restaurantName}</p>
           </div>
 
           {/* Form */}

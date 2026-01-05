@@ -1,9 +1,13 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRoleCheck } from '@/hooks/useRoleCheck';
 import { TrendingUp, Plus, Edit2, Trash2, Loader2, X, ArrowUp, ArrowDown, Eye } from 'lucide-react';
 
 export default function AdminPopularConfig() {
+  // Check if user has permission (only admin and super_admin)
+  const { isAuthorized, isChecking } = useRoleCheck(['admin', 'super_admin']);
+
   const [thresholds, setThresholds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -266,7 +270,8 @@ export default function AdminPopularConfig() {
     boxShadow: `0 10px 15px -3px ${threshold.color}50, 0 4px 6px -2px ${threshold.color}30`,
   });
 
-  if (loading) {
+  // Show loading while checking auth or fetching data
+  if (isChecking || loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3">
@@ -275,6 +280,11 @@ export default function AdminPopularConfig() {
         </div>
       </div>
     );
+  }
+
+  // Don't render if not authorized
+  if (!isAuthorized) {
+    return null;
   }
 
   return (
@@ -324,7 +334,7 @@ export default function AdminPopularConfig() {
                 setTestQuantity(e.target.value);
                 setTestResult(null);
               }}
-              onKeyPress={(e) => e.key === 'Enter' && handleTestQuantity()}
+              onKeyDown={(e) => e.key === 'Enter' && handleTestQuantity()}
               placeholder="Nhập số lượng để xem badge nào sẽ hiển thị"
               className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />

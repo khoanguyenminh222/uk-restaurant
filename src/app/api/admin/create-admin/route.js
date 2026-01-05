@@ -66,6 +66,10 @@ export async function POST(request) {
     // Generate user_id (use phone as user_id)
     const user_id = body.phone;
 
+    // Validate role (only allow admin or manager, not super_admin)
+    const allowedRoles = ['admin', 'manager'];
+    const role = body.role && allowedRoles.includes(body.role) ? body.role : 'admin';
+
     // Create admin user object
     const adminUser = {
       user_id,
@@ -74,7 +78,7 @@ export async function POST(request) {
       email: body.email.trim().toLowerCase(),
       password: hashedPassword,
       address: body.address?.trim() || '',
-      role: 'admin', // Set role as admin (not super_admin)
+      role: role, // Set role as admin or manager (not super_admin)
       email_verified: true, // Admin accounts are auto-verified
       verification_code: null,
       verification_code_expires: null,

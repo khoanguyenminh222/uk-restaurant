@@ -5,7 +5,7 @@ import clientPromise, { getDatabaseName } from '@/lib/mongodb';
  * GET /api/admin/admins
  * Lấy danh sách tất cả admin (super admin only)
  * Query params:
- *   - role (optional) - filter theo role (admin, super_admin)
+ *   - role (optional) - filter theo role (admin, super_admin, manager)
  *   - search (optional) - search theo tên, phone, email
  *   - page (optional) - số trang
  *   - limit (optional) - số lượng/trang
@@ -25,7 +25,7 @@ export async function GET(request) {
 
     // Build query
     const query = {
-      role: { $in: ['admin', 'super_admin'] },
+      role: { $in: ['admin', 'super_admin', 'manager'] },
       is_deleted: { $ne: true } // Exclude soft-deleted admins
     };
 

@@ -231,7 +231,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
                   aria-expanded={isUserMenuOpen}
                 >
                   <UserCircle className="w-5 h-5 shrink-0" />
-                  <span className="max-w-[100px] truncate text-sm">{user.name || user.phone}</span>
+                  <span className="max-w-24 truncate text-sm">{user.name || user.phone}</span>
                 </button>
 
                 {/* User Dropdown Menu */}
@@ -279,7 +279,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
                       )}
                       
                       {/* Admin Panel Link - Only for admin/super_admin */}
-                      {(user?.role === 'admin' || user?.role === 'super_admin') && (
+                      {(user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'manager') && (
                         <a
                           href="/admin/dashboard"
                           onClick={() => setIsUserMenuOpen(false)}
@@ -395,7 +395,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
               )}
               
               {/* Admin Panel Link - Only for admin/super_admin */}
-              {(user?.role === 'admin' || user?.role === 'super_admin') && (
+              {(user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'manager') && (
                 <a
                   href="/admin/dashboard"
                   onClick={() => setIsMenuOpen(false)}

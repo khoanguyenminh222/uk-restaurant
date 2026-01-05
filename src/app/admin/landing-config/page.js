@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { 
-  Settings, Save, RotateCcw, Loader2, X, Plus, Edit2, Trash2, 
-  ArrowUp, ArrowDown, Home, Sparkles, BookOpen, Info, Phone, 
+import { useRoleCheck } from '@/hooks/useRoleCheck';
+import {
+  Settings, Save, RotateCcw, Loader2, X, Plus, Edit2, Trash2,
+  ArrowUp, ArrowDown, Home, Sparkles, BookOpen, Info, Phone,
   Mail, MapPin, Share2, Link as LinkIcon, CheckCircle2, Zap, Heart, MessageCircle
 } from 'lucide-react';
 import * as lucideIcons from 'lucide-react';
@@ -168,6 +169,9 @@ const SOCIAL_ICONS = [
 ];
 
 export default function AdminLandingConfig() {
+  // Check if user has permission (only admin and super_admin)
+  const { isAuthorized, isChecking } = useRoleCheck(['admin', 'super_admin']);
+
   const [activeTab, setActiveTab] = useState('general');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -500,12 +504,18 @@ export default function AdminLandingConfig() {
     setFooterData({ ...footerData, links: newLinks });
   };
 
-  if (loading) {
+  // Show loading while checking auth or fetching data
+  if (isChecking || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
+  }
+
+  // Don't render if not authorized
+  if (!isAuthorized) {
+    return null;
   }
 
   return (
