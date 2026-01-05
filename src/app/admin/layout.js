@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, Menu, X, LayoutDashboard, FolderOpen, UtensilsCrossed, Users, LogOut, ShoppingCart, UserCircle, Image as ImageIcon, TrendingUp, Settings, ChevronDown, ChevronRight, Shield } from 'lucide-react';
+import { Home, Menu, X, LayoutDashboard, FolderOpen, UtensilsCrossed, Users, LogOut, ShoppingCart, UserCircle, Image as ImageIcon, TrendingUp, Settings, ChevronDown, ChevronRight, Shield, Bell } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle/ThemeToggle';
 import { useLandingConfig } from '@/hooks/useLandingConfig';
 
@@ -68,6 +68,7 @@ export default function AdminLayout({ children }) {
   const isConfigPath = pathname.startsWith('/admin/banners') || 
                        pathname.startsWith('/admin/popular-config') || 
                        pathname.startsWith('/admin/landing-config') ||
+                       pathname.startsWith('/admin/notification-config') ||
                        pathname.startsWith('/admin/blacklist');
   
   // Auto expand config menu if on config page
@@ -113,6 +114,7 @@ export default function AdminLayout({ children }) {
             { href: '/admin/banners', label: 'Banner', icon: ImageIcon },
             { href: '/admin/popular-config', label: 'Cấu hình Ngưỡng', icon: TrendingUp },
             { href: '/admin/landing-config', label: 'Cấu hình Landing', icon: Settings },
+            { href: '/admin/notification-config', label: 'Cấu hình Thông báo', icon: Bell },
             { href: '/admin/blacklist', label: 'Blacklist Email', icon: Shield },
           ]
         }]

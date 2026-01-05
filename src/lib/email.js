@@ -4,21 +4,36 @@
  */
 
 import nodemailer from 'nodemailer';
-import { getRestaurantName, getSlogan } from '@/lib/restaurantConfig';
+import { getRestaurantName, getSlogan, getEmailConfig } from '@/lib/restaurantConfig';
 
 /**
  * Tạo transporter cho nodemailer
  * Sử dụng Gmail SMTP hoặc environment variables
  */
-function createTransporter() {
-  // Sử dụng Gmail với App Password hoặc OAuth2
-  // Hoặc có thể dùng SendGrid, Resend, Mailgun, etc.
+async function createTransporter() {
+  // Lấy email config từ database
+  const emailConfig = await getEmailConfig();
+  
+  // Ưu tiên database, fallback về env nếu database không có giá trị
+  const senderEmail = emailConfig?.sender_email || process.env.EMAIL_USER;
+  const senderPassword = emailConfig?.sender_password || process.env.EMAIL_PASSWORD;
+  
+  if (!senderEmail || !senderPassword) {
+    const missingFields = [];
+    if (!senderEmail) missingFields.push('sender_email');
+    if (!senderPassword) missingFields.push('sender_password');
+    
+    throw new Error(
+      `Email configuration is missing: ${missingFields.join(', ')}. ` +
+      `Please configure email settings in Admin > Notification Config or set environment variables (EMAIL_USER, EMAIL_PASSWORD).`
+    );
+  }
   
   const transporter = nodemailer.createTransport({
     service: process.env.EMAIL_SERVICE || 'gmail',
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD, // App Password cho Gmail
+      user: senderEmail,
+      pass: senderPassword,
     },
   });
 
@@ -34,12 +49,12 @@ function createTransporter() {
  */
 export async function sendVerificationEmail(email, code, name = null, expiresInMinutes = 10) {
   try {
-    const transporter = createTransporter();
+    const transporter = await createTransporter();
     const restaurantName = await getRestaurantName();
     const slogan = await getSlogan();
 
     const mailOptions = {
-      from: `"${restaurantName}" <${process.env.EMAIL_USER}>`,
+      from: `"${restaurantName}" <${(await getEmailConfig()).sender_email}>`,
       to: email,
       subject: `Xác thực email - ${restaurantName}`,
       html: `
@@ -108,13 +123,13 @@ export async function sendVerificationEmail(email, code, name = null, expiresInM
  */
 export async function sendResetPasswordEmail(email, name, resetToken, expiresInMinutes = 30) {
   try {
-    const transporter = createTransporter();
+    const transporter = await createTransporter();
     const restaurantName = await getRestaurantName();
     const slogan = await getSlogan();
     const resetUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
 
     const mailOptions = {
-      from: `"${restaurantName}" <${process.env.EMAIL_USER}>`,
+      from: `"${restaurantName}" <${(await getEmailConfig()).sender_email}>`,
       to: email,
       subject: `Đặt lại mật khẩu - ${restaurantName}`,
       html: `
@@ -182,7 +197,7 @@ export async function sendResetPasswordEmail(email, name, resetToken, expiresInM
  */
 export async function sendOrderConfirmationEmail(email, name, orderId, trackOrderUrl, orderData) {
   try {
-    const transporter = createTransporter();
+    const transporter = await createTransporter();
     const restaurantName = await getRestaurantName();
     const slogan = await getSlogan();
 
@@ -229,7 +244,7 @@ export async function sendOrderConfirmationEmail(email, name, orderId, trackOrde
       : new Date().toLocaleString('vi-VN');
 
     const mailOptions = {
-      from: `"${restaurantName}" <${process.env.EMAIL_USER}>`,
+      from: `"${restaurantName}" <${(await getEmailConfig()).sender_email}>`,
       to: email,
       subject: `Xác nhận đơn hàng #${orderId} - ${restaurantName}`,
       html: `
@@ -343,6 +358,93 @@ export async function sendOrderConfirmationEmail(email, name, orderId, trackOrde
   } catch (error) {
     console.error('Error sending order confirmation email:', error);
     return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Gửi email thử nghiệm để kiểm tra cấu hình
+ * @param {string} email - Email address người nhận
+ */
+export async function sendTestEmail(email) {
+  try {
+    const transporter = await createTransporter();
+    const restaurantName = await getRestaurantName();
+    const slogan = await getSlogan();
+    const emailConfig = await getEmailConfig();
+
+    const mailOptions = {
+      from: `"${restaurantName}" <${emailConfig.sender_email}>`,
+      to: email,
+      subject: `Email thử nghiệm - ${restaurantName}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+          <div style="background-color: #16a34a; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="color: white; margin: 0;">${restaurantName}</h1>
+            <p style="color: #e5e7eb; margin: 5px 0 0 0;">${slogan}</p>
+          </div>
+          
+          <div style="background-color: white; padding: 30px; border-radius: 0 0 8px 8px;">
+            <h2 style="color: #16a34a; margin-top: 0;">✅ Email thử nghiệm thành công!</h2>
+            
+            <p style="color: #374151; line-height: 1.6;">
+              Xin chúc mừng! Hệ thống email của bạn đã được cấu hình thành công.
+            </p>
+            
+            <div style="background-color: #f3f4f6; padding: 15px; border-radius: 6px; margin: 20px 0;">
+              <h3 style="color: #16a34a; margin-top: 0; font-size: 16px;">Thông tin cấu hình:</h3>
+              <ul style="color: #6b7280; margin: 0; padding-left: 20px;">
+                <li>Email gửi: <strong>${emailConfig.sender_email}</strong></li>
+                <li>Tên người gửi: <strong>${restaurantName}</strong></li>
+                <li>Thời gian: ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}</li>
+              </ul>
+            </div>
+            
+            <p style="color: #374151; line-height: 1.6;">
+              Email này được gửi từ hệ thống quản lý ${restaurantName}. Bạn có thể sử dụng cấu hình này để gửi các email sau:
+            </p>
+            
+            <ul style="color: #6b7280; line-height: 1.6;">
+              <li>Xác thực email đặt hàng</li>
+              <li>Đặt lại mật khẩu</li>
+              <li>Xác nhận đơn hàng</li>
+              <li>Các thông báo khác từ hệ thống</li>
+            </ul>
+            
+            <p style="color: #6b7280; font-size: 14px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+              Đây là email tự động từ hệ thống ${restaurantName}. Vui lòng không trả lời email này.
+            </p>
+          </div>
+        </div>
+      `,
+      text: `
+        ${restaurantName}
+        ${slogan}
+        
+        ✅ Email thử nghiệm thành công!
+        
+        Xin chúc mừng! Hệ thống email của bạn đã được cấu hình thành công.
+        
+        Thông tin cấu hình:
+        - Email gửi: ${emailConfig.sender_email}
+        - Tên người gửi: ${restaurantName}
+        - Thời gian: ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}
+        
+        Email này được gửi từ hệ thống quản lý ${restaurantName}. Bạn có thể sử dụng cấu hình này để gửi các email sau:
+        - Xác thực email đặt hàng
+        - Đặt lại mật khẩu
+        - Xác nhận đơn hàng
+        - Các thông báo khác từ hệ thống
+        
+        Đây là email tự động từ hệ thống ${restaurantName}. Vui lòng không trả lời email này.
+      `,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Test email sent:', info.messageId);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('Error sending test email:', error);
+    throw new Error(error.message || 'Không thể gửi email thử nghiệm');
   }
 }
 

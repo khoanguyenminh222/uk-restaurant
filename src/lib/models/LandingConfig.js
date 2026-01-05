@@ -83,6 +83,11 @@ export const defaultLandingConfig = {
       },
     ],
   },
+  email_config: {
+    // Email gửi đi từ hệ thống (dùng cho xác thực, đặt hàng, etc)
+    sender_email: process.env.EMAIL_USER || 'no-reply@restaurant.com',
+    sender_password: process.env.EMAIL_PASSWORD || '',
+  },
   footer: {
     restaurant_name: 'UK Restaurant',
     slogan: 'Ăn no khỏi "bàn"',
@@ -316,6 +321,23 @@ export function validateLandingConfig(data) {
     }
   }
 
+  // Validate email config
+  if (data.email_config) {
+    if (data.email_config.sender_email && typeof data.email_config.sender_email === 'string') {
+      if (data.email_config.sender_email.length > 100) {
+        errors.push('Email Config: Sender email không được vượt quá 100 ký tự');
+      } else if (!data.email_config.sender_email.includes('@')) {
+        errors.push('Email Config: Sender email không hợp lệ');
+      }
+    }
+
+    if (data.email_config.sender_password && typeof data.email_config.sender_password === 'string') {
+      if (data.email_config.sender_password.length > 200) {
+        errors.push('Email Config: Sender password không được vượt quá 200 ký tự');
+      }
+    }
+  }
+
   // Validate footer
   if (data.footer) {
     if (!data.footer.restaurant_name || typeof data.footer.restaurant_name !== 'string' || data.footer.restaurant_name.trim().length === 0) {
@@ -534,6 +556,10 @@ export function mergeWithDefaults(config) {
 
   if (config.spam) {
     merged.spam = { ...merged.spam, ...config.spam };
+  }
+
+  if (config.email_config) {
+    merged.email_config = { ...merged.email_config, ...config.email_config };
   }
 
   return merged;

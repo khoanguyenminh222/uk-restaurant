@@ -87,3 +87,12 @@ export async function getSpamConfig() {
   };
 }
 
+/**
+ * Lấy Email config từ database (server-side only)
+ * @returns {Promise<object>} Email config object với sender email và sender password
+ */
+export async function getEmailConfig() {
+  const config = await getConfig();
+  const emailConfig = config.email_config || defaultLandingConfig.email_config;
+  return emailConfig;
+}

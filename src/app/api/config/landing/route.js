@@ -168,6 +168,9 @@ export async function PUT(request) {
       if (body.spam) {
         updateData.spam = { ...updateData.spam, ...body.spam };
       }
+      if (body.email_config) {
+        updateData.email_config = { ...updateData.email_config, ...body.email_config };
+      }
 
       updateData.updated_at = now;
 
