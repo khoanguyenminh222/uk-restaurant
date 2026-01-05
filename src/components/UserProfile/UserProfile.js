@@ -67,8 +67,27 @@ export default function UserProfile({ isOpen, onClose }) {
     setError("")
     setSuccess("")
 
+    // Validate required fields
     if (!editForm.name.trim()) {
       setError("Tên là bắt buộc")
+      return
+    }
+
+    if (!editForm.email.trim()) {
+      setError("Email là bắt buộc")
+      return
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(editForm.email.trim())) {
+      setError("Email không hợp lệ")
+      return
+    }
+
+    // Check phone number (read-only but required)
+    if (!user.phone || !user.phone.trim()) {
+      setError("Số điện thoại là bắt buộc. Vui lòng liên hệ hỗ trợ.")
       return
     }
 
@@ -187,7 +206,7 @@ export default function UserProfile({ isOpen, onClose }) {
               <div>
                 <label className="block text-sm font-medium text-card-foreground mb-2">
                   <User className="w-4 h-4 inline mr-2" />
-                  Tên
+                  Tên <span className="text-destructive">*</span>
                 </label>
                 {isEditing ? (
                   <input
@@ -206,9 +225,9 @@ export default function UserProfile({ isOpen, onClose }) {
               <div>
                 <label className="block text-sm font-medium text-card-foreground mb-2">
                   <Phone className="w-4 h-4 inline mr-2" />
-                  Số điện thoại
+                  Số điện thoại <span className="text-destructive">*</span>
                 </label>
-                <p className="text-card-foreground">{user.phone || "N/A"}</p>
+                <p className="text-card-foreground">{user.phone || "Chưa có"}</p>
                 <p className="text-xs text-muted-foreground mt-1">Số điện thoại không thể thay đổi</p>
               </div>
 
@@ -216,7 +235,7 @@ export default function UserProfile({ isOpen, onClose }) {
               <div>
                 <label className="block text-sm font-medium text-card-foreground mb-2">
                   <Mail className="w-4 h-4 inline mr-2" />
-                  Email
+                  Email <span className="text-destructive">*</span>
                 </label>
                 {isEditing ? (
                   <input
