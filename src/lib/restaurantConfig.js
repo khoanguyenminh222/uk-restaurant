@@ -69,3 +69,21 @@ export async function getIconConfig() {
   };
 }
 
+/**
+ * Lấy Spam config từ database (server-side only)
+ * @returns {Promise<object>} Spam config object với tất cả các cấu hình spam protection
+ */
+export async function getSpamConfig() {
+  const config = await getConfig();
+  return config.spam || {
+    max_orders: 5,
+    order_rate_limit_ttl: 1800,
+    order_rate_limit_blacklist_hours: 24,
+    verification_code_ttl: 600,
+    verified_session_ttl: 1800,
+    max_verify_attempts: 5,
+    max_send_code: 5,
+    send_code_rate_limit_ttl: 3600,
+  };
+}
+

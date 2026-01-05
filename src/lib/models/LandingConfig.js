@@ -119,6 +119,21 @@ export const defaultLandingConfig = {
     icon_favicon: '/favicon.ico', // Favicon URL (hiển thị trên tab browser)
     icon_apple: '/apple-icon.png', // Apple touch icon (hiển thị khi thêm vào home screen trên iOS)
   },
+  spam: {
+    // Giới hạn đặt hàng
+    max_orders: 5, // Số đơn hàng tối đa mà 1 email có thể đặt trong khoảng thời gian
+    order_rate_limit_ttl: 1800, // Thời gian giới hạn đặt hàng (giây) - 30 phút
+    order_rate_limit_blacklist_hours: 24, // Thời gian blacklist khi vượt quá giới hạn (giờ)
+    
+    // Xác thực email
+    verification_code_ttl: 600, // Thời gian mã xác thực có hiệu lực (giây) - 10 phút
+    verified_session_ttl: 1800, // Thời gian session sau khi verify (giây) - 30 phút
+    max_verify_attempts: 5, // Số lần thử nhập mã xác thực sai tối đa
+    
+    // Giới hạn gửi mã
+    max_send_code: 5, // Số lần gửi mã xác thực tối đa trong khoảng thời gian
+    send_code_rate_limit_ttl: 3600, // Thời gian giới hạn gửi mã (giây) - 1 giờ
+  },
 };
 
 /**
@@ -398,6 +413,65 @@ export function validateLandingConfig(data) {
     }
   }
 
+  // Validate spam config
+  if (data.spam) {
+    if (data.spam.max_orders !== undefined) {
+      const maxOrders = parseInt(data.spam.max_orders);
+      if (isNaN(maxOrders) || maxOrders < 1 || maxOrders > 100) {
+        errors.push('Spam: Số đơn hàng tối đa phải là số từ 1 đến 100');
+      }
+    }
+
+    if (data.spam.order_rate_limit_ttl !== undefined) {
+      const ttl = parseInt(data.spam.order_rate_limit_ttl);
+      if (isNaN(ttl) || ttl < 60 || ttl > 86400) {
+        errors.push('Spam: Thời gian giới hạn đặt hàng phải là số từ 60 đến 86400 giây (1 phút đến 24 giờ)');
+      }
+    }
+
+    if (data.spam.order_rate_limit_blacklist_hours !== undefined) {
+      const hours = parseInt(data.spam.order_rate_limit_blacklist_hours);
+      if (isNaN(hours) || hours < 1 || hours > 720) {
+        errors.push('Spam: Thời gian blacklist phải là số từ 1 đến 720 giờ (1 giờ đến 30 ngày)');
+      }
+    }
+
+    if (data.spam.verification_code_ttl !== undefined) {
+      const ttl = parseInt(data.spam.verification_code_ttl);
+      if (isNaN(ttl) || ttl < 60 || ttl > 3600) {
+        errors.push('Spam: Thời gian mã xác thực phải là số từ 60 đến 3600 giây (1 phút đến 1 giờ)');
+      }
+    }
+
+    if (data.spam.verified_session_ttl !== undefined) {
+      const ttl = parseInt(data.spam.verified_session_ttl);
+      if (isNaN(ttl) || ttl < 60 || ttl > 86400) {
+        errors.push('Spam: Thời gian session sau khi verify phải là số từ 60 đến 86400 giây (1 phút đến 24 giờ)');
+      }
+    }
+
+    if (data.spam.max_verify_attempts !== undefined) {
+      const attempts = parseInt(data.spam.max_verify_attempts);
+      if (isNaN(attempts) || attempts < 1 || attempts > 20) {
+        errors.push('Spam: Số lần thử nhập mã sai tối đa phải là số từ 1 đến 20');
+      }
+    }
+
+    if (data.spam.max_send_code !== undefined) {
+      const maxSend = parseInt(data.spam.max_send_code);
+      if (isNaN(maxSend) || maxSend < 1 || maxSend > 50) {
+        errors.push('Spam: Số lần gửi mã tối đa phải là số từ 1 đến 50');
+      }
+    }
+
+    if (data.spam.send_code_rate_limit_ttl !== undefined) {
+      const ttl = parseInt(data.spam.send_code_rate_limit_ttl);
+      if (isNaN(ttl) || ttl < 60 || ttl > 86400) {
+        errors.push('Spam: Thời gian giới hạn gửi mã phải là số từ 60 đến 86400 giây (1 phút đến 24 giờ)');
+      }
+    }
+  }
+
   return {
     isValid: errors.length === 0,
     errors,
@@ -456,6 +530,10 @@ export function mergeWithDefaults(config) {
 
   if (config.seo) {
     merged.seo = { ...merged.seo, ...config.seo };
+  }
+
+  if (config.spam) {
+    merged.spam = { ...merged.spam, ...config.spam };
   }
 
   return merged;

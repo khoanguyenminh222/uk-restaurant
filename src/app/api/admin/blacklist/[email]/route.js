@@ -69,7 +69,9 @@ export async function PUT(request, { params }) {
       (!updated.blocked_until || new Date(updated.blocked_until) < new Date());
     
     if (isUnblocked) {
-      const ORDER_RATE_LIMIT_TTL = parseInt(process.env.SPAM_ORDER_RATE_LIMIT_TTL || '1800');
+      const { getSpamConfig } = await import('@/lib/restaurantConfig');
+      const spamConfig = await getSpamConfig();
+      const ORDER_RATE_LIMIT_TTL = spamConfig.order_rate_limit_ttl || parseInt(process.env.SPAM_ORDER_RATE_LIMIT_TTL || '1800');
       const rateLimitKey = `order_count:${normalizedEmail}:${ORDER_RATE_LIMIT_TTL}s`;
       cache.delete(rateLimitKey);
       console.log(`[Update Blacklist] ✅ Đã unblock và reset cache rate limit cho email: ${normalizedEmail}`);
@@ -124,7 +126,9 @@ export async function DELETE(request, { params }) {
     }
 
     // Reset cache rate limit khi xóa blacklist
-    const ORDER_RATE_LIMIT_TTL = parseInt(process.env.SPAM_ORDER_RATE_LIMIT_TTL || '1800');
+    const { getSpamConfig } = await import('@/lib/restaurantConfig');
+    const spamConfig = await getSpamConfig();
+    const ORDER_RATE_LIMIT_TTL = spamConfig.order_rate_limit_ttl || parseInt(process.env.SPAM_ORDER_RATE_LIMIT_TTL || '1800');
     const rateLimitKey = `order_count:${normalizedEmail}:${ORDER_RATE_LIMIT_TTL}s`;
     cache.delete(rateLimitKey);
     console.log(`[Delete Blacklist] ✅ Đã xóa blacklist và reset cache rate limit cho email: ${normalizedEmail}`);

@@ -6,13 +6,16 @@
 import cache from './cache';
 import { checkBlacklist } from './blacklist';
 import { sendVerificationEmail as sendEmail } from './email';
+import { getSpamConfig } from './restaurantConfig';
 
-// Config từ environment variables
-const MAX_SEND_CODE = parseInt(process.env.SPAM_MAX_SEND_CODE || '5');
-const VERIFICATION_CODE_TTL = parseInt(process.env.SPAM_VERIFICATION_CODE_TTL || '600'); // 10 phút
-const VERIFIED_SESSION_TTL = parseInt(process.env.SPAM_VERIFIED_SESSION_TTL || '1800'); // 30 phút
-const MAX_VERIFY_ATTEMPTS = parseInt(process.env.SPAM_MAX_VERIFY_ATTEMPTS || '5');
-const SEND_CODE_RATE_LIMIT_TTL = parseInt(process.env.SPAM_SEND_CODE_RATE_LIMIT_TTL || '3600'); // Default: 1 giờ (có thể set 900 = 15 phút, 1800 = 30 phút, 7200 = 2 giờ, ...)
+// Fallback config từ environment variables (nếu không có trong database)
+const getDefaultConfig = () => ({
+  max_send_code: parseInt(process.env.SPAM_MAX_SEND_CODE || '5'),
+  verification_code_ttl: parseInt(process.env.SPAM_VERIFICATION_CODE_TTL || '600'),
+  verified_session_ttl: parseInt(process.env.SPAM_VERIFIED_SESSION_TTL || '1800'),
+  max_verify_attempts: parseInt(process.env.SPAM_MAX_VERIFY_ATTEMPTS || '5'),
+  send_code_rate_limit_ttl: parseInt(process.env.SPAM_SEND_CODE_RATE_LIMIT_TTL || '3600'),
+});
 
 /**
  * Generate 6-digit verification code
@@ -30,6 +33,13 @@ export async function sendVerificationCode(email) {
   if (!email) {
     return { success: false, error: 'Email là bắt buộc' };
   }
+
+  // Get spam config from database
+  const spamConfig = await getSpamConfig();
+  const defaultConfig = getDefaultConfig();
+  const MAX_SEND_CODE = spamConfig.max_send_code || defaultConfig.max_send_code;
+  const VERIFICATION_CODE_TTL = spamConfig.verification_code_ttl || defaultConfig.verification_code_ttl;
+  const SEND_CODE_RATE_LIMIT_TTL = spamConfig.send_code_rate_limit_ttl || defaultConfig.send_code_rate_limit_ttl;
 
   // Normalize email
   const normalizedEmail = email.toLowerCase().trim();
@@ -107,6 +117,13 @@ export async function verifyEmailCode(email, code) {
   if (!email || !code) {
     return { success: false, error: 'Email và mã xác thực là bắt buộc' };
   }
+
+  // Get spam config from database
+  const spamConfig = await getSpamConfig();
+  const defaultConfig = getDefaultConfig();
+  const VERIFICATION_CODE_TTL = spamConfig.verification_code_ttl || defaultConfig.verification_code_ttl;
+  const MAX_VERIFY_ATTEMPTS = spamConfig.max_verify_attempts || defaultConfig.max_verify_attempts;
+  const VERIFIED_SESSION_TTL = spamConfig.verified_session_ttl || defaultConfig.verified_session_ttl;
 
   // Normalize email
   const normalizedEmail = email.toLowerCase().trim();

@@ -143,7 +143,9 @@ export async function removeFromBlacklist(email) {
   // Reset cache rate limit khi xóa blacklist
   // Import cache ở đây để tránh circular dependency
   const cache = (await import('./cache')).default;
-  const ORDER_RATE_LIMIT_TTL = parseInt(process.env.SPAM_ORDER_RATE_LIMIT_TTL || '1800');
+  const { getSpamConfig } = await import('./restaurantConfig');
+  const spamConfig = await getSpamConfig();
+  const ORDER_RATE_LIMIT_TTL = spamConfig.order_rate_limit_ttl || parseInt(process.env.SPAM_ORDER_RATE_LIMIT_TTL || '1800');
   
   // Xóa tất cả các cache keys liên quan đến email này
   // Cache key format: `order_count:${email}:${TTL}s`

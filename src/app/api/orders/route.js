@@ -6,6 +6,7 @@ import { sendOrderConfirmationEmail } from '@/lib/email';
 import { checkBlacklist, autoBlacklistIfNeeded } from '@/lib/blacklist';
 import { isEmailVerified } from '@/lib/emailVerification';
 import cache from '@/lib/cache';
+import { getSpamConfig } from '@/lib/restaurantConfig';
 
 /**
  * GET /api/orders
@@ -208,9 +209,10 @@ export async function POST(request) {
     }
 
     // Step 3: Check rate limit
-    const MAX_ORDERS = parseInt(process.env.SPAM_MAX_ORDERS || '5');
-    const ORDER_RATE_LIMIT_TTL = parseInt(process.env.SPAM_ORDER_RATE_LIMIT_TTL || '1800'); // Default: 30 phút (có thể set 3600 = 1 giờ, 7200 = 2 giờ, ...)
-    const ORDER_RATE_LIMIT_BLACKLIST_HOURS = parseInt(process.env.SPAM_ORDER_RATE_LIMIT_BLACKLIST_HOURS || '24'); // 24 giờ
+    const spamConfig = await getSpamConfig();
+    const MAX_ORDERS = spamConfig.max_orders || parseInt(process.env.SPAM_MAX_ORDERS || '5');
+    const ORDER_RATE_LIMIT_TTL = spamConfig.order_rate_limit_ttl || parseInt(process.env.SPAM_ORDER_RATE_LIMIT_TTL || '1800');
+    const ORDER_RATE_LIMIT_BLACKLIST_HOURS = spamConfig.order_rate_limit_blacklist_hours || parseInt(process.env.SPAM_ORDER_RATE_LIMIT_BLACKLIST_HOURS || '24');
     
     const rateLimitKey = `order_count:${normalizedEmail}:${ORDER_RATE_LIMIT_TTL}s`;
     const orderCount = cache.increment(rateLimitKey, ORDER_RATE_LIMIT_TTL);
@@ -238,10 +240,29 @@ export async function POST(request) {
       );
     }
 
-    // Generate order_id
-    const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 1000);
-    body.order_id = `ORD-${timestamp}-${random}`;
+    // Generate order_id theo format: ORD-yyyymmdd-XXXX (XXXX là số thứ tự trong ngày)
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const dateStr = `${year}${month}${day}`; // yyyymmdd
+    
+    // Tính số đơn hàng trong ngày hiện tại
+    const startOfDay = new Date(year, now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const endOfDay = new Date(year, now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    
+    const ordersToday = await db.collection('orders').countDocuments({
+      created_at: {
+        $gte: startOfDay,
+        $lte: endOfDay
+      }
+    });
+    
+    // Số thứ tự = số đơn hàng hiện tại + 1 (bắt đầu từ 0001)
+    const sequenceNumber = ordersToday + 1;
+    const sequenceStr = String(sequenceNumber).padStart(4, '0'); // Format thành 4 chữ số
+    
+    body.order_id = `ORD-${dateStr}-${sequenceStr}`;
 
     // Set default status
     if (!body.status) {

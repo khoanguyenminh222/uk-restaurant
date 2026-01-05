@@ -165,6 +165,9 @@ export async function PUT(request) {
       if (body.seo) {
         updateData.seo = { ...updateData.seo, ...body.seo };
       }
+      if (body.spam) {
+        updateData.spam = { ...updateData.spam, ...body.spam };
+      }
 
       updateData.updated_at = now;
 

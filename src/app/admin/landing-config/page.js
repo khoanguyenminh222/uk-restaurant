@@ -5,7 +5,7 @@ import { useRoleCheck } from '@/hooks/useRoleCheck';
 import {
   Settings, Save, RotateCcw, Loader2, X, Plus, Edit2, Trash2,
   ArrowUp, ArrowDown, Home, Sparkles, BookOpen, Info, Phone,
-  Mail, MapPin, Share2, Link as LinkIcon, CheckCircle2, Zap, Heart, MessageCircle
+  Mail, MapPin, Share2, Link as LinkIcon, CheckCircle2, Zap, Heart, MessageCircle, Shield
 } from 'lucide-react';
 import * as lucideIcons from 'lucide-react';
 
@@ -148,6 +148,7 @@ const getLucideIcon = (iconName) => {
 const TABS = [
   { id: 'general', label: 'Cấu hình chung', icon: Settings },
   { id: 'seo', label: 'Cấu hình SEO', icon: Settings },
+  { id: 'spam', label: 'Bảo vệ Spam', icon: Shield },
   { id: 'header', label: 'Header', icon: Home },
   { id: 'hero', label: 'Hero', icon: Sparkles },
   { id: 'menu', label: 'Menu', icon: BookOpen },
@@ -220,6 +221,16 @@ export default function AdminLandingConfig() {
     icon_favicon: '/favicon.ico',
     icon_apple: '/apple-icon.png',
   });
+  const [spamData, setSpamData] = useState({
+    max_orders: 5,
+    order_rate_limit_ttl: 1800,
+    order_rate_limit_blacklist_hours: 24,
+    verification_code_ttl: 600,
+    verified_session_ttl: 1800,
+    max_verify_attempts: 5,
+    max_send_code: 5,
+    send_code_rate_limit_ttl: 3600,
+  });
 
   // Modal states
   const [showFeatureModal, setShowFeatureModal] = useState(false);
@@ -261,6 +272,7 @@ export default function AdminLandingConfig() {
         if (data.data.contact) setContactData(data.data.contact);
         if (data.data.footer) setFooterData(data.data.footer);
         if (data.data.seo) setSeoData(data.data.seo);
+        if (data.data.spam) setSpamData(data.data.spam);
       } else {
         setError('Lỗi khi tải cấu hình');
       }
@@ -288,6 +300,7 @@ export default function AdminLandingConfig() {
         contact: contactData,
         footer: footerData,
         seo: seoData,
+        spam: spamData,
       };
 
       const res = await fetch('/api/config/landing', {
@@ -1446,6 +1459,187 @@ export default function AdminLandingConfig() {
                     />
                     <span className="text-sm text-card-foreground">Cho phép follow links (robots: follow)</span>
                   </label>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'spam' && (
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold text-card-foreground mb-4">Cấu hình Bảo vệ Spam</h2>
+              <p className="text-sm text-muted-foreground mb-6">
+                Cấu hình các giới hạn và thời gian hiệu lực để bảo vệ hệ thống khỏi spam và lạm dụng.
+              </p>
+
+              {/* Giới hạn đặt hàng */}
+              <div className="space-y-4 border-t border-b border-border pt-6 pb-6">
+                <h3 className="text-lg font-medium text-card-foreground">1. Giới hạn đặt hàng</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Ngăn chặn việc đặt quá nhiều đơn hàng trong thời gian ngắn từ cùng một email.
+                </p>
+
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Số đơn hàng tối đa <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={spamData.max_orders || 5}
+                    onChange={(e) => setSpamData({ ...spamData, max_orders: parseInt(e.target.value) || 5 })}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Số đơn hàng tối đa mà một email có thể đặt trong khoảng thời gian giới hạn (theo "Thời gian giới hạn đặt hàng" bên dưới).
+                    <br />
+                    <strong>Ví dụ:</strong> Nếu đặt là 5 và thời gian là 30 phút, thì một email chỉ có thể đặt tối đa 5 đơn trong 30 phút.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Thời gian giới hạn đặt hàng (giây) <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="60"
+                    max="86400"
+                    value={spamData.order_rate_limit_ttl || 1800}
+                    onChange={(e) => setSpamData({ ...spamData, order_rate_limit_ttl: parseInt(e.target.value) || 1800 })}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Khoảng thời gian (tính bằng giây) để đếm số đơn hàng. Hệ thống sẽ đếm số đơn trong khoảng thời gian này.
+                    <br />
+                    <strong>Gợi ý:</strong> 1800 giây = 30 phút, 3600 giây = 1 giờ, 7200 giây = 2 giờ
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Thời gian blacklist khi vượt quá (giờ) <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="720"
+                    value={spamData.order_rate_limit_blacklist_hours || 24}
+                    onChange={(e) => setSpamData({ ...spamData, order_rate_limit_blacklist_hours: parseInt(e.target.value) || 24 })}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Khi email đặt quá số đơn cho phép (vượt "Số đơn hàng tối đa"), hệ thống sẽ tự động chặn email này trong bao nhiêu giờ.
+                    <br />
+                    <strong>Ví dụ:</strong> 24 giờ = 1 ngày, 168 giờ = 1 tuần
+                  </p>
+                </div>
+              </div>
+
+              {/* Xác thực email */}
+              <div className="space-y-4 border-t border-b border-border pt-6 pb-6">
+                <h3 className="text-lg font-medium text-card-foreground">2. Xác thực email</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Cấu hình thời gian hiệu lực của mã xác thực và số lần thử nhập mã.
+                </p>
+
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Thời gian mã xác thực có hiệu lực (giây) <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="60"
+                    max="3600"
+                    value={spamData.verification_code_ttl || 600}
+                    onChange={(e) => setSpamData({ ...spamData, verification_code_ttl: parseInt(e.target.value) || 600 })}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Sau thời gian này, mã xác thực sẽ hết hạn và người dùng phải gửi lại mã mới.
+                    <br />
+                    <strong>Gợi ý:</strong> 600 giây = 10 phút, 300 giây = 5 phút
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Thời gian session sau khi verify (giây) <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="60"
+                    max="86400"
+                    value={spamData.verified_session_ttl || 1800}
+                    onChange={(e) => setSpamData({ ...spamData, verified_session_ttl: parseInt(e.target.value) || 1800 })}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Sau khi xác thực email thành công, session sẽ có hiệu lực trong khoảng thời gian này. Trong thời gian này, người dùng không cần xác thực lại khi đặt hàng.
+                    <br />
+                    <strong>Gợi ý:</strong> 1800 giây = 30 phút, 3600 giây = 1 giờ
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Số lần thử nhập mã sai tối đa <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={spamData.max_verify_attempts || 5}
+                    onChange={(e) => setSpamData({ ...spamData, max_verify_attempts: parseInt(e.target.value) || 5 })}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Nếu nhập sai mã quá số lần này, người dùng phải gửi lại mã mới.
+                  </p>
+                </div>
+              </div>
+
+              {/* Giới hạn gửi mã */}
+              <div className="space-y-4 border-t border-b border-border pt-6 pb-6">
+                <h3 className="text-lg font-medium text-card-foreground">3. Giới hạn gửi mã</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Ngăn chặn việc yêu cầu gửi quá nhiều mã xác thực trong thời gian ngắn.
+                </p>
+
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Số lần gửi mã tối đa <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="50"
+                    value={spamData.max_send_code || 5}
+                    onChange={(e) => setSpamData({ ...spamData, max_send_code: parseInt(e.target.value) || 5 })}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Số lần gửi mã xác thực tối đa mà một email có thể yêu cầu trong khoảng thời gian giới hạn (theo "Thời gian giới hạn gửi mã" bên dưới).
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Thời gian giới hạn gửi mã (giây) <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="60"
+                    max="86400"
+                    value={spamData.send_code_rate_limit_ttl || 3600}
+                    onChange={(e) => setSpamData({ ...spamData, send_code_rate_limit_ttl: parseInt(e.target.value) || 3600 })}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Khoảng thời gian (tính bằng giây) để đếm số lần gửi mã. Hệ thống sẽ đếm số lần gửi mã trong khoảng thời gian này.
+                    <br />
+                    <strong>Gợi ý:</strong> 3600 giây = 1 giờ, 1800 giây = 30 phút, 7200 giây = 2 giờ
+                  </p>
                 </div>
               </div>
             </div>
