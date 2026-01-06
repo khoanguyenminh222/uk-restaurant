@@ -497,57 +497,136 @@ function formatOrderItemsForEmail(items) {
 }
 
 /**
+ * Status config với màu sắc & tên file icon PNG (tương ứng với STATUS_CONFIG trong admin)
+ * Ảnh PNG đặt trong thư mục public:
+ *  - public/clock.png (pending)
+ *  - public/circle-check.png (confirmed)
+ *  - public/package.png (preparing)
+ *  - public/circle-check-big.png (ready)
+ *  - public/truck.png (delivered)
+ *  - public/circle-check.png (completed)
+ *  - public/circle-x.png (cancelled)
+ */
+const STATUS_EMAIL_CONFIG = {
+  pending: {
+    label: 'Chờ xử lý',
+    color: '#eab308', // yellow-500
+    bgColor: '#fef9c3', // yellow-100
+    iconName: 'clock',
+  },
+  confirmed: {
+    label: 'Đã xác nhận',
+    color: '#3b82f6', // blue-500
+    bgColor: '#dbeafe', // blue-100
+    iconName: 'circle-check',
+  },
+  preparing: {
+    label: 'Đang chuẩn bị',
+    color: '#f97316', // orange-500
+    bgColor: '#fed7aa', // orange-100
+    iconName: 'package',
+  },
+  ready: {
+    label: 'Sẵn sàng',
+    color: '#22c55e', // green-500
+    bgColor: '#dcfce7', // green-100
+    iconName: 'circle-check-big',
+  },
+  delivered: {
+    label: 'Đã giao',
+    color: '#10b981', // emerald-500
+    bgColor: '#d1fae5', // emerald-100
+    iconName: 'truck',
+  },
+  completed: {
+    label: 'Hoàn thành',
+    color: '#16a34a', // green-600
+    bgColor: '#dcfce7', // green-100
+    iconName: 'circle-check',
+  },
+  cancelled: {
+    label: 'Đã hủy',
+    color: '#ef4444', // red-500
+    bgColor: '#fee2e2', // red-100
+    iconName: 'circle-x',
+  },
+};
+
+/**
  * Lấy subject và nội dung email theo status
  * @param {string} status - Order status
  * @param {string} orderId - Order ID
  * @param {string} restaurantName - Restaurant name
- * @returns {object} {subject, title, message, color}
+ * @returns {object} {subject, title, message, color, iconUrl, bgColor}
  */
 function getStatusEmailContent(status, orderId, restaurantName) {
-  const statusConfig = {
+  const config = STATUS_EMAIL_CONFIG[status];
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL ||
+    '';
+  const iconUrl =
+    baseUrl && config?.iconName
+      ? `${baseUrl}/email-status/${config.iconName}.png`
+      : '';
+  
+  if (!config) {
+    return {
+      subject: `Cập nhật đơn hàng #${orderId} - ${restaurantName}`,
+      title: 'Cập nhật đơn hàng',
+      message: 'Trạng thái đơn hàng của bạn đã được cập nhật.',
+      color: '#6b7280',
+      bgColor: '#f3f4f6',
+      iconUrl: '',
+      label: 'Cập nhật đơn hàng',
+    };
+  }
+  
+  const statusMessages = {
     confirmed: {
       subject: `Đơn hàng #${orderId} đã được xác nhận - ${restaurantName}`,
       title: 'Đơn hàng đã được xác nhận!',
       message: 'Đơn hàng của bạn đã được xác nhận và đang được chuẩn bị.',
-      color: '#16a34a',
     },
     preparing: {
       subject: `Đơn hàng #${orderId} đang được chuẩn bị - ${restaurantName}`,
       title: 'Đơn hàng đang được chuẩn bị!',
       message: 'Đơn hàng của bạn đang được chuẩn bị. Chúng tôi sẽ thông báo khi đơn hàng sẵn sàng.',
-      color: '#f59e0b',
     },
     ready: {
       subject: `Đơn hàng #${orderId} đã sẵn sàng - ${restaurantName}`,
       title: 'Đơn hàng đã sẵn sàng!',
       message: 'Đơn hàng của bạn đã sẵn sàng. Vui lòng đến nhận hàng hoặc đợi shipper giao hàng.',
-      color: '#3b82f6',
     },
     delivered: {
       subject: `Đơn hàng #${orderId} đã được giao - ${restaurantName}`,
       title: 'Đơn hàng đã được giao!',
       message: 'Đơn hàng của bạn đã được giao thành công. Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!',
-      color: '#10b981',
     },
     completed: {
       subject: `Cảm ơn bạn đã đặt hàng tại ${restaurantName}`,
       title: 'Cảm ơn bạn đã đặt hàng!',
       message: 'Đơn hàng của bạn đã hoàn thành. Chúng tôi rất vui được phục vụ bạn và mong được gặp lại bạn lần sau!',
-      color: '#8b5cf6',
     },
     cancelled: {
       subject: `Đơn hàng #${orderId} đã bị hủy - ${restaurantName}`,
       title: 'Đơn hàng đã bị hủy',
       message: 'Rất tiếc, đơn hàng của bạn đã bị hủy. Nếu có thắc mắc, vui lòng liên hệ với chúng tôi.',
-      color: '#ef4444',
+    },
+    pending: {
+      subject: `Đơn hàng #${orderId} đang chờ xử lý - ${restaurantName}`,
+      title: 'Đơn hàng đang chờ xử lý',
+      message: 'Đơn hàng của bạn đã được tiếp nhận và đang chờ xử lý.',
     },
   };
   
-  return statusConfig[status] || {
-    subject: `Cập nhật đơn hàng #${orderId} - ${restaurantName}`,
-    title: 'Cập nhật đơn hàng',
-    message: 'Trạng thái đơn hàng của bạn đã được cập nhật.',
-    color: '#6b7280',
+  const message = statusMessages[status] || statusMessages.pending;
+  
+  return {
+    ...message,
+    color: config.color,
+    bgColor: config.bgColor,
+    iconUrl,
+    label: config.label,
   };
 }
 
@@ -637,7 +716,7 @@ export async function sendOrderStatusEmail(order, newStatus, previousStatus = nu
     });
     
     // Track order URL
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     const trackOrderUrl = `${baseUrl}/track-order?order_id=${orderId}`;
     
     // Lý do hủy (nếu có)
@@ -655,7 +734,15 @@ export async function sendOrderStatusEmail(order, newStatus, previousStatus = nu
           </div>
           <div style="background-color: white; padding: 30px; border-radius: 0 0 8px 8px;">
             <div style="text-align: center; margin-bottom: 30px;">
-              <h2 style="color: #1f2937; margin-top: 0; color: ${statusContent.color};">${statusContent.title}</h2>
+              <div style="display: inline-block; background-color: ${statusContent.bgColor}; padding: 16px; border-radius: 50%; margin-bottom: 16px;">
+                ${
+                  statusContent.iconUrl
+                    ? `<img src="${statusContent.iconUrl}" alt="${statusContent.label}" width="48" height="48" style="display:block; margin:0 auto;" />`
+                    : `<span style="display:inline-flex; align-items:center; justify-content:center; width:48px; height:48px; color:${statusContent.color}; font-size:24px; font-weight:bold;">${(statusContent.label || '✓').charAt(0)}</span>`
+                }
+              </div>
+              <h2 style="color: ${statusContent.color}; margin-top: 0; font-size: 24px; font-weight: bold;">${statusContent.title}</h2>
+              <p style="color: #6b7280; margin-top: 8px; font-size: 14px;">${statusContent.label}</p>
             </div>
             
             <p style="color: #4b5563; line-height: 1.6;">
