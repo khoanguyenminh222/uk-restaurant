@@ -109,7 +109,7 @@ export default function Contact() {
         {/* Contact Card */}
         <div
           ref={contactCardRef}
-          className={`max-w-2xl mx-auto bg-card border border-primary rounded-lg p-8 shadow-sm hover:shadow-md hover:shadow-black/50 transition-all duration-300 mb-12 scroll-fade-in ${isContactCardVisible ? "visible" : ""}`}
+          className={`max-w-2xl mx-auto bg-card border border-primary rounded-lg p-8 shadow-sm hover:shadow-md hover:shadow-black/30 transition-all duration-300 mb-12 scroll-fade-in ${isContactCardVisible ? "visible" : ""}`}
         >
           <div className="space-y-6">
             {contactInfo.map((item, index) => {
@@ -146,7 +146,7 @@ export default function Contact() {
           {/* Google Maps */}
           <div
             ref={mapRef}
-            className={`bg-card border border-primary rounded-lg overflow-hidden shadow-sm hover:shadow-md hover:shadow-black/50 transition-all duration-300 scroll-fade-in-left scroll-delay-100 ${isMapVisible ? "visible" : ""}`}
+            className={`bg-card border border-primary rounded-lg overflow-hidden shadow-sm hover:shadow-md hover:shadow-black/30 transition-all duration-300 scroll-fade-in-left scroll-delay-100 ${isMapVisible ? "visible" : ""}`}
           >
             <div className="p-4 border-b border-primary">
               <h3 className="text-lg font-semibold text-card-foreground flex items-center gap-2">
@@ -172,7 +172,7 @@ export default function Contact() {
           {/* Social Media */}
           <div
             ref={socialRef}
-            className={`bg-card border border-primary rounded-lg p-8 shadow-sm hover:shadow-md hover:shadow-black/50 transition-all duration-300 scroll-fade-in-right scroll-delay-200 ${isSocialVisible ? "visible" : ""}`}
+            className={`bg-card border border-primary rounded-lg p-8 shadow-sm hover:shadow-md hover:shadow-black/30 transition-all duration-300 scroll-fade-in-right scroll-delay-200 ${isSocialVisible ? "visible" : ""}`}
           >
             <h3 className="text-lg font-semibold text-card-foreground mb-6 flex items-center gap-2">
               <MessageCircle className="w-5 h-5 text-primary" />

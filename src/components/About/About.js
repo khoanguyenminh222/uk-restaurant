@@ -60,14 +60,14 @@ export default function About() {
         </div>
 
         {/* Feature Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-3">
           {finalFeatures.map((feature, index) => {
             const IconComponent = feature.icon
             return (
               <div
                 key={index}
                 ref={feature.ref}
-                className={`bg-card border border-border rounded-lg p-6 text-center hover:shadow-md hover:shadow-black/50 hover:border-primary/50 transition-all duration-300 group scroll-fade-in ${
+                className={`bg-card border border-border rounded-lg p-6 text-center hover:shadow-sm hover:shadow-black/10 hover:border-primary/50 transition-all duration-300 group scroll-fade-in ${
                   index === 0 ? "scroll-delay-100" : index === 1 ? "scroll-delay-200" : "scroll-delay-300"
                 } ${feature.isVisible ? "visible" : ""}`}
               >
