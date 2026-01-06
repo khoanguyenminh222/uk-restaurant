@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRoleCheck } from '@/hooks/useRoleCheck'
 import { Shield, Search, Plus, Edit, Trash2, Filter, X, Loader2, CheckCircle, XCircle, Calendar, FileText } from 'lucide-react'
+import Toast from '@/components/Toast/Toast'
 
 export default function AdminBlacklist() {
   // Check if user has permission (only admin and super_admin)
@@ -21,7 +22,10 @@ export default function AdminBlacklist() {
   const [total, setTotal] = useState(0)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [editingEmail, setEditingEmail] = useState(null)
+  const [emailToDelete, setEmailToDelete] = useState(null)
+  const [toast, setToast] = useState({ message: '', isVisible: false, type: 'success' })
   const [formData, setFormData] = useState({
     email: "",
     reason: "manual_block",
@@ -75,23 +79,19 @@ export default function AdminBlacklist() {
         setTotalPages(data.pagination.totalPages)
         setTotal(data.pagination.total)
       } else {
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(
-            new CustomEvent("showToast", {
-              detail: { message: data.error || "Lỗi khi lấy danh sách blacklist", type: "error" },
-            })
-          )
-        }
+        setToast({
+          message: data.error || "Lỗi khi lấy danh sách blacklist",
+          type: "error",
+          isVisible: true
+        })
       }
     } catch (err) {
       console.error("Error fetching blacklist:", err)
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(
-          new CustomEvent("showToast", {
-            detail: { message: "Lỗi kết nối. Vui lòng thử lại sau.", type: "error" },
-          })
-        )
-      }
+      setToast({
+        message: "Lỗi kết nối. Vui lòng thử lại sau.",
+        type: "error",
+        isVisible: true
+      })
     } finally {
       setLoading(false)
     }
@@ -136,34 +136,25 @@ export default function AdminBlacklist() {
           admin_notes: "",
         })
         fetchBlacklist()
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(
-            new CustomEvent("showToast", {
-              detail: {
-                message: "Đã thêm email vào blacklist",
-                type: "success",
-              },
-            })
-          )
-        }
+        setToast({
+          message: "Đã thêm email vào blacklist",
+          type: "success",
+          isVisible: true
+        })
       } else {
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(
-            new CustomEvent("showToast", {
-              detail: { message: data.error || "Lỗi khi thêm vào blacklist", type: "error" },
-            })
-          )
-        }
+        setToast({
+          message: data.error || "Lỗi khi thêm vào blacklist",
+          type: "error",
+          isVisible: true
+        })
       }
     } catch (err) {
       console.error("Error adding to blacklist:", err)
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(
-          new CustomEvent("showToast", {
-            detail: { message: "Lỗi kết nối. Vui lòng thử lại sau.", type: "error" },
-          })
-        )
-      }
+      setToast({
+        message: "Lỗi kết nối. Vui lòng thử lại sau.",
+        type: "error",
+        isVisible: true
+      })
     } finally {
       setAdding(false)
     }
@@ -225,44 +216,39 @@ export default function AdminBlacklist() {
           admin_notes: "",
         })
         fetchBlacklist()
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(
-            new CustomEvent("showToast", {
-              detail: {
-                message: "Đã cập nhật blacklist",
-                type: "success",
-              },
-            })
-          )
-        }
+        setToast({
+          message: "Đã cập nhật blacklist",
+          type: "success",
+          isVisible: true
+        })
       } else {
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(
-            new CustomEvent("showToast", {
-              detail: { message: data.error || "Lỗi khi cập nhật blacklist", type: "error" },
-            })
-          )
-        }
+        setToast({
+          message: data.error || "Lỗi khi cập nhật blacklist",
+          type: "error",
+          isVisible: true
+        })
       }
     } catch (err) {
       console.error("Error updating blacklist:", err)
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(
-          new CustomEvent("showToast", {
-            detail: { message: "Lỗi kết nối. Vui lòng thử lại sau.", type: "error" },
-          })
-        )
-      }
+      setToast({
+        message: "Lỗi kết nối. Vui lòng thử lại sau.",
+        type: "error",
+        isVisible: true
+      })
     } finally {
       setUpdating(false)
     }
   }
 
-  // Handle delete
-  const handleDelete = async (email) => {
-    if (!confirm(`Bạn có chắc chắn muốn xóa email "${email}" khỏi blacklist?`)) {
-      return
-    }
+  // Handle delete - open modal
+  const handleDelete = (email) => {
+    setEmailToDelete(email)
+    setShowDeleteModal(true)
+  }
+
+  // Confirm delete
+  const confirmDelete = async () => {
+    if (!emailToDelete) return
 
     setDeleting(true)
     try {
@@ -272,7 +258,7 @@ export default function AdminBlacklist() {
         headers['x-admin-phone'] = adminPhone
       }
 
-      const response = await fetch(`/api/admin/blacklist/${encodeURIComponent(email)}`, {
+      const response = await fetch(`/api/admin/blacklist/${encodeURIComponent(emailToDelete)}`, {
         method: "DELETE",
         headers
       })
@@ -280,35 +266,28 @@ export default function AdminBlacklist() {
       const data = await response.json()
 
       if (data.success) {
+        setShowDeleteModal(false)
+        setEmailToDelete(null)
         fetchBlacklist()
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(
-            new CustomEvent("showToast", {
-              detail: {
-                message: "Đã xóa email khỏi blacklist",
-                type: "success",
-              },
-            })
-          )
-        }
+        setToast({
+          message: "Đã xóa email khỏi blacklist",
+          type: "success",
+          isVisible: true
+        })
       } else {
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(
-            new CustomEvent("showToast", {
-              detail: { message: data.error || "Lỗi khi xóa khỏi blacklist", type: "error" },
-            })
-          )
-        }
+        setToast({
+          message: data.error || "Lỗi khi xóa khỏi blacklist",
+          type: "error",
+          isVisible: true
+        })
       }
     } catch (err) {
       console.error("Error deleting from blacklist:", err)
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(
-          new CustomEvent("showToast", {
-            detail: { message: "Lỗi kết nối. Vui lòng thử lại sau.", type: "error" },
-          })
-        )
-      }
+      setToast({
+        message: "Lỗi kết nối. Vui lòng thử lại sau.",
+        type: "error",
+        isVisible: true
+      })
     } finally {
       setDeleting(false)
     }
@@ -361,7 +340,7 @@ export default function AdminBlacklist() {
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark transition-colors flex items-center gap-2"
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark transition-colors flex items-center gap-2 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           Thêm Email
@@ -483,7 +462,7 @@ export default function AdminBlacklist() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleEdit(entry.email)}
-                            className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                            className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
                             title="Sửa"
                           >
                             <Edit className="w-4 h-4" />
@@ -491,7 +470,7 @@ export default function AdminBlacklist() {
                           <button
                             onClick={() => handleDelete(entry.email)}
                             disabled={deleting}
-                            className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                             title="Xóa"
                           >
                             {deleting ? (
@@ -538,8 +517,23 @@ export default function AdminBlacklist() {
 
       {/* Add Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-card border border-border rounded-lg shadow-2xl w-full max-w-md">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={() => {
+            setShowAddModal(false)
+            setFormData({
+              email: "",
+              reason: "manual_block",
+              is_permanent: false,
+              blocked_until: "",
+              admin_notes: "",
+            })
+          }}
+        >
+          <div 
+            className="bg-card border border-border rounded-lg shadow-2xl w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
@@ -557,7 +551,7 @@ export default function AdminBlacklist() {
                       admin_notes: "",
                     })
                   }}
-                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
+                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -647,14 +641,14 @@ export default function AdminBlacklist() {
                       })
                     }}
                     disabled={adding}
-                    className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   >
                     Hủy
                   </button>
                   <button
                     type="submit"
                     disabled={adding}
-                    className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {adding ? (
                       <>
@@ -672,10 +666,106 @@ export default function AdminBlacklist() {
         </div>
       )}
 
+      {/* Delete Modal */}
+      {showDeleteModal && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={() => {
+            setShowDeleteModal(false)
+            setEmailToDelete(null)
+          }}
+        >
+          <div 
+            className="bg-card border border-border rounded-lg shadow-2xl w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+                  <Trash2 className="w-5 h-5 text-destructive" />
+                  Xác nhận xóa
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false)
+                    setEmailToDelete(null)
+                  }}
+                  disabled={deleting}
+                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg disabled:opacity-50 cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="mb-6">
+                <p className="text-foreground mb-2">
+                  Bạn có chắc chắn muốn xóa email này khỏi blacklist?
+                </p>
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-1">Email:</p>
+                  <p className="font-mono text-foreground">{emailToDelete}</p>
+                </div>
+                <p className="text-sm text-muted-foreground mt-3">
+                  Email này sẽ có thể đặt hàng và đăng ký trở lại.
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDeleteModal(false)
+                    setEmailToDelete(null)
+                  }}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDelete}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-2 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {deleting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Đang xóa...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4" />
+                      <span>Xóa</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Edit Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-card border border-border rounded-lg shadow-2xl w-full max-w-md">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={() => {
+            setShowEditModal(false)
+            setEditingEmail(null)
+            setFormData({
+              email: "",
+              reason: "manual_block",
+              is_permanent: false,
+              blocked_until: "",
+              admin_notes: "",
+            })
+          }}
+        >
+          <div 
+            className="bg-card border border-border rounded-lg shadow-2xl w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
@@ -693,9 +783,8 @@ export default function AdminBlacklist() {
                       blocked_until: "",
                       admin_notes: "",
                     })
-                    setError("")
                   }}
-                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
+                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -784,14 +873,14 @@ export default function AdminBlacklist() {
                       })
                     }}
                     disabled={updating}
-                    className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   >
                     Hủy
                   </button>
                   <button
                     type="submit"
                     disabled={updating}
-                    className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {updating ? (
                       <>
@@ -808,6 +897,14 @@ export default function AdminBlacklist() {
           </div>
         </div>
       )}
+
+      {/* Toast Notification */}
+      <Toast
+        message={toast.message}
+        isVisible={toast.isVisible}
+        type={toast.type}
+        onClose={() => setToast({ ...toast, isVisible: false })}
+      />
     </div>
   )
 }

@@ -17,7 +17,7 @@ export default function Toast({ message, isVisible, onClose, type = "success" })
 
   return (
     <div className="fixed top-20 right-4 z-50 animate-slide-in-right">
-      <div className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg min-w-[280px] ${
+      <div className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg min-w-72 ${
         type === "success" 
           ? "bg-green-600 text-white" 
           : "bg-red-600 text-white"

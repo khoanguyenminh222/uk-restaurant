@@ -124,8 +124,8 @@ export default function AdminLayout({ children }) {
           onToggle: () => setConfigMenuOpen(!configMenuOpen),
           children: [
             { href: '/admin/banners', label: 'Banner', icon: ImageIcon },
-            { href: '/admin/popular-config', label: 'Cấu hình Ngưỡng', icon: TrendingUp },
             { href: '/admin/landing-config', label: 'Cấu hình Landing', icon: Settings },
+            { href: '/admin/popular-config', label: 'Cấu hình Ngưỡng', icon: TrendingUp },
             { href: '/admin/notification-config', label: 'Cấu hình Thông báo', icon: Bell },
             { href: '/admin/blacklist', label: 'Blacklist Email', icon: Shield },
           ]
@@ -176,11 +176,11 @@ export default function AdminLayout({ children }) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-full w-64 bg-card border-r border-border z-50 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed left-0 top-0 h-screen w-64 bg-card border-r border-border z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${
           mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0`}
       >
-        <div className="p-6 border-b border-border">
+        <div className="p-6 border-b border-border shrink-0">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-xl font-bold text-card-foreground">{restaurantName}</h1>
@@ -207,7 +207,7 @@ export default function AdminLayout({ children }) {
           )}
         </div>
 
-        <nav className="p-4 flex-1 overflow-y-auto">
+        <nav className="p-4 flex-1 overflow-y-auto min-h-0">
           <ul className="space-y-2">
             {navItems.map((item, index) => {
               // Menu group với submenu
@@ -283,7 +283,7 @@ export default function AdminLayout({ children }) {
           </ul>
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border space-y-2 bg-card">
+        <div className="p-4 border-t border-border space-y-2 bg-card shrink-0">
           <Link
             href="/"
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-muted hover:text-card-foreground transition-colors cursor-pointer"
