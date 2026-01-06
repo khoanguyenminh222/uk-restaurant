@@ -24,7 +24,10 @@ import {
   CheckCircle,
   User,
   UserX,
-  ArrowRight
+  ArrowRight,
+  History,
+  Plus,
+  Minus
 } from 'lucide-react';
 
 const STATUS_CONFIG = {
@@ -75,6 +78,13 @@ export default function AdminOrders() {
   const [confirmAction, setConfirmAction] = useState(null);
   const [confirmMessage, setConfirmMessage] = useState('');
   const [editingStatus, setEditingStatus] = useState('');
+  const [editingAdminNotes, setEditingAdminNotes] = useState('');
+  const [editingCustomerName, setEditingCustomerName] = useState('');
+  const [editingCustomerPhone, setEditingCustomerPhone] = useState('');
+  const [editingCustomerAddress, setEditingCustomerAddress] = useState('');
+  const [editingTotalPrice, setEditingTotalPrice] = useState(0);
+  const [editingItems, setEditingItems] = useState([]);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
   
   // Refs for modals
@@ -312,7 +322,6 @@ export default function AdminOrders() {
             changed_by: 'admin',
             currentAdminPhone: adminPhone,
             cancel_reason: cancelReason.trim() || '',
-            admin_notes: cancelReason.trim() || '', // Lưu lý do hủy vào admin_notes
           }),
         });
 
@@ -450,6 +459,27 @@ export default function AdminOrders() {
   const handleEdit = (order) => {
     setSelectedOrder(order);
     setEditingStatus(order.status);
+    setEditingAdminNotes(order.admin_notes || '');
+    setEditingCustomerName(order.customer_name || '');
+    setEditingCustomerPhone(order.customer_phone || '');
+    setEditingCustomerAddress(order.customer_address || '');
+    setEditingTotalPrice(order.total_price || 0);
+    // Copy items array để có thể chỉnh sửa
+    if (order.items && Array.isArray(order.items)) {
+      setEditingItems([...order.items]);
+    } else if (order.món_id) {
+      // Convert single item to array format
+      setEditingItems([{
+        món_id: order.món_id,
+        tên_món: order.tên_món || '',
+        giá: order.giá || 0,
+        quantity: order.quantity || 1,
+        category_id: order.category_id || 0,
+        category_name: order.category_name || '',
+      }]);
+    } else {
+      setEditingItems([]);
+    }
     setShowEditModal(true);
   };
 
@@ -959,21 +989,34 @@ export default function AdminOrders() {
             className="bg-card rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto relative"
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              onClick={() => {
-                setShowDetailModal(false);
-                setSelectedOrder(null);
-              }}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
-              aria-label="Đóng"
-            >
-              <X className="w-5 h-5" />
-            </button>
             <div className="p-6">
-              <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center justify-between mb-6 relative">
+              <div className="flex items-center gap-3">
                 <ShoppingCart className="w-6 h-6 text-primary" />
                 <h2 className="text-2xl font-bold text-card-foreground">Chi tiết đơn hàng</h2>
               </div>
+              <div className="flex items-center gap-2">
+                {selectedOrder.status_history && selectedOrder.status_history.length > 0 && (
+                  <button
+                    onClick={() => setShowHistoryModal(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium cursor-pointer"
+                  >
+                    <History className="w-4 h-4" />
+                    <span>Lịch sử thay đổi</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    setSelectedOrder(null);
+                  }}
+                  className="p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
+                  aria-label="Đóng"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
 
               <div className="space-y-6">
                 {/* Order Info */}
@@ -1059,12 +1102,28 @@ export default function AdminOrders() {
                 </div>
 
                 {/* Notes */}
-                {selectedOrder.notes && (
+                {(selectedOrder.notes || selectedOrder.admin_notes || selectedOrder.cancel_reason) && (
                   <div className="border-t border-border pt-4">
                     <h3 className="font-semibold text-card-foreground mb-3">Ghi chú</h3>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Từ khách hàng:</p>
-                      <p className="text-sm text-card-foreground">{selectedOrder.notes}</p>
+                    <div className="space-y-3">
+                      {selectedOrder.notes && (
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-1">Từ khách hàng:</p>
+                          <p className="text-sm text-card-foreground">{selectedOrder.notes}</p>
+                        </div>
+                      )}
+                      {selectedOrder.admin_notes && (
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-1">Ghi chú từ admin:</p>
+                          <p className="text-sm text-card-foreground">{selectedOrder.admin_notes}</p>
+                        </div>
+                      )}
+                      {selectedOrder.cancel_reason && (
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-1">Lý do hủy đơn hàng:</p>
+                          <p className="text-sm text-destructive">{selectedOrder.cancel_reason}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -1082,11 +1141,17 @@ export default function AdminOrders() {
             setShowEditModal(false);
             setSelectedOrder(null);
             setEditingStatus('');
+            setEditingAdminNotes('');
+            setEditingCustomerName('');
+            setEditingCustomerPhone('');
+            setEditingCustomerAddress('');
+            setEditingTotalPrice(0);
+            setEditingItems([]);
           }}
         >
           <div 
             ref={editModalRef}
-            className="bg-card rounded-lg max-w-md w-full p-6 border border-border relative"
+            className="bg-card rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 border border-border relative"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -1094,6 +1159,12 @@ export default function AdminOrders() {
                 setShowEditModal(false);
                 setSelectedOrder(null);
                 setEditingStatus('');
+                setEditingAdminNotes('');
+                setEditingCustomerName('');
+                setEditingCustomerPhone('');
+                setEditingCustomerAddress('');
+                setEditingTotalPrice(0);
+                setEditingItems([]);
               }}
               className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
               aria-label="Đóng"
@@ -1106,6 +1177,134 @@ export default function AdminOrders() {
             </div>
 
             <div className="space-y-4">
+              {/* Customer Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Tên khách hàng <span className="text-destructive">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={editingCustomerName}
+                    onChange={(e) => setEditingCustomerName(e.target.value)}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Số điện thoại <span className="text-destructive">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={editingCustomerPhone}
+                    onChange={(e) => setEditingCustomerPhone(e.target.value)}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Địa chỉ
+                </label>
+                <input
+                  type="text"
+                  value={editingCustomerAddress}
+                  onChange={(e) => setEditingCustomerAddress(e.target.value)}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+
+              {/* Items */}
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Danh sách món
+                </label>
+                <div className="space-y-2 max-h-60 overflow-y-auto border border-border rounded-lg p-3 bg-muted/30">
+                  {editingItems.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">Chưa có món nào</p>
+                  ) : (
+                    editingItems.map((item, index) => (
+                      <div key={index} className="flex items-center gap-2 p-2 bg-card rounded border border-border">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-card-foreground">{item.tên_món || 'N/A'}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <input
+                              type="number"
+                              min="1"
+                              value={item.quantity || 1}
+                              onChange={(e) => {
+                                const newItems = [...editingItems];
+                                newItems[index].quantity = parseInt(e.target.value) || 1;
+                                setEditingItems(newItems);
+                                // Auto calculate total
+                                const total = newItems.reduce((sum, i) => sum + (i.giá || 0) * (i.quantity || 1), 0);
+                                setEditingTotalPrice(total);
+                              }}
+                              className="w-16 px-2 py-1 bg-input border border-border rounded text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                            />
+                            <span className="text-xs text-muted-foreground">x</span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="1000"
+                              value={item.giá || 0}
+                              onChange={(e) => {
+                                const newItems = [...editingItems];
+                                newItems[index].giá = parseInt(e.target.value) || 0;
+                                setEditingItems(newItems);
+                                // Auto calculate total
+                                const total = newItems.reduce((sum, i) => sum + (i.giá || 0) * (i.quantity || 1), 0);
+                                setEditingTotalPrice(total);
+                              }}
+                              className="w-24 px-2 py-1 bg-input border border-border rounded text-card-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                            />
+                            <span className="text-xs text-muted-foreground">=</span>
+                            <span className="text-sm font-medium text-primary">
+                              {formatCurrency((item.giá || 0) * (item.quantity || 1))}
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const newItems = editingItems.filter((_, i) => i !== index);
+                            setEditingItems(newItems);
+                            // Auto calculate total
+                            const total = newItems.reduce((sum, i) => sum + (i.giá || 0) * (i.quantity || 1), 0);
+                            setEditingTotalPrice(total);
+                          }}
+                          className="p-1.5 text-destructive hover:bg-destructive/10 rounded transition-colors cursor-pointer"
+                          aria-label="Xóa món"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Total Price */}
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Tổng tiền <span className="text-destructive">*</span>
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1000"
+                  value={editingTotalPrice}
+                  onChange={(e) => setEditingTotalPrice(parseInt(e.target.value) || 0)}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  required
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Tự động tính: {formatCurrency(editingItems.reduce((sum, item) => sum + (item.giá || 0) * (item.quantity || 1), 0))}
+                </p>
+              </div>
+
+              {/* Status */}
               <div>
                 <label className="block text-sm font-medium text-card-foreground mb-2">
                   Trạng thái
@@ -1123,11 +1322,145 @@ export default function AdminOrders() {
                 </select>
               </div>
 
+              {/* Admin Notes */}
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Ghi chú từ admin
+                </label>
+                <textarea
+                  value={editingAdminNotes}
+                  onChange={(e) => setEditingAdminNotes(e.target.value)}
+                  placeholder="Nhập ghi chú từ admin..."
+                  rows={3}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none text-sm"
+                  maxLength={500}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {editingAdminNotes.length}/500 ký tự
+                </p>
+              </div>
+
               <div className="flex gap-3 pt-4">
                 <button
-                  onClick={() => {
-                    setShowEditModal(false);
-                    handleUpdateStatus(selectedOrder.order_id, editingStatus);
+                  onClick={async () => {
+                    try {
+                      // Lấy thông tin admin từ localStorage
+                      const adminData = localStorage.getItem('admin_data');
+                      let adminPhone = null;
+                      if (adminData) {
+                        try {
+                          const admin = JSON.parse(adminData);
+                          adminPhone = admin.phone;
+                        } catch (e) {
+                          console.error('Error parsing admin data:', e);
+                        }
+                      }
+
+                      const headers = {
+                        'Content-Type': 'application/json',
+                      };
+                      
+                      if (adminPhone) {
+                        headers['x-admin-phone'] = adminPhone;
+                      }
+
+                      // Validate
+                      if (!editingCustomerName.trim()) {
+                        if (typeof window !== 'undefined') {
+                          window.dispatchEvent(
+                            new CustomEvent('showToast', {
+                              detail: { message: 'Tên khách hàng là bắt buộc', type: 'error' },
+                            })
+                          );
+                        }
+                        return;
+                      }
+                      if (!editingCustomerPhone.trim()) {
+                        if (typeof window !== 'undefined') {
+                          window.dispatchEvent(
+                            new CustomEvent('showToast', {
+                              detail: { message: 'Số điện thoại là bắt buộc', type: 'error' },
+                            })
+                          );
+                        }
+                        return;
+                      }
+                      if (editingItems.length === 0) {
+                        if (typeof window !== 'undefined') {
+                          window.dispatchEvent(
+                            new CustomEvent('showToast', {
+                              detail: { message: 'Đơn hàng phải có ít nhất 1 món', type: 'error' },
+                            })
+                          );
+                        }
+                        return;
+                      }
+                      if (editingTotalPrice <= 0) {
+                        if (typeof window !== 'undefined') {
+                          window.dispatchEvent(
+                            new CustomEvent('showToast', {
+                              detail: { message: 'Tổng tiền phải > 0', type: 'error' },
+                            })
+                          );
+                        }
+                        return;
+                      }
+
+                      const response = await fetch(`/api/orders/${selectedOrder.order_id}`, {
+                        method: 'PUT',
+                        headers,
+                        body: JSON.stringify({
+                          status: editingStatus,
+                          admin_notes: editingAdminNotes.trim() || '',
+                          customer_name: editingCustomerName.trim(),
+                          customer_phone: editingCustomerPhone.trim(),
+                          customer_address: editingCustomerAddress.trim() || '',
+                          items: editingItems,
+                          total_price: editingTotalPrice,
+                          changed_by: 'admin',
+                          currentAdminPhone: adminPhone,
+                        }),
+                      });
+
+                      const data = await response.json();
+
+                      if (data.success) {
+                        if (typeof window !== 'undefined') {
+                          window.dispatchEvent(
+                            new CustomEvent('showToast', {
+                              detail: { message: 'Đã cập nhật đơn hàng thành công!', type: 'success' },
+                            })
+                          );
+                        }
+                        setShowEditModal(false);
+                        setSelectedOrder(null);
+                        setEditingStatus('');
+                        setEditingAdminNotes('');
+                        setEditingCustomerName('');
+                        setEditingCustomerPhone('');
+                        setEditingCustomerAddress('');
+                        setEditingTotalPrice(0);
+                        setEditingItems([]);
+                        fetchOrders();
+                      } else {
+                        if (typeof window !== 'undefined') {
+                          window.dispatchEvent(
+                            new CustomEvent('showToast', {
+                              detail: { message: data.error || 'Không thể cập nhật đơn hàng', type: 'error' },
+                            })
+                          );
+                        }
+                      }
+                    } catch (err) {
+                      console.error('Error updating order:', err);
+                      if (typeof window !== 'undefined') {
+                        window.dispatchEvent(
+                          new CustomEvent('showToast', {
+                            detail: { message: 'Lỗi khi cập nhật đơn hàng', type: 'error' },
+                          })
+                        );
+                      }
+                    }
                   }}
                   className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer"
                 >
@@ -1138,6 +1471,12 @@ export default function AdminOrders() {
                     setShowEditModal(false);
                     setSelectedOrder(null);
                     setEditingStatus('');
+                    setEditingAdminNotes('');
+                    setEditingCustomerName('');
+                    setEditingCustomerPhone('');
+                    setEditingCustomerAddress('');
+                    setEditingTotalPrice(0);
+                    setEditingItems([]);
                   }}
                   className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium cursor-pointer"
                 >
@@ -1263,6 +1602,235 @@ export default function AdminOrders() {
                   'Xác nhận hủy'
                 )}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Status History Modal */}
+      {showHistoryModal && selectedOrder && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowHistoryModal(false)}
+        >
+          <div 
+            className="bg-card rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 border border-border"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <History className="w-6 h-6 text-primary" />
+                <h2 className="text-2xl font-bold text-card-foreground">Lịch sử thay đổi</h2>
+              </div>
+              <button
+                onClick={() => setShowHistoryModal(false)}
+                className="p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
+                aria-label="Đóng"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div className="mb-4">
+                <p className="text-sm text-muted-foreground mb-1">Order ID</p>
+                <p className="font-medium text-card-foreground">{selectedOrder.order_id}</p>
+              </div>
+
+              {/* Change History */}
+              {selectedOrder.change_history && selectedOrder.change_history.length > 0 ? (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-card-foreground">Lịch sử chỉnh sửa</h3>
+                  {selectedOrder.change_history.map((changeEntry, index) => {
+                    const isLast = index === selectedOrder.change_history.length - 1;
+                    return (
+                      <div key={index} className="relative border-l-2 border-border pl-4 pb-4">
+                        <div className="flex items-start gap-3">
+                          <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center border-2 ${
+                            isLast 
+                              ? 'bg-primary border-primary text-primary-foreground' 
+                              : 'bg-muted border-border text-muted-foreground'
+                          }`}>
+                            <Edit2 className="w-3 h-3" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm font-medium text-card-foreground">
+                                {formatDate(changeEntry.changed_at)}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {changeEntry.changed_by_detail ? (
+                                  <>
+                                    {changeEntry.changed_by_detail.name || changeEntry.changed_by_detail.phone || changeEntry.changed_by || 'N/A'}
+                                    {changeEntry.changed_by_detail.role && (
+                                      <span className="ml-1">
+                                        ({changeEntry.changed_by_detail.role === 'super_admin' ? 'Super Admin' : changeEntry.changed_by_detail.role === 'manager' ? 'Manager' : 'Admin'})
+                                      </span>
+                                    )}
+                                  </>
+                                ) : (
+                                  changeEntry.changed_by || 'N/A'
+                                )}
+                              </span>
+                            </div>
+                            
+                            {/* Display changes */}
+                            {changeEntry.changes && changeEntry.changes.length > 0 && (
+                              <div className="space-y-2 mt-2">
+                                {changeEntry.changes.map((change, changeIndex) => {
+                                  const getFieldLabel = (field) => {
+                                    const labels = {
+                                      customer_name: 'Tên khách hàng',
+                                      customer_phone: 'Số điện thoại',
+                                      customer_address: 'Địa chỉ',
+                                      total_price: 'Tổng tiền',
+                                      status: 'Trạng thái',
+                                      admin_notes: 'Ghi chú admin',
+                                      items: 'Danh sách món',
+                                    };
+                                    return labels[field] || field;
+                                  };
+                                  
+                                  const field = change.field;
+                                  const oldValue = change.old_value;
+                                  const newValue = change.new_value;
+                                  
+                                  const formatDisplayValue = (value, fieldName) => {
+                                    if (value === null || value === undefined || value === '') return '(trống)';
+                                    if (fieldName === 'total_price') return formatCurrency(parseFloat(value) || 0);
+                                    if (fieldName === 'status') {
+                                      const StatusIcon = STATUS_CONFIG[value]?.icon || Clock;
+                                      return (
+                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full border ${
+                                          STATUS_CONFIG[value]?.color || 'bg-gray-500/20 text-gray-600 border-gray-500/50'
+                                        }`}>
+                                          <StatusIcon className="w-3 h-3" />
+                                          {STATUS_CONFIG[value]?.label || value}
+                                        </span>
+                                      );
+                                    }
+                                    if (fieldName === 'items') {
+                                      try {
+                                        const items = typeof value === 'string' ? JSON.parse(value) : value;
+                                        if (Array.isArray(items)) {
+                                          return `${items.length} món: ${items.map(i => `${i.tên_món} (x${i.quantity})`).join(', ')}`;
+                                        }
+                                      } catch (e) {
+                                        return String(value);
+                                      }
+                                    }
+                                    return String(value);
+                                  };
+                                  
+                                  return (
+                                    <div key={changeIndex} className="bg-muted rounded-lg p-3 border border-border">
+                                      <p className="text-sm font-medium text-card-foreground mb-2">
+                                        {getFieldLabel(field)}
+                                      </p>
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                                        <div>
+                                          <p className="text-xs text-muted-foreground mb-1">Giá trị cũ:</p>
+                                          <div className="text-card-foreground break-all">
+                                            {(() => {
+                                              const formatted = formatDisplayValue(oldValue, field);
+                                              return typeof formatted === 'string' ? (
+                                                <span className="line-through text-muted-foreground">{formatted}</span>
+                                              ) : (
+                                                formatted
+                                              );
+                                            })()}
+                                          </div>
+                                        </div>
+                                        <div>
+                                          <p className="text-xs text-muted-foreground mb-1">Giá trị mới:</p>
+                                          <div className="text-card-foreground break-all">
+                                            {(() => {
+                                              const formatted = formatDisplayValue(newValue, field);
+                                              return typeof formatted === 'string' ? (
+                                                <span className="text-primary font-medium">{formatted}</span>
+                                              ) : (
+                                                formatted
+                                              );
+                                            })()}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-muted-foreground text-sm">Chưa có lịch sử chỉnh sửa</p>
+                </div>
+              )}
+
+              {/* Status History */}
+              {selectedOrder.status_history && selectedOrder.status_history.length > 0 && (
+                <div className="space-y-4 border-t border-border pt-4">
+                  <h3 className="text-lg font-semibold text-card-foreground">Lịch sử thay đổi trạng thái</h3>
+                  <div className="space-y-3">
+                    {selectedOrder.status_history.map((history, index) => {
+                      const StatusIcon = STATUS_CONFIG[history.status]?.icon || Clock;
+                      const isLast = index === selectedOrder.status_history.length - 1;
+                      return (
+                        <div key={index} className="relative border-l-2 border-border pl-4 pb-4">
+                          <div className="flex items-start gap-3">
+                            <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center border-2 ${
+                              isLast 
+                                ? 'bg-primary border-primary text-primary-foreground' 
+                                : 'bg-muted border-border text-muted-foreground'
+                            }`}>
+                              <StatusIcon className="w-3 h-3" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full border ${
+                                  STATUS_CONFIG[history.status]?.color || 'bg-gray-500/20 text-gray-600 border-gray-500/50'
+                                }`}>
+                                  <StatusIcon className="w-3 h-3" />
+                                  {STATUS_CONFIG[history.status]?.label || history.status}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {formatDate(history.changed_at)}
+                                </span>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                Thay đổi bởi: <span className="font-medium text-card-foreground">
+                                  {history.changed_by_detail ? (
+                                    <>
+                                      {history.changed_by_detail.name || history.changed_by_detail.phone || history.changed_by || 'N/A'}
+                                      {history.changed_by_detail.role && (
+                                        <span className="text-xs ml-1 text-muted-foreground">
+                                          ({history.changed_by_detail.role === 'super_admin' ? 'Super Admin' : history.changed_by_detail.role === 'manager' ? 'Manager' : 'Admin'})
+                                        </span>
+                                      )}
+                                    </>
+                                  ) : (
+                                    history.changed_by || 'N/A'
+                                  )}
+                                </span>
+                              </p>
+                              {history.changed_by_detail && history.changed_by_detail.email && (
+                                <p className="text-xs text-muted-foreground">
+                                  Email: {history.changed_by_detail.email}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

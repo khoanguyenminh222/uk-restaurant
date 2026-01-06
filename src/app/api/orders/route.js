@@ -198,7 +198,30 @@ export async function POST(request) {
     }
 
     // Step 2: Check email verified
-    if (!isEmailVerified(normalizedEmail)) {
+    // Skip email verification if user is logged in (user_id exists) or if it's an admin
+    let skipEmailVerification = false;
+    if (body.user_id) {
+      // Check if user exists and is logged in
+      try {
+        const user = await db.collection('users').findOne({ 
+          user_id: body.user_id,
+          is_deleted: { $ne: true }
+        });
+        if (user) {
+          // User is logged in, skip email verification
+          skipEmailVerification = true;
+          // Also check if user is admin/manager/super_admin
+          if (user.role && ['admin', 'manager', 'super_admin'].includes(user.role)) {
+            skipEmailVerification = true;
+          }
+        }
+      } catch (userError) {
+        console.error('Error checking user login:', userError);
+        // Continue with email verification check
+      }
+    }
+    
+    if (!skipEmailVerification && !isEmailVerified(normalizedEmail)) {
       return NextResponse.json(
         {
           success: false,
@@ -273,6 +296,58 @@ export async function POST(request) {
     // Set timestamps
     body.created_at = new Date();
     body.updated_at = new Date();
+
+    // Initialize status_history with initial status
+    if (!body.status_history) {
+      // Prepare changed_by_detail for initial status
+      let changedByDetail = null;
+      if (body.user_id) {
+        try {
+          const user = await db.collection('users').findOne({ 
+            user_id: body.user_id,
+            is_deleted: { $ne: true }
+          });
+          if (user) {
+            if (user.role && ['admin', 'manager', 'super_admin'].includes(user.role)) {
+              // Admin/Manager/Super Admin
+              changedByDetail = {
+                type: 'admin',
+                user_id: user.user_id || user._id?.toString() || '',
+                name: user.name || '',
+                phone: user.phone || '',
+                email: user.email || '',
+                role: user.role || 'admin',
+              };
+            } else {
+              // Regular user
+              changedByDetail = {
+                type: 'user',
+                user_id: user.user_id || user._id?.toString() || '',
+                name: user.name || '',
+                phone: user.phone || '',
+                email: user.email || '',
+              };
+            }
+          }
+        } catch (userError) {
+          console.error('Error fetching user info for status_history:', userError);
+        }
+      }
+      
+      // Fallback to system if no detail
+      if (!changedByDetail) {
+        changedByDetail = {
+          type: 'system',
+        };
+      }
+      
+      body.status_history = [{
+        status: body.status || 'pending',
+        changed_at: new Date(),
+        changed_by: changedByDetail.type === 'admin' ? 'admin' : (changedByDetail.type === 'user' ? 'user' : 'system'),
+        changed_by_detail: changedByDetail,
+      }];
+    }
 
     // Insert order
     const result = await db.collection('orders').insertOne(body);

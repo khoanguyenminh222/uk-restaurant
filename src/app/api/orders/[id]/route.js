@@ -102,6 +102,94 @@ export async function PUT(request, { params }) {
       updated_at: new Date(),
     };
 
+    // Track changes for change_history
+    const changes = [];
+    
+    // Helper function to format value for display
+    const formatValue = (value) => {
+      if (value === null || value === undefined) return null;
+      if (Array.isArray(value)) return JSON.stringify(value);
+      if (typeof value === 'object') return JSON.stringify(value);
+      return value;
+    };
+
+    // Helper function to compare and track changes
+    const trackChange = (field, oldValue, newValue) => {
+      const formattedOld = formatValue(oldValue);
+      const formattedNew = formatValue(newValue);
+      
+      // Only track if values are different
+      if (JSON.stringify(formattedOld) !== JSON.stringify(formattedNew)) {
+        changes.push({
+          field: field,
+          old_value: formattedOld,
+          new_value: formattedNew,
+        });
+      }
+    };
+
+    // Track changes for each field
+    if (body.customer_name !== undefined && body.customer_name !== order.customer_name) {
+      trackChange('customer_name', order.customer_name, body.customer_name);
+    }
+    
+    if (body.customer_phone !== undefined && body.customer_phone !== order.customer_phone) {
+      trackChange('customer_phone', order.customer_phone, body.customer_phone);
+    }
+    
+    if (body.customer_address !== undefined && body.customer_address !== order.customer_address) {
+      trackChange('customer_address', order.customer_address || '', body.customer_address || '');
+    }
+    
+    if (body.total_price !== undefined && body.total_price !== order.total_price) {
+      trackChange('total_price', order.total_price, body.total_price);
+    }
+    
+    if (body.admin_notes !== undefined && body.admin_notes !== (order.admin_notes || '')) {
+      trackChange('admin_notes', order.admin_notes || '', body.admin_notes || '');
+    }
+    
+    // Track items changes (compare JSON strings)
+    if (body.items !== undefined) {
+      // Normalize old items
+      let oldItems = null;
+      if (order.items && Array.isArray(order.items) && order.items.length > 0) {
+        oldItems = JSON.stringify(order.items);
+      } else if (order.món_id) {
+        // Convert single item to array format for comparison
+        oldItems = JSON.stringify([{
+          món_id: order.món_id,
+          tên_món: order.tên_món || '',
+          giá: order.giá || 0,
+          quantity: order.quantity || 1,
+          category_id: order.category_id || 0,
+          category_name: order.category_name || '',
+        }]);
+      }
+      
+      // Normalize new items
+      let newItems = null;
+      if (Array.isArray(body.items) && body.items.length > 0) {
+        newItems = JSON.stringify(body.items);
+      }
+      
+      if (oldItems !== newItems) {
+        trackChange('items', order.items || (order.món_id ? [{
+          món_id: order.món_id,
+          tên_món: order.tên_món || '',
+          giá: order.giá || 0,
+          quantity: order.quantity || 1,
+          category_id: order.category_id || 0,
+          category_name: order.category_name || '',
+        }] : null), body.items || null);
+      }
+    }
+    
+    // Track status change (will also be in status_history)
+    if (body.status && body.status !== order.status) {
+      trackChange('status', order.status, body.status);
+    }
+
     if (body.status) {
       updateData.status = body.status;
       
@@ -111,10 +199,52 @@ export async function PUT(request, { params }) {
       } else {
         updateData.status_history = [...order.status_history];
       }
+      
+      // Prepare changed_by_detail
+      let changedByDetail = null;
+      if (adminInfo) {
+        // Admin/Manager/Super Admin
+        changedByDetail = {
+          type: 'admin',
+          user_id: adminInfo.user_id || adminInfo._id?.toString() || '',
+          name: adminInfo.name || '',
+          phone: adminInfo.phone || '',
+          email: adminInfo.email || '',
+          role: adminInfo.role || 'admin',
+        };
+      } else if (body.user_id) {
+        // User (nếu có user_id trong body)
+        try {
+          const user = await db.collection('users').findOne({ 
+            user_id: body.user_id,
+            role: { $ne: 'admin' } // Không phải admin
+          });
+          if (user) {
+            changedByDetail = {
+              type: 'user',
+              user_id: user.user_id || user._id?.toString() || '',
+              name: user.name || '',
+              phone: user.phone || '',
+              email: user.email || '',
+            };
+          }
+        } catch (userError) {
+          console.error('Error fetching user info:', userError);
+        }
+      }
+      
+      // Fallback to system if no detail
+      if (!changedByDetail) {
+        changedByDetail = {
+          type: body.changed_by || 'system',
+        };
+      }
+      
       updateData.status_history.push({
         status: body.status,
         changed_at: new Date(),
-        changed_by: body.changed_by || 'admin',
+        changed_by: body.changed_by || (adminInfo ? 'admin' : 'system'),
+        changed_by_detail: changedByDetail,
       });
     }
 
@@ -143,10 +273,110 @@ export async function PUT(request, { params }) {
       updateData.customer_address = body.customer_address;
     }
 
-    // Update order
+    // Update items
+    if (body.items !== undefined) {
+      if (Array.isArray(body.items) && body.items.length > 0) {
+        updateData.items = body.items;
+        // Clear single item fields if using items array
+        updateData.món_id = undefined;
+        updateData.tên_món = undefined;
+        updateData.giá = undefined;
+        updateData.quantity = undefined;
+        updateData.category_id = undefined;
+        updateData.category_name = undefined;
+      } else {
+        // Empty items array - keep existing items or set to empty
+        updateData.items = [];
+      }
+    }
+
+    // Update total_price
+    if (body.total_price !== undefined) {
+      updateData.total_price = parseFloat(body.total_price);
+    }
+
+    // Add to change_history if there are any changes
+    if (changes.length > 0) {
+      // Prepare changed_by_detail
+      let changedByDetail = null;
+      if (adminInfo) {
+        changedByDetail = {
+          type: 'admin',
+          user_id: adminInfo.user_id || adminInfo._id?.toString() || '',
+          name: adminInfo.name || '',
+          phone: adminInfo.phone || '',
+          email: adminInfo.email || '',
+          role: adminInfo.role || 'admin',
+        };
+      } else if (body.user_id) {
+        try {
+          const user = await db.collection('users').findOne({ 
+            user_id: body.user_id,
+            role: { $ne: 'admin' }
+          });
+          if (user) {
+            changedByDetail = {
+              type: 'user',
+              user_id: user.user_id || user._id?.toString() || '',
+              name: user.name || '',
+              phone: user.phone || '',
+              email: user.email || '',
+            };
+          }
+        } catch (userError) {
+          console.error('Error fetching user info:', userError);
+        }
+      }
+      
+      if (!changedByDetail) {
+        changedByDetail = {
+          type: body.changed_by || (adminInfo ? 'admin' : 'system'),
+        };
+      }
+      
+      // Initialize change_history if not exists
+      if (!order.change_history) {
+        updateData.change_history = [];
+      } else {
+        updateData.change_history = [...order.change_history];
+      }
+      
+      // Add new change entry
+      updateData.change_history.push({
+        changed_at: new Date(),
+        changed_by: body.changed_by || (adminInfo ? 'admin' : 'system'),
+        changed_by_detail: changedByDetail,
+        changes: changes,
+      });
+    }
+
+    // Update order - Use $set for defined fields, $unset for undefined fields
+    const unsetFields = {};
+    if (updateData.món_id === undefined && body.items !== undefined) {
+      // Only unset single item fields if items array is being updated
+      unsetFields.món_id = '';
+      unsetFields.tên_món = '';
+      unsetFields.giá = '';
+      unsetFields.quantity = '';
+      unsetFields.category_id = '';
+      unsetFields.category_name = '';
+    }
+    
+    // Remove undefined fields from updateData before $set
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] === undefined) {
+        delete updateData[key];
+      }
+    });
+    
+    const updateOperation = { $set: updateData };
+    if (Object.keys(unsetFields).length > 0) {
+      updateOperation.$unset = unsetFields;
+    }
+
     const result = await db.collection('orders').updateOne(
       { order_id: id },
-      { $set: updateData }
+      updateOperation
     );
 
     if (result.matchedCount === 0) {
@@ -210,15 +440,63 @@ export async function DELETE(request, { params }) {
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
 
-    // Soft delete: set status to deleted
+    // Get order before deleting
+    const order = await db.collection('orders').findOne({ order_id: id });
+    if (!order) {
+      return NextResponse.json(
+        { success: false, error: 'Không tìm thấy đơn hàng' },
+        { status: 404 }
+      );
+    }
+
+    // Soft delete: set status to deleted and add to status_history
+    const updateData = {
+      status: 'deleted',
+      updated_at: new Date(),
+    };
+
+    // Get admin info for status_history
+    let adminInfo = null;
+    try {
+      adminInfo = await getAdminFromToken(request);
+    } catch (adminError) {
+      console.error('Error getting admin info:', adminError);
+    }
+    
+    // Add to status_history
+    if (!order.status_history) {
+      updateData.status_history = [];
+    } else {
+      updateData.status_history = [...order.status_history];
+    }
+    
+    // Prepare changed_by_detail
+    let changedByDetail = null;
+    if (adminInfo) {
+      changedByDetail = {
+        type: 'admin',
+        user_id: adminInfo.user_id || adminInfo._id?.toString() || '',
+        name: adminInfo.name || '',
+        phone: adminInfo.phone || '',
+        email: adminInfo.email || '',
+        role: adminInfo.role || 'admin',
+      };
+    } else {
+      changedByDetail = {
+        type: 'admin', // Default to admin for delete action
+      };
+    }
+    
+    updateData.status_history.push({
+      status: 'deleted',
+      changed_at: new Date(),
+      changed_by: 'admin',
+      changed_by_detail: changedByDetail,
+    });
+
     const result = await db.collection('orders').updateOne(
       { order_id: id },
-      { 
-        $set: { 
-          status: 'deleted',
-          updated_at: new Date(),
-        } 
-      }
+      { $set: updateData }
     );
 
     if (result.matchedCount === 0) {

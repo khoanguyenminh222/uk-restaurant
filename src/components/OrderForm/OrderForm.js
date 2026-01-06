@@ -188,31 +188,34 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
         notes: "",
       })
       
-      // Chỉ mark as verified nếu email có trong verified_emails localStorage và chưa hết hạn
-      // Không tự động mark as verified chỉ vì user có email (admin có thể có email nhưng chưa verify)
+      // Tự động xác thực email cho user/admin đã login
       if (email && typeof window !== "undefined") {
+        // Kiểm tra xem user có phải admin/manager/super_admin không
+        const isAdmin = user.role && ['admin', 'manager', 'super_admin'].includes(user.role)
+        
+        // Nếu là user thường hoặc admin đã login, tự động mark as verified
+        // Lưu vào localStorage với thời gian hết hạn dài (30 ngày cho user đã login)
         const verifiedEmails = JSON.parse(localStorage.getItem('verified_emails') || '{}')
         const emailKey = email.toLowerCase().trim()
-        const verifiedInfo = verifiedEmails[emailKey]
+        const expiresAt = new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)) // 30 ngày
         
-        if (verifiedInfo && verifiedInfo.verified) {
-          // Kiểm tra xem có hết hạn không (theo VERIFIED_SESSION_TTL)
-          const expiresAt = new Date(verifiedInfo.expiresAt)
-          const now = new Date()
-          
-          if (now < expiresAt) {
-            // Email vẫn còn hiệu lực, mark as verified
-            setEmailVerification(prev => ({ 
-              ...prev, 
-              verified: true, 
-              step: 'verified' 
-            }))
-          } else {
-            // Đã hết hạn, xóa khỏi localStorage
-            delete verifiedEmails[emailKey]
-            localStorage.setItem('verified_emails', JSON.stringify(verifiedEmails))
-          }
+        verifiedEmails[emailKey] = {
+          verified: true,
+          verifiedAt: new Date().toISOString(),
+          expiresAt: expiresAt.toISOString(),
+          autoVerified: true, // Đánh dấu là tự động verify (không cần code)
         }
+        localStorage.setItem('verified_emails', JSON.stringify(verifiedEmails))
+        
+        // Mark as verified trong state
+        setEmailVerification(prev => ({ 
+          ...prev, 
+          verified: true, 
+          step: 'verified',
+          error: ""
+        }))
+        
+        console.log(`[Email Verification] ✅ Tự động xác thực email cho user đã login: ${emailKey}${isAdmin ? ` (${user.role})` : ''}`)
       }
     } else {
       // Fill from localStorage (previous orders)
@@ -420,8 +423,16 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
       newErrors.customer_email = "Email là bắt buộc"
     } else if (!validateEmail(formData.customer_email)) {
       newErrors.customer_email = "Email không hợp lệ"
-    } else if (!emailVerification.verified) {
-      newErrors.customer_email = "Email chưa được xác thực"
+    } else {
+      // Kiểm tra xem user có đang login không
+      const user = getUser()
+      const isLoggedIn = user && user.user_id
+      
+      // Nếu user đã login, không cần verify email (API sẽ tự động skip)
+      // Nếu user chưa login, cần verify email
+      if (!isLoggedIn && !emailVerification.verified) {
+        newErrors.customer_email = "Email chưa được xác thực"
+      }
     }
 
     if (!formData.customer_address.trim()) {
@@ -1059,21 +1070,53 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                         handleChange(e)
                         // Reset verification when email changes
                         if (emailVerification.verified) {
-                          setEmailVerification({
-                            step: 'input',
-                            code: "",
-                            sendingCode: false,
-                            verifyingCode: false,
-                            error: "",
-                            verified: false,
-                          })
-                          // Xóa verified email khỏi localStorage khi đổi email
-                          if (typeof window !== "undefined") {
-                            const verifiedEmails = JSON.parse(localStorage.getItem('verified_emails') || '{}')
-                            const oldEmail = formData.customer_email.trim().toLowerCase()
-                            if (oldEmail) {
-                              delete verifiedEmails[oldEmail]
+                          const user = getUser()
+                          const isLoggedIn = user && user.user_id
+                          const newEmail = e.target.value.trim().toLowerCase()
+                          
+                          // Nếu user đã login và email mới khớp với email của user, tự động verify lại
+                          if (isLoggedIn && user.email && newEmail === user.email.toLowerCase()) {
+                            // Tự động verify lại cho user đã login
+                            if (typeof window !== "undefined") {
+                              const verifiedEmails = JSON.parse(localStorage.getItem('verified_emails') || '{}')
+                              const emailKey = newEmail
+                              const expiresAt = new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)) // 30 ngày
+                              
+                              verifiedEmails[emailKey] = {
+                                verified: true,
+                                verifiedAt: new Date().toISOString(),
+                                expiresAt: expiresAt.toISOString(),
+                                autoVerified: true,
+                              }
                               localStorage.setItem('verified_emails', JSON.stringify(verifiedEmails))
+                              
+                              setEmailVerification({
+                                step: 'verified',
+                                code: "",
+                                sendingCode: false,
+                                verifyingCode: false,
+                                error: "",
+                                verified: true,
+                              })
+                            }
+                          } else {
+                            // Reset verification nếu không phải email của user đã login
+                            setEmailVerification({
+                              step: 'input',
+                              code: "",
+                              sendingCode: false,
+                              verifyingCode: false,
+                              error: "",
+                              verified: false,
+                            })
+                            // Xóa verified email khỏi localStorage khi đổi email
+                            if (typeof window !== "undefined") {
+                              const verifiedEmails = JSON.parse(localStorage.getItem('verified_emails') || '{}')
+                              const oldEmail = formData.customer_email.trim().toLowerCase()
+                              if (oldEmail) {
+                                delete verifiedEmails[oldEmail]
+                                localStorage.setItem('verified_emails', JSON.stringify(verifiedEmails))
+                              }
                             }
                           }
                         }
