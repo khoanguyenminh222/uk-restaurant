@@ -207,15 +207,15 @@ export default function Menu({ onAddToCart, onOrderClick }) {
               return 0
             })
             
-            // Giới hạn 6 món
-            const top6Foods = sortedFoods.slice(0, 6)
+            // Giới hạn 5 món
+            const top5Foods = sortedFoods.slice(0, 5)
             
             // Kiểm tra xem có món nào có badge không
-            const hasBadge = top6Foods.some(f => f.matchedThreshold)
+            const hasBadge = top5Foods.some(f => f.matchedThreshold)
             setIsShowingPopular(hasBadge)
             
-            setFoods(top6Foods)
-            applyFilters(top6Foods, searchQuery)
+            setFoods(top5Foods)
+            applyFilters(top5Foods, searchQuery)
             setLoading(false)
             setTimeout(() => {
               setIsTransitioning(false)
@@ -444,14 +444,14 @@ export default function Menu({ onAddToCart, onOrderClick }) {
           </>
         )}
 
-        {/* Menu Preview - Grid 3 cột cân bằng (Giải pháp tối ưu) */}
+        {/* Menu Preview - Grid 5 cột desktop */}
         {!loading && !error && (
           <>
               {filteredFoods.length > 0 ? (
               <>
-                {/* Grid responsive: 2 cột mobile, 3 cột tablet/desktop - Cân bằng tốt nhất */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-5">
-                  {filteredFoods.slice(0, 6).map((food, index) => (
+                {/* Grid responsive: 2 cột mobile, 3 cột tablet, 5 cột desktop */}
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-5">
+                  {filteredFoods.slice(0, 5).map((food, index) => (
                     <div
                       key={food.id || food._id}
                       className="menu-item animate-fade-in-scale"
@@ -472,7 +472,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
                   ))}
                 </div>
 
-                {/* View All Button - Ngay sau 6 items (2 hàng x 3 cột) */}
+                {/* View All Button - Ngay sau 5 items (1 hàng) */}
                 <div className="flex justify-center mt-6 md:mt-8">
                   <button
                     onClick={handleViewAllMenu}

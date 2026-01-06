@@ -85,12 +85,12 @@ export default function MenuCard({ food, onOrderClick, onAddToCart, isPopular = 
       }`}
     >
       {/* Image - Kích thước thay đổi theo size prop */}
-      <div className={`relative w-full overflow-hidden bg-muted shrink-0 ${
+      <div className={`relative w-full overflow-hidden bg-muted shrink-0 flex items-center justify-center ${
         size === "large" 
           ? "h-32 sm:h-40 md:h-48" 
           : size === "medium"
           ? "h-28 sm:h-36 md:h-44"
-          : "h-24 sm:h-28 md:h-32"
+          : "h-36 sm:h-42 md:h-72"
       }`}>
         {food.image ? (
           <Image
@@ -138,17 +138,17 @@ export default function MenuCard({ food, onOrderClick, onAddToCart, isPopular = 
       {/* Content */}
       <div className={`flex flex-col grow ${
         size === "large" 
-          ? "p-3 sm:p-4" 
+          ? "p-4 sm:p-5 md:p-6" 
           : size === "medium"
-          ? "p-2.5 sm:p-3"
-          : "p-2 sm:p-3"
+          ? "p-3 sm:p-4"
+          : "p-2.5 sm:p-3"
       }`}>
         {/* Name */}
-        <h3 className={`font-semibold font-display text-card-foreground mb-1 line-clamp-1 ${
+        <h3 className={`font-semibold font-display text-card-foreground mb-2 line-clamp-2 ${
           size === "large"
-            ? "text-base sm:text-lg md:text-xl"
+            ? "text-lg sm:text-xl md:text-2xl"
             : size === "medium"
-            ? "text-sm sm:text-base"
+            ? "text-base sm:text-lg"
             : "text-sm sm:text-base"
         }`}>
           {food.name}
@@ -156,9 +156,9 @@ export default function MenuCard({ food, onOrderClick, onAddToCart, isPopular = 
 
         {/* Description - Hiển thị nhiều hơn cho large cards */}
         {food.description && (
-          <p className={`text-muted-foreground mb-2 grow ${
+          <p className={`text-muted-foreground mb-3 grow ${
             size === "large"
-              ? "text-xs sm:text-sm md:text-base line-clamp-3"
+              ? "text-sm sm:text-base line-clamp-3"
               : size === "medium"
               ? "hidden sm:block text-xs line-clamp-2"
               : "hidden sm:block text-xs line-clamp-2"
@@ -168,14 +168,14 @@ export default function MenuCard({ food, onOrderClick, onAddToCart, isPopular = 
         )}
 
         {/* Price and Actions */}
-        <div className="flex flex-col gap-1.5 sm:gap-2 mt-auto">
+        <div className="flex flex-col gap-2 sm:gap-3 mt-auto">
           {/* Price */}
           <div className="flex items-center justify-between">
             <span className={`font-bold text-primary ${
               size === "large"
-                ? "text-lg sm:text-xl md:text-2xl"
+                ? "text-xl sm:text-2xl md:text-3xl"
                 : size === "medium"
-                ? "text-base sm:text-lg"
+                ? "text-lg sm:text-xl"
                 : "text-base sm:text-lg"
             }`}>
               {formatCurrency(food.price)}
