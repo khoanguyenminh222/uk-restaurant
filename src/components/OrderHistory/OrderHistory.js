@@ -1,9 +1,19 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { X, Package, Calendar, DollarSign, Filter, Loader2, Eye, XCircle, Clock, CheckCircle, Mail } from "lucide-react"
+import { X, Package, Calendar, DollarSign, Filter, Loader2, Eye, XCircle, Clock, CheckCircle, Mail, History, Edit2, CheckCircle2, Truck } from "lucide-react"
 import { getUser } from "@/utils/user"
 import { formatCurrency } from "@/utils/helpers"
+
+const STATUS_CONFIG = {
+  pending: { label: 'Chờ xử lý', color: 'bg-yellow-500/20 text-yellow-600 border-yellow-500/50', icon: Clock },
+  confirmed: { label: 'Đã xác nhận', color: 'bg-blue-500/20 text-blue-600 border-blue-500/50', icon: CheckCircle2 },
+  preparing: { label: 'Đang chuẩn bị', color: 'bg-orange-500/20 text-orange-600 border-orange-500/50', icon: Package },
+  ready: { label: 'Sẵn sàng', color: 'bg-green-500/20 text-green-600 border-green-500/50', icon: CheckCircle },
+  delivered: { label: 'Đã giao', color: 'bg-emerald-500/20 text-emerald-600 border-emerald-500/50', icon: Truck },
+  completed: { label: 'Hoàn thành', color: 'bg-green-600/20 text-green-700 border-green-600/50', icon: CheckCircle2 },
+  cancelled: { label: 'Đã hủy', color: 'bg-red-500/20 text-red-600 border-red-500/50', icon: XCircle },
+};
 
 export default function OrderHistory({ isOpen, onClose }) {
   const [ordersLoading, setOrdersLoading] = useState(false)
@@ -21,6 +31,7 @@ export default function OrderHistory({ isOpen, onClose }) {
   const [cancelling, setCancelling] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [cancelReason, setCancelReason] = useState('')
+  const [showHistoryModal, setShowHistoryModal] = useState(false)
   const detailModalRef = useRef(null)
 
   // Load user info and orders
@@ -146,9 +157,26 @@ export default function OrderHistory({ isOpen, onClose }) {
   }
 
   // Handle view detail
-  const handleViewDetail = (order) => {
-    setSelectedOrder(order)
-    setShowDetailModal(true)
+  const handleViewDetail = async (order) => {
+    try {
+      // Fetch full order details to get status_history and change_history
+      const response = await fetch(`/api/orders/${order.order_id}`)
+      const data = await response.json()
+      
+      if (data.success) {
+        setSelectedOrder(data.data)
+        setShowDetailModal(true)
+      } else {
+        // Fallback to order from list if API fails
+        setSelectedOrder(order)
+        setShowDetailModal(true)
+      }
+    } catch (err) {
+      console.error("Error fetching order detail:", err)
+      // Fallback to order from list if API fails
+      setSelectedOrder(order)
+      setShowDetailModal(true)
+    }
   }
 
   // Handle cancel order click
@@ -326,13 +354,13 @@ export default function OrderHistory({ isOpen, onClose }) {
                             // Multiple items
                             order.items.map((item, index) => (
                               <p key={index} className="text-sm text-card-foreground">
-                                {item.tên_món} × {item.quantity} - {formatCurrency(item.giá * item.quantity)}
+                                {item.name || item.tên_món} × {item.quantity} - {formatCurrency((item.price || item.giá || 0) * item.quantity)}
                               </p>
                             ))
                           ) : (
-                            // Single item
+                            // Single item (legacy)
                             <p className="text-sm text-card-foreground">
-                              {order.tên_món} × {order.quantity || 1} - {formatCurrency((order.giá || 0) * (order.quantity || 1))}
+                              {order.name || order.tên_món} × {order.quantity || 1} - {formatCurrency((order.price || order.giá || 0) * (order.quantity || 1))}
                             </p>
                           )}
                         </div>
@@ -348,7 +376,7 @@ export default function OrderHistory({ isOpen, onClose }) {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleViewDetail(order)}
-                          className="px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary font-medium rounded-lg transition-colors flex items-center gap-2"
+                          className="px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary font-medium rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
                         >
                           <Eye className="w-4 h-4" />
                           <span className="hidden sm:inline">Chi tiết</span>
@@ -381,20 +409,33 @@ export default function OrderHistory({ isOpen, onClose }) {
             className="bg-card rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto relative border border-border"
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              onClick={() => {
-                setShowDetailModal(false)
-                setSelectedOrder(null)
-              }}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors z-10 cursor-pointer"
-              aria-label="Đóng"
-            >
-              <X className="w-5 h-5" />
-            </button>
             <div className="p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <Package className="w-6 h-6 text-primary" />
-                <h2 className="text-2xl font-bold text-card-foreground">Chi tiết đơn hàng</h2>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <Package className="w-6 h-6 text-primary" />
+                  <h2 className="text-2xl font-bold text-card-foreground">Chi tiết đơn hàng</h2>
+                </div>
+                <div className="flex items-center gap-2">
+                  {selectedOrder.status_history && selectedOrder.status_history.length > 0 && (
+                    <button
+                      onClick={() => setShowHistoryModal(true)}
+                      className="flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium cursor-pointer"
+                    >
+                      <History className="w-4 h-4" />
+                      <span>Lịch sử thay đổi</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      setShowDetailModal(false)
+                      setSelectedOrder(null)
+                    }}
+                    className="p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
+                    aria-label="Đóng"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-6">
@@ -464,17 +505,17 @@ export default function OrderHistory({ isOpen, onClose }) {
                       {selectedOrder.items.map((item, index) => (
                         <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                           <div>
-                            <p className="font-medium text-card-foreground">{item.tên_món}</p>
-                            <p className="text-sm text-muted-foreground">x{item.quantity} - {formatCurrency(item.giá)}</p>
+                            <p className="font-medium text-card-foreground">{item.name || item.tên_món}</p>
+                            <p className="text-sm text-muted-foreground">x{item.quantity} - {formatCurrency(item.price || item.giá || 0)}</p>
                           </div>
-                          <p className="font-medium text-primary">{formatCurrency(item.giá * item.quantity)}</p>
+                          <p className="font-medium text-primary">{formatCurrency((item.price || item.giá || 0) * item.quantity)}</p>
                         </div>
                       ))}
                     </div>
                   ) : (
                     <div className="p-3 bg-muted rounded-lg">
-                      <p className="font-medium text-card-foreground">{selectedOrder.tên_món || 'N/A'}</p>
-                      <p className="text-sm text-muted-foreground">x{selectedOrder.quantity || 1} - {formatCurrency(selectedOrder.giá || 0)}</p>
+                      <p className="font-medium text-card-foreground">{selectedOrder.name || selectedOrder.tên_món || 'N/A'}</p>
+                      <p className="text-sm text-muted-foreground">x{selectedOrder.quantity || 1} - {formatCurrency(selectedOrder.price || selectedOrder.giá || 0)}</p>
                     </div>
                   )}
                 </div>
@@ -493,7 +534,7 @@ export default function OrderHistory({ isOpen, onClose }) {
                     <button
                       onClick={handleCancelClick}
                       disabled={cancelling}
-                      className="w-full py-3 bg-destructive/10 hover:bg-destructive/20 text-destructive font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      className="w-full py-3 bg-destructive/10 hover:bg-destructive/20 text-destructive font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <XCircle className="w-5 h-5" />
                       <span>Hủy đơn hàng</span>
@@ -591,6 +632,239 @@ export default function OrderHistory({ isOpen, onClose }) {
                   </>
                 )}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Status History Modal */}
+      {showHistoryModal && selectedOrder && (
+        <div 
+          className="fixed inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center p-4"
+          style={{ zIndex: 70 }}
+          onClick={() => setShowHistoryModal(false)}
+        >
+          <div 
+            className="bg-card rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 border border-border"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <History className="w-6 h-6 text-primary" />
+                <h2 className="text-2xl font-bold text-card-foreground">Lịch sử thay đổi</h2>
+              </div>
+              <button
+                onClick={() => setShowHistoryModal(false)}
+                className="p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
+                aria-label="Đóng"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div className="mb-4">
+                <p className="text-sm text-muted-foreground mb-1">Mã đơn hàng</p>
+                <p className="font-medium text-card-foreground">{selectedOrder.order_id}</p>
+              </div>
+
+              {/* Get current user for comparison */}
+              {(() => {
+                const currentUser = getUser();
+                const currentUserId = currentUser?.user_id;
+
+                return (
+                  <>
+                    {/* Change History */}
+                    {selectedOrder.change_history && selectedOrder.change_history.length > 0 ? (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-card-foreground">Lịch sử chỉnh sửa</h3>
+                        {selectedOrder.change_history.map((changeEntry, index) => {
+                          const isLast = index === selectedOrder.change_history.length - 1;
+                          const changedByDetail = changeEntry.changed_by_detail;
+                          const isUserChange = changedByDetail?.type === 'user' && changedByDetail?.user_id === currentUserId;
+                          const isAdminOrSystem = changedByDetail?.type === 'admin' || changedByDetail?.type === 'system';
+                          
+                          return (
+                            <div key={index} className="relative border-l-2 border-border pl-4 pb-4">
+                              <div className="flex items-start gap-3">
+                                <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center border-2 ${
+                                  isLast 
+                                    ? 'bg-primary border-primary text-primary-foreground' 
+                                    : 'bg-muted border-border text-muted-foreground'
+                                }`}>
+                                  <Edit2 className="w-3 h-3" />
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="text-sm font-medium text-card-foreground">
+                                      {formatDate(changeEntry.changed_at)}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {isUserChange ? (
+                                        'Của bạn'
+                                      ) : isAdminOrSystem ? (
+                                        changedByDetail?.type === 'admin' ? 'Admin' : 'Hệ thống'
+                                      ) : (
+                                        changeEntry.changed_by || 'N/A'
+                                      )}
+                                    </span>
+                                  </div>
+                                  
+                                  {/* Display changes */}
+                                  {changeEntry.changes && changeEntry.changes.length > 0 && (
+                                    <div className="space-y-2 mt-2">
+                                      {changeEntry.changes.map((change, changeIndex) => {
+                                        const getFieldLabel = (field) => {
+                                          const labels = {
+                                            customer_name: 'Tên khách hàng',
+                                            customer_phone: 'Số điện thoại',
+                                            customer_address: 'Địa chỉ',
+                                            total_price: 'Tổng tiền',
+                                            status: 'Trạng thái',
+                                            admin_notes: 'Ghi chú admin',
+                                            items: 'Danh sách món',
+                                          };
+                                          return labels[field] || field;
+                                        };
+                                        
+                                        const field = change.field;
+                                        const oldValue = change.old_value;
+                                        const newValue = change.new_value;
+                                        
+                                        const formatDisplayValue = (value, fieldName) => {
+                                          if (value === null || value === undefined || value === '') return '(trống)';
+                                          if (fieldName === 'total_price') return formatCurrency(parseFloat(value) || 0);
+                                          if (fieldName === 'status') {
+                                            const StatusIcon = STATUS_CONFIG[value]?.icon || Clock;
+                                            return (
+                                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full border ${
+                                                STATUS_CONFIG[value]?.color || 'bg-gray-500/20 text-gray-600 border-gray-500/50'
+                                              }`}>
+                                                <StatusIcon className="w-3 h-3" />
+                                                {STATUS_CONFIG[value]?.label || value}
+                                              </span>
+                                            );
+                                          }
+                                          if (fieldName === 'items') {
+                                            try {
+                                              const items = typeof value === 'string' ? JSON.parse(value) : value;
+                                              if (Array.isArray(items)) {
+                                                return `${items.length} món: ${items.map(i => `${i.name || i.tên_món} (x${i.quantity})`).join(', ')}`;
+                                              }
+                                            } catch (e) {
+                                              return String(value);
+                                            }
+                                          }
+                                          return String(value);
+                                        };
+                                        
+                                        return (
+                                          <div key={changeIndex} className="bg-muted rounded-lg p-3 border border-border">
+                                            <p className="text-sm font-medium text-card-foreground mb-2">
+                                              {getFieldLabel(field)}
+                                            </p>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                                              <div>
+                                                <p className="text-xs text-muted-foreground mb-1">Giá trị cũ:</p>
+                                                <div className="text-card-foreground break-all">
+                                                  {(() => {
+                                                    const formatted = formatDisplayValue(oldValue, field);
+                                                    return typeof formatted === 'string' ? (
+                                                      <span className="line-through text-muted-foreground">{formatted}</span>
+                                                    ) : (
+                                                      formatted
+                                                    );
+                                                  })()}
+                                                </div>
+                                              </div>
+                                              <div>
+                                                <p className="text-xs text-muted-foreground mb-1">Giá trị mới:</p>
+                                                <div className="text-card-foreground break-all">
+                                                  {(() => {
+                                                    const formatted = formatDisplayValue(newValue, field);
+                                                    return typeof formatted === 'string' ? (
+                                                      <span className="text-primary font-medium">{formatted}</span>
+                                                    ) : (
+                                                      formatted
+                                                    );
+                                                  })()}
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-center py-4">
+                        <p className="text-muted-foreground text-sm">Chưa có lịch sử chỉnh sửa</p>
+                      </div>
+                    )}
+
+                    {/* Status History */}
+                    {selectedOrder.status_history && selectedOrder.status_history.length > 0 && (
+                      <div className="space-y-4 border-t border-border pt-4">
+                        <h3 className="text-lg font-semibold text-card-foreground">Lịch sử thay đổi trạng thái</h3>
+                        <div className="space-y-3">
+                          {selectedOrder.status_history.map((history, index) => {
+                            const StatusIcon = STATUS_CONFIG[history.status]?.icon || Clock;
+                            const isLast = index === selectedOrder.status_history.length - 1;
+                            const changedByDetail = history.changed_by_detail;
+                            const isUserChange = changedByDetail?.type === 'user' && changedByDetail?.user_id === currentUserId;
+                            const isAdminOrSystem = changedByDetail?.type === 'admin' || changedByDetail?.type === 'system';
+                            
+                            return (
+                              <div key={index} className="relative border-l-2 border-border pl-4 pb-4">
+                                <div className="flex items-start gap-3">
+                                  <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center border-2 ${
+                                    isLast 
+                                      ? 'bg-primary border-primary text-primary-foreground' 
+                                      : 'bg-muted border-border text-muted-foreground'
+                                  }`}>
+                                    <StatusIcon className="w-3 h-3" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="flex items-center justify-between mb-1">
+                                      <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full border ${
+                                        STATUS_CONFIG[history.status]?.color || 'bg-gray-500/20 text-gray-600 border-gray-500/50'
+                                      }`}>
+                                        <StatusIcon className="w-3 h-3" />
+                                        {STATUS_CONFIG[history.status]?.label || history.status}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {formatDate(history.changed_at)}
+                                      </span>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                      Thay đổi bởi: <span className="font-medium text-card-foreground">
+                                        {isUserChange ? (
+                                          'Của bạn'
+                                        ) : isAdminOrSystem ? (
+                                          changedByDetail?.type === 'admin' ? 'Admin' : 'Hệ thống'
+                                        ) : (
+                                          history.changed_by || 'N/A'
+                                        )}
+                                      </span>
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </div>
         </div>
