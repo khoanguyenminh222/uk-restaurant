@@ -141,9 +141,6 @@ export default function AdminFood() {
       setSearching(false);
     }
   };
-    setPagination(prev => ({ ...prev, page: 1 }));
-    fetchFood();
-  };
 
   const handleOpenModal = (foodItem = null) => {
     if (foodItem) {
@@ -289,10 +286,8 @@ export default function AdminFood() {
             })
           );
         }
+        handleCloseModal();
         fetchFood();
-        setTimeout(() => {
-          handleCloseModal();
-        }, 1000);
       } else {
         if (typeof window !== 'undefined') {
           window.dispatchEvent(

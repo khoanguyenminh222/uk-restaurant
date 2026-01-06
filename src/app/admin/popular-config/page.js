@@ -219,10 +219,8 @@ export default function AdminPopularConfig() {
             })
           );
         }
+        handleCloseModal();
         fetchThresholds();
-        setTimeout(() => {
-          handleCloseModal();
-        }, 1000);
       } else {
         if (typeof window !== 'undefined') {
           window.dispatchEvent(

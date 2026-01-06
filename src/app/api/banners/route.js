@@ -25,18 +25,13 @@ export async function GET(request) {
           { is_active: { $exists: false } },
           { is_active: null }
         ];
-      } else {
+      } else if (isActive === 'false') {
         // Lấy banner không active
         query.is_active = false;
       }
-    } else {
-      // Mặc định chỉ lấy banner active
-      query.$or = [
-        { is_active: true },
-        { is_active: { $exists: false } },
-        { is_active: null }
-      ];
+      // Nếu isActive === 'all' hoặc giá trị khác, không filter (lấy tất cả)
     }
+    // Nếu không có query param is_active, lấy tất cả banner (để admin panel hiển thị đầy đủ)
 
     // Get banners, sort by order
     const banners = await db

@@ -171,10 +171,8 @@ export default function AdminCategories() {
             })
           );
         }
+        handleCloseModal();
         fetchCategories();
-        setTimeout(() => {
-          handleCloseModal();
-        }, 1000);
       } else {
         if (typeof window !== 'undefined') {
           window.dispatchEvent(
@@ -268,7 +266,7 @@ export default function AdminCategories() {
         </div>
         <button
           onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium"
+          className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer"
         >
           <Plus className="w-5 h-5" />
           <span>Thêm danh mục</span>
@@ -557,8 +555,10 @@ export default function AdminCategories() {
                   value={formData.icon}
                   onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
                   className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="🍽️"
+                  placeholder="🍖"
                 />
+                <p className="text-sm text-muted-foreground">Ví dụ: 🍔, 🍖, 🥤, 🥗, 🌭, 🍚, 🍵, 🍙, 🍰</p>
+                <p className="text-sm text-muted-foreground"> Truy cập <a href="https://emojipedia.org/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">emojipedia.org</a> để tìm emoji</p>
               </div>
 
               <div>

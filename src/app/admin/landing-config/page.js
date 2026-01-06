@@ -179,7 +179,6 @@ export default function AdminLandingConfig() {
   const [saving, setSaving] = useState(false);
   const [config, setConfig] = useState(null);
   const [toast, setToast] = useState({ message: '', isVisible: false });
-  const [saving, setSaving] = useState(false);
 
   // Form states cho từng section
   const [restaurantName, setRestaurantName] = useState('');
