@@ -28,6 +28,7 @@ export default function MenuPage() {
   const [thresholds, setThresholds] = useState([]) // Danh sách ngưỡng từ database
   const [customBadges, setCustomBadges] = useState([]) // Danh sách badge tùy chỉnh (manual_badge không có threshold_id)
   const [popularFoodsMap, setPopularFoodsMap] = useState({}) // Map food_id -> total_quantity
+  const [showValue, setShowValue] = useState(true) // Cài đặt hiển thị giá trị
   const [pagination, setPagination] = useState({ page: 1, limit: 24, total: 0, totalPages: 0 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -126,19 +127,21 @@ export default function MenuPage() {
     return null
   }
 
-  // Fetch thresholds và popular foods song song để tối ưu performance
+  // Fetch thresholds, popular foods và settings song song để tối ưu performance
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch cả hai API song song
-        const [thresholdsResponse, popularFoodsResponse] = await Promise.all([
+        // Fetch cả ba API song song
+        const [thresholdsResponse, popularFoodsResponse, settingsResponse] = await Promise.all([
           fetch('/api/config/popular?sortBy=value'),
-          fetch('/api/food/popular?limit=1000')
+          fetch('/api/food/popular?limit=1000'),
+          fetch('/api/config/popular/settings')
         ])
 
-        const [thresholdsResult, popularFoodsResult] = await Promise.all([
+        const [thresholdsResult, popularFoodsResult, settingsResult] = await Promise.all([
           thresholdsResponse.json(),
-          popularFoodsResponse.json()
+          popularFoodsResponse.json(),
+          settingsResponse.json()
         ])
 
         // Set thresholds
@@ -156,6 +159,11 @@ export default function MenuPage() {
             }
           })
           setPopularFoodsMap(map)
+        }
+
+        // Set showValue
+        if (settingsResult.success && settingsResult.data) {
+          setShowValue(settingsResult.data.show_value !== false)
         }
       } catch (error) {
         console.error('Error fetching data:', error)
@@ -917,9 +925,11 @@ export default function MenuPage() {
                       >
                         {threshold.label}
                       </span>
-                      <span className="text-xs text-muted-foreground font-medium">
-                        (≥{threshold.value})
-                      </span>
+                      {showValue && (
+                        <span className="text-xs text-muted-foreground font-medium">
+                          (≥{threshold.value})
+                        </span>
+                      )}
                     </button>
                   )
                 })}

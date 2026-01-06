@@ -26,6 +26,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
   const [isShowingPopular, setIsShowingPopular] = useState(false) // Đang hiển thị món nổi bật
   const [thresholds, setThresholds] = useState([]) // Danh sách ngưỡng
   const [popularFoodsMap, setPopularFoodsMap] = useState({}) // Map food_id -> total_quantity
+  const [showValue, setShowValue] = useState(true) // Cài đặt hiển thị giá trị
   const menuSectionRef = useRef(null)
   const stickyBarRef = useRef(null)
   const categoryTabsRef = useRef(null) // Ref cho category tabs gốc
@@ -97,18 +98,20 @@ export default function Menu({ onAddToCart, onOrderClick }) {
     return null
   }
 
-  // Fetch thresholds và popular foods song song
+  // Fetch thresholds, popular foods và settings song song
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [thresholdsResponse, popularFoodsResponse] = await Promise.all([
+        const [thresholdsResponse, popularFoodsResponse, settingsResponse] = await Promise.all([
           fetch('/api/config/popular?sortBy=value'),
-          fetch('/api/food/popular?limit=1000')
+          fetch('/api/food/popular?limit=1000'),
+          fetch('/api/config/popular/settings')
         ])
 
-        const [thresholdsResult, popularFoodsResult] = await Promise.all([
+        const [thresholdsResult, popularFoodsResult, settingsResult] = await Promise.all([
           thresholdsResponse.json(),
-          popularFoodsResponse.json()
+          popularFoodsResponse.json(),
+          settingsResponse.json()
         ])
 
         if (thresholdsResult.success && Array.isArray(thresholdsResult.data)) {
@@ -124,6 +127,10 @@ export default function Menu({ onAddToCart, onOrderClick }) {
             }
           })
           setPopularFoodsMap(map)
+        }
+
+        if (settingsResult.success && settingsResult.data) {
+          setShowValue(settingsResult.data.show_value !== false)
         }
       } catch (error) {
         console.error('Error fetching data:', error)
@@ -414,33 +421,72 @@ export default function Menu({ onAddToCart, onOrderClick }) {
             </div>
             
             {/* Hiển thị giá trị các ngưỡng */}
-            {thresholds.length > 0 && (
-              <div className="mb-6 flex flex-wrap items-center justify-center gap-3 md:gap-4">
-                {thresholds.map((threshold) => (
-                  <div
-                    key={threshold._id}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border backdrop-blur-sm"
-                  style={{
-                      backgroundColor: `${threshold.color}10`,
-                      borderColor: `${threshold.color}30`,
-                  }}
-                >
-                    <span className="text-sm">{threshold.icon}</span>
-                    <span 
-                      className="text-xs font-semibold"
+            {(() => {
+              // Lấy manual badges từ 5 món đang hiển thị
+              const top5Foods = filteredFoods.slice(0, 5)
+              const manualBadges = []
+              const thresholdIdsInUse = new Set()
+              
+              top5Foods.forEach(food => {
+                if (food.matchedThreshold?.isManual === true) {
+                  const badge = food.matchedThreshold
+                  // Nếu có _id (từ threshold config) thì đã có trong thresholds rồi, chỉ track lại
+                  if (badge._id) {
+                    thresholdIdsInUse.add(badge._id)
+                  } else {
+                    // Nếu là custom badge (không có _id), thêm vào danh sách
+                    // Kiểm tra duplicate dựa trên label + icon + color
+                    const isDuplicate = manualBadges.some(b => 
+                      b.label === badge.label && 
+                      b.icon === badge.icon && 
+                      b.color === badge.color
+                    )
+                    if (!isDuplicate) {
+                      manualBadges.push(badge)
+                    }
+                  }
+                }
+              })
+              
+              // Kết hợp thresholds và manual badges custom
+              // Loại bỏ duplicate: nếu manual badge có _id thì đã có trong thresholds rồi
+              const allBadges = [
+                ...thresholds,
+                ...manualBadges.filter(b => !b._id) // Chỉ lấy custom badges (không có _id)
+              ]
+              
+              if (allBadges.length === 0) return null
+              
+              return (
+                <div className="mb-6 flex flex-wrap items-center justify-center gap-3 md:gap-4">
+                  {allBadges.map((badge, index) => (
+                    <div
+                      key={badge._id || `manual-${badge.label}-${badge.icon}-${badge.color}-${index}`}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border backdrop-blur-sm"
+                      style={{
+                        backgroundColor: `${badge.color}10`,
+                        borderColor: `${badge.color}30`,
+                      }}
+                    >
+                      <span className="text-sm">{badge.icon}</span>
+                      <span 
+                        className="text-xs font-semibold"
                         style={{
-                        color: threshold.color,
+                          color: badge.color,
                         }}
                       >
-                      {threshold.label}
-                    </span>
-                    <span className="text-xs text-muted-foreground font-medium">
-                      (≥{threshold.value})
-                    </span>
-                      </div>
-                    ))}
+                        {badge.label}
+                      </span>
+                      {showValue && badge._id && badge.value !== undefined && badge.value !== null && (
+                        <span className="text-xs text-muted-foreground font-medium">
+                          (≥{badge.value})
+                        </span>
+                      )}
+                    </div>
+                  ))}
                 </div>
-            )}
+              )
+            })()}
           </>
         )}
 

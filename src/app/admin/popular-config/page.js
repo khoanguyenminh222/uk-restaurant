@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRoleCheck } from '@/hooks/useRoleCheck';
 import Toast from '@/components/Toast/Toast';
-import { TrendingUp, Plus, Edit2, Trash2, Loader2, X, ArrowUp, ArrowDown, Eye } from 'lucide-react';
+import { TrendingUp, Plus, Edit2, Trash2, Loader2, X, ArrowUp, ArrowDown, Eye, Settings } from 'lucide-react';
 
 export default function AdminPopularConfig() {
   // Check if user has permission (only admin and super_admin)
@@ -12,6 +12,8 @@ export default function AdminPopularConfig() {
   const [thresholds, setThresholds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showValue, setShowValue] = useState(true);
+  const [savingSettings, setSavingSettings] = useState(false);
   const [editingThreshold, setEditingThreshold] = useState(null);
   const [formData, setFormData] = useState({
     label: '',
@@ -32,7 +34,62 @@ export default function AdminPopularConfig() {
 
   useEffect(() => {
     fetchThresholds();
+    fetchSettings();
   }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const res = await fetch('/api/config/popular/settings');
+      const data = await res.json();
+      if (data.success) {
+        setShowValue(data.data.show_value !== false);
+      }
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+    }
+  };
+
+  const handleToggleShowValue = async () => {
+    const newValue = !showValue;
+    setSavingSettings(true);
+    try {
+      const res = await fetch('/api/config/popular/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ show_value: newValue }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setShowValue(newValue);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: 'Cập nhật cài đặt thành công!', type: 'success' },
+            })
+          );
+        }
+      } else {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: data.error || 'Lỗi khi cập nhật cài đặt', type: 'error' },
+            })
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error updating settings:', error);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Lỗi khi cập nhật cài đặt', type: 'error' },
+          })
+        );
+      }
+    } finally {
+      setSavingSettings(false);
+    }
+  };
 
   // Listen for toast events
   useEffect(() => {
@@ -161,11 +218,11 @@ export default function AdminPopularConfig() {
       return;
     }
 
-    if (formData.value < 1) {
+    if (formData.value < 0) {
       if (typeof window !== 'undefined') {
         window.dispatchEvent(
           new CustomEvent('showToast', {
-            detail: { message: 'Value phải >= 1', type: 'error' },
+            detail: { message: 'Value phải >= 0', type: 'error' },
           })
         );
       }
@@ -387,6 +444,37 @@ export default function AdminPopularConfig() {
           <Plus className="w-5 h-5" />
           <span>Thêm ngưỡng</span>
         </button>
+      </div>
+
+      {/* Settings Section */}
+      <div className="bg-card rounded-lg border border-border p-6">
+        <h2 className="text-lg font-semibold text-card-foreground mb-4 flex items-center gap-2">
+          <Settings className="w-5 h-5" />
+          Cài đặt hiển thị
+        </h2>
+        <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-card-foreground mb-1">
+              Hiển thị giá trị ngưỡng
+            </label>
+            <p className="text-xs text-muted-foreground">
+              Bật/tắt hiển thị giá trị (≥X) bên cạnh label của badge trên giao diện user
+            </p>
+          </div>
+          <button
+            onClick={handleToggleShowValue}
+            disabled={savingSettings}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+              showValue ? 'bg-primary' : 'bg-destructive'
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                showValue ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
       </div>
 
       {/* Testing Section */}
@@ -616,9 +704,9 @@ export default function AdminPopularConfig() {
                 </label>
                 <input
                   type="number"
-                  min="1"
+                  min="0"
                   value={formData.value}
-                  onChange={(e) => setFormData({ ...formData, value: parseInt(e.target.value) || 1 })}
+                  onChange={(e) => setFormData({ ...formData, value: parseInt(e.target.value) || 0 })}
                   className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                   required
                 />

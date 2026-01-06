@@ -15,10 +15,10 @@ export async function GET(request) {
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
 
-    // Lấy tất cả ngưỡng
+    // Lấy tất cả ngưỡng (loại trừ document settings)
     let thresholds = await db
       .collection('popularConfig')
-      .find({})
+      .find({ type: { $ne: 'settings' } })
       .toArray();
 
     // Sort theo order (tăng dần) hoặc value (giảm dần)

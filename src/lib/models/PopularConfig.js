@@ -9,7 +9,7 @@
  */
 export const PopularConfigSchema = {
   label: String,        // Tên hiển thị (ví dụ: "Bán chạy", "Nổi bật", "Phổ biến")
-  value: Number,        // Số lượng tối thiểu để đạt ngưỡng (>= 1)
+  value: Number,        // Số lượng tối thiểu để đạt ngưỡng (>= 0)
   icon: String,         // Icon emoji (ví dụ: "🔥", "⭐", "⚡", "🏆", "👑", "💎", ...)
   color: String,        // Mã màu hex (ví dụ: "#FF0000", "#0066FF", "#8000FF", ...)
   order: Number,        // Thứ tự hiển thị (1 = cao nhất)
@@ -27,8 +27,8 @@ export function validateThreshold(data) {
     errors.push('Label là bắt buộc');
   }
   
-  if (typeof data.value !== 'number' || data.value < 1 || !Number.isInteger(data.value)) {
-    errors.push('Value phải là số nguyên >= 1');
+  if (typeof data.value !== 'number' || data.value < 0 || !Number.isInteger(data.value)) {
+    errors.push('Value phải là số nguyên >= 0');
   }
   
   if (!data.icon || typeof data.icon !== 'string' || data.icon.trim().length === 0) {
