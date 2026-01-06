@@ -79,8 +79,20 @@ export default function AdminLayout({ children }) {
   }, [isConfigPath]);
 
   const handleLogout = () => {
+    // Xóa admin data
     localStorage.removeItem('admin_data');
     localStorage.removeItem('admin_logged_in');
+    
+    // Xóa user data nếu có (trường hợp admin cũng là user)
+    if (typeof window !== 'undefined') {
+      try {
+        const { clearUser } = require('@/utils/user');
+        clearUser();
+      } catch (error) {
+        console.error('Error clearing user data:', error);
+      }
+    }
+    
     router.push('/admin');
   };
 

@@ -155,6 +155,13 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
   const handleLogout = () => {
     clearUser()
     setIsUserMenuOpen(false)
+    
+    // Xóa thêm admin data nếu có (trường hợp user vừa là user vừa là admin)
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('admin_data')
+      localStorage.removeItem('admin_logged_in')
+    }
+    
     // Save logout message to show after reload
     localStorage.setItem('logout_success_message', 'Đăng xuất thành công!')
     // Reload page to update header

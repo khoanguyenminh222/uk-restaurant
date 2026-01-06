@@ -4,6 +4,7 @@
  */
 
 import { getStorageKey, STORAGE_KEYS } from './storage';
+import { clearCustomerInfo } from './customer';
 
 const USER_STORAGE_KEY = getStorageKey(STORAGE_KEYS.USER);
 
@@ -43,9 +44,26 @@ export function saveUser(user) {
 
 /**
  * Xóa thông tin user (logout)
+ * Cũng xóa customer info và verified emails
  */
 export function clearUser() {
   saveUser(null);
+  
+  // Xóa customer info
+  if (typeof window !== 'undefined') {
+    try {
+      clearCustomerInfo();
+    } catch (error) {
+      console.error('Error clearing customer info:', error);
+    }
+    
+    // Xóa verified emails
+    try {
+      localStorage.removeItem('verified_emails');
+    } catch (error) {
+      console.error('Error clearing verified emails:', error);
+    }
+  }
 }
 
 /**

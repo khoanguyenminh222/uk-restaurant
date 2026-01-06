@@ -39,3 +39,16 @@ export function saveCustomerInfo(customer) {
   }
 }
 
+/**
+ * Xóa thông tin khách hàng khỏi localStorage
+ */
+export function clearCustomerInfo() {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    localStorage.removeItem(CUSTOMER_STORAGE_KEY);
+  } catch (error) {
+    console.error('Error clearing customer info:', error);
+  }
+}
+
