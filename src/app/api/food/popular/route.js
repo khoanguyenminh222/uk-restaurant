@@ -62,20 +62,20 @@ export async function GET(request) {
       );
     }
 
-    // Bước 3: Group by món_id và sum quantity
+    // Bước 3: Group by food_id và sum quantity
     const foodStats = {};
     orderLogs.forEach(log => {
-      const mónId = log.món_id;
-      if (!foodStats[mónId]) {
-        foodStats[mónId] = {
-          món_id: mónId,
-          tên_món: log.tên_món,
+      const foodId = log.food_id;
+      if (!foodStats[foodId]) {
+        foodStats[foodId] = {
+          food_id: foodId,
+          name: log.name,
           category_id: log.category_id,
           category_name: log.category_name,
           total_quantity: 0
         };
       }
-      foodStats[mónId].total_quantity += log.quantity || 0;
+      foodStats[foodId].total_quantity += log.quantity || 0;
     });
 
     // Bước 4: Convert to array và sort theo total_quantity giảm dần
@@ -84,10 +84,10 @@ export async function GET(request) {
       .slice(0, limit);
 
     // Bước 5: Lấy thông tin đầy đủ từ food collection
-    const mónIds = popularFoods.map(f => f.món_id);
+    const foodIds = popularFoods.map(f => f.food_id);
     const foods = await db
       .collection('food')
-      .find({ id: { $in: mónIds }, is_available: { $ne: false } })
+      .find({ id: { $in: foodIds }, is_available: { $ne: false } })
       .toArray();
 
     // Tạo map để dễ lookup
@@ -99,7 +99,7 @@ export async function GET(request) {
     // Merge data: thêm thông tin từ food collection và giữ nguyên thứ tự popular
     const result = popularFoods
       .map(popular => {
-        const food = foodMap[popular.món_id];
+        const food = foodMap[popular.food_id];
         if (!food) return null; // Bỏ qua nếu món không còn tồn tại hoặc không available
         
         return {

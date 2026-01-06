@@ -152,36 +152,17 @@ export async function PUT(request, { params }) {
     // Track items changes (compare JSON strings)
     if (body.items !== undefined) {
       // Normalize old items
-      let oldItems = null;
-      if (order.items && Array.isArray(order.items) && order.items.length > 0) {
-        oldItems = JSON.stringify(order.items);
-      } else if (order.món_id) {
-        // Convert single item to array format for comparison
-        oldItems = JSON.stringify([{
-          món_id: order.món_id,
-          tên_món: order.tên_món || '',
-          giá: order.giá || 0,
-          quantity: order.quantity || 1,
-          category_id: order.category_id || 0,
-          category_name: order.category_name || '',
-        }]);
-      }
+      const oldItems = order.items && Array.isArray(order.items) && order.items.length > 0
+        ? JSON.stringify(order.items)
+        : null;
       
       // Normalize new items
-      let newItems = null;
-      if (Array.isArray(body.items) && body.items.length > 0) {
-        newItems = JSON.stringify(body.items);
-      }
+      const newItems = Array.isArray(body.items) && body.items.length > 0
+        ? JSON.stringify(body.items)
+        : null;
       
       if (oldItems !== newItems) {
-        trackChange('items', order.items || (order.món_id ? [{
-          món_id: order.món_id,
-          tên_món: order.tên_món || '',
-          giá: order.giá || 0,
-          quantity: order.quantity || 1,
-          category_id: order.category_id || 0,
-          category_name: order.category_name || '',
-        }] : null), body.items || null);
+        trackChange('items', order.items || null, body.items || null);
       }
     }
     
@@ -277,13 +258,6 @@ export async function PUT(request, { params }) {
     if (body.items !== undefined) {
       if (Array.isArray(body.items) && body.items.length > 0) {
         updateData.items = body.items;
-        // Clear single item fields if using items array
-        updateData.món_id = undefined;
-        updateData.tên_món = undefined;
-        updateData.giá = undefined;
-        updateData.quantity = undefined;
-        updateData.category_id = undefined;
-        updateData.category_name = undefined;
       } else {
         // Empty items array - keep existing items or set to empty
         updateData.items = [];
@@ -350,18 +324,6 @@ export async function PUT(request, { params }) {
       });
     }
 
-    // Update order - Use $set for defined fields, $unset for undefined fields
-    const unsetFields = {};
-    if (updateData.món_id === undefined && body.items !== undefined) {
-      // Only unset single item fields if items array is being updated
-      unsetFields.món_id = '';
-      unsetFields.tên_món = '';
-      unsetFields.giá = '';
-      unsetFields.quantity = '';
-      unsetFields.category_id = '';
-      unsetFields.category_name = '';
-    }
-    
     // Remove undefined fields from updateData before $set
     Object.keys(updateData).forEach(key => {
       if (updateData[key] === undefined) {
@@ -370,9 +332,6 @@ export async function PUT(request, { params }) {
     });
     
     const updateOperation = { $set: updateData };
-    if (Object.keys(unsetFields).length > 0) {
-      updateOperation.$unset = unsetFields;
-    }
 
     const result = await db.collection('orders').updateOne(
       { order_id: id },

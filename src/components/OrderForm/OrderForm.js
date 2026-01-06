@@ -602,27 +602,15 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
         status: "pending",
       }
 
-      // Add items based on order type
-      if (orderItems.length === 1 && !Array.isArray(items)) {
-        // Single item order
-        const item = orderItems[0]
-        orderData.món_id = item.id || item.food_id
-        orderData.tên_món = item.name
-        orderData.giá = item.price
-        orderData.quantity = item.quantity || 1
-        orderData.category_id = item.category_id
-        orderData.category_name = item.category_name || ""
-      } else {
-        // Multiple items from cart
-        orderData.items = orderItems.map((item) => ({
-          món_id: item.id || item.food_id,
-          tên_món: item.name,
-          giá: item.price,
-          quantity: item.quantity || 1,
-          category_id: item.category_id,
-          category_name: item.category_name || "",
-        }))
-      }
+      // Luôn dùng items array (kể cả khi chỉ có 1 món)
+      orderData.items = orderItems.map((item) => ({
+        food_id: item.id || item.food_id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity || 1,
+        category_id: item.category_id,
+        category_name: item.category_name || "",
+      }))
 
       // Submit order
       const response = await fetch("/api/orders", {

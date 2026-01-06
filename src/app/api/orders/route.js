@@ -288,6 +288,44 @@ export async function POST(request) {
     
     body.order_id = `ORD-${dateStr}-${sequenceStr}`;
 
+    // Chuẩn hóa category_name cho items (đảm bảo luôn có trong order và orderLog)
+    if (body.items && Array.isArray(body.items) && body.items.length > 0) {
+      // Lấy danh sách category_id duy nhất
+      const categoryIds = [
+        ...new Set(
+          body.items
+            .map((item) => item.category_id)
+            .filter((id) => typeof id === 'number')
+        ),
+      ];
+
+      let categoryMap = {};
+      if (categoryIds.length > 0) {
+        try {
+          const categories = await db
+            .collection('categories')
+            .find({ id: { $in: categoryIds } })
+            .toArray();
+
+          categories.forEach((cat) => {
+            categoryMap[cat.id] = cat.name || '';
+          });
+        } catch (catError) {
+          console.error('Error fetching categories for items:', catError);
+        }
+      }
+
+      // Gán category_name nếu thiếu
+      body.items = body.items.map((item) => ({
+        ...item,
+        category_name:
+          item.category_name ||
+          (typeof item.category_id === 'number'
+            ? categoryMap[item.category_id] || ''
+            : item.category_name || ''),
+      }));
+    }
+
     // Set default status
     if (!body.status) {
       body.status = 'pending';
@@ -352,15 +390,14 @@ export async function POST(request) {
     // Insert order
     const result = await db.collection('orders').insertOne(body);
 
-    // Create order log entries
+    // Create order log entries từ items array
     if (body.items && Array.isArray(body.items) && body.items.length > 0) {
-      // Multiple items from cart
       const logEntries = body.items.map((item) => ({
         order_id: body.order_id,
         user_id: body.user_id || null,
-        món_id: item.món_id,
-        tên_món: item.tên_món,
-        giá: item.giá,
+        food_id: item.food_id,
+        name: item.name,
+        price: item.price,
         quantity: item.quantity,
         category_id: item.category_id,
         category_name: item.category_name,
@@ -376,27 +413,6 @@ export async function POST(request) {
         if (logValidation.isValid) {
           await db.collection('orderLog').insertOne(logEntry);
         }
-      }
-    } else if (body.món_id) {
-      // Single item
-      const logEntry = {
-        order_id: body.order_id,
-        user_id: body.user_id || null,
-        món_id: body.món_id,
-        tên_món: body.tên_món || '',
-        giá: body.giá || 0,
-        quantity: body.quantity || 1,
-        category_id: body.category_id || 0,
-        category_name: body.category_name || '',
-        customer_name: body.customer_name,
-        customer_phone: body.customer_phone,
-        customer_address: body.customer_address || '',
-        timestamp: new Date(),
-      };
-
-      const logValidation = validateOrderLog(logEntry);
-      if (logValidation.isValid) {
-        await db.collection('orderLog').insertOne(logEntry);
       }
     }
 

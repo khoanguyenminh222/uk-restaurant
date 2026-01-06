@@ -5,24 +5,17 @@
 export const OrderSchema = {
   order_id: String, // unique - mã đơn hàng
   user_id: String, // optional - có thể null nếu không đăng nhập
-  // Nếu nhiều món (từ cart):
+  // Danh sách món ăn (luôn dùng array):
   items: [
     {
-      món_id: Number,
-      tên_món: String,
-      giá: Number,
-      quantity: Number,
-      category_id: Number,
-      category_name: String,
+      food_id: Number, // ID món ăn
+      name: String, // tên món
+      price: Number, // giá món
+      quantity: Number, // số lượng
+      category_id: Number, // ID danh mục
+      category_name: String, // tên danh mục
     },
   ],
-  // Nếu 1 món (đặt ngay):
-  món_id: Number, // optional - nếu items có thì không cần
-  tên_món: String, // optional
-  giá: Number, // optional
-  quantity: Number, // optional
-  category_id: Number, // optional
-  category_name: String, // optional
   // Thông tin khách hàng (required):
   customer_name: String, // required
   customer_phone: String, // required
@@ -93,11 +86,9 @@ export function validateOrder(data) {
     errors.push('Số điện thoại không hợp lệ');
   }
   
-  // Phải có items hoặc món_id
+  // Phải có items array với ít nhất 1 món
   if (!data.items || !Array.isArray(data.items) || data.items.length === 0) {
-    if (!data.món_id) {
-      errors.push('Đơn hàng phải có ít nhất 1 món');
-    }
+    errors.push('Đơn hàng phải có ít nhất 1 món');
   }
   
   if (data.total_price === undefined || typeof data.total_price !== 'number' || data.total_price <= 0) {

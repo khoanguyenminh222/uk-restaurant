@@ -208,28 +208,16 @@ export async function sendOrderConfirmationEmail(email, name, orderId, trackOrde
     if (orderData.items && Array.isArray(orderData.items) && orderData.items.length > 0) {
       itemsHtml = orderData.items.map(item => `
         <tr>
-          <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">${item.tên_món}</td>
+          <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">${item.name}</td>
           <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.quantity}</td>
-          <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: right;">${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.giá)}</td>
-          <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: right;">${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.giá * item.quantity)}</td>
+          <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: right;">${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price)}</td>
+          <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: right;">${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price * item.quantity)}</td>
         </tr>
       `).join('');
       
       itemsText = orderData.items.map(item => 
-        `- ${item.tên_món} (x${item.quantity}): ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.giá * item.quantity)}`
+        `- ${item.name} (x${item.quantity}): ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price * item.quantity)}`
       ).join('\n');
-    } else if (orderData.tên_món) {
-      const quantity = orderData.quantity || 1;
-      const price = orderData.giá || 0;
-      itemsHtml = `
-        <tr>
-          <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">${orderData.tên_món}</td>
-          <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: center;">${quantity}</td>
-          <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: right;">${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price)}</td>
-          <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: right;">${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price * quantity)}</td>
-        </tr>
-      `;
-      itemsText = `- ${orderData.tên_món} (x${quantity}): ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price * quantity)}`;
     }
 
     const totalPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(orderData.total_price || 0);
@@ -478,7 +466,7 @@ function formatOrderItemsForEmail(items) {
     const totalItemPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price * quantity);
     return `
       <tr>
-        <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">${item.tên_món}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">${item.name}</td>
         <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: center;">${quantity}</td>
         <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: right;">${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price)}</td>
         <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: right;">${totalItemPrice}</td>
@@ -490,7 +478,7 @@ function formatOrderItemsForEmail(items) {
     const quantity = item.quantity || 1;
     const price = item.giá || 0;
     const totalItemPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price * quantity);
-    return `- ${item.tên_món} (x${quantity}): ${totalItemPrice}`;
+    return `- ${item.name} (x${quantity}): ${totalItemPrice}`;
   }).join('\n');
   
   return { html: itemsHtml, text: itemsText };

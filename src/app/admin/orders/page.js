@@ -467,16 +467,6 @@ export default function AdminOrders() {
     // Copy items array để có thể chỉnh sửa
     if (order.items && Array.isArray(order.items)) {
       setEditingItems([...order.items]);
-    } else if (order.món_id) {
-      // Convert single item to array format
-      setEditingItems([{
-        món_id: order.món_id,
-        tên_món: order.tên_món || '',
-        giá: order.giá || 0,
-        quantity: order.quantity || 1,
-        category_id: order.category_id || 0,
-        category_name: order.category_name || '',
-      }]);
     } else {
       setEditingItems([]);
     }
@@ -504,9 +494,9 @@ export default function AdminOrders() {
 
   const getItemNames = (order) => {
     if (order.items && Array.isArray(order.items)) {
-      return order.items.map(item => `${item.tên_món} (x${item.quantity})`).join(', ');
+      return order.items.map(item => `${item.name} (x${item.quantity})`).join(', ');
     }
-    return `${order.tên_món || 'N/A'} (x${order.quantity || 1})`;
+    return 'N/A';
   };
 
 
@@ -1086,10 +1076,10 @@ export default function AdminOrders() {
                       {selectedOrder.items.map((item, index) => (
                         <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                           <div>
-                            <p className="font-medium text-card-foreground">{item.tên_món}</p>
-                            <p className="text-sm text-muted-foreground">x{item.quantity} - {formatCurrency(item.giá)}</p>
+                            <p className="font-medium text-card-foreground">{item.name}</p>
+                            <p className="text-sm text-muted-foreground">x{item.quantity} - {formatCurrency(item.price)}</p>
                           </div>
-                          <p className="font-medium text-primary">{formatCurrency(item.giá * item.quantity)}</p>
+                          <p className="font-medium text-primary">{formatCurrency(item.price * item.quantity)}</p>
                         </div>
                       ))}
                     </div>
@@ -1228,7 +1218,7 @@ export default function AdminOrders() {
                     editingItems.map((item, index) => (
                       <div key={index} className="flex items-center gap-2 p-2 bg-card rounded border border-border">
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-card-foreground">{item.tên_món || 'N/A'}</p>
+                          <p className="text-sm font-medium text-card-foreground">{item.name || 'N/A'}</p>
                           <div className="flex items-center gap-2 mt-1">
                             <input
                               type="number"
@@ -1249,7 +1239,7 @@ export default function AdminOrders() {
                               type="number"
                               min="0"
                               step="1000"
-                              value={item.giá || 0}
+                              value={item.price || 0}
                               onChange={(e) => {
                                 const newItems = [...editingItems];
                                 newItems[index].giá = parseInt(e.target.value) || 0;
@@ -1262,7 +1252,7 @@ export default function AdminOrders() {
                             />
                             <span className="text-xs text-muted-foreground">=</span>
                             <span className="text-sm font-medium text-primary">
-                              {formatCurrency((item.giá || 0) * (item.quantity || 1))}
+                              {formatCurrency((item.price || 0) * (item.quantity || 1))}
                             </span>
                           </div>
                         </div>
@@ -1300,7 +1290,7 @@ export default function AdminOrders() {
                   required
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Tự động tính: {formatCurrency(editingItems.reduce((sum, item) => sum + (item.giá || 0) * (item.quantity || 1), 0))}
+                  Tự động tính: {formatCurrency(editingItems.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0))}
                 </p>
               </div>
 

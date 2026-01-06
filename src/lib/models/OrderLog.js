@@ -5,9 +5,9 @@
 export const OrderLogSchema = {
   order_id: String, // mã đơn hàng
   user_id: String, // optional - có thể null
-  món_id: Number, // ID món ăn
-  tên_món: String, // tên món
-  giá: Number, // giá món
+  food_id: Number, // ID món ăn
+  name: String, // tên món
+  price: Number, // giá món
   quantity: Number, // số lượng
   category_id: Number, // ID danh mục
   category_name: String, // tên danh mục
@@ -27,8 +27,8 @@ export function validateOrderLog(data) {
     errors.push('Order ID là bắt buộc');
   }
   
-  if (data.món_id === undefined || typeof data.món_id !== 'number') {
-    errors.push('Món ID là bắt buộc');
+  if (data.food_id === undefined || typeof data.food_id !== 'number') {
+    errors.push('Food ID là bắt buộc');
   }
   
   if (data.quantity === undefined || typeof data.quantity !== 'number' || data.quantity <= 0) {

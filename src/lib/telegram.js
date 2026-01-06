@@ -98,16 +98,10 @@ export function formatNewOrderMessage(order) {
   if (order.items && Array.isArray(order.items) && order.items.length > 0) {
     // Đơn nhiều món
     itemsText = order.items.map(item => {
-      const price = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.giá || 0);
-      const total = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format((item.giá || 0) * (item.quantity || 1));
-      return `• <b>${item.tên_món || 'N/A'}</b> x${item.quantity || 1} - ${total}`;
+      const price = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price || 0);
+      const total = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format((item.price || 0) * (item.quantity || 1));
+      return `• <b>${item.name || 'N/A'}</b> x${item.quantity || 1} - ${total}`;
     }).join('\n');
-  } else if (order.tên_món) {
-    // Đơn 1 món
-    const quantity = order.quantity || 1;
-    const price = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.giá || 0);
-    const total = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format((order.giá || 0) * quantity);
-    itemsText = `• <b>${order.tên_món}</b> x${quantity} - ${total}`;
   } else {
     itemsText = '• Không có thông tin món';
   }
