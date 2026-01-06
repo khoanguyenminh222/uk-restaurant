@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { usePathname, useRouter } from "next/navigation"
 import { Utensils, Home, BookOpen, Phone, ShoppingCart, User, Menu as MenuIcon, X, LogOut, UserCircle, History, Shield } from "lucide-react"
 import { getCartItemCount } from "@/utils/cart"
 import { getUser, clearUser } from "@/utils/user"
@@ -10,6 +11,9 @@ import { useLandingConfig } from "@/hooks/useLandingConfig"
 export default function Header({ onCartClick, onLoginClick, onProfileClick, onOrderHistoryClick }) {
   const { config } = useLandingConfig()
   const restaurantName = config?.header?.restaurant_name || 'UK Restaurant'
+  const pathname = usePathname()
+  const router = useRouter()
+  const isHomePage = pathname === '/'
   
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -117,6 +121,14 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
   }, [isMenuOpen])
 
   const scrollToSection = (sectionId) => {
+    // Nếu không ở trang chủ, điều hướng về trang chủ với hash
+    if (!isHomePage) {
+      router.push(`/#${sectionId}`)
+      setIsMenuOpen(false)
+      return
+    }
+    
+    // Nếu ở trang chủ, scroll đến section
     const element = document.getElementById(sectionId)
     if (element) {
       const offset = 80
@@ -130,6 +142,14 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
     }
     setIsMenuOpen(false)
     setActiveSection(sectionId)
+  }
+
+  const handleLogoClick = () => {
+    if (isHomePage) {
+      scrollToSection("home")
+    } else {
+      router.push("/")
+    }
   }
 
   const handleLogout = () => {
@@ -158,7 +178,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
         <div className="flex items-center justify-between h-16 sm:h-20 overflow-visible">
           {/* Logo */}
           <button
-            onClick={() => scrollToSection("home")}
+            onClick={handleLogoClick}
             className="flex cursor-pointer items-center gap-2 text-xl sm:text-2xl md:text-3xl font-bold font-display text-primary hover:text-primary-light hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded-lg px-2 py-1 shrink-0"
             aria-label={`${restaurantName} - Về trang chủ`}
           >

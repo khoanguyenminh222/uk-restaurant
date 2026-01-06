@@ -644,17 +644,8 @@ export default function MenuPage() {
 
       setTimeout(() => setFlyingItem(null), 800)
     }
-
-    addToCart({
-      id: food.id,
-      name: food.name,
-      price: food.price,
-      image: food.image,
-      category_id: food.category_id,
-      quantity: 1,
-    })
-
-    window.dispatchEvent(new CustomEvent("cartUpdated"))
+    
+    // MenuCard đã tự thêm vào cart rồi, chỗ này chỉ xử lý animation/toast
   }
 
   const handleClearSearch = () => {
@@ -839,7 +830,13 @@ export default function MenuPage() {
           {/* Header */}
           <div className="mb-6">
             <button
-              onClick={() => router.back()}
+              onClick={() => {
+                if (window.history.length > 1) {
+                  router.back()
+                } else {
+                  window.location.href = '/'
+                }
+              }}
               className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4 transition-colors cursor-pointer hover:scale-105"
             >
               <ArrowLeft className="w-5 h-5" />

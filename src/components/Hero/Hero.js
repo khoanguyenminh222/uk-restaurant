@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Image from "next/image"
 import { useLandingConfig } from "@/hooks/useLandingConfig"
 
 export default function Hero() {
@@ -54,7 +53,11 @@ export default function Hero() {
     }
   }, [heroImages.length])
 
-  const scrollToMenu = () => {
+  const navigateToMenu = () => {
+    window.open('/menu', '_blank')
+  }
+
+  const scrollToMenuSection = () => {
     const menuElement = document.getElementById("menu")
     if (menuElement) {
       const offset = 80
@@ -85,7 +88,8 @@ export default function Hero() {
   return (
     <section
       id="home"
-      className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden"
+      className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden cursor-pointer"
+      onClick={navigateToMenu}
     >
       {/* Background Images Slider */}
       <div className="absolute inset-0" style={{ zIndex: 0 }}>
@@ -163,13 +167,19 @@ export default function Hero() {
           {/* CTA Buttons */}
           <div className="flex flex-col py-3 sm:flex-row items-center justify-center gap-3 sm:gap-4 animate-fade-in-up animation-delay-300">
             <button
-              onClick={scrollToMenu}
+              onClick={(e) => {
+                e.stopPropagation();
+                navigateToMenu();
+              }}
               className="w-full sm:w-auto px-8 py-3 md:px-10 md:py-4 cursor-pointer bg-primary hover:bg-primary-dark text-primary-foreground font-bold text-base md:text-lg lg:text-xl rounded-xl shadow-md hover:shadow-primary/50 transition-all duration-300 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-transparent whitespace-nowrap"
             >
               {ctaButtonText}
             </button>
             <button
-              onClick={scrollToContact}
+              onClick={(e) => {
+                e.stopPropagation();
+                scrollToContact();
+              }}
               className="w-full sm:w-auto px-8 py-3 md:px-10 md:py-4 cursor-pointer bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white border-2 border-white/50 hover:border-white font-bold text-base md:text-lg lg:text-xl rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-white/30 focus:ring-offset-2 focus:ring-offset-transparent shadow-lg whitespace-nowrap"
             >
               Liên hệ
@@ -180,7 +190,10 @@ export default function Hero() {
 
       {/* Scroll Indicator */}
       <button
-        onClick={scrollToMenu}
+        onClick={(e) => {
+          e.stopPropagation();
+          scrollToMenuSection();
+        }}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 animate-bounce cursor-pointer hover:opacity-80 transition-opacity"
         aria-label="Cuộn xuống menu"
       >
@@ -208,7 +221,10 @@ export default function Hero() {
           {heroImages.map((_, index) => (
             <button
               key={index}
-              onClick={() => setCurrentImageIndex(index)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentImageIndex(index);
+              }}
               className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
                 index === currentImageIndex
                   ? "w-8 bg-white"

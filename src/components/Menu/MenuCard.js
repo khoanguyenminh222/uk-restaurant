@@ -33,13 +33,7 @@ export default function MenuCard({ food, onOrderClick, onAddToCart, isPopular = 
         }
     }
     
-    if (position && onAddToCart) {
-      onAddToCart({
-        food,
-        position
-      })
-    }
-    
+    // Add to cart (MenuCard tự xử lý)
     addToCart({
       id: food.id,
       name: food.name,
@@ -49,11 +43,19 @@ export default function MenuCard({ food, onOrderClick, onAddToCart, isPopular = 
       quantity: 1,
     })
     
-    // Reset animation after delay
-    setTimeout(() => setIsAnimating(false), 600)
-    
     // Update cart count
     window.dispatchEvent(new CustomEvent("cartUpdated"))
+    
+    // Call parent callback for animation/toast only (NOT for adding to cart)
+    if (position && onAddToCart) {
+      onAddToCart({
+        food,
+        position
+      })
+    }
+    
+    // Reset animation after delay
+    setTimeout(() => setIsAnimating(false), 600)
   }
 
   const handleOrderClick = (e) => {
@@ -186,7 +188,7 @@ export default function MenuCard({ food, onOrderClick, onAddToCart, isPopular = 
             <button
               ref={buttonRef}
               onClick={handleAddToCart}
-              className={`flex-1 cursor-pointer flex items-center justify-center gap-1 px-2 py-1.5 sm:py-2 min-h-[32px] sm:min-h-[36px] bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg text-xs font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background whitespace-nowrap ${
+              className={`flex-1 cursor-pointer flex items-center justify-center gap-1 px-2 py-1.5 sm:py-2 min-h-8 sm:min-h-9 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg text-xs font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background whitespace-nowrap ${
                 isAnimating ? "scale-95" : "hover:scale-105 active:scale-95"
               }`}
               aria-label={`Thêm ${food.name} vào giỏ hàng`}
@@ -199,7 +201,7 @@ export default function MenuCard({ food, onOrderClick, onAddToCart, isPopular = 
             {onOrderClick && (
               <button
                 onClick={handleOrderClick}
-                className="flex-1 px-2 py-1.5 sm:py-2 min-h-[32px] sm:min-h-[36px] bg-muted hover:bg-muted/80 text-card-foreground rounded-lg text-xs font-medium transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background whitespace-nowrap cursor-pointer"
+                className="flex-1 px-2 py-1.5 sm:py-2 min-h-8 sm:min-h-9 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg text-xs font-medium transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background whitespace-nowrap cursor-pointer"
               >
                 Đặt ngay
               </button>
