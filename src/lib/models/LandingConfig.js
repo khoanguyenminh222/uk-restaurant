@@ -29,6 +29,11 @@ export const defaultLandingConfig = {
   menu: {
     section_title: 'Thực đơn',
     section_description: 'Khám phá những món ăn được yêu thích nhất',
+    popular_title: 'Món nổi bật',
+    popular_icon: '🔥',
+    // Tên icon lucide cho phần Món nổi bật (dùng trong component Menu)
+    // Ví dụ: 'TrendingUp', 'Star', 'Flame'
+    popular_lucide_icon: 'TrendingUp',
   },
   about: {
     section_title: 'Giới thiệu',

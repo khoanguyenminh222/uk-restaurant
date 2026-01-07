@@ -191,7 +191,11 @@ export default function AdminLandingConfig() {
     title: '', subtitle: '', description: '', cta_button_text: '' 
   });
   const [menuData, setMenuData] = useState({ 
-    section_title: '', section_description: '' 
+    section_title: '', 
+    section_description: '',
+    popular_title: '',
+    popular_icon: '',
+    popular_lucide_icon: '',
   });
   const [aboutData, setAboutData] = useState({ 
     section_title: '', section_description: '', features: [] 
@@ -987,6 +991,79 @@ export default function AdminLandingConfig() {
                 <p className="text-xs text-muted-foreground mt-1">
                   {menuData.section_description.length}/300 ký tự
                 </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Tiêu đề Món nổi bật
+                </label>
+                <input
+                  type="text"
+                  value={menuData.popular_title || ''}
+                  onChange={(e) => setMenuData({ ...menuData, popular_title: e.target.value })}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Món nổi bật"
+                  maxLength={50}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {(menuData.popular_title || '').length}/50 ký tự
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Icon Món nổi bật (Emoji hoặc text)
+                </label>
+                <input
+                  type="text"
+                  value={menuData.popular_icon || ''}
+                  onChange={(e) => setMenuData({ ...menuData, popular_icon: e.target.value })}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="🔥"
+                  maxLength={10}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {(menuData.popular_icon || '').length}/10 ký tự (ví dụ: 🔥, ⭐, 💯)
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Truy cập <a href="https://emojipedia.org/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">emojipedia.org</a> để tìm emoji
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Icon lucide cho Món nổi bật (tùy chọn)
+                </label>
+                <input
+                  type="text"
+                  value={menuData.popular_lucide_icon || ''}
+                  onChange={(e) => setMenuData({ ...menuData, popular_lucide_icon: e.target.value })}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="TrendingUp"
+                  maxLength={50}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Nhập tên icon trong <code>lucide-react</code>, ví dụ: TrendingUp, Star, Flame. Nếu để trống sẽ dùng TrendingUp.
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Truy cập <a href="https://lucide.dev/icons/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">lucide.dev</a> để tìm icon
+                </p>
+                {menuData.popular_lucide_icon && (
+                  <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                    {isValidLucideIcon(menuData.popular_lucide_icon) ? (
+                      <>
+                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border bg-card">
+                          {(() => {
+                            const Icon = getLucideIcon(menuData.popular_lucide_icon);
+                            return Icon ? <Icon className="w-4 h-4 text-primary" /> : null;
+                          })()}
+                        </span>
+                        <span>Preview: <code>{menuData.popular_lucide_icon}</code></span>
+                      </>
+                    ) : (
+                      <span>
+                        Icon không hợp lệ, frontend sẽ fallback về <code>TrendingUp</code>.
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}

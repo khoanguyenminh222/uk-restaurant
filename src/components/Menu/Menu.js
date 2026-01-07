@@ -2,16 +2,83 @@
 
 import { useState, useEffect, useRef } from "react"
 import { Search, X, ArrowRight, TrendingUp } from "lucide-react"
+import * as lucideIcons from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useScrollAnimation } from "@/hooks/useScrollAnimation"
 import MenuCard from "./MenuCard"
 import { useLandingConfig } from "@/hooks/useLandingConfig"
+
+// Helper function để chuyển đổi kebab-case sang PascalCase
+const toPascalCase = (str) => {
+  if (!str) return str;
+  return str
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join('');
+};
+
+// Helper function để lấy icon component từ lucide-react
+const getLucideIcon = (iconName) => {
+  if (!iconName || typeof iconName !== 'string') {
+    return TrendingUp; // Fallback
+  }
+  
+  // Thử các format khác nhau:
+  const variants = [
+    iconName, // Tên gốc
+    toPascalCase(iconName), // Chuyển kebab-case sang PascalCase
+    iconName + 'Icon', // Với suffix Icon
+    toPascalCase(iconName) + 'Icon', // PascalCase + Icon
+  ];
+  
+  // Loại bỏ duplicates
+  const uniqueVariants = [...new Set(variants)];
+  
+  for (const variant of uniqueVariants) {
+    const icon = lucideIcons[variant];
+    if (icon) {
+      // Nếu là object với default export, lấy default
+      if (typeof icon === 'object' && icon.default) {
+        return icon.default;
+      }
+      // Nếu là function hoặc React component, trả về trực tiếp
+      if (typeof icon === 'function' || (typeof icon === 'object' && icon.$$typeof)) {
+        return icon;
+      }
+    }
+  }
+  
+  // Fallback về TrendingUp nếu không tìm thấy
+  return TrendingUp;
+};
+
+// Component wrapper cho food card với scroll-fade-in
+function FoodCardWrapper({ children, delay = 0 }) {
+  const [cardRef, isCardVisible] = useScrollAnimation({ threshold: 0.1 })
+  
+  return (
+    <div
+      ref={cardRef}
+      className={`h-full scroll-fade-in ${isCardVisible ? "visible" : ""}`}
+      style={{
+        transitionDelay: isCardVisible ? `${delay}s` : '0s'
+      }}
+    >
+      {children}
+    </div>
+  )
+}
 
 export default function Menu({ onAddToCart, onOrderClick }) {
   const { config } = useLandingConfig()
   const menuConfig = config?.menu || {}
   const sectionTitle = menuConfig.section_title || 'Thực đơn'
   const sectionDescription = menuConfig.section_description || 'Khám phá những món ăn được yêu thích nhất'
+  const popularTitle = menuConfig.popular_title || 'Món nổi bật'
+  const popularIcon = menuConfig.popular_icon || '🔥'
+  const popularLucideIconName = menuConfig.popular_lucide_icon || 'TrendingUp'
+  
+  const PopularLucideIcon = getLucideIcon(popularLucideIconName)
   
   const router = useRouter()
   const [categories, setCategories] = useState([])
@@ -33,6 +100,9 @@ export default function Menu({ onAddToCart, onOrderClick }) {
 
   const [headerRef, isHeaderVisible] = useScrollAnimation({ threshold: 0.2 })
   const [contentRef, isContentVisible] = useScrollAnimation({ threshold: 0.2 })
+  const [popularTitleRef, isPopularTitleVisible] = useScrollAnimation({ threshold: 0.1 })
+  const [badgesRef, isBadgesVisible] = useScrollAnimation({ threshold: 0.2 })
+  const [viewAllButtonRef, isViewAllButtonVisible] = useScrollAnimation({ threshold: 0.1 })
 
   // Fetch categories
   useEffect(() => {
@@ -412,12 +482,12 @@ export default function Menu({ onAddToCart, onOrderClick }) {
         {/* Section Header - Món nổi bật - Gọn gàng */}
         {!loading && !error && isShowingPopular && selectedCategory === null && !searchQuery && (
           <>
-            <div className="mb-4 md:mb-6 flex items-center justify-center gap-2">
-              <TrendingUp className="w-5 h-5 text-primary" />
+            <div className={`mb-4 md:mb-6 flex items-center justify-center gap-2 scroll-fade-in ${isPopularTitleVisible ? "visible" : ""}`} ref={popularTitleRef}>
+              <PopularLucideIcon className="w-5 h-5 text-primary" />
               <h3 className="text-lg md:text-xl font-bold font-display text-primary">
-                Món nổi bật
+                {popularTitle}
               </h3>
-              <span className="text-lg">🔥</span>
+              <span className="text-lg">{popularIcon}</span>
             </div>
             
             {/* Hiển thị giá trị các ngưỡng */}
@@ -458,7 +528,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
               if (allBadges.length === 0) return null
               
               return (
-                <div className="mb-6 flex flex-wrap items-center justify-center gap-3 md:gap-4">
+                <div className={`mb-6 flex flex-wrap items-center justify-center gap-3 md:gap-4 scroll-fade-in ${isBadgesVisible ? "visible" : ""}`} ref={badgesRef}>
                   {allBadges.map((badge, index) => (
                     <div
                       key={badge._id || `manual-${badge.label}-${badge.icon}-${badge.color}-${index}`}
@@ -498,31 +568,26 @@ export default function Menu({ onAddToCart, onOrderClick }) {
                 {/* Grid responsive: 2 cột mobile, 3 cột tablet, 5 cột desktop */}
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-5">
                   {filteredFoods.slice(0, 5).map((food, index) => (
-                    <div
-                      key={food.id || food._id}
-                      className="menu-item animate-fade-in-scale"
-                      style={{
-                        animationDelay: `${index * 0.08}s`,
-                        animationFillMode: 'both'
-                      }}
-                    >
-                      <MenuCard
-                        food={food}
-                        onAddToCart={onAddToCart}
-                        onOrderClick={onOrderClick}
-                        isPopular={food.matchedThreshold !== null}
-                        thresholds={thresholds}
-                        matchedThreshold={food.matchedThreshold}
-                      />
-                    </div>
+                    <FoodCardWrapper key={food.id || food._id} delay={index * 0.1}>
+                      <div className="menu-item h-full">
+                        <MenuCard
+                          food={food}
+                          onAddToCart={onAddToCart}
+                          onOrderClick={onOrderClick}
+                          isPopular={food.matchedThreshold !== null}
+                          thresholds={thresholds}
+                          matchedThreshold={food.matchedThreshold}
+                        />
+                      </div>
+                    </FoodCardWrapper>
                   ))}
                 </div>
 
                 {/* View All Button - Ngay sau 5 items (1 hàng) */}
-                <div className="flex justify-center mt-6 md:mt-8">
+                <div className={`flex justify-center mt-6 md:mt-8 p-2 scroll-fade-in ${isViewAllButtonVisible ? "visible" : ""}`} ref={viewAllButtonRef}>
                   <button
                     onClick={handleViewAllMenu}
-                    className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg font-medium transition-all duration-200 hover:scale-105 active:scale-95 shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 cursor-pointer"
+                    className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg font-medium transition-all duration-200 hover:scale-105 active:scale-95 shadow-sm shadow-primary/20 hover:shadow-md hover:shadow-primary/30 cursor-pointer"
                   >
                     Xem tất cả
                     <ArrowRight className="w-5 h-5" />

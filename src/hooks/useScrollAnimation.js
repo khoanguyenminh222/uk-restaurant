@@ -7,11 +7,13 @@ export function useScrollAnimation(options = {}) {
   const elementRef = useRef(null)
 
   useEffect(() => {
+    const el = elementRef.current
+    if (!el) return
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsVisible(true)
-          // Optional: Unobserve after animation to improve performance
           if (options.once !== false) {
             observer.unobserve(entry.target)
           }
@@ -20,22 +22,18 @@ export function useScrollAnimation(options = {}) {
         }
       },
       {
-        threshold: options.threshold || 0.1,
+        threshold: options.threshold ?? 0.1,
         rootMargin: options.rootMargin || "0px 0px -50px 0px",
       }
     )
 
-    const currentElement = elementRef.current
-    if (currentElement) {
-      observer.observe(currentElement)
-    }
+    observer.observe(el)
 
     return () => {
-      if (currentElement) {
-        observer.unobserve(currentElement)
-      }
+      observer.disconnect()
     }
-  }, [options.threshold, options.rootMargin, options.once])
+  // Re-run when the referenced DOM node becomes available
+  }, [elementRef.current, options.threshold, options.rootMargin, options.once])
 
   return [elementRef, isVisible]
 }
