@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { Utensils, Home, BookOpen, Phone, ShoppingCart, User, Menu as MenuIcon, X, LogOut, UserCircle, History, Shield } from "lucide-react"
+import * as lucideIcons from "lucide-react"
 import { getCartItemCount } from "@/utils/cart"
 import { getUser, clearUser } from "@/utils/user"
 import ThemeToggle from "@/components/ThemeToggle/ThemeToggle"
@@ -168,12 +169,53 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
     window.location.reload()
   }
 
-  const menuItems = [
+  // Get menu items from config or use defaults
+  const configMenuItems = config?.header?.menu_items || []
+  const defaultMenuItems = [
     { id: "home", label: "Trang chủ", icon: Home },
     { id: "menu", label: "Thực đơn", icon: Utensils },
     { id: "about", label: "Giới thiệu", icon: BookOpen },
     { id: "contact", label: "Liên hệ", icon: Phone },
   ]
+  
+  // Helper function to get icon from lucide-react
+  const getIconComponent = (iconName, itemId) => {
+    if (!iconName) {
+      const iconMap = {
+        home: Home,
+        menu: Utensils,
+        about: BookOpen,
+        contact: Phone,
+      }
+      return iconMap[itemId] || Home
+    }
+    
+    // Try to get icon from lucide-react
+    const iconNamePascal = iconName.charAt(0).toUpperCase() + iconName.slice(1)
+    if (lucideIcons[iconNamePascal]) {
+      return lucideIcons[iconNamePascal]
+    }
+    
+    // Fallback to default based on id
+    const iconMap = {
+      home: Home,
+      menu: Utensils,
+      about: BookOpen,
+      contact: Phone,
+    }
+    return iconMap[itemId] || Home
+  }
+  
+  // Map config menu items to component format
+  const menuItems = configMenuItems.length > 0 
+    ? configMenuItems
+        .sort((a, b) => (a.order || 0) - (b.order || 0))
+        .map(item => ({
+          id: item.id,
+          label: item.label,
+          icon: getIconComponent(item.icon, item.id)
+        }))
+    : defaultMenuItems
 
   return (
     <header

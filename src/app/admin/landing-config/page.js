@@ -183,7 +183,10 @@ export default function AdminLandingConfig() {
   // Form states cho từng section
   const [restaurantName, setRestaurantName] = useState('');
   const [slogan, setSlogan] = useState('');
-  const [headerData, setHeaderData] = useState({ restaurant_name: '' });
+  const [headerData, setHeaderData] = useState({ 
+    restaurant_name: '',
+    menu_items: []
+  });
   const [heroData, setHeroData] = useState({ 
     title: '', subtitle: '', description: '', cta_button_text: '' 
   });
@@ -279,7 +282,26 @@ export default function AdminLandingConfig() {
         // Populate form data
         if (data.data.restaurant_name) setRestaurantName(data.data.restaurant_name);
         if (data.data.slogan) setSlogan(data.data.slogan);
-        if (data.data.header) setHeaderData(data.data.header);
+        if (data.data.header) {
+          // Đảm bảo luôn có đủ 4 menu items mặc định
+          const defaultMenuItems = [
+            { id: 'home', label: 'Trang chủ', icon: 'Home', order: 1 },
+            { id: 'menu', label: 'Thực đơn', icon: 'Utensils', order: 2 },
+            { id: 'about', label: 'Giới thiệu', icon: 'BookOpen', order: 3 },
+            { id: 'contact', label: 'Liên hệ', icon: 'Phone', order: 4 },
+          ];
+          
+          const existingMenuItems = data.data.header.menu_items || [];
+          const menuItems = defaultMenuItems.map(defaultItem => {
+            const existing = existingMenuItems.find(item => item.id === defaultItem.id);
+            return existing || defaultItem;
+          });
+          
+          setHeaderData({
+            ...data.data.header,
+            menu_items: menuItems
+          });
+        }
         if (data.data.hero) setHeroData(data.data.hero);
         if (data.data.menu) setMenuData(data.data.menu);
         if (data.data.about) setAboutData(data.data.about);
@@ -314,10 +336,27 @@ export default function AdminLandingConfig() {
     try {
       setSaving(true);
 
+      // Đảm bảo header có đủ 4 menu items
+      const defaultMenuItems = [
+        { id: 'home', label: 'Trang chủ', icon: 'Home', order: 1 },
+        { id: 'menu', label: 'Thực đơn', icon: 'Utensils', order: 2 },
+        { id: 'about', label: 'Giới thiệu', icon: 'BookOpen', order: 3 },
+        { id: 'contact', label: 'Liên hệ', icon: 'Phone', order: 4 },
+      ];
+      
+      const existingMenuItems = headerData.menu_items || [];
+      const menuItems = defaultMenuItems.map(defaultItem => {
+        const existing = existingMenuItems.find(item => item.id === defaultItem.id);
+        return existing || defaultItem;
+      });
+
       const updateData = {
         restaurant_name: restaurantName,
         slogan: slogan,
-        header: headerData,
+        header: {
+          ...headerData,
+          menu_items: menuItems
+        },
         hero: heroData,
         menu: menuData,
         about: aboutData,
@@ -704,7 +743,7 @@ export default function AdminLandingConfig() {
 
           {/* Header Tab */}
           {activeTab === 'header' && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <h2 className="text-xl font-semibold text-card-foreground mb-4">Cấu hình Header</h2>
               <div>
                 <label className="block text-sm font-medium text-card-foreground mb-2">
@@ -721,6 +760,131 @@ export default function AdminLandingConfig() {
                 <p className="text-xs text-muted-foreground mt-1">
                   {headerData.restaurant_name.length}/50 ký tự
                 </p>
+              </div>
+
+              {/* Menu Items Management */}
+              <div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Menu Items
+                  </label>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Chỉnh sửa tên hiển thị, icon và thứ tự cho các menu items. Các section là cố định.
+                  </p>
+                </div>
+                <div className="space-y-3">
+                  {headerData.menu_items?.map((item, index) => {
+                    const MenuIcon = item.icon ? (getLucideIcon(item.icon) || Home) : Home;
+                    // Map section ID to display name
+                    const sectionNames = {
+                      home: 'Trang chủ',
+                      menu: 'Thực đơn',
+                      about: 'Giới thiệu',
+                      contact: 'Liên hệ'
+                    };
+                    return (
+                      <div
+                        key={item.id || index}
+                        className="p-4 bg-muted border border-border rounded-lg space-y-3"
+                      >
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="flex items-center justify-center w-10 h-10 bg-primary/10 rounded-lg text-primary shrink-0">
+                            <MenuIcon className="w-5 h-5" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-sm font-medium text-card-foreground">
+                              {sectionNames[item.id] || item.id}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              Section: <code className="bg-background px-1 py-0.5 rounded">{item.id}</code>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-medium text-card-foreground mb-1">
+                              Tên hiển thị <span className="text-red-400">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={item.label}
+                              onChange={(e) => {
+                                const newItems = [...headerData.menu_items];
+                                newItems[index].label = e.target.value;
+                                setHeaderData({ ...headerData, menu_items: newItems });
+                              }}
+                              className="w-full px-3 py-2 bg-input border border-border rounded text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                              placeholder="Trang chủ"
+                              maxLength={50}
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {item.label.length}/50 ký tự
+                            </p>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-card-foreground mb-1">
+                              Icon
+                            </label>
+                            <input
+                              type="text"
+                              value={item.icon || ''}
+                              onChange={(e) => {
+                                const newItems = [...headerData.menu_items];
+                                newItems[index].icon = e.target.value;
+                                setHeaderData({ ...headerData, menu_items: newItems });
+                              }}
+                              className="w-full px-3 py-2 bg-input border border-border rounded text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                              placeholder="Home"
+                              maxLength={50}
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Tên icon từ lucide-react (ví dụ: Home, Utensils, BookOpen, Phone)
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
+                          <button
+                            onClick={() => {
+                              if (index > 0) {
+                                const newItems = [...headerData.menu_items];
+                                [newItems[index - 1], newItems[index]] = [newItems[index], newItems[index - 1]];
+                                newItems[index - 1].order = index;
+                                newItems[index].order = index + 1;
+                                setHeaderData({ ...headerData, menu_items: newItems });
+                              }
+                            }}
+                            disabled={index === 0}
+                            className="flex items-center gap-1 px-3 py-1.5 text-sm text-primary hover:bg-primary/10 rounded cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            title="Di chuyển lên"
+                          >
+                            <ArrowUp className="w-4 h-4" />
+                            Lên
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (index < headerData.menu_items.length - 1) {
+                                const newItems = [...headerData.menu_items];
+                                [newItems[index], newItems[index + 1]] = [newItems[index + 1], newItems[index]];
+                                newItems[index].order = index + 1;
+                                newItems[index + 1].order = index + 2;
+                                setHeaderData({ ...headerData, menu_items: newItems });
+                              }
+                            }}
+                            disabled={index === headerData.menu_items.length - 1}
+                            className="flex items-center gap-1 px-3 py-1.5 text-sm text-primary hover:bg-primary/10 rounded cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            title="Di chuyển xuống"
+                          >
+                            <ArrowDown className="w-4 h-4" />
+                            Xuống
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {(!headerData.menu_items || headerData.menu_items.length === 0) && (
+                    <p className="text-muted-foreground text-center py-4">Chưa có menu item nào</p>
+                  )}
+                </div>
               </div>
             </div>
           )}

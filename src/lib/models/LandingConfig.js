@@ -13,6 +13,12 @@ export const defaultLandingConfig = {
   slogan: 'Ăn no khỏi "bàn"', // Slogan/tagline của cửa hàng (dùng cho email, metadata)
   header: {
     restaurant_name: 'UK Restaurant',
+    menu_items: [
+      { id: 'home', label: 'Trang chủ', icon: 'Home', order: 1 },
+      { id: 'menu', label: 'Thực đơn', icon: 'Utensils', order: 2 },
+      { id: 'about', label: 'Giới thiệu', icon: 'BookOpen', order: 3 },
+      { id: 'contact', label: 'Liên hệ', icon: 'Phone', order: 4 },
+    ],
   },
   hero: {
     title: 'UK Restaurant',
@@ -187,6 +193,44 @@ export function validateLandingConfig(data) {
       errors.push('Header: Restaurant name là bắt buộc');
     } else if (data.header.restaurant_name.length > 50) {
       errors.push('Header: Restaurant name không được vượt quá 50 ký tự');
+    }
+
+    // Validate menu_items
+    if (data.header.menu_items) {
+      if (!Array.isArray(data.header.menu_items)) {
+        errors.push('Header: Menu items phải là một array');
+      } else {
+        if (data.header.menu_items.length < 1) {
+          errors.push('Header: Phải có ít nhất 1 menu item');
+        } else if (data.header.menu_items.length > 10) {
+          errors.push('Header: Không được có quá 10 menu items');
+        }
+
+        data.header.menu_items.forEach((item, index) => {
+          if (!item.id || typeof item.id !== 'string' || item.id.trim().length === 0) {
+            errors.push(`Header: Menu item ${index + 1}: ID là bắt buộc`);
+          } else if (item.id.length > 50) {
+            errors.push(`Header: Menu item ${index + 1}: ID không được vượt quá 50 ký tự`);
+          }
+
+          if (!item.label || typeof item.label !== 'string' || item.label.trim().length === 0) {
+            errors.push(`Header: Menu item ${index + 1}: Label là bắt buộc`);
+          } else if (item.label.length > 50) {
+            errors.push(`Header: Menu item ${index + 1}: Label không được vượt quá 50 ký tự`);
+          }
+
+          if (item.icon && typeof item.icon !== 'string') {
+            errors.push(`Header: Menu item ${index + 1}: Icon phải là string`);
+          }
+
+          if (item.order !== undefined) {
+            const order = parseInt(item.order);
+            if (isNaN(order) || order < 1) {
+              errors.push(`Header: Menu item ${index + 1}: Order phải là số >= 1`);
+            }
+          }
+        });
+      }
     }
   }
 
@@ -569,6 +613,9 @@ export function mergeWithDefaults(config) {
 
   if (config.header) {
     merged.header = { ...merged.header, ...config.header };
+    if (config.header.menu_items) {
+      merged.header.menu_items = config.header.menu_items;
+    }
   }
 
   if (config.hero) {

@@ -154,35 +154,54 @@ export default function Hero() {
             {title}
           </h1>
 
-          {/* Subtitle */}
-          <p className="text-xl md:text-2xl lg:text-3xl font-medium font-display text-white mb-6 animate-fade-in-up animation-delay-100 drop-shadow-md">
+          {/* Subtitle với Slide-in Animation */}
+          <p 
+            className="text-xl md:text-2xl lg:text-3xl font-medium font-display text-white mb-6 drop-shadow-lg"
+            style={{
+              animation: 'fadeInUp 0.8s ease-out 0.2s both'
+            }}
+          >
             {subtitle}
           </p>
 
-          {/* Description */}
-          <p className="text-base md:text-lg lg:text-xl text-white/90 max-w-2xl mx-auto mb-8 leading-relaxed animate-fade-in-up animation-delay-200 text-pretty drop-shadow-md">
+          {/* Description với Fade-in từ dưới */}
+          <p 
+            className="text-base md:text-lg lg:text-xl text-white/90 max-w-2xl mx-auto mb-8 leading-relaxed text-pretty drop-shadow-md"
+            style={{
+              animation: 'fadeInUp 1s ease-out 0.4s both'
+            }}
+          >
             {description}
           </p>
 
-          {/* CTA Buttons */}
+          {/* CTA Buttons với Glassmorphism */}
           <div className="flex flex-col py-3 sm:flex-row items-center justify-center gap-3 sm:gap-4 animate-fade-in-up animation-delay-300">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 navigateToMenu();
               }}
-              className="w-full sm:w-auto px-8 py-3 md:px-10 md:py-4 cursor-pointer bg-primary hover:bg-primary-dark text-primary-foreground font-bold text-base md:text-lg lg:text-xl rounded-xl shadow-md hover:shadow-primary/50 transition-all duration-300 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-transparent whitespace-nowrap"
+              className="group relative w-full sm:w-auto px-8 py-3 md:px-10 md:py-4 cursor-pointer bg-primary hover:bg-primary-dark text-primary-foreground font-bold text-base md:text-lg lg:text-xl rounded-xl shadow-md hover:shadow-primary/50 transition-all duration-300 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-transparent whitespace-nowrap overflow-hidden"
             >
-              {ctaButtonText}
+              <span className="relative z-10">{ctaButtonText}</span>
+              <span 
+                className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"
+              ></span>
             </button>
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 scrollToContact();
               }}
-              className="w-full sm:w-auto px-8 py-3 md:px-10 md:py-4 cursor-pointer bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white border-2 border-white/50 hover:border-white font-bold text-base md:text-lg lg:text-xl rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-white/30 focus:ring-offset-2 focus:ring-offset-transparent shadow-lg whitespace-nowrap"
+              className="group relative w-full sm:w-auto px-8 py-3 md:px-10 md:py-4 cursor-pointer bg-white/10 backdrop-blur-md hover:bg-white/20 text-white border-2 border-white/60 hover:border-white font-bold text-base md:text-lg lg:text-xl rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-white/30 focus:ring-offset-2 focus:ring-offset-transparent shadow-lg whitespace-nowrap overflow-hidden"
+              style={{
+                backdropFilter: 'blur(10px) saturate(180%)'
+              }}
             >
-              Liên hệ
+              <span className="relative z-10">Liên hệ</span>
+              <span 
+                className="absolute inset-0 bg-linear-to-r from-transparent via-white/30 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"
+              ></span>
             </button>
           </div>
         </div>
