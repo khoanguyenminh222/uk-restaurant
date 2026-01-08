@@ -90,7 +90,7 @@ export default function Hero() {
     <section
       id="home"
       className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden cursor-pointer"
-      onClick={navigateToMenu}
+      onClick={scrollToMenuSection}
     >
       {/* Background Images Slider */}
       <div className="absolute inset-0" style={{ zIndex: 0 }}>
@@ -180,7 +180,7 @@ export default function Hero() {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                navigateToMenu();
+                scrollToMenuSection();
               }}
               className="group relative w-full sm:w-auto px-8 py-3 md:px-10 md:py-4 cursor-pointer bg-primary hover:bg-primary-dark text-primary-foreground font-bold text-base md:text-lg lg:text-xl rounded-xl shadow-md hover:shadow-primary/50 transition-all duration-300 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-transparent whitespace-nowrap overflow-hidden"
             >

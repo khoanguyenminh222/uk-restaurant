@@ -16,8 +16,10 @@ export const defaultLandingConfig = {
     menu_items: [
       { id: 'home', label: 'Trang chủ', icon: 'Home', order: 1 },
       { id: 'menu', label: 'Thực đơn', icon: 'Utensils', order: 2 },
-      { id: 'about', label: 'Giới thiệu', icon: 'BookOpen', order: 3 },
-      { id: 'contact', label: 'Liên hệ', icon: 'Phone', order: 4 },
+      { id: 'why-choose-us', label: 'Tại sao chọn chúng tôi', icon: 'Star', order: 3 },
+      { id: 'testimonials', label: 'Đánh giá', icon: 'MessageSquare', order: 4 },
+      { id: 'about', label: 'Giới thiệu', icon: 'BookOpen', order: 5 },
+      { id: 'contact', label: 'Liên hệ', icon: 'Phone', order: 6 },
     ],
   },
   hero: {
@@ -35,61 +37,129 @@ export const defaultLandingConfig = {
     // Ví dụ: 'TrendingUp', 'Star', 'Flame'
     popular_lucide_icon: 'TrendingUp',
   },
-  about: {
-    section_title: 'Giới thiệu',
-    section_description: 'Cam kết mang đến cho bạn những trải nghiệm ẩm thực tuyệt vời nhất',
+  whyChooseUs: {
+    section_title: 'Tại sao chọn chúng tôi',
+    section_description: 'Khám phá những lý do khiến chúng tôi trở thành lựa chọn hàng đầu của hàng nghìn khách hàng',
     features: [
       {
-        title: 'Chất lượng',
-        description: 'Nguyên liệu tươi ngon, được chọn lọc kỹ càng từ những nhà cung cấp uy tín',
-        icon: 'CheckCircle2',
+        icon: 'Leaf',
+        title: 'Nguyên liệu tươi ngon',
+        description: 'Chúng tôi chỉ sử dụng nguyên liệu tươi sống, được nhập mỗi ngày từ các nhà cung cấp uy tín. Mỗi món ăn đều được chế biến với tình yêu và sự cẩn thận.',
+        color: 'from-green-500/20 to-emerald-600/10',
+        borderColor: 'border-green-500/30',
         order: 1,
       },
       {
-        title: 'Nhanh chóng',
-        description: 'Giao hàng nhanh chóng, đúng giờ như đã hứa với dịch vụ chuyên nghiệp',
-        icon: 'Zap',
+        icon: 'ChefHat',
+        title: 'Đầu bếp chuyên nghiệp',
+        description: 'Đội ngũ đầu bếp giàu kinh nghiệm, được đào tạo bài bản. Mỗi món ăn là một tác phẩm nghệ thuật được tạo ra từ đôi bàn tay tài hoa.',
+        color: 'from-orange-500/20 to-amber-600/10',
+        borderColor: 'border-orange-500/30',
         order: 2,
       },
       {
-        title: 'Tận tâm',
-        description: 'Phục vụ với sự nhiệt tình và chuyên nghiệp, luôn đặt khách hàng lên hàng đầu',
-        icon: 'Heart',
+        icon: 'Zap',
+        title: 'Giao hàng siêu tốc',
+        description: 'Cam kết giao hàng trong vòng 30 phút. Hệ thống logistics hiện đại đảm bảo món ăn luôn nóng hổi, tươi ngon khi đến tay khách hàng.',
+        color: 'from-blue-500/20 to-cyan-600/10',
+        borderColor: 'border-blue-500/30',
         order: 3,
+      },
+      {
+        icon: 'Shield',
+        title: 'An toàn vệ sinh',
+        description: 'Tuân thủ nghiêm ngặt các tiêu chuẩn vệ sinh an toàn thực phẩm. Nhà bếp được kiểm tra định kỳ, đảm bảo môi trường sạch sẽ, an toàn.',
+        color: 'from-purple-500/20 to-violet-600/10',
+        borderColor: 'border-purple-500/30',
+        order: 4,
+      },
+      {
+        icon: 'Heart',
+        title: 'Dịch vụ tận tâm',
+        description: 'Đội ngũ nhân viên nhiệt tình, chuyên nghiệp. Luôn lắng nghe và đáp ứng mọi nhu cầu của khách hàng với thái độ phục vụ chu đáo nhất.',
+        color: 'from-pink-500/20 to-rose-600/10',
+        borderColor: 'border-pink-500/30',
+        order: 5,
+      },
+      {
+        icon: 'Star',
+        title: 'Giá cả hợp lý',
+        description: 'Chất lượng cao nhưng giá cả phải chăng. Chúng tôi cam kết mang đến giá trị tốt nhất cho từng đồng bạn bỏ ra.',
+        color: 'from-yellow-500/20 to-amber-600/10',
+        borderColor: 'border-yellow-500/30',
+        order: 6,
+      },
+    ],
+    stats: [
+      {
+        icon: 'Users',
+        value: '10,000+',
+        label: 'Khách hàng tin tưởng',
+        color: 'from-blue-500/20 to-blue-600/10',
+      },
+      {
+        icon: 'Star',
+        value: '4.9/5',
+        label: 'Đánh giá trung bình',
+        color: 'from-yellow-500/20 to-yellow-600/10',
+      },
+      {
+        icon: 'Clock',
+        value: "30'",
+        label: 'Giao hàng nhanh',
+        color: 'from-green-500/20 to-green-600/10',
+      },
+      {
+        icon: 'Award',
+        value: '15+',
+        label: 'Năm kinh nghiệm',
+        color: 'from-primary/20 to-primary-light/10',
       },
     ],
   },
-  contact: {
-    section_title: 'Liên hệ',
-    info: {
-      phone: '(+84) 096 960 6095',
-      email: 'khoanguyenminh222@gmail.com',
-      address: '123 Đường ABC, Quận 1, TP. Hồ Chí Minh',
+  testimonials: {
+    section_title: 'Đánh giá từ khách hàng',
+    section_description: 'Những phản hồi chân thật từ khách hàng đã sử dụng dịch vụ của chúng tôi',
+    trustStats: {
+      averageRating: 4.9,
+      totalReviews: 1247,
+      verifiedCustomers: 98,
     },
-    map_embed_url: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.1234567890!2d106.6297!3d10.8231!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTDCsDQ5JzIzLjIiTiAxMDbCsDM3JzQ2LjkiRQ!5e0!3m2!1svi!2s!4v1234567890123!5m2!1svi!2s',
-    social_media: [
+    testimonials: [
       {
-        name: 'Facebook',
-        url: 'https://www.facebook.com/ukrestaurant',
-        icon: 'FacebookIcon',
-        description: 'Theo dõi chúng tôi trên Facebook',
-        color: 'text-blue-400',
+        name: 'Nguyễn Văn A',
+        role: 'Khách hàng thân thiết',
+        rating: 5,
+        comment: 'Món ăn rất ngon, giao hàng nhanh chóng. Nhà hàng luôn đảm bảo chất lượng và dịch vụ tận tâm. Tôi sẽ quay lại đặt món nhiều lần nữa!',
+        avatar: '👨‍💼',
+        color: 'from-blue-500/20 to-blue-600/10',
+        borderColor: 'border-blue-500/30',
+        verified: true,
+        date: '2 tuần trước',
         order: 1,
       },
       {
-        name: 'Zalo',
-        url: 'https://zalo.me/0969606095',
-        icon: 'MessageCircle',
-        description: 'Chat với chúng tôi trên Zalo',
-        color: 'text-blue-400',
+        name: 'Trần Thị B',
+        role: 'Khách hàng mới',
+        rating: 5,
+        comment: 'Lần đầu tiên đặt món và tôi rất hài lòng. Thực đơn đa dạng, giá cả hợp lý. Đặc biệt là món phở bò rất ngon và đậm đà!',
+        avatar: '👩‍💼',
+        color: 'from-pink-500/20 to-pink-600/10',
+        borderColor: 'border-pink-500/30',
+        verified: true,
+        date: '1 tuần trước',
         order: 2,
       },
       {
-        name: 'Instagram',
-        url: 'https://www.instagram.com/ukrestaurant',
-        icon: 'InstagramIcon',
-        description: 'Xem hình ảnh món ăn trên Instagram',
-        color: 'text-pink-400',
+        name: 'Lê Văn C',
+        role: 'Food Blogger',
+        rating: 5,
+        comment: 'Chất lượng món ăn vượt ngoài mong đợi. Nguyên liệu tươi ngon, cách chế biến cẩn thận. Đây là một trong những nhà hàng tốt nhất mà tôi từng thử!',
+        avatar: '👨‍🍳',
+        color: 'from-primary/20 to-primary-light/10',
+        borderColor: 'border-primary/30',
+        verified: true,
+        date: '3 ngày trước',
         order: 3,
       },
     ],
@@ -279,107 +349,172 @@ export function validateLandingConfig(data) {
     }
   }
 
-  // Validate about
-  if (data.about) {
-    if (!data.about.section_title || typeof data.about.section_title !== 'string' || data.about.section_title.trim().length === 0) {
-      errors.push('About: Section title là bắt buộc');
-    } else if (data.about.section_title.length > 100) {
-      errors.push('About: Section title không được vượt quá 100 ký tự');
+  // Validate whyChooseUs
+  if (data.whyChooseUs) {
+    if (!data.whyChooseUs.section_title || typeof data.whyChooseUs.section_title !== 'string' || data.whyChooseUs.section_title.trim().length === 0) {
+      errors.push('WhyChooseUs: Section title là bắt buộc');
+    } else if (data.whyChooseUs.section_title.length > 100) {
+      errors.push('WhyChooseUs: Section title không được vượt quá 100 ký tự');
     }
 
-    if (!data.about.section_description || typeof data.about.section_description !== 'string' || data.about.section_description.trim().length === 0) {
-      errors.push('About: Section description là bắt buộc');
-    } else if (data.about.section_description.length > 300) {
-      errors.push('About: Section description không được vượt quá 300 ký tự');
+    if (!data.whyChooseUs.section_description || typeof data.whyChooseUs.section_description !== 'string' || data.whyChooseUs.section_description.trim().length === 0) {
+      errors.push('WhyChooseUs: Section description là bắt buộc');
+    } else if (data.whyChooseUs.section_description.length > 300) {
+      errors.push('WhyChooseUs: Section description không được vượt quá 300 ký tự');
     }
 
     // Validate features
-    if (data.about.features) {
-      if (!Array.isArray(data.about.features)) {
-        errors.push('About: Features phải là một array');
+    if (data.whyChooseUs.features) {
+      if (!Array.isArray(data.whyChooseUs.features)) {
+        errors.push('WhyChooseUs: Features phải là một array');
       } else {
-        if (data.about.features.length < 1) {
-          errors.push('About: Phải có ít nhất 1 feature');
-        } else if (data.about.features.length > 6) {
-          errors.push('About: Không được có quá 6 features');
+        if (data.whyChooseUs.features.length < 1) {
+          errors.push('WhyChooseUs: Phải có ít nhất 1 feature');
+        } else if (data.whyChooseUs.features.length > 6) {
+          errors.push('WhyChooseUs: Không được có quá 6 features');
         }
 
-        data.about.features.forEach((feature, index) => {
+        data.whyChooseUs.features.forEach((feature, index) => {
+          if (!feature.icon || typeof feature.icon !== 'string' || feature.icon.trim().length === 0) {
+            errors.push(`WhyChooseUs: Feature ${index + 1}: Icon là bắt buộc`);
+          }
+
           if (!feature.title || typeof feature.title !== 'string' || feature.title.trim().length === 0) {
-            errors.push(`About: Feature ${index + 1}: Title là bắt buộc`);
+            errors.push(`WhyChooseUs: Feature ${index + 1}: Title là bắt buộc`);
           } else if (feature.title.length > 100) {
-            errors.push(`About: Feature ${index + 1}: Title không được vượt quá 100 ký tự`);
+            errors.push(`WhyChooseUs: Feature ${index + 1}: Title không được vượt quá 100 ký tự`);
           }
 
           if (!feature.description || typeof feature.description !== 'string' || feature.description.trim().length === 0) {
-            errors.push(`About: Feature ${index + 1}: Description là bắt buộc`);
-          } else if (feature.description.length > 300) {
-            errors.push(`About: Feature ${index + 1}: Description không được vượt quá 300 ký tự`);
+            errors.push(`WhyChooseUs: Feature ${index + 1}: Description là bắt buộc`);
+          } else if (feature.description.length > 500) {
+            errors.push(`WhyChooseUs: Feature ${index + 1}: Description không được vượt quá 500 ký tự`);
+          }
+
+          if (feature.color && feature.color.length > 100) {
+            errors.push(`WhyChooseUs: Feature ${index + 1}: Color không được vượt quá 100 ký tự`);
+          }
+
+          if (feature.borderColor && feature.borderColor.length > 100) {
+            errors.push(`WhyChooseUs: Feature ${index + 1}: BorderColor không được vượt quá 100 ký tự`);
+          }
+        });
+      }
+    }
+
+    // Validate stats
+    if (data.whyChooseUs.stats) {
+      if (!Array.isArray(data.whyChooseUs.stats)) {
+        errors.push('WhyChooseUs: Stats phải là một array');
+      } else {
+        if (data.whyChooseUs.stats.length > 10) {
+          errors.push('WhyChooseUs: Không được có quá 10 stats');
+        }
+
+        data.whyChooseUs.stats.forEach((stat, index) => {
+          if (!stat.icon || typeof stat.icon !== 'string' || stat.icon.trim().length === 0) {
+            errors.push(`WhyChooseUs: Stat ${index + 1}: Icon là bắt buộc`);
+          }
+
+          if (!stat.value || typeof stat.value !== 'string' || stat.value.trim().length === 0) {
+            errors.push(`WhyChooseUs: Stat ${index + 1}: Value là bắt buộc`);
+          } else if (stat.value.length > 50) {
+            errors.push(`WhyChooseUs: Stat ${index + 1}: Value không được vượt quá 50 ký tự`);
+          }
+
+          if (!stat.label || typeof stat.label !== 'string' || stat.label.trim().length === 0) {
+            errors.push(`WhyChooseUs: Stat ${index + 1}: Label là bắt buộc`);
+          } else if (stat.label.length > 100) {
+            errors.push(`WhyChooseUs: Stat ${index + 1}: Label không được vượt quá 100 ký tự`);
+          }
+
+          if (stat.color && stat.color.length > 100) {
+            errors.push(`WhyChooseUs: Stat ${index + 1}: Color không được vượt quá 100 ký tự`);
           }
         });
       }
     }
   }
 
-  // Validate contact
-  if (data.contact) {
-    if (!data.contact.section_title || typeof data.contact.section_title !== 'string' || data.contact.section_title.trim().length === 0) {
-      errors.push('Contact: Section title là bắt buộc');
-    } else if (data.contact.section_title.length > 100) {
-      errors.push('Contact: Section title không được vượt quá 100 ký tự');
+  // Validate testimonials
+  if (data.testimonials) {
+    if (!data.testimonials.section_title || typeof data.testimonials.section_title !== 'string' || data.testimonials.section_title.trim().length === 0) {
+      errors.push('Testimonials: Section title là bắt buộc');
+    } else if (data.testimonials.section_title.length > 100) {
+      errors.push('Testimonials: Section title không được vượt quá 100 ký tự');
     }
 
-    if (data.contact.info) {
-      if (!data.contact.info.phone || typeof data.contact.info.phone !== 'string' || data.contact.info.phone.trim().length === 0) {
-        errors.push('Contact: Phone là bắt buộc');
-      } else if (data.contact.info.phone.length > 20) {
-        errors.push('Contact: Phone không được vượt quá 20 ký tự');
-      }
-
-      if (!data.contact.info.email || typeof data.contact.info.email !== 'string' || data.contact.info.email.trim().length === 0) {
-        errors.push('Contact: Email là bắt buộc');
-      } else {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(data.contact.info.email)) {
-          errors.push('Contact: Email không hợp lệ');
-        } else if (data.contact.info.email.length > 100) {
-          errors.push('Contact: Email không được vượt quá 100 ký tự');
+    // Validate trustStats
+    if (data.testimonials.trustStats) {
+      if (data.testimonials.trustStats.averageRating !== undefined) {
+        const rating = parseFloat(data.testimonials.trustStats.averageRating);
+        if (isNaN(rating) || rating < 0 || rating > 5) {
+          errors.push('Testimonials: TrustStats averageRating phải là số từ 0 đến 5');
         }
       }
 
-      if (!data.contact.info.address || typeof data.contact.info.address !== 'string' || data.contact.info.address.trim().length === 0) {
-        errors.push('Contact: Address là bắt buộc');
-      } else if (data.contact.info.address.length > 200) {
-        errors.push('Contact: Address không được vượt quá 200 ký tự');
+      if (data.testimonials.trustStats.totalReviews !== undefined) {
+        const reviews = parseInt(data.testimonials.trustStats.totalReviews);
+        if (isNaN(reviews) || reviews < 0) {
+          errors.push('Testimonials: TrustStats totalReviews phải là số nguyên dương');
+        }
+      }
+
+      if (data.testimonials.trustStats.verifiedCustomers !== undefined) {
+        const verified = parseInt(data.testimonials.trustStats.verifiedCustomers);
+        if (isNaN(verified) || verified < 0 || verified > 100) {
+          errors.push('Testimonials: TrustStats verifiedCustomers phải là số từ 0 đến 100');
+        }
       }
     }
 
-    if (!data.contact.map_embed_url || typeof data.contact.map_embed_url !== 'string' || data.contact.map_embed_url.trim().length === 0) {
-      errors.push('Contact: Map embed URL là bắt buộc');
-    } else if (!data.contact.map_embed_url.startsWith('https://www.google.com/maps/embed')) {
-      errors.push('Contact: Map embed URL phải bắt đầu với https://www.google.com/maps/embed');
-    }
-
-    // Validate social media
-    if (data.contact.social_media) {
-      if (!Array.isArray(data.contact.social_media)) {
-        errors.push('Contact: Social media phải là một array');
+    // Validate testimonials array
+    if (data.testimonials.testimonials) {
+      if (!Array.isArray(data.testimonials.testimonials)) {
+        errors.push('Testimonials: Testimonials phải là một array');
       } else {
-        data.contact.social_media.forEach((social, index) => {
-          if (!social.name || typeof social.name !== 'string' || social.name.trim().length === 0) {
-            errors.push(`Contact: Social media ${index + 1}: Name là bắt buộc`);
-          } else if (social.name.length > 50) {
-            errors.push(`Contact: Social media ${index + 1}: Name không được vượt quá 50 ký tự`);
+        if (data.testimonials.testimonials.length > 20) {
+          errors.push('Testimonials: Không được có quá 20 testimonials');
+        }
+
+        data.testimonials.testimonials.forEach((testimonial, index) => {
+          if (!testimonial.name || typeof testimonial.name !== 'string' || testimonial.name.trim().length === 0) {
+            errors.push(`Testimonials: Testimonial ${index + 1}: Name là bắt buộc`);
+          } else if (testimonial.name.length > 100) {
+            errors.push(`Testimonials: Testimonial ${index + 1}: Name không được vượt quá 100 ký tự`);
           }
 
-          if (!social.url || typeof social.url !== 'string' || social.url.trim().length === 0) {
-            errors.push(`Contact: Social media ${index + 1}: URL là bắt buộc`);
-          } else if (!social.url.startsWith('http://') && !social.url.startsWith('https://')) {
-            errors.push(`Contact: Social media ${index + 1}: URL phải bắt đầu với http:// hoặc https://`);
+          if (testimonial.role && testimonial.role.length > 100) {
+            errors.push(`Testimonials: Testimonial ${index + 1}: Role không được vượt quá 100 ký tự`);
           }
 
-          if (social.description && social.description.length > 200) {
-            errors.push(`Contact: Social media ${index + 1}: Description không được vượt quá 200 ký tự`);
+          if (testimonial.rating !== undefined) {
+            const rating = parseInt(testimonial.rating);
+            if (isNaN(rating) || rating < 1 || rating > 5) {
+              errors.push(`Testimonials: Testimonial ${index + 1}: Rating phải là số từ 1 đến 5`);
+            }
+          }
+
+          if (!testimonial.comment || typeof testimonial.comment !== 'string' || testimonial.comment.trim().length === 0) {
+            errors.push(`Testimonials: Testimonial ${index + 1}: Comment là bắt buộc`);
+          } else if (testimonial.comment.length > 500) {
+            errors.push(`Testimonials: Testimonial ${index + 1}: Comment không được vượt quá 500 ký tự`);
+          }
+
+          if (testimonial.avatar && testimonial.avatar.length > 10) {
+            errors.push(`Testimonials: Testimonial ${index + 1}: Avatar không được vượt quá 10 ký tự`);
+          }
+
+          if (testimonial.color && testimonial.color.length > 100) {
+            errors.push(`Testimonials: Testimonial ${index + 1}: Color không được vượt quá 100 ký tự`);
+          }
+
+          if (testimonial.borderColor && testimonial.borderColor.length > 100) {
+            errors.push(`Testimonials: Testimonial ${index + 1}: BorderColor không được vượt quá 100 ký tự`);
+          }
+
+          if (testimonial.date && testimonial.date.length > 50) {
+            errors.push(`Testimonials: Testimonial ${index + 1}: Date không được vượt quá 50 ký tự`);
           }
         });
       }
@@ -631,20 +766,23 @@ export function mergeWithDefaults(config) {
     merged.menu = { ...merged.menu, ...config.menu };
   }
 
-  if (config.about) {
-    merged.about = { ...merged.about, ...config.about };
-    if (config.about.features) {
-      merged.about.features = config.about.features;
+  if (config.whyChooseUs) {
+    merged.whyChooseUs = { ...merged.whyChooseUs, ...config.whyChooseUs };
+    if (config.whyChooseUs.features) {
+      merged.whyChooseUs.features = config.whyChooseUs.features;
+    }
+    if (config.whyChooseUs.stats) {
+      merged.whyChooseUs.stats = config.whyChooseUs.stats;
     }
   }
 
-  if (config.contact) {
-    merged.contact = { ...merged.contact, ...config.contact };
-    if (config.contact.info) {
-      merged.contact.info = { ...merged.contact.info, ...config.contact.info };
+  if (config.testimonials) {
+    merged.testimonials = { ...merged.testimonials, ...config.testimonials };
+    if (config.testimonials.trustStats) {
+      merged.testimonials.trustStats = { ...merged.testimonials.trustStats, ...config.testimonials.trustStats };
     }
-    if (config.contact.social_media) {
-      merged.contact.social_media = config.contact.social_media;
+    if (config.testimonials.testimonials) {
+      merged.testimonials.testimonials = config.testimonials.testimonials;
     }
   }
 

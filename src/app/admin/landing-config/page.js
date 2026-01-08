@@ -6,7 +6,7 @@ import Toast from '@/components/Toast/Toast';
 import {
   Settings, Save, RotateCcw, Loader2, X, Plus, Edit2, Trash2,
   ArrowUp, ArrowDown, Home, Sparkles, BookOpen, Info, Phone,
-  Mail, MapPin, Share2, Link as LinkIcon, CheckCircle2, Zap, Heart, MessageCircle, Shield
+  Mail, MapPin, Share2, Link as LinkIcon, CheckCircle2, Zap, Heart, MessageCircle, Shield, Star, MessageSquare
 } from 'lucide-react';
 import * as lucideIcons from 'lucide-react';
 
@@ -153,8 +153,8 @@ const TABS = [
   { id: 'header', label: 'Header', icon: Home },
   { id: 'hero', label: 'Hero', icon: Sparkles },
   { id: 'menu', label: 'Menu', icon: BookOpen },
-  { id: 'about', label: 'About', icon: Info },
-  { id: 'contact', label: 'Contact', icon: Phone },
+  { id: 'whyChooseUs', label: 'Why Choose Us', icon: Star },
+  { id: 'testimonials', label: 'Testimonials', icon: MessageSquare },
   { id: 'footer', label: 'Footer', icon: LinkIcon },
 ];
 
@@ -197,10 +197,10 @@ export default function AdminLandingConfig() {
     popular_icon: '',
     popular_lucide_icon: '',
   });
-  const [aboutData, setAboutData] = useState({ 
+  const [whyChooseUsData, setWhyChooseUsData] = useState({ 
     section_title: '', section_description: '', features: [] 
   });
-  const [contactData, setContactData] = useState({ 
+  const [testimonialsData, setTestimonialsData] = useState({ 
     section_title: '', 
     info: { phone: '', email: '', address: '' },
     map_embed_url: '',
@@ -287,12 +287,14 @@ export default function AdminLandingConfig() {
         if (data.data.restaurant_name) setRestaurantName(data.data.restaurant_name);
         if (data.data.slogan) setSlogan(data.data.slogan);
         if (data.data.header) {
-          // Đảm bảo luôn có đủ 4 menu items mặc định
+          // Đảm bảo luôn có đủ 6 menu items mặc định
           const defaultMenuItems = [
             { id: 'home', label: 'Trang chủ', icon: 'Home', order: 1 },
             { id: 'menu', label: 'Thực đơn', icon: 'Utensils', order: 2 },
-            { id: 'about', label: 'Giới thiệu', icon: 'BookOpen', order: 3 },
-            { id: 'contact', label: 'Liên hệ', icon: 'Phone', order: 4 },
+            { id: 'why-choose-us', label: 'Tại sao chọn chúng tôi', icon: 'Star', order: 3 },
+            { id: 'testimonials', label: 'Đánh giá', icon: 'MessageSquare', order: 4 },
+            { id: 'about', label: 'Giới thiệu', icon: 'BookOpen', order: 5 },
+            { id: 'contact', label: 'Liên hệ', icon: 'Phone', order: 6 },
           ];
           
           const existingMenuItems = data.data.header.menu_items || [];
@@ -308,8 +310,17 @@ export default function AdminLandingConfig() {
         }
         if (data.data.hero) setHeroData(data.data.hero);
         if (data.data.menu) setMenuData(data.data.menu);
-        if (data.data.about) setAboutData(data.data.about);
-        if (data.data.contact) setContactData(data.data.contact);
+        if (data.data.whyChooseUs) setWhyChooseUsData(data.data.whyChooseUs);
+        if (data.data.testimonials) {
+          setTestimonialsData({
+            section_title: data.data.testimonials.section_title || '',
+            info: data.data.testimonials.info || { phone: '', email: '', address: '' },
+            map_embed_url: data.data.testimonials.map_embed_url || '',
+            social_media: data.data.testimonials.social_media || [],
+            trustStats: data.data.testimonials.trustStats || { averageRating: 0, totalReviews: 0, verifiedCustomers: 0 },
+            testimonials: data.data.testimonials.testimonials || [],
+          });
+        }
         if (data.data.footer) setFooterData(data.data.footer);
         if (data.data.seo) setSeoData(data.data.seo);
         if (data.data.spam) setSpamData(data.data.spam);
@@ -340,12 +351,14 @@ export default function AdminLandingConfig() {
     try {
       setSaving(true);
 
-      // Đảm bảo header có đủ 4 menu items
+      // Đảm bảo header có đủ 6 menu items
       const defaultMenuItems = [
         { id: 'home', label: 'Trang chủ', icon: 'Home', order: 1 },
         { id: 'menu', label: 'Thực đơn', icon: 'Utensils', order: 2 },
-        { id: 'about', label: 'Giới thiệu', icon: 'BookOpen', order: 3 },
-        { id: 'contact', label: 'Liên hệ', icon: 'Phone', order: 4 },
+        { id: 'why-choose-us', label: 'Tại sao chọn chúng tôi', icon: 'Star', order: 3 },
+        { id: 'testimonials', label: 'Đánh giá', icon: 'MessageSquare', order: 4 },
+        { id: 'about', label: 'Giới thiệu', icon: 'BookOpen', order: 5 },
+        { id: 'contact', label: 'Liên hệ', icon: 'Phone', order: 6 },
       ];
       
       const existingMenuItems = headerData.menu_items || [];
@@ -363,8 +376,8 @@ export default function AdminLandingConfig() {
         },
         hero: heroData,
         menu: menuData,
-        about: aboutData,
-        contact: contactData,
+        whyChooseUs: whyChooseUsData,
+        testimonials: testimonialsData,
         footer: footerData,
         seo: seoData,
         spam: spamData,
@@ -457,8 +470,8 @@ export default function AdminLandingConfig() {
       setFeatureForm({ ...feature });
     } else {
       setEditingFeature(null);
-      const maxOrder = aboutData.features.length > 0 
-        ? Math.max(...aboutData.features.map(f => f.order || 0))
+      const maxOrder = whyChooseUsData.features.length > 0 
+        ? Math.max(...whyChooseUsData.features.map(f => f.order || 0))
         : 0;
       setFeatureForm({ title: '', description: '', icon: 'CheckCircle2', order: maxOrder + 1 });
     }
@@ -495,7 +508,7 @@ export default function AdminLandingConfig() {
       return;
     }
 
-    const newFeatures = [...aboutData.features];
+    const newFeatures = [...whyChooseUsData.features];
     if (editingFeature) {
       const index = newFeatures.findIndex(f => f === editingFeature);
       if (index !== -1) {
@@ -505,7 +518,7 @@ export default function AdminLandingConfig() {
       newFeatures.push({ ...featureForm });
     }
 
-    setAboutData({ ...aboutData, features: newFeatures });
+    setWhyChooseUsData({ ...whyChooseUsData, features: newFeatures });
     setShowFeatureModal(false);
     setEditingFeature(null);
     setFeatureForm({ title: '', description: '', icon: 'CheckCircle2', order: 1 });
@@ -513,8 +526,8 @@ export default function AdminLandingConfig() {
 
   const handleDeleteFeature = (feature) => {
     if (!confirm('Bạn có chắc muốn xóa feature này?')) return;
-    const newFeatures = aboutData.features.filter(f => f !== feature);
-    setAboutData({ ...aboutData, features: newFeatures });
+    const newFeatures = whyChooseUsData.features.filter(f => f !== feature);
+    setWhyChooseUsData({ ...whyChooseUsData, features: newFeatures });
   };
 
   // Social media management
@@ -524,8 +537,8 @@ export default function AdminLandingConfig() {
       setSocialForm({ ...social });
     } else {
       setEditingSocial(null);
-      const maxOrder = contactData.social_media.length > 0 
-        ? Math.max(...contactData.social_media.map(s => s.order || 0))
+      const maxOrder = testimonialsData.social_media.length > 0 
+        ? Math.max(...testimonialsData.social_media.map(s => s.order || 0))
         : 0;
       setSocialForm({ name: '', url: '', icon: 'FacebookIcon', description: '', color: 'text-blue-400', order: maxOrder + 1 });
     }
@@ -562,7 +575,7 @@ export default function AdminLandingConfig() {
       return;
     }
 
-    const newSocial = [...contactData.social_media];
+    const newSocial = [...testimonialsData.social_media];
     if (editingSocial) {
       const index = newSocial.findIndex(s => s === editingSocial);
       if (index !== -1) {
@@ -572,7 +585,7 @@ export default function AdminLandingConfig() {
       newSocial.push({ ...socialForm });
     }
 
-    setContactData({ ...contactData, social_media: newSocial });
+    setTestimonialsData({ ...testimonialsData, social_media: newSocial });
     setShowSocialModal(false);
     setEditingSocial(null);
     setSocialForm({ name: '', url: '', icon: 'FacebookIcon', description: '', color: 'text-blue-400', order: 1 });
@@ -580,8 +593,8 @@ export default function AdminLandingConfig() {
 
   const handleDeleteSocial = (social) => {
     if (!confirm('Bạn có chắc muốn xóa social media này?')) return;
-    const newSocial = contactData.social_media.filter(s => s !== social);
-    setContactData({ ...contactData, social_media: newSocial });
+    const newSocial = testimonialsData.social_media.filter(s => s !== social);
+    setTestimonialsData({ ...testimonialsData, social_media: newSocial });
   };
 
   // Footer links management
@@ -654,7 +667,7 @@ export default function AdminLandingConfig() {
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-2">
             <Settings className="w-8 h-8 text-primary" />
-            <h1 className="text-3xl font-bold text-foreground">Cấu hình Landing Page</h1>
+            <h1 className="text-3xl font-bold text-foreground">Cấu hình Trang chủ</h1>
           </div>
           <p className="text-muted-foreground">Quản lý tất cả nội dung text động trên landing page</p>
         </div>
@@ -783,6 +796,8 @@ export default function AdminLandingConfig() {
                     const sectionNames = {
                       home: 'Trang chủ',
                       menu: 'Thực đơn',
+                      'why-choose-us': 'Tại sao chọn chúng tôi',
+                      testimonials: 'Đánh giá',
                       about: 'Giới thiệu',
                       contact: 'Liên hệ'
                     };
@@ -1068,38 +1083,38 @@ export default function AdminLandingConfig() {
             </div>
           )}
 
-          {/* About Tab */}
-          {activeTab === 'about' && (
+          {/* WhyChooseUs Tab */}
+          {activeTab === 'whyChooseUs' && (
             <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-card-foreground mb-4">Cấu hình About Section</h2>
+              <h2 className="text-xl font-semibold text-card-foreground mb-4">Cấu hình Why Choose Us Section</h2>
               <div>
                 <label className="block text-sm font-medium text-card-foreground mb-2">
                   Section Title <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
-                  value={aboutData.section_title}
-                  onChange={(e) => setAboutData({ ...aboutData, section_title: e.target.value })}
+                  value={whyChooseUsData.section_title}
+                  onChange={(e) => setWhyChooseUsData({ ...whyChooseUsData, section_title: e.target.value })}
                   className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   placeholder="Giới thiệu"
                   maxLength={100}
                 />
-                <p className="text-xs text-muted-foreground mt-1">{aboutData.section_title.length}/100 ký tự</p>
+                <p className="text-xs text-muted-foreground mt-1">{whyChooseUsData.section_title.length}/100 ký tự</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-card-foreground mb-2">
                   Section Description <span className="text-red-400">*</span>
                 </label>
                 <textarea
-                  value={aboutData.section_description}
-                  onChange={(e) => setAboutData({ ...aboutData, section_description: e.target.value })}
+                  value={whyChooseUsData.section_description}
+                  onChange={(e) => setWhyChooseUsData({ ...whyChooseUsData, section_description: e.target.value })}
                   className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   rows={3}
                   placeholder="Cam kết mang đến cho bạn những trải nghiệm ẩm thực tuyệt vời nhất"
                   maxLength={300}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  {aboutData.section_description.length}/300 ký tự
+                  {whyChooseUsData.section_description.length}/300 ký tự
                 </p>
               </div>
 
@@ -1107,11 +1122,11 @@ export default function AdminLandingConfig() {
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <label className="block text-sm font-medium text-card-foreground">
-                    Features <span className="text-red-400">*</span> ({aboutData.features.length}/6)
+                    Features <span className="text-red-400">*</span> ({whyChooseUsData.features.length}/6)
                   </label>
                   <button
                     onClick={() => handleOpenFeatureModal()}
-                    disabled={aboutData.features.length >= 6}
+                    disabled={whyChooseUsData.features.length >= 6}
                     className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
@@ -1119,7 +1134,7 @@ export default function AdminLandingConfig() {
                   </button>
                 </div>
                 <div className="space-y-2">
-                  {aboutData.features.map((feature, index) => {
+                  {whyChooseUsData.features.map((feature, index) => {
                     const FeatureIcon = feature.icon ? (getLucideIcon(feature.icon) || CheckCircle2) : CheckCircle2;
                     return (
                       <div
@@ -1152,7 +1167,7 @@ export default function AdminLandingConfig() {
                       </div>
                     );
                   })}
-                  {aboutData.features.length === 0 && (
+                  {whyChooseUsData.features.length === 0 && (
                     <p className="text-muted-foreground text-center py-4">Chưa có feature nào</p>
                   )}
                 </div>
@@ -1160,24 +1175,24 @@ export default function AdminLandingConfig() {
             </div>
           )}
 
-          {/* Contact Tab */}
-          {activeTab === 'contact' && (
+          {/* Testimonials Tab */}
+          {activeTab === 'testimonials' && (
             <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-card-foreground mb-4">Cấu hình Contact Section</h2>
+              <h2 className="text-xl font-semibold text-card-foreground mb-4">Cấu hình Testimonials Section</h2>
               <div>
                 <label className="block text-sm font-medium text-card-foreground mb-2">
                   Section Title <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
-                  value={contactData.section_title}
-                  onChange={(e) => setContactData({ ...contactData, section_title: e.target.value })}
+                  value={testimonialsData.section_title}
+                  onChange={(e) => setTestimonialsData({ ...testimonialsData, section_title: e.target.value })}
                   className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   placeholder="Liên hệ"
                   maxLength={100}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  {contactData.section_title.length}/100 ký tự
+                  {testimonialsData.section_title.length}/100 ký tự
                 </p>
               </div>
 
@@ -1188,11 +1203,11 @@ export default function AdminLandingConfig() {
                   </label>
                   <input
                     type="tel"
-                    value={contactData.info.phone}
+                    value={testimonialsData.info?.phone || ''}
                     onChange={(e) =>
-                      setContactData({
-                        ...contactData,
-                        info: { ...contactData.info, phone: e.target.value },
+                      setTestimonialsData({
+                        ...testimonialsData,
+                        info: { ...(testimonialsData.info || {}), phone: e.target.value },
                       })
                     }
                     className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
@@ -1206,11 +1221,11 @@ export default function AdminLandingConfig() {
                   </label>
                   <input
                     type="email"
-                    value={contactData.info.email}
+                    value={testimonialsData.info?.email || ''}
                     onChange={(e) =>
-                      setContactData({
-                        ...contactData,
-                        info: { ...contactData.info, email: e.target.value },
+                      setTestimonialsData({
+                        ...testimonialsData,
+                        info: { ...(testimonialsData.info || {}), email: e.target.value },
                       })
                     }
                     className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
@@ -1224,11 +1239,11 @@ export default function AdminLandingConfig() {
                   </label>
                   <input
                     type="text"
-                    value={contactData.info.address}
+                    value={testimonialsData.info?.address || ''}
                     onChange={(e) =>
-                      setContactData({
-                        ...contactData,
-                        info: { ...contactData.info, address: e.target.value },
+                      setTestimonialsData({
+                        ...testimonialsData,
+                        info: { ...(testimonialsData.info || {}), address: e.target.value },
                       })
                     }
                     className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
@@ -1244,8 +1259,8 @@ export default function AdminLandingConfig() {
                 </label>
                 <input
                   type="url"
-                  value={contactData.map_embed_url}
-                  onChange={(e) => setContactData({ ...contactData, map_embed_url: e.target.value })}
+                  value={testimonialsData.map_embed_url}
+                  onChange={(e) => setTestimonialsData({ ...testimonialsData, map_embed_url: e.target.value })}
                   className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   placeholder="https://www.google.com/maps/embed?..."
                 />
@@ -1267,7 +1282,7 @@ export default function AdminLandingConfig() {
                   </button>
                 </div>
                 <div className="space-y-2">
-                  {contactData.social_media.map((social, index) => {
+                  {testimonialsData.social_media.map((social, index) => {
                     // Render icon cho social media
                     let SocialIcon = MessageCircle;
                     if (social.icon === 'FacebookIcon') {
@@ -1320,7 +1335,7 @@ export default function AdminLandingConfig() {
                       </div>
                     );
                   })}
-                  {contactData.social_media.length === 0 && (
+                  {testimonialsData.social_media.length === 0 && (
                     <p className="text-muted-foreground text-center py-4">Chưa có social media nào</p>
                   )}
                 </div>

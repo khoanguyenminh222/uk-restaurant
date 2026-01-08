@@ -141,19 +141,19 @@ export async function PUT(request) {
       if (body.menu) {
         updateData.menu = { ...updateData.menu, ...body.menu };
       }
-      if (body.about) {
-        updateData.about = { ...updateData.about, ...body.about };
-        if (body.about.features) {
-          updateData.about.features = body.about.features;
+      if (body.whyChooseUs) {
+        updateData.whyChooseUs = { ...updateData.whyChooseUs, ...body.whyChooseUs };
+        if (body.whyChooseUs.features) {
+          updateData.whyChooseUs.features = body.whyChooseUs.features;
         }
       }
-      if (body.contact) {
-        updateData.contact = { ...updateData.contact, ...body.contact };
-        if (body.contact.info) {
-          updateData.contact.info = { ...updateData.contact.info, ...body.contact.info };
+      if (body.testimonials) {
+        updateData.testimonials = { ...updateData.testimonials, ...body.testimonials };
+        if (body.testimonials.info) {
+          updateData.testimonials.info = { ...updateData.testimonials.info, ...body.testimonials.info };
         }
-        if (body.contact.social_media !== undefined) {
-          updateData.contact.social_media = body.contact.social_media;
+        if (body.testimonials.social_media !== undefined) {
+          updateData.testimonials.social_media = body.testimonials.social_media;
         }
       }
       if (body.footer) {

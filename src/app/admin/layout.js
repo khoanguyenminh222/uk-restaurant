@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, Menu, X, LayoutDashboard, FolderOpen, UtensilsCrossed, Users, LogOut, ShoppingCart, UserCircle, Image as ImageIcon, TrendingUp, Settings, ChevronDown, ChevronRight, Shield, Bell } from 'lucide-react';
+import { Home, Menu, X, LayoutDashboard, FolderOpen, UtensilsCrossed, Users, LogOut, ShoppingCart, UserCircle, Image as ImageIcon, TrendingUp, Settings, ChevronDown, ChevronRight, Shield, Bell, BookOpen, Phone } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle/ThemeToggle';
 import { useLandingConfig } from '@/hooks/useLandingConfig';
 
@@ -124,7 +124,9 @@ export default function AdminLayout({ children }) {
           onToggle: () => setConfigMenuOpen(!configMenuOpen),
           children: [
             { href: '/admin/banners', label: 'Banner', icon: ImageIcon },
-            { href: '/admin/landing-config', label: 'Cấu hình Landing', icon: Settings },
+            { href: '/admin/landing-config', label: 'Cấu hình Home', icon: Settings },
+            { href: '/admin/about-config', label: 'Cấu hình About', icon: BookOpen },
+            { href: '/admin/contact-config', label: 'Cấu hình Contact', icon: Phone },
             { href: '/admin/popular-config', label: 'Cấu hình Ngưỡng', icon: TrendingUp },
             { href: '/admin/notification-config', label: 'Cấu hình Thông báo', icon: Bell },
             { href: '/admin/blacklist', label: 'Blacklist Email', icon: Shield },
