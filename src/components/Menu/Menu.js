@@ -1,12 +1,47 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Search, X, ArrowRight, TrendingUp } from "lucide-react"
+import { Search, X, ArrowRight, TrendingUp, ArrowDown } from "lucide-react"
 import * as lucideIcons from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useScrollAnimation } from "@/hooks/useScrollAnimation"
 import MenuCard from "./MenuCard"
 import { useLandingConfig } from "@/hooks/useLandingConfig"
+
+// Component tinh tế để scroll xuống section tiếp theo
+function ScrollToNextSection({ targetId }) {
+  const scrollToNext = () => {
+    const element = document.getElementById(targetId)
+    if (element) {
+      const offset = 80
+      const elementPosition = element.getBoundingClientRect().top
+      const offsetPosition = elementPosition + window.pageYOffset - offset
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth",
+      })
+    }
+  }
+
+  return (
+    <div className="flex justify-center mt-6 md:mt-8 pb-4">
+      <button
+        onClick={scrollToNext}
+        className="group flex flex-col items-center gap-2 text-muted-foreground hover:text-primary transition-colors duration-300 cursor-pointer"
+        aria-label={`Cuộn xuống ${targetId}`}
+      >
+        <span className="text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          Xem thêm
+        </span>
+        <div className="relative">
+          <ArrowDown className="w-5 h-5 animate-bounce" />
+          <div className="absolute inset-0 bg-primary/20 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        </div>
+      </button>
+    </div>
+  )
+}
 
 // Helper function để chuyển đổi kebab-case sang PascalCase
 const toPascalCase = (str) => {
@@ -593,6 +628,9 @@ export default function Menu({ onAddToCart, onOrderClick }) {
                     <ArrowRight className="w-5 h-5" />
                   </button>
                 </div>
+
+                {/* Subtle Scroll Indicator - Cuộn xuống WhyChooseUs */}
+                <ScrollToNextSection targetId="why-choose-us" />
               </>
             ) : (
               <div className="flex items-center justify-center py-20">

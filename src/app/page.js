@@ -4,8 +4,8 @@ import { useState, useRef, useEffect } from "react"
 import Header from "@/components/Header/Header"
 import Hero from "@/components/Hero/Hero"
 import Menu from "@/components/Menu/Menu"
-import About from "@/components/About/About"
-import Contact from "@/components/Contact/Contact"
+import WhyChooseUs from "@/components/WhyChooseUs/WhyChooseUs"
+import Testimonials from "@/components/Testimonials/Testimonials"
 import Footer from "@/components/Footer/Footer"
 import ScrollToTop from "@/components/ScrollToTop/ScrollToTop"
 import Cart from "@/components/Cart/Cart"
@@ -153,8 +153,8 @@ export default function Home() {
           </div>
         </div> */}
         <Menu onAddToCart={handleAddToCart} onOrderClick={handleOrderNow} />
-        <About />
-        <Contact />
+        <WhyChooseUs />
+        <Testimonials />
       </main>
       <Footer />
       <ScrollToTop />
