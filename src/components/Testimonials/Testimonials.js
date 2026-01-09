@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { Star, Quote, CheckCircle2, Sparkles, TrendingUp } from "lucide-react"
 import { useScrollAnimation } from "@/hooks/useScrollAnimation"
+import { useLandingConfig } from "@/hooks/useLandingConfig"
 
 // Component để animate số đếm tăng dần
 function AnimatedNumber({ value, isVisible, duration = 2000, suffix = "" }) {
@@ -74,11 +75,42 @@ export default function Testimonials() {
   const [testimonial2Ref, isTestimonial2Visible] = useScrollAnimation({ threshold: 0.2 })
   const [testimonial3Ref, isTestimonial3Visible] = useScrollAnimation({ threshold: 0.2 })
 
+  const { config } = useLandingConfig()
+  const [reviewStats, setReviewStats] = useState(null)
+
+  // Fetch review stats nếu auto_calculate_stats = true
+  useEffect(() => {
+    const fetchReviewStats = async () => {
+      if (config?.testimonials?.auto_calculate_stats) {
+        try {
+          const res = await fetch('/api/reviews/stats')
+          const data = await res.json()
+          if (data.success) {
+            setReviewStats(data.data)
+          }
+        } catch (error) {
+          console.error('Error fetching review stats:', error)
+        }
+      }
+    }
+    fetchReviewStats()
+  }, [config?.testimonials?.auto_calculate_stats])
+
   // Trust stats - Social proof mạnh mẽ
-  const trustStats = {
+  // Sử dụng stats từ reviews nếu auto_calculate_stats = true, ngược lại dùng từ config hoặc default
+  const defaultTrustStats = {
     averageRating: 4.9,
     totalReviews: 1247,
     verifiedCustomers: 98
+  }
+
+  let trustStats = config?.testimonials?.trustStats || defaultTrustStats
+  if (config?.testimonials?.auto_calculate_stats && reviewStats) {
+    trustStats = {
+      averageRating: reviewStats.averageRating,
+      totalReviews: reviewStats.totalReviews,
+      verifiedCustomers: reviewStats.verifiedCustomers,
+    }
   }
 
   // Sample testimonials với thông tin đa dạng và trust signals
@@ -153,7 +185,12 @@ export default function Testimonials() {
           </h2>
 
           {/* Divider */}
-          <div className="w-16 sm:w-20 md:w-24 h-1 sm:h-1.5 bg-linear-to-r from-transparent via-primary to-transparent mx-auto mb-4 sm:mb-6 rounded-full"></div>
+          {/* Divider */}
+          <div className="flex items-center justify-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <div className="h-px w-8 sm:w-12 bg-linear-to-r from-transparent to-primary"></div>
+            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-primary"></div>
+            <div className="h-px w-8 sm:w-12 bg-linear-to-r from-primary to-transparent"></div>
+          </div>
 
           {/* Description */}
           <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-2 mb-6 sm:mb-8">

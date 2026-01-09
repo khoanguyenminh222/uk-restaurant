@@ -1,0 +1,131 @@
+import { NextResponse } from 'next/server';
+import clientPromise, { getDatabaseName } from '@/lib/mongodb';
+import { validateReview, calculateReviewStats } from '@/lib/models/Review';
+
+/**
+ * GET /api/reviews
+ * Lấy danh sách đánh giá
+ * Query params:
+ * - approved: true/false (lọc theo trạng thái duyệt)
+ * - featured: true/false (lọc theo featured)
+ * - limit: số lượng (default: 50)
+ * - skip: bỏ qua (default: 0)
+ */
+export async function GET(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const approved = searchParams.get('approved');
+    const featured = searchParams.get('featured');
+    const limit = parseInt(searchParams.get('limit') || '50');
+    const skip = parseInt(searchParams.get('skip') || '0');
+
+    const client = await clientPromise;
+    const db = client.db(getDatabaseName());
+
+    const query = {};
+    if (approved !== null) {
+      query.is_approved = approved === 'true';
+    }
+    // Nếu không có approved param, chỉ lấy reviews đã được duyệt (cho public)
+    if (approved === null) {
+      query.is_approved = { $ne: false };
+    }
+
+    const reviews = await db
+      .collection('reviews')
+      .find(query)
+      .sort({ created_at: -1 })
+      .limit(limit)
+      .skip(skip)
+      .toArray();
+
+    const total = await db.collection('reviews').countDocuments(query);
+
+    // Calculate stats
+    const allApprovedReviews = await db
+      .collection('reviews')
+      .find({ is_approved: { $ne: false } })
+      .toArray();
+    
+    const stats = calculateReviewStats(allApprovedReviews);
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: reviews.map(review => ({
+          ...review,
+          _id: review._id.toString(),
+        })),
+        stats,
+        pagination: {
+          total,
+          limit,
+          skip,
+          hasMore: skip + limit < total,
+        },
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error('Error fetching reviews:', error);
+    return NextResponse.json(
+      { success: false, error: 'Lỗi khi lấy danh sách đánh giá' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * POST /api/reviews
+ * Tạo đánh giá mới (public)
+ */
+export async function POST(request) {
+  try {
+    const body = await request.json();
+
+    const validation = validateReview(body);
+    if (!validation.isValid) {
+      return NextResponse.json(
+        { success: false, error: 'Dữ liệu không hợp lệ', errors: validation.errors },
+        { status: 400 }
+      );
+    }
+
+    const client = await clientPromise;
+    const db = client.db(getDatabaseName());
+
+    const now = new Date();
+    const newReview = {
+      customer_name: body.customer_name.trim(),
+      customer_phone: body.customer_phone?.trim() || '',
+      customer_email: body.customer_email?.trim() || '',
+      rating: parseInt(body.rating),
+      comment: body.comment?.trim() || '',
+      order_id: body.order_id || '',
+      is_approved: false, // Mặc định chưa duyệt, admin sẽ duyệt sau
+      avatar: body.avatar || '👤',
+      color: body.color || 'from-primary/20 to-primary-light/10',
+      borderColor: body.borderColor || 'border-primary/30',
+      created_at: now,
+      updated_at: now,
+    };
+
+    const result = await db.collection('reviews').insertOne(newReview);
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'Đánh giá đã được gửi. Cảm ơn bạn đã phản hồi!',
+        data: { ...newReview, _id: result.insertedId.toString() },
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error('Error creating review:', error);
+    return NextResponse.json(
+      { success: false, error: 'Lỗi khi tạo đánh giá' },
+      { status: 500 }
+    );
+  }
+}
+

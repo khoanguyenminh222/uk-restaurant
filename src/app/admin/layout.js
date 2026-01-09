@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, Menu, X, LayoutDashboard, FolderOpen, UtensilsCrossed, Users, LogOut, ShoppingCart, UserCircle, Image as ImageIcon, TrendingUp, Settings, ChevronDown, ChevronRight, Shield, Bell, BookOpen, Phone } from 'lucide-react';
+import { Home, Menu, X, LayoutDashboard, FolderOpen, UtensilsCrossed, Users, LogOut, ShoppingCart, UserCircle, Image as ImageIcon, TrendingUp, Settings, ChevronDown, ChevronRight, Shield, Bell, BookOpen, Phone, MessageSquare } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle/ThemeToggle';
 import { useLandingConfig } from '@/hooks/useLandingConfig';
 
@@ -113,6 +113,7 @@ export default function AdminLayout({ children }) {
     { href: '/admin/categories', label: 'Danh mục', icon: FolderOpen },
     { href: '/admin/food', label: 'Món ăn', icon: UtensilsCrossed },
     { href: '/admin/orders', label: 'Đơn hàng', icon: ShoppingCart },
+    { href: '/admin/reviews', label: 'Đánh giá', icon: MessageSquare },
 
     // Config menu - only for admin and super_admin (not manager)
     ...(adminInfo && (adminInfo.role === 'admin' || adminInfo.role === 'super_admin')

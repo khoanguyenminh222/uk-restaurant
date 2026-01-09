@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { defaultLandingConfig, validateLandingConfig, mergeWithDefaults } from '@/lib/models/LandingConfig';
+import { calculateReviewStats } from '@/lib/models/Review';
 
 /**
  * GET /api/config/landing
@@ -102,6 +103,31 @@ export async function PUT(request) {
     if (!existing) {
       // Tạo mới: merge với defaults
       const newConfig = mergeWithDefaults(body);
+      
+      // Tự động thêm color và borderColor mặc định cho các feature thiếu
+      if (newConfig.whyChooseUs && newConfig.whyChooseUs.features) {
+        const defaultColors = [
+          { color: 'from-green-500/20 to-emerald-600/10', borderColor: 'border-green-500/30' },
+          { color: 'from-orange-500/20 to-amber-600/10', borderColor: 'border-orange-500/30' },
+          { color: 'from-blue-500/20 to-cyan-600/10', borderColor: 'border-blue-500/30' },
+          { color: 'from-purple-500/20 to-violet-600/10', borderColor: 'border-purple-500/30' },
+          { color: 'from-pink-500/20 to-rose-600/10', borderColor: 'border-pink-500/30' },
+          { color: 'from-yellow-500/20 to-amber-600/10', borderColor: 'border-yellow-500/30' },
+        ];
+        
+        newConfig.whyChooseUs.features = newConfig.whyChooseUs.features.map((feature, index) => {
+          if (feature.color && feature.borderColor) {
+            return feature;
+          }
+          const colorIndex = index % defaultColors.length;
+          return {
+            ...feature,
+            color: feature.color || defaultColors[colorIndex].color,
+            borderColor: feature.borderColor || defaultColors[colorIndex].borderColor,
+          };
+        });
+      }
+      
       newConfig.config_type = 'landing';
       newConfig.created_at = now;
       newConfig.updated_at = now;
@@ -144,16 +170,85 @@ export async function PUT(request) {
       if (body.whyChooseUs) {
         updateData.whyChooseUs = { ...updateData.whyChooseUs, ...body.whyChooseUs };
         if (body.whyChooseUs.features) {
-          updateData.whyChooseUs.features = body.whyChooseUs.features;
+          // Tự động thêm color và borderColor mặc định cho các feature thiếu
+          const defaultColors = [
+            { color: 'from-green-500/20 to-emerald-600/10', borderColor: 'border-green-500/30' },
+            { color: 'from-orange-500/20 to-amber-600/10', borderColor: 'border-orange-500/30' },
+            { color: 'from-blue-500/20 to-cyan-600/10', borderColor: 'border-blue-500/30' },
+            { color: 'from-purple-500/20 to-violet-600/10', borderColor: 'border-purple-500/30' },
+            { color: 'from-pink-500/20 to-rose-600/10', borderColor: 'border-pink-500/30' },
+            { color: 'from-yellow-500/20 to-amber-600/10', borderColor: 'border-yellow-500/30' },
+          ];
+          
+          updateData.whyChooseUs.features = body.whyChooseUs.features.map((feature, index) => {
+            // Nếu feature đã có color và borderColor, giữ nguyên
+            if (feature.color && feature.borderColor) {
+              return feature;
+            }
+            // Nếu không có, thêm từ mảng mặc định dựa trên index
+            const colorIndex = index % defaultColors.length;
+            return {
+              ...feature,
+              color: feature.color || defaultColors[colorIndex].color,
+              borderColor: feature.borderColor || defaultColors[colorIndex].borderColor,
+            };
+          });
+        }
+        if (body.whyChooseUs.stats) {
+          updateData.whyChooseUs.stats = body.whyChooseUs.stats;
+        }
+        // Nếu auto_calculate_stats = true, tính toán stats từ reviews
+        if (body.whyChooseUs.auto_calculate_stats === true) {
+          try {
+            const reviews = await db
+              .collection('reviews')
+              .find({ is_approved: { $ne: false } })
+              .toArray();
+            
+            const stats = calculateReviewStats(reviews);
+            
+            // Cập nhật stats từ reviews
+            updateData.whyChooseUs.stats = updateData.whyChooseUs.stats || [];
+            updateData.whyChooseUs.stats = updateData.whyChooseUs.stats.map(stat => {
+              if (stat.icon === 'Users') {
+                return { ...stat, value: `${stats.totalReviews.toLocaleString('vi-VN')}+` };
+              }
+              if (stat.icon === 'Star') {
+                return { ...stat, value: `${stats.averageRating}/5` };
+              }
+              return stat;
+            });
+          } catch (error) {
+            console.error('Error calculating stats from reviews:', error);
+          }
         }
       }
       if (body.testimonials) {
         updateData.testimonials = { ...updateData.testimonials, ...body.testimonials };
-        if (body.testimonials.info) {
-          updateData.testimonials.info = { ...updateData.testimonials.info, ...body.testimonials.info };
+        if (body.testimonials.trustStats) {
+          updateData.testimonials.trustStats = { ...updateData.testimonials.trustStats, ...body.testimonials.trustStats };
         }
-        if (body.testimonials.social_media !== undefined) {
-          updateData.testimonials.social_media = body.testimonials.social_media;
+        if (body.testimonials.testimonials) {
+          updateData.testimonials.testimonials = body.testimonials.testimonials;
+        }
+        // Nếu auto_calculate_stats = true, tính toán trustStats từ reviews
+        if (body.testimonials.auto_calculate_stats === true) {
+          try {
+            const reviews = await db
+              .collection('reviews')
+              .find({ is_approved: { $ne: false } })
+              .toArray();
+            
+            const stats = calculateReviewStats(reviews);
+            
+            updateData.testimonials.trustStats = {
+              averageRating: stats.averageRating,
+              totalReviews: stats.totalReviews,
+              verifiedCustomers: stats.verifiedCustomers,
+            };
+          } catch (error) {
+            console.error('Error calculating trustStats from reviews:', error);
+          }
         }
       }
       if (body.footer) {

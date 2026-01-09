@@ -6,7 +6,7 @@ import Toast from '@/components/Toast/Toast';
 import {
   Settings, Save, RotateCcw, Loader2, X, Plus, Edit2, Trash2,
   ArrowUp, ArrowDown, Home, Sparkles, BookOpen, Info, Phone,
-  Mail, MapPin, Share2, Link as LinkIcon, CheckCircle2, Zap, Heart, MessageCircle, Shield, Star, MessageSquare
+  Mail, MapPin, Share2, Link as LinkIcon, CheckCircle2, Zap, Heart, MessageCircle, Shield, Star, MessageSquare, Users, TrendingUp
 } from 'lucide-react';
 import * as lucideIcons from 'lucide-react';
 
@@ -161,7 +161,34 @@ const TABS = [
 // Default icons cho features (lucide-react)
 const FEATURE_ICONS = [
   'CheckCircle2', 'Zap', 'Heart', 'Star', 'Award', 'Shield', 
-  'Clock', 'Truck', 'Users', 'ThumbsUp', 'Gift', 'TrendingUp'
+  'Clock', 'Truck', 'Users', 'ThumbsUp', 'Gift', 'TrendingUp',
+  'Leaf', 'ChefHat', 'Sparkles'
+];
+
+// Default icons cho stats (lucide-react)
+const STAT_ICONS = [
+  'Users', 'Star', 'Clock', 'Award', 'TrendingUp', 'Heart',
+  'Zap', 'Shield', 'CheckCircle2', 'Gift', 'Truck', 'ThumbsUp'
+];
+
+// Default colors cho features
+const FEATURE_COLORS = [
+  { color: 'from-green-500/20 to-emerald-600/10', borderColor: 'border-green-500/30' },
+  { color: 'from-orange-500/20 to-amber-600/10', borderColor: 'border-orange-500/30' },
+  { color: 'from-blue-500/20 to-cyan-600/10', borderColor: 'border-blue-500/30' },
+  { color: 'from-purple-500/20 to-violet-600/10', borderColor: 'border-purple-500/30' },
+  { color: 'from-pink-500/20 to-rose-600/10', borderColor: 'border-pink-500/30' },
+  { color: 'from-yellow-500/20 to-amber-600/10', borderColor: 'border-yellow-500/30' },
+];
+
+// Default colors cho stats
+const STAT_COLORS = [
+  'from-blue-500/20 to-blue-600/10',
+  'from-yellow-500/20 to-yellow-600/10',
+  'from-green-500/20 to-green-600/10',
+  'from-primary/20 to-primary-light/10',
+  'from-purple-500/20 to-purple-600/10',
+  'from-pink-500/20 to-pink-600/10',
 ];
 
 // Default icons cho social media
@@ -198,14 +225,15 @@ export default function AdminLandingConfig() {
     popular_lucide_icon: '',
   });
   const [whyChooseUsData, setWhyChooseUsData] = useState({ 
-    section_title: '', section_description: '', features: [] 
+    section_title: '', section_description: '', features: [], stats: [], auto_calculate_stats: false
   });
   const [testimonialsData, setTestimonialsData] = useState({ 
     section_title: '', 
-    info: { phone: '', email: '', address: '' },
-    map_embed_url: '',
-    social_media: []
+    trustStats: { averageRating: 0, totalReviews: 0, verifiedCustomers: 0 },
+    testimonials: [],
+    auto_calculate_stats: false
   });
+  const [reviewStats, setReviewStats] = useState(null); // Stats từ reviews API
   const [footerData, setFooterData] = useState({ 
     restaurant_name: '', slogan: '', description: '', 
     copyright_text: '', links: [] 
@@ -242,9 +270,27 @@ export default function AdminLandingConfig() {
   // Modal states
   const [showFeatureModal, setShowFeatureModal] = useState(false);
   const [editingFeature, setEditingFeature] = useState(null);
-  const [featureForm, setFeatureForm] = useState({ title: '', description: '', icon: 'CheckCircle2', order: 1 });
+  const [featureForm, setFeatureForm] = useState({ 
+    title: '', 
+    description: '', 
+    icon: 'CheckCircle2', 
+    color: 'from-green-500/20 to-emerald-600/10',
+    borderColor: 'border-green-500/30',
+    order: 1 
+  });
   const [featureIconSuggestions, setFeatureIconSuggestions] = useState([]);
   const [showFeatureIconDropdown, setShowFeatureIconDropdown] = useState(false);
+
+  const [showStatModal, setShowStatModal] = useState(false);
+  const [editingStat, setEditingStat] = useState(null);
+  const [statForm, setStatForm] = useState({ 
+    icon: 'Users', 
+    value: '', 
+    label: '', 
+    color: 'from-blue-500/20 to-blue-600/10' 
+  });
+  const [statIconSuggestions, setStatIconSuggestions] = useState([]);
+  const [showStatIconDropdown, setShowStatIconDropdown] = useState(false);
 
   const [showSocialModal, setShowSocialModal] = useState(false);
   const [editingSocial, setEditingSocial] = useState(null);
@@ -257,6 +303,12 @@ export default function AdminLandingConfig() {
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [editingLink, setEditingLink] = useState(null);
   const [linkForm, setLinkForm] = useState({ text: '', url: '#', order: 1 });
+
+  const [showDeleteFeatureModal, setShowDeleteFeatureModal] = useState(false);
+  const [featureToDelete, setFeatureToDelete] = useState(null);
+
+  const [showDeleteStatModal, setShowDeleteStatModal] = useState(false);
+  const [statToDelete, setStatToDelete] = useState(null);
 
   useEffect(() => {
     fetchConfig();
@@ -275,6 +327,18 @@ export default function AdminLandingConfig() {
     window.addEventListener('showToast', handleShowToast);
     return () => window.removeEventListener('showToast', handleShowToast);
   }, []);
+
+  const fetchReviewStats = async () => {
+    try {
+      const res = await fetch('/api/reviews/stats');
+      const data = await res.json();
+      if (data.success) {
+        setReviewStats(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching review stats:', error);
+    }
+  };
 
   const fetchConfig = async () => {
     try {
@@ -310,17 +374,26 @@ export default function AdminLandingConfig() {
         }
         if (data.data.hero) setHeroData(data.data.hero);
         if (data.data.menu) setMenuData(data.data.menu);
-        if (data.data.whyChooseUs) setWhyChooseUsData(data.data.whyChooseUs);
+        if (data.data.whyChooseUs) {
+          setWhyChooseUsData({
+            section_title: data.data.whyChooseUs.section_title || '',
+            section_description: data.data.whyChooseUs.section_description || '',
+            features: data.data.whyChooseUs.features || [],
+            stats: data.data.whyChooseUs.stats || [],
+            auto_calculate_stats: data.data.whyChooseUs.auto_calculate_stats || false,
+          });
+        }
         if (data.data.testimonials) {
           setTestimonialsData({
             section_title: data.data.testimonials.section_title || '',
-            info: data.data.testimonials.info || { phone: '', email: '', address: '' },
-            map_embed_url: data.data.testimonials.map_embed_url || '',
-            social_media: data.data.testimonials.social_media || [],
             trustStats: data.data.testimonials.trustStats || { averageRating: 0, totalReviews: 0, verifiedCustomers: 0 },
             testimonials: data.data.testimonials.testimonials || [],
+            auto_calculate_stats: data.data.testimonials.auto_calculate_stats || false,
           });
         }
+        
+        // Load review stats để hiển thị
+        fetchReviewStats();
         if (data.data.footer) setFooterData(data.data.footer);
         if (data.data.seo) setSeoData(data.data.seo);
         if (data.data.spam) setSpamData(data.data.spam);
@@ -467,13 +540,25 @@ export default function AdminLandingConfig() {
   const handleOpenFeatureModal = (feature = null) => {
     if (feature) {
       setEditingFeature(feature);
-      setFeatureForm({ ...feature });
+      setFeatureForm({ 
+        ...feature,
+        color: feature.color || 'from-green-500/20 to-emerald-600/10',
+        borderColor: feature.borderColor || 'border-green-500/30'
+      });
     } else {
       setEditingFeature(null);
       const maxOrder = whyChooseUsData.features.length > 0 
         ? Math.max(...whyChooseUsData.features.map(f => f.order || 0))
         : 0;
-      setFeatureForm({ title: '', description: '', icon: 'CheckCircle2', order: maxOrder + 1 });
+      const colorIndex = whyChooseUsData.features.length % FEATURE_COLORS.length;
+      setFeatureForm({ 
+        title: '', 
+        description: '', 
+        icon: 'CheckCircle2', 
+        color: FEATURE_COLORS[colorIndex].color,
+        borderColor: FEATURE_COLORS[colorIndex].borderColor,
+        order: maxOrder + 1 
+      });
     }
     setShowFeatureModal(true);
     setShowFeatureIconDropdown(false);
@@ -521,13 +606,207 @@ export default function AdminLandingConfig() {
     setWhyChooseUsData({ ...whyChooseUsData, features: newFeatures });
     setShowFeatureModal(false);
     setEditingFeature(null);
-    setFeatureForm({ title: '', description: '', icon: 'CheckCircle2', order: 1 });
+    setFeatureForm({ 
+      title: '', 
+      description: '', 
+      icon: 'CheckCircle2', 
+      color: 'from-green-500/20 to-emerald-600/10',
+      borderColor: 'border-green-500/30',
+      order: 1 
+    });
   };
 
   const handleDeleteFeature = (feature) => {
-    if (!confirm('Bạn có chắc muốn xóa feature này?')) return;
-    const newFeatures = whyChooseUsData.features.filter(f => f !== feature);
-    setWhyChooseUsData({ ...whyChooseUsData, features: newFeatures });
+    setFeatureToDelete(feature);
+    setShowDeleteFeatureModal(true);
+  };
+
+  const confirmDeleteFeature = () => {
+    if (featureToDelete) {
+      const newFeatures = whyChooseUsData.features.filter(f => f !== featureToDelete);
+      setWhyChooseUsData({ ...whyChooseUsData, features: newFeatures });
+    }
+    setShowDeleteFeatureModal(false);
+    setFeatureToDelete(null);
+  };
+
+  // Stat management
+  const handleOpenStatModal = (stat = null) => {
+    if (stat) {
+      setEditingStat(stat);
+      setStatForm({ 
+        ...stat,
+        color: stat.color || 'from-blue-500/20 to-blue-600/10'
+      });
+    } else {
+      setEditingStat(null);
+      setStatForm({ 
+        icon: 'Users', 
+        value: '', 
+        label: '', 
+        color: 'from-blue-500/20 to-blue-600/10' 
+      });
+    }
+    setShowStatModal(true);
+    setShowStatIconDropdown(false);
+  };
+
+  const handleStatIconChange = (value) => {
+    setStatForm({ ...statForm, icon: value });
+    if (value) {
+      const filtered = STAT_ICONS.filter(icon => 
+        icon.toLowerCase().includes(value.toLowerCase())
+      );
+      setStatIconSuggestions(filtered);
+      setShowStatIconDropdown(filtered.length > 0);
+    } else {
+      setStatIconSuggestions(STAT_ICONS);
+      setShowStatIconDropdown(false);
+    }
+  };
+
+  const handleSaveStat = () => {
+    if (!statForm.icon || !statForm.value || !statForm.label) {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Vui lòng điền đầy đủ thông tin', type: 'error' },
+          })
+        );
+      }
+      return;
+    }
+
+    const newStats = [...(whyChooseUsData.stats || [])];
+    if (editingStat) {
+      const index = newStats.findIndex(s => s === editingStat);
+      if (index !== -1) {
+        newStats[index] = { ...statForm };
+      }
+    } else {
+      newStats.push({ ...statForm });
+    }
+
+    setWhyChooseUsData({ ...whyChooseUsData, stats: newStats });
+    setShowStatModal(false);
+    setEditingStat(null);
+    setStatForm({ icon: 'Users', value: '', label: '', color: 'from-blue-500/20 to-blue-600/10' });
+  };
+
+  const handleDeleteStat = (stat) => {
+    setStatToDelete(stat);
+    setShowDeleteStatModal(true);
+  };
+
+  const confirmDeleteStat = () => {
+    if (statToDelete) {
+      const newStats = (whyChooseUsData.stats || []).filter(s => s !== statToDelete);
+      setWhyChooseUsData({ ...whyChooseUsData, stats: newStats });
+    }
+    setShowDeleteStatModal(false);
+    setStatToDelete(null);
+  };
+
+  // Handler khi toggle auto_calculate_stats
+  const handleToggleAutoCalculateStats = async (checked) => {
+    let newStats = [...(whyChooseUsData.stats || [])];
+    
+    if (checked) {
+      // Khi bật auto_calculate_stats, đảm bảo có 2 stats đầu tiên (Users và Star)
+      const hasUsers = newStats.some(s => s.icon === 'Users');
+      const hasStar = newStats.some(s => s.icon === 'Star');
+      
+      // Lấy giá trị từ reviewStats nếu có, nếu không thì fetch
+      let usersValue = '0+';
+      let starValue = '0/5';
+      
+      // Fetch reviewStats nếu chưa có hoặc cần cập nhật
+      if (!reviewStats) {
+        try {
+          const res = await fetch('/api/reviews/stats');
+          const data = await res.json();
+          if (data.success && data.data) {
+            setReviewStats(data.data);
+            usersValue = `${data.data.totalReviews.toLocaleString('vi-VN')}+`;
+            starValue = `${data.data.averageRating}/5`;
+          }
+        } catch (error) {
+          console.error('Error fetching review stats:', error);
+        }
+      } else {
+        // Sử dụng giá trị từ reviewStats hiện có
+        usersValue = `${reviewStats.totalReviews.toLocaleString('vi-VN')}+`;
+        starValue = `${reviewStats.averageRating}/5`;
+      }
+      
+      // Tạo hoặc cập nhật stat Users
+      if (!hasUsers) {
+        newStats.unshift({
+          icon: 'Users',
+          value: usersValue,
+          label: 'Khách hàng tin tưởng',
+          color: 'from-blue-500/20 to-blue-600/10'
+        });
+      } else {
+        // Cập nhật giá trị nếu đã có
+        const usersIndex = newStats.findIndex(s => s.icon === 'Users');
+        if (usersIndex !== -1) {
+          newStats[usersIndex] = {
+            ...newStats[usersIndex],
+            value: usersValue,
+            label: newStats[usersIndex].label || 'Khách hàng tin tưởng'
+          };
+        }
+      }
+      
+      // Tạo hoặc cập nhật stat Star
+      if (!hasStar) {
+        // Tìm vị trí sau Users
+        const usersIndex = newStats.findIndex(s => s.icon === 'Users');
+        if (usersIndex !== -1) {
+          newStats.splice(usersIndex + 1, 0, {
+            icon: 'Star',
+            value: starValue,
+            label: 'Đánh giá trung bình',
+            color: 'from-yellow-500/20 to-yellow-600/10'
+          });
+        } else {
+          // Nếu không có Users, thêm Star vào đầu
+          newStats.unshift({
+            icon: 'Star',
+            value: starValue,
+            label: 'Đánh giá trung bình',
+            color: 'from-yellow-500/20 to-yellow-600/10'
+          });
+        }
+      } else {
+        // Cập nhật giá trị nếu đã có
+        const starIndex = newStats.findIndex(s => s.icon === 'Star');
+        if (starIndex !== -1) {
+          newStats[starIndex] = {
+            ...newStats[starIndex],
+            value: starValue,
+            label: newStats[starIndex].label || 'Đánh giá trung bình'
+          };
+        }
+      }
+      
+      // Đảm bảo Users và Star luôn ở đầu (sắp xếp lại)
+      const usersStat = newStats.find(s => s.icon === 'Users');
+      const starStat = newStats.find(s => s.icon === 'Star');
+      const otherStats = newStats.filter(s => s.icon !== 'Users' && s.icon !== 'Star');
+      
+      newStats = [];
+      if (usersStat) newStats.push(usersStat);
+      if (starStat) newStats.push(starStat);
+      newStats.push(...otherStats);
+    }
+    
+    setWhyChooseUsData({ 
+      ...whyChooseUsData, 
+      auto_calculate_stats: checked,
+      stats: newStats
+    });
   };
 
   // Social media management
@@ -1172,6 +1451,109 @@ export default function AdminLandingConfig() {
                   )}
                 </div>
               </div>
+
+              {/* Stats Management */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <label className="block text-sm font-medium text-card-foreground">
+                    Stats (Số liệu thống kê)
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => handleOpenStatModal()}
+                      disabled={whyChooseUsData.auto_calculate_stats}
+                      className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Thêm Stat
+                    </button>
+                    <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <input
+                        type="checkbox"
+                        checked={whyChooseUsData.auto_calculate_stats || false}
+                        onChange={(e) => handleToggleAutoCalculateStats(e.target.checked)}
+                        className="w-4 h-4 rounded border-border cursor-pointer"
+                      />
+                      <span>Tự động tính từ đánh giá</span>
+                    </label>
+                  </div>
+                </div>
+                
+                {whyChooseUsData.auto_calculate_stats && reviewStats && (
+                  <div className="mb-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                    <p className="text-sm text-blue-400 font-medium mb-2">📊 Stats từ đánh giá:</p>
+                    <div className="grid grid-cols-3 gap-2 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Tổng đánh giá:</span>
+                        <span className="ml-2 font-bold text-foreground">{reviewStats.totalReviews}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Điểm TB:</span>
+                        <span className="ml-2 font-bold text-foreground">{reviewStats.averageRating}/5</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Đã xác minh:</span>
+                        <span className="ml-2 font-bold text-foreground">{reviewStats.verifiedCustomers}%</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  {whyChooseUsData.stats?.map((stat, index) => {
+                    const StatIcon = stat.icon ? (getLucideIcon(stat.icon) || TrendingUp) : TrendingUp;
+                    // Kiểm tra nếu là 2 stats đầu tiên (Users và Star) và auto_calculate_stats = true thì không cho chỉnh sửa/xóa
+                    const isFixedStat = whyChooseUsData.auto_calculate_stats && 
+                      (stat.icon === 'Users' || stat.icon === 'Star') && 
+                      index < 2;
+                    
+                    return (
+                      <div
+                        key={index}
+                        className={`flex items-center justify-between p-4 border rounded-lg ${
+                          isFixedStat ? 'bg-muted/50 border-primary/30' : 'bg-muted border-border'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className="flex items-center justify-center w-10 h-10 bg-primary/10 rounded-lg text-primary">
+                            <StatIcon className="w-5 h-5" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-medium text-card-foreground">
+                              {stat.label}
+                              {isFixedStat && (
+                                <span className="ml-2 text-xs text-primary">(Tự động tính)</span>
+                              )}
+                            </div>
+                            <div className="text-sm text-muted-foreground">Giá trị: <code>{stat.value}</code></div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleOpenStatModal(stat)}
+                            className="p-2 text-primary hover:bg-primary/10 rounded cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={whyChooseUsData.auto_calculate_stats || isFixedStat}
+                            title={isFixedStat ? 'Không thể chỉnh sửa stat tự động tính' : ''}
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteStat(stat)}
+                            className="p-2 text-red-400 hover:bg-red-400/10 rounded cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={whyChooseUsData.auto_calculate_stats || isFixedStat}
+                            title={isFixedStat ? 'Không thể xóa stat tự động tính' : ''}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {(!whyChooseUsData.stats || whyChooseUsData.stats.length === 0) && (
+                    <p className="text-muted-foreground text-center py-4">Chưa có stats nào</p>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
@@ -1196,149 +1578,111 @@ export default function AdminLandingConfig() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Phone <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    value={testimonialsData.info?.phone || ''}
-                    onChange={(e) =>
-                      setTestimonialsData({
-                        ...testimonialsData,
-                        info: { ...(testimonialsData.info || {}), phone: e.target.value },
-                      })
-                    }
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="(+84) 096 960 6095"
-                    maxLength={20}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Email <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    value={testimonialsData.info?.email || ''}
-                    onChange={(e) =>
-                      setTestimonialsData({
-                        ...testimonialsData,
-                        info: { ...(testimonialsData.info || {}), email: e.target.value },
-                      })
-                    }
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="email@example.com"
-                    maxLength={100}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Address <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={testimonialsData.info?.address || ''}
-                    onChange={(e) =>
-                      setTestimonialsData({
-                        ...testimonialsData,
-                        info: { ...(testimonialsData.info || {}), address: e.target.value },
-                      })
-                    }
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="123 Đường ABC..."
-                    maxLength={200}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Google Maps Embed URL <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="url"
-                  value={testimonialsData.map_embed_url}
-                  onChange={(e) => setTestimonialsData({ ...testimonialsData, map_embed_url: e.target.value })}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="https://www.google.com/maps/embed?..."
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Lấy embed URL từ Google Maps → Share → Embed a map
-                </p>
-              </div>
-
-              {/* Social Media Management */}
+              {/* Trust Stats Management */}
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <label className="block text-sm font-medium text-card-foreground">Social Media</label>
-                  <button
-                    onClick={() => handleOpenSocialModal()}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark cursor-pointer"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Thêm Social Media
-                  </button>
+                  <label className="block text-sm font-medium text-card-foreground">
+                    Trust Stats (Thống kê đánh giá)
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <input
+                        type="checkbox"
+                        checked={testimonialsData.auto_calculate_stats || false}
+                        onChange={(e) => setTestimonialsData({ ...testimonialsData, auto_calculate_stats: e.target.checked })}
+                        className="w-4 h-4 rounded border-border cursor-pointer"
+                      />
+                      <span>Tự động tính từ đánh giá</span>
+                    </label>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  {testimonialsData.social_media.map((social, index) => {
-                    // Render icon cho social media
-                    let SocialIcon = MessageCircle;
-                    if (social.icon === 'FacebookIcon') {
-                      SocialIcon = () => (
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                        </svg>
-                      );
-                    } else if (social.icon === 'InstagramIcon') {
-                      SocialIcon = () => (
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-                        </svg>
-                      );
-                    } else if (social.icon) {
-                      const lucideIcon = getLucideIcon(social.icon);
-                      if (lucideIcon) {
-                        SocialIcon = lucideIcon;
-                      }
-                    }
-                    
-                    return (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-4 bg-muted border border-border rounded-lg"
-                      >
-                        <div className="flex items-center gap-3 flex-1">
-                          <div className={`flex items-center justify-center w-10 h-10 rounded-lg ${social.color || 'text-blue-400'}`}>
-                            <SocialIcon className="w-5 h-5" />
-                          </div>
-                          <div className="flex-1">
-                            <div className="font-medium text-card-foreground">{social.name}</div>
-                            <div className="text-sm text-muted-foreground">{social.url}</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => handleOpenSocialModal(social)}
-                            className="p-2 text-primary hover:bg-primary/10 rounded cursor-pointer"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteSocial(social)}
-                            className="p-2 text-red-400 hover:bg-red-400/10 rounded cursor-pointer"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
+                
+                {testimonialsData.auto_calculate_stats && reviewStats && (
+                  <div className="mb-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                    <p className="text-sm text-blue-400 font-medium mb-2">📊 Stats từ đánh giá:</p>
+                    <div className="grid grid-cols-3 gap-2 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Tổng đánh giá:</span>
+                        <span className="ml-2 font-bold text-foreground">{reviewStats.totalReviews}</span>
                       </div>
-                    );
-                  })}
-                  {testimonialsData.social_media.length === 0 && (
-                    <p className="text-muted-foreground text-center py-4">Chưa có social media nào</p>
-                  )}
+                      <div>
+                        <span className="text-muted-foreground">Điểm TB:</span>
+                        <span className="ml-2 font-bold text-foreground">{reviewStats.averageRating}/5</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Đã xác minh:</span>
+                        <span className="ml-2 font-bold text-foreground">{reviewStats.verifiedCustomers}%</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      Điểm đánh giá trung bình
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="5"
+                      value={testimonialsData.trustStats?.averageRating || 0}
+                      onChange={(e) =>
+                        setTestimonialsData({
+                          ...testimonialsData,
+                          trustStats: { ...(testimonialsData.trustStats || {}), averageRating: parseFloat(e.target.value) || 0 },
+                        })
+                      }
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                      disabled={testimonialsData.auto_calculate_stats}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      Tổng số đánh giá
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={testimonialsData.trustStats?.totalReviews || 0}
+                      onChange={(e) =>
+                        setTestimonialsData({
+                          ...testimonialsData,
+                          trustStats: { ...(testimonialsData.trustStats || {}), totalReviews: parseInt(e.target.value) || 0 },
+                        })
+                      }
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                      disabled={testimonialsData.auto_calculate_stats}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      % Khách hàng đã xác minh
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={testimonialsData.trustStats?.verifiedCustomers || 0}
+                      onChange={(e) =>
+                        setTestimonialsData({
+                          ...testimonialsData,
+                          trustStats: { ...(testimonialsData.trustStats || {}), verifiedCustomers: parseInt(e.target.value) || 0 },
+                        })
+                      }
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                      disabled={testimonialsData.auto_calculate_stats}
+                    />
+                  </div>
                 </div>
+              </div>
+
+              {/* Testimonials Note */}
+              <div className="p-4 bg-muted border border-border rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  💡 <strong>Lưu ý:</strong> Testimonials được quản lý từ hệ thống đánh giá. Admin có thể duyệt và chọn hiển thị các đánh giá từ trang quản lý Reviews riêng.
+                </p>
               </div>
             </div>
           )}
@@ -2004,8 +2348,16 @@ export default function AdminLandingConfig() {
 
       {/* Feature Modal */}
       {showFeatureModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full">
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowFeatureModal(false);
+              setEditingFeature(null);
+            }
+          }}
+        >
+          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-semibold text-card-foreground">
                 {editingFeature ? 'Sửa Feature' : 'Thêm Feature'}
@@ -2146,6 +2498,57 @@ export default function AdminLandingConfig() {
                   min={1}
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Color (Gradient) <span className="text-muted-foreground text-xs">(ví dụ: from-green-500/20 to-emerald-600/10)</span>
+                </label>
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={featureForm.color}
+                    onChange={(e) => setFeatureForm({ ...featureForm, color: e.target.value })}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="from-green-500/20 to-emerald-600/10"
+                  />
+                  <div className="grid grid-cols-6 gap-2">
+                    {FEATURE_COLORS.map((colorOption, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setFeatureForm({ ...featureForm, color: colorOption.color, borderColor: colorOption.borderColor })}
+                        className={`h-10 rounded border-2 ${
+                          featureForm.color === colorOption.color ? 'border-primary' : 'border-border'
+                        }`}
+                        style={{
+                          background: `linear-gradient(to bottom right, ${colorOption.color.includes('green') ? 'rgba(34, 197, 94, 0.2)' : 
+                            colorOption.color.includes('orange') ? 'rgba(249, 115, 22, 0.2)' :
+                            colorOption.color.includes('blue') ? 'rgba(59, 130, 246, 0.2)' :
+                            colorOption.color.includes('purple') ? 'rgba(168, 85, 247, 0.2)' :
+                            colorOption.color.includes('pink') ? 'rgba(236, 72, 153, 0.2)' :
+                            'rgba(234, 179, 8, 0.2)'}, ${colorOption.color.includes('green') ? 'rgba(5, 150, 105, 0.1)' : 
+                            colorOption.color.includes('orange') ? 'rgba(217, 119, 6, 0.1)' :
+                            colorOption.color.includes('blue') ? 'rgba(37, 99, 235, 0.1)' :
+                            colorOption.color.includes('purple') ? 'rgba(124, 58, 237, 0.1)' :
+                            colorOption.color.includes('pink') ? 'rgba(219, 39, 119, 0.1)' :
+                            'rgba(217, 119, 6, 0.1)'})`
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Border Color <span className="text-muted-foreground text-xs">(ví dụ: border-green-500/30)</span>
+                </label>
+                <input
+                  type="text"
+                  value={featureForm.borderColor}
+                  onChange={(e) => setFeatureForm({ ...featureForm, borderColor: e.target.value })}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="border-green-500/30"
+                />
+              </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => {
@@ -2168,10 +2571,222 @@ export default function AdminLandingConfig() {
         </div>
       )}
 
+      {/* Stat Modal */}
+      {showStatModal && (
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowStatModal(false);
+              setEditingStat(null);
+            }
+          }}
+        >
+          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold text-card-foreground">
+                {editingStat ? 'Sửa Stat' : 'Thêm Stat'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowStatModal(false);
+                  setEditingStat(null);
+                }}
+                className="text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Icon <span className="text-red-400">*</span>
+                </label>
+                <div className="space-y-2">
+                  <div className="relative flex items-center gap-3">
+                    <div className="flex-1 relative">
+                      <input
+                        type="text"
+                        value={statForm.icon}
+                        onChange={(e) => handleStatIconChange(e.target.value)}
+                        onFocus={() => {
+                          if (statForm.icon) {
+                            const filtered = STAT_ICONS.filter(icon => 
+                              icon.toLowerCase().includes(statForm.icon.toLowerCase())
+                            );
+                            setStatIconSuggestions(filtered.length > 0 ? filtered : STAT_ICONS);
+                            setShowStatIconDropdown(filtered.length > 0);
+                          } else {
+                            setStatIconSuggestions(STAT_ICONS);
+                            setShowStatIconDropdown(true);
+                          }
+                        }}
+                        onBlur={() => {
+                          setTimeout(() => setShowStatIconDropdown(false), 200);
+                        }}
+                        placeholder="Nhập tên icon (ví dụ: Users, Star, Clock...)"
+                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                      {showStatIconDropdown && statIconSuggestions.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                          {statIconSuggestions.map((icon) => {
+                            const IconComponent = getLucideIcon(icon) || Users;
+                            return (
+                              <button
+                                key={icon}
+                                type="button"
+                                onClick={() => {
+                                  setStatForm({ ...statForm, icon });
+                                  setShowStatIconDropdown(false);
+                                }}
+                                className="w-full flex items-center gap-3 px-4 py-2 hover:bg-muted text-left text-sm text-card-foreground"
+                              >
+                                <IconComponent className="w-4 h-4 text-primary" />
+                                <span>{icon}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-center w-12 h-12 bg-muted border border-border rounded-lg shrink-0">
+                      {statForm.icon && (() => {
+                        try {
+                          const IconComponent = getLucideIcon(statForm.icon);
+                          if (IconComponent) {
+                            return (
+                              <div className="text-primary">
+                                <IconComponent className="w-6 h-6" />
+                              </div>
+                            );
+                          }
+                        } catch (e) {
+                          console.error('Error rendering icon:', e);
+                        }
+                        return <Users className="w-6 h-6 text-muted-foreground" />;
+                      })()}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">
+                      {statForm.icon && isValidLucideIcon(statForm.icon) ? (
+                        <span className="text-green-400">✓ Icon hợp lệ</span>
+                      ) : statForm.icon ? (
+                        <span className="text-red-400">✗ Icon không tồn tại</span>
+                      ) : (
+                        'Xem trước icon'
+                      )}
+                    </p>
+                    <a
+                      href="https://lucide.dev/icons"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary hover:underline"
+                    >
+                      Xem tất cả icons →
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Value <span className="text-red-400">*</span> <span className="text-muted-foreground text-xs">(ví dụ: 10,000+, 4.9/5, 30')</span>
+                </label>
+                <input
+                  type="text"
+                  value={statForm.value}
+                  onChange={(e) => setStatForm({ ...statForm, value: e.target.value })}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="10,000+"
+                  maxLength={50}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Label <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={statForm.label}
+                  onChange={(e) => setStatForm({ ...statForm, label: e.target.value })}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Khách hàng tin tưởng"
+                  maxLength={100}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Color (Gradient) <span className="text-muted-foreground text-xs">(ví dụ: from-blue-500/20 to-blue-600/10)</span>
+                </label>
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={statForm.color}
+                    onChange={(e) => setStatForm({ ...statForm, color: e.target.value })}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="from-blue-500/20 to-blue-600/10"
+                  />
+                  <div className="grid grid-cols-6 gap-2">
+                    {STAT_COLORS.map((colorOption, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setStatForm({ ...statForm, color: colorOption })}
+                        className={`h-10 rounded border-2 ${
+                          statForm.color === colorOption ? 'border-primary' : 'border-border'
+                        }`}
+                        style={{
+                          background: `linear-gradient(to bottom right, ${colorOption.includes('blue') ? 'rgba(59, 130, 246, 0.2)' : 
+                            colorOption.includes('yellow') ? 'rgba(234, 179, 8, 0.2)' :
+                            colorOption.includes('green') ? 'rgba(34, 197, 94, 0.2)' :
+                            colorOption.includes('primary') ? 'rgba(59, 130, 246, 0.2)' :
+                            colorOption.includes('purple') ? 'rgba(168, 85, 247, 0.2)' :
+                            'rgba(236, 72, 153, 0.2)'}, ${colorOption.includes('blue') ? 'rgba(37, 99, 235, 0.1)' : 
+                            colorOption.includes('yellow') ? 'rgba(217, 119, 6, 0.1)' :
+                            colorOption.includes('green') ? 'rgba(5, 150, 105, 0.1)' :
+                            colorOption.includes('primary') ? 'rgba(37, 99, 235, 0.1)' :
+                            colorOption.includes('purple') ? 'rgba(124, 58, 237, 0.1)' :
+                            'rgba(219, 39, 119, 0.1)'})`
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setShowStatModal(false);
+                    setEditingStat(null);
+                  }}
+                  className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 cursor-pointer"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleSaveStat}
+                  className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark cursor-pointer"
+                >
+                  Lưu
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Social Modal */}
       {showSocialModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full">
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowSocialModal(false);
+              setEditingSocial(null);
+            }
+          }}
+        >
+          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-semibold text-card-foreground">
                 {editingSocial ? 'Sửa Social Media' : 'Thêm Social Media'}
@@ -2389,8 +3004,16 @@ export default function AdminLandingConfig() {
 
       {/* Link Modal */}
       {showLinkModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full">
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowLinkModal(false);
+              setEditingLink(null);
+            }
+          }}
+        >
+          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-semibold text-card-foreground">
                 {editingLink ? 'Sửa Link' : 'Thêm Link'}
@@ -2455,6 +3078,124 @@ export default function AdminLandingConfig() {
                   className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark cursor-pointer"
                 >
                   Lưu
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Feature Confirmation Modal */}
+      {showDeleteFeatureModal && (
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowDeleteFeatureModal(false);
+              setFeatureToDelete(null);
+            }
+          }}
+        >
+          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold text-card-foreground">
+                Xác nhận xóa Feature
+              </h3>
+              <button
+                onClick={() => {
+                  setShowDeleteFeatureModal(false);
+                  setFeatureToDelete(null);
+                }}
+                className="text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <p className="text-card-foreground">
+                Bạn có chắc muốn xóa feature <strong>"{featureToDelete?.title}"</strong>?
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Hành động này không thể hoàn tác.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setShowDeleteFeatureModal(false);
+                    setFeatureToDelete(null);
+                  }}
+                  className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 cursor-pointer"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={confirmDeleteFeature}
+                  className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 cursor-pointer"
+                >
+                  Xóa
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Stat Confirmation Modal */}
+      {showDeleteStatModal && (
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowDeleteStatModal(false);
+              setStatToDelete(null);
+            }
+          }}
+        >
+          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold text-card-foreground">
+                Xác nhận xóa Stat
+              </h3>
+              <button
+                onClick={() => {
+                  setShowDeleteStatModal(false);
+                  setStatToDelete(null);
+                }}
+                className="text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <p className="text-card-foreground">
+                Bạn có chắc muốn xóa stat <strong>"{statToDelete?.label}"</strong>?
+              </p>
+              {statToDelete && (
+                <div className="p-3 bg-muted rounded-lg">
+                  <div className="text-sm text-muted-foreground">
+                    <div>Icon: <code>{statToDelete.icon}</code></div>
+                    <div>Giá trị: <code>{statToDelete.value}</code></div>
+                  </div>
+                </div>
+              )}
+              <p className="text-sm text-muted-foreground">
+                Hành động này không thể hoàn tác.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setShowDeleteStatModal(false);
+                    setStatToDelete(null);
+                  }}
+                  className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 cursor-pointer"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={confirmDeleteStat}
+                  className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 cursor-pointer"
+                >
+                  Xóa
                 </button>
               </div>
             </div>

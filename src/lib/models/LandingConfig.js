@@ -40,6 +40,7 @@ export const defaultLandingConfig = {
   whyChooseUs: {
     section_title: 'Tại sao chọn chúng tôi',
     section_description: 'Khám phá những lý do khiến chúng tôi trở thành lựa chọn hàng đầu của hàng nghìn khách hàng',
+    auto_calculate_stats: false, // true = tự động tính từ reviews, false = admin tự nhập
     features: [
       {
         icon: 'Leaf',
@@ -120,6 +121,7 @@ export const defaultLandingConfig = {
   testimonials: {
     section_title: 'Đánh giá từ khách hàng',
     section_description: 'Những phản hồi chân thật từ khách hàng đã sử dụng dịch vụ của chúng tôi',
+    auto_calculate_stats: false, // true = tự động tính từ reviews, false = admin tự nhập
     trustStats: {
       averageRating: 4.9,
       totalReviews: 1247,

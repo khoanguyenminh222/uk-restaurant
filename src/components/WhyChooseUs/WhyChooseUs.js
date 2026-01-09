@@ -14,9 +14,31 @@ import {
   ChefHat,
   Leaf,
   Star,
-  ArrowDown
+  ArrowDown,
 } from "lucide-react"
 import { useScrollAnimation } from "@/hooks/useScrollAnimation"
+import { useLandingConfig } from "@/hooks/useLandingConfig"
+
+// Helper function để convert icon string thành component
+const getIconComponent = (icon) => {
+  if (typeof icon === 'string') {
+    // Nếu là string, tìm component tương ứng
+    const iconMap = {
+      'Users': Users,
+      'Star': Star,
+      'Clock': Clock,
+      'Award': Award,
+      'Leaf': Leaf,
+      'ChefHat': ChefHat,
+      'Zap': Zap,
+      'Shield': Shield,
+      'Heart': Heart,
+    }
+    return iconMap[icon] || Users // Fallback về Users nếu không tìm thấy
+  }
+  // Nếu đã là component, trả về luôn
+  return icon || Users
+}
 
 // Component tinh tế để scroll xuống section tiếp theo
 function ScrollToNextSection({ targetId }) {
@@ -138,74 +160,65 @@ function AnimatedNumber({ value, isVisible, duration = 2000 }) {
 
 export default function WhyChooseUs() {
   const [headerRef, isHeaderVisible] = useScrollAnimation({ threshold: 0.2 })
+  const [statsRef, isStatsVisible] = useScrollAnimation({ threshold: 0.2 })
+  const { config } = useLandingConfig()
+  const [reviewStats, setReviewStats] = useState(null)
+
+  // Fetch review stats nếu auto_calculate_stats = true
+  useEffect(() => {
+    const fetchReviewStats = async () => {
+      if (config?.whyChooseUs?.auto_calculate_stats) {
+        try {
+          const res = await fetch('/api/reviews/stats')
+          const data = await res.json()
+          if (data.success) {
+            setReviewStats(data.data)
+          }
+        } catch (error) {
+          console.error('Error fetching review stats:', error)
+        }
+      }
+    }
+    fetchReviewStats()
+  }, [config?.whyChooseUs?.auto_calculate_stats])
+
+  // Lấy features từ config hoặc dùng default
+  const configFeatures = config?.whyChooseUs?.features || []
+  
+  // Tạo refs động cho từng feature (tối đa 6)
   const [card1Ref, isCard1Visible] = useScrollAnimation({ threshold: 0.2 })
   const [card2Ref, isCard2Visible] = useScrollAnimation({ threshold: 0.2 })
   const [card3Ref, isCard3Visible] = useScrollAnimation({ threshold: 0.2 })
   const [card4Ref, isCard4Visible] = useScrollAnimation({ threshold: 0.2 })
   const [card5Ref, isCard5Visible] = useScrollAnimation({ threshold: 0.2 })
   const [card6Ref, isCard6Visible] = useScrollAnimation({ threshold: 0.2 })
-  const [statsRef, isStatsVisible] = useScrollAnimation({ threshold: 0.2 })
-
-  // Features data - Phong phú và đa dạng
-  const features = [
-    {
-      icon: Leaf,
-      title: "Nguyên liệu tươi ngon",
-      description: "Chúng tôi chỉ sử dụng nguyên liệu tươi sống, được nhập mỗi ngày từ các nhà cung cấp uy tín. Mỗi món ăn đều được chế biến với tình yêu và sự cẩn thận.",
-      color: "from-green-500/20 to-emerald-600/10",
-      borderColor: "border-green-500/30",
-      ref: card1Ref,
-      isVisible: isCard1Visible,
-    },
-    {
-      icon: ChefHat,
-      title: "Đầu bếp chuyên nghiệp",
-      description: "Đội ngũ đầu bếp giàu kinh nghiệm, được đào tạo bài bản. Mỗi món ăn là một tác phẩm nghệ thuật được tạo ra từ đôi bàn tay tài hoa.",
-      color: "from-orange-500/20 to-amber-600/10",
-      borderColor: "border-orange-500/30",
-      ref: card2Ref,
-      isVisible: isCard2Visible,
-    },
-    {
-      icon: Zap,
-      title: "Giao hàng siêu tốc",
-      description: "Cam kết giao hàng trong vòng 30 phút. Hệ thống logistics hiện đại đảm bảo món ăn luôn nóng hổi, tươi ngon khi đến tay khách hàng.",
-      color: "from-blue-500/20 to-cyan-600/10",
-      borderColor: "border-blue-500/30",
-      ref: card3Ref,
-      isVisible: isCard3Visible,
-    },
-    {
-      icon: Shield,
-      title: "An toàn vệ sinh",
-      description: "Tuân thủ nghiêm ngặt các tiêu chuẩn vệ sinh an toàn thực phẩm. Nhà bếp được kiểm tra định kỳ, đảm bảo môi trường sạch sẽ, an toàn.",
-      color: "from-purple-500/20 to-violet-600/10",
-      borderColor: "border-purple-500/30",
-      ref: card4Ref,
-      isVisible: isCard4Visible,
-    },
-    {
-      icon: Heart,
-      title: "Dịch vụ tận tâm",
-      description: "Đội ngũ nhân viên nhiệt tình, chuyên nghiệp. Luôn lắng nghe và đáp ứng mọi nhu cầu của khách hàng với thái độ phục vụ chu đáo nhất.",
-      color: "from-pink-500/20 to-rose-600/10",
-      borderColor: "border-pink-500/30",
-      ref: card5Ref,
-      isVisible: isCard5Visible,
-    },
-    {
-      icon: Star,
-      title: "Giá cả hợp lý",
-      description: "Chất lượng cao nhưng giá cả phải chăng. Chúng tôi cam kết mang đến giá trị tốt nhất cho từng đồng bạn bỏ ra.",
-      color: "from-yellow-500/20 to-amber-600/10",
-      borderColor: "border-yellow-500/30",
-      ref: card6Ref,
-      isVisible: isCard6Visible,
-    },
-  ]
+  
+  const featureRefs = [card1Ref, card2Ref, card3Ref, card4Ref, card5Ref, card6Ref]
+  const featureVisibles = [isCard1Visible, isCard2Visible, isCard3Visible, isCard4Visible, isCard5Visible, isCard6Visible]
+  
+  // Features data - Sử dụng từ config, sắp xếp theo order
+  const features = configFeatures
+    .map((feature, index) => {
+      const ref = featureRefs[index] || null
+      const isVisible = featureVisibles[index] || false
+      const IconComponent = getIconComponent(feature.icon)
+      
+      return {
+        icon: IconComponent,
+        title: feature.title,
+        description: feature.description,
+        color: feature.color || "from-primary/20 to-primary-light/10",
+        borderColor: feature.borderColor || "border-primary/30",
+        order: feature.order || index + 1,
+        ref,
+        isVisible,
+      }
+    })
+    .sort((a, b) => (a.order || 0) - (b.order || 0))
 
   // Stats data - Số liệu ấn tượng với giá trị gốc để animate
-  const stats = [
+  // Sử dụng stats từ reviews nếu auto_calculate_stats = true, ngược lại dùng từ config hoặc default
+  const defaultStats = [
     { 
       icon: Users, 
       value: "10,000+", 
@@ -231,6 +244,29 @@ export default function WhyChooseUs() {
       color: "from-primary/20 to-primary-light/10",
     },
   ]
+
+  // Nếu auto_calculate_stats = true và có reviewStats, cập nhật stats từ reviews
+  let stats = config?.whyChooseUs?.stats || defaultStats
+  
+  // Convert icon strings thành components nếu cần
+  stats = stats.map(stat => ({
+    ...stat,
+    icon: getIconComponent(stat.icon)
+  }))
+  
+  if (config?.whyChooseUs?.auto_calculate_stats && reviewStats) {
+    stats = stats.map(stat => {
+      // So sánh bằng tên icon (string) hoặc component
+      const iconName = typeof stat.icon === 'string' ? stat.icon : stat.icon.name || ''
+      if (iconName === 'Users' || stat.icon === Users) {
+        return { ...stat, value: `${reviewStats.totalReviews.toLocaleString('vi-VN')}+` }
+      }
+      if (iconName === 'Star' || stat.icon === Star) {
+        return { ...stat, value: `${reviewStats.averageRating}/5` }
+      }
+      return stat
+    })
+  }
 
   return (
     <section id="why-choose-us" className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -268,7 +304,7 @@ export default function WhyChooseUs() {
           {/* Title - Responsive sizes */}
           <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black font-display mb-4 sm:mb-6 leading-tight px-2">
             <span className="block bg-linear-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
-              Tại sao chọn chúng tôi
+              {config?.whyChooseUs?.section_title || "Tại sao chọn chúng tôi"}
             </span>
           </h2>
 
@@ -281,7 +317,7 @@ export default function WhyChooseUs() {
 
           {/* Description - Compact hơn */}
           <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed font-light px-2">
-            Khám phá những lý do khiến chúng tôi trở thành lựa chọn hàng đầu của hàng nghìn khách hàng
+            {config?.whyChooseUs?.section_description || "Khám phá những lý do khiến chúng tôi trở thành lựa chọn hàng đầu của hàng nghìn khách hàng"}
           </p>
         </div>
 
@@ -291,7 +327,7 @@ export default function WhyChooseUs() {
           className={`grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5 mb-10 sm:mb-12 md:mb-16 scroll-fade-in ${isStatsVisible ? "visible" : ""}`}
         >
           {stats.map((stat, index) => {
-            const IconComponent = stat.icon
+            const IconComponent = getIconComponent(stat.icon)
             return (
               <div
                 key={index}
