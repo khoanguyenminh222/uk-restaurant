@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRoleCheck } from '@/hooks/useRoleCheck';
 import Toast from '@/components/Toast/Toast';
+import { defaultLandingConfig } from '@/lib/models/LandingConfig';
 import {
   Settings, Save, RotateCcw, Loader2, X, Plus, Edit2, Trash2,
   ArrowUp, ArrowDown, Home, Sparkles, BookOpen, Info, Phone,
@@ -310,6 +311,19 @@ export default function AdminLandingConfig() {
   const [showDeleteStatModal, setShowDeleteStatModal] = useState(false);
   const [statToDelete, setStatToDelete] = useState(null);
 
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetSections, setResetSections] = useState({
+    general: false,
+    header: false,
+    hero: false,
+    menu: false,
+    whyChooseUs: false,
+    testimonials: false,
+    footer: false,
+    seo: false,
+    spam: false,
+  });
+
   useEffect(() => {
     fetchConfig();
   }, []);
@@ -495,20 +509,87 @@ export default function AdminLandingConfig() {
     }
   };
 
+  const handleOpenResetModal = () => {
+    setResetSections({
+      general: false,
+      header: false,
+      hero: false,
+      menu: false,
+      whyChooseUs: false,
+      testimonials: false,
+      footer: false,
+      seo: false,
+      spam: false,
+    });
+    setShowResetModal(true);
+  };
+
   const handleReset = async () => {
-    if (!confirm('Bạn có chắc muốn reset về mặc định? Tất cả thay đổi sẽ bị mất.')) {
+    // Kiểm tra xem có phần nào được chọn không
+    const selectedSections = Object.entries(resetSections)
+      .filter(([_, selected]) => selected)
+      .map(([key, _]) => key);
+    
+    if (selectedSections.length === 0) {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Vui lòng chọn ít nhất một phần để reset', type: 'error' },
+          })
+        );
+      }
       return;
     }
 
     try {
       setSaving(true);
-      const res = await fetch('/api/config/landing/reset', { method: 'POST' });
+      setShowResetModal(false);
+      
+      // Tạo object chứa các giá trị mặc định cho các phần được chọn
+      const resetData = {};
+      
+      if (resetSections.general) {
+        resetData.restaurant_name = defaultLandingConfig.restaurant_name;
+        resetData.slogan = defaultLandingConfig.slogan;
+      }
+      if (resetSections.header) {
+        resetData.header = defaultLandingConfig.header;
+      }
+      if (resetSections.hero) {
+        resetData.hero = defaultLandingConfig.hero;
+      }
+      if (resetSections.menu) {
+        resetData.menu = defaultLandingConfig.menu;
+      }
+      if (resetSections.whyChooseUs) {
+        resetData.whyChooseUs = defaultLandingConfig.whyChooseUs;
+      }
+      if (resetSections.testimonials) {
+        resetData.testimonials = defaultLandingConfig.testimonials;
+      }
+      if (resetSections.footer) {
+        resetData.footer = defaultLandingConfig.footer;
+      }
+      if (resetSections.seo) {
+        resetData.seo = defaultLandingConfig.seo;
+      }
+      if (resetSections.spam) {
+        resetData.spam = defaultLandingConfig.spam;
+      }
+
+      // Gửi request reset
+      const res = await fetch('/api/config/landing', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(resetData),
+      });
+
       const data = await res.json();
       if (data.success) {
         if (typeof window !== 'undefined') {
           window.dispatchEvent(
             new CustomEvent('showToast', {
-              detail: { message: 'Đã reset về mặc định!', type: 'success' },
+              detail: { message: `Đã reset ${selectedSections.length} phần về mặc định!`, type: 'success' },
             })
           );
         }
@@ -2310,21 +2391,12 @@ export default function AdminLandingConfig() {
         {/* Action Buttons */}
         <div className="flex items-center justify-between">
           <button
-            onClick={handleReset}
+            onClick={handleOpenResetModal}
             disabled={saving}
             className="flex cursor-pointer items-center gap-2 px-6 py-3 bg-muted text-foreground rounded-lg hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {saving ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Đang reset...</span>
-              </>
-            ) : (
-              <>
-                <RotateCcw className="w-4 h-4" />
-                <span>Reset về mặc định</span>
-              </>
-            )}
+            <RotateCcw className="w-4 h-4" />
+            <span>Reset về mặc định</span>
           </button>
           <button
             onClick={handleSave}
@@ -3197,6 +3269,117 @@ export default function AdminLandingConfig() {
                 >
                   Xóa
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Config Modal */}
+      {showResetModal && (
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowResetModal(false);
+            }
+          }}
+        >
+          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold text-card-foreground">
+                Chọn phần muốn reset
+              </h3>
+              <button
+                onClick={() => setShowResetModal(false)}
+                className="text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Chọn các phần bạn muốn reset về giá trị mặc định. Các phần không được chọn sẽ giữ nguyên.
+              </p>
+              
+              <div className="space-y-3">
+                {TABS.filter(tab => tab.id !== 'general' || true).map((tab) => {
+                  const sectionKey = tab.id === 'whyChooseUs' ? 'whyChooseUs' : 
+                                   tab.id === 'general' ? 'general' : tab.id;
+                  const sectionLabel = tab.id === 'whyChooseUs' ? 'Why Choose Us' : tab.label;
+                  
+                  return (
+                    <label
+                      key={tab.id}
+                      className="flex items-center gap-3 p-3 bg-muted rounded-lg hover:bg-muted/80 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={resetSections[sectionKey] || false}
+                        onChange={(e) => {
+                          setResetSections({
+                            ...resetSections,
+                            [sectionKey]: e.target.checked
+                          });
+                        }}
+                        className="w-4 h-4 rounded border-border cursor-pointer"
+                      />
+                      <div className="flex items-center gap-2 flex-1">
+                        <tab.icon className="w-4 h-4 text-primary" />
+                        <span className="text-card-foreground font-medium">{sectionLabel}</span>
+                      </div>
+                    </label>
+                  );
+                })}
+                
+                {/* Spam section (không có trong TABS) */}
+                <label
+                  className="flex items-center gap-3 p-3 bg-muted rounded-lg hover:bg-muted/80 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={resetSections.spam || false}
+                    onChange={(e) => {
+                      setResetSections({
+                        ...resetSections,
+                        spam: e.target.checked
+                      });
+                    }}
+                    className="w-4 h-4 rounded border-border cursor-pointer"
+                  />
+                  <div className="flex items-center gap-2 flex-1">
+                    <Shield className="w-4 h-4 text-primary" />
+                    <span className="text-card-foreground font-medium">Ngăn chặn Spam</span>
+                  </div>
+                </label>
+              </div>
+
+              <div className="pt-4 border-t border-border">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowResetModal(false)}
+                    className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 cursor-pointer"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={handleReset}
+                    disabled={saving || Object.values(resetSections).every(v => !v)}
+                    className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Đang reset...</span>
+                      </>
+                    ) : (
+                      <>
+                        <RotateCcw className="w-4 h-4" />
+                        <span>Reset</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
