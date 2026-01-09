@@ -8,7 +8,7 @@ import { ObjectId } from 'mongodb';
  */
 export async function PUT(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
 
     // TODO: Thêm admin authentication check
@@ -20,8 +20,12 @@ export async function PUT(request, { params }) {
       updated_at: new Date(),
     };
 
+    // Chỉ cho phép cập nhật các field được phép
     if (body.is_approved !== undefined) {
       updateData.is_approved = body.is_approved;
+    }
+    if (body.is_visible !== undefined) {
+      updateData.is_visible = body.is_visible;
     }
     if (body.avatar !== undefined) {
       updateData.avatar = body.avatar;
@@ -32,9 +36,7 @@ export async function PUT(request, { params }) {
     if (body.borderColor !== undefined) {
       updateData.borderColor = body.borderColor;
     }
-    if (body.comment !== undefined) {
-      updateData.comment = body.comment;
-    }
+    // Không cho phép sửa: customer_name, rating, comment
 
     const result = await db
       .collection('reviews')
@@ -77,7 +79,7 @@ export async function PUT(request, { params }) {
  */
 export async function DELETE(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // TODO: Thêm admin authentication check
 

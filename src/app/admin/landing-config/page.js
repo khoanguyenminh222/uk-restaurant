@@ -229,7 +229,8 @@ export default function AdminLandingConfig() {
     section_title: '', section_description: '', features: [], stats: [], auto_calculate_stats: false
   });
   const [testimonialsData, setTestimonialsData] = useState({ 
-    section_title: '', 
+    section_title: '',
+    section_description: '',
     trustStats: { averageRating: 0, totalReviews: 0, verifiedCustomers: 0 },
     testimonials: [],
     auto_calculate_stats: false
@@ -400,6 +401,7 @@ export default function AdminLandingConfig() {
         if (data.data.testimonials) {
           setTestimonialsData({
             section_title: data.data.testimonials.section_title || '',
+            section_description: data.data.testimonials.section_description || '',
             trustStats: data.data.testimonials.trustStats || { averageRating: 0, totalReviews: 0, verifiedCustomers: 0 },
             testimonials: data.data.testimonials.testimonials || [],
             auto_calculate_stats: data.data.testimonials.auto_calculate_stats || false,
@@ -1651,11 +1653,28 @@ export default function AdminLandingConfig() {
                   value={testimonialsData.section_title}
                   onChange={(e) => setTestimonialsData({ ...testimonialsData, section_title: e.target.value })}
                   className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="Liên hệ"
+                  placeholder="Đánh giá từ khách hàng"
                   maxLength={100}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   {testimonialsData.section_title.length}/100 ký tự
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Section Description
+                </label>
+                <textarea
+                  value={testimonialsData.section_description}
+                  onChange={(e) => setTestimonialsData({ ...testimonialsData, section_description: e.target.value })}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Những phản hồi chân thật từ khách hàng đã sử dụng dịch vụ của chúng tôi"
+                  rows={3}
+                  maxLength={300}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {testimonialsData.section_description.length}/300 ký tự
                 </p>
               </div>
 
@@ -1724,8 +1743,7 @@ export default function AdminLandingConfig() {
                       Tổng số đánh giá
                     </label>
                     <input
-                      type="number"
-                      min="0"
+                      type="text"
                       value={testimonialsData.trustStats?.totalReviews || 0}
                       onChange={(e) =>
                         setTestimonialsData({

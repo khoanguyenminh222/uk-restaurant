@@ -196,6 +196,50 @@ export default function WhyChooseUs() {
   const featureRefs = [card1Ref, card2Ref, card3Ref, card4Ref, card5Ref, card6Ref]
   const featureVisibles = [isCard1Visible, isCard2Visible, isCard3Visible, isCard4Visible, isCard5Visible, isCard6Visible]
   
+  // Check initial visibility cho feature cards - hiển thị ngay nếu đã trong viewport
+  useEffect(() => {
+    const checkInitialVisibility = () => {
+      featureRefs.forEach((ref) => {
+        if (ref.current) {
+          const el = ref.current
+          const rect = el.getBoundingClientRect()
+          const windowHeight = window.innerHeight
+          const windowWidth = window.innerWidth
+          
+          // Kiểm tra xem element có trong viewport không
+          const isInViewport = (
+            rect.top < windowHeight &&
+            rect.bottom > 0 &&
+            rect.left < windowWidth &&
+            rect.right > 0 &&
+            rect.height > 0 &&
+            rect.width > 0
+          )
+          
+          // Nếu đã trong viewport, thêm class visible ngay
+          if (isInViewport && !el.classList.contains('visible')) {
+            el.classList.add('visible')
+          }
+        }
+      })
+    }
+    
+    // Check sau khi DOM render
+    const timeoutId = setTimeout(checkInitialVisibility, 0)
+    const rafId1 = requestAnimationFrame(() => {
+      checkInitialVisibility()
+      const rafId2 = requestAnimationFrame(() => {
+        checkInitialVisibility()
+      })
+      return () => cancelAnimationFrame(rafId2)
+    })
+    
+    return () => {
+      clearTimeout(timeoutId)
+      cancelAnimationFrame(rafId1)
+    }
+  }, [configFeatures.length]) // Re-check khi features thay đổi
+  
   // Features data - Sử dụng từ config, sắp xếp theo order
   const features = configFeatures
     .map((feature, index) => {

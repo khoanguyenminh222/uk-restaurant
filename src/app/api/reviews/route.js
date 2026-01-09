@@ -7,7 +7,6 @@ import { validateReview, calculateReviewStats } from '@/lib/models/Review';
  * Lấy danh sách đánh giá
  * Query params:
  * - approved: true/false (lọc theo trạng thái duyệt)
- * - featured: true/false (lọc theo featured)
  * - limit: số lượng (default: 50)
  * - skip: bỏ qua (default: 0)
  */
@@ -15,7 +14,6 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const approved = searchParams.get('approved');
-    const featured = searchParams.get('featured');
     const limit = parseInt(searchParams.get('limit') || '50');
     const skip = parseInt(searchParams.get('skip') || '0');
 
@@ -23,12 +21,14 @@ export async function GET(request) {
     const db = client.db(getDatabaseName());
 
     const query = {};
+    const all = searchParams.get('all'); // Cho phép admin lấy tất cả reviews
     if (approved !== null) {
       query.is_approved = approved === 'true';
     }
-    // Nếu không có approved param, chỉ lấy reviews đã được duyệt (cho public)
-    if (approved === null) {
+    // Nếu không có approved param và không phải all, chỉ lấy reviews đã được duyệt và visible (cho public)
+    if (approved === null && all !== 'true') {
       query.is_approved = { $ne: false };
+      query.is_visible = true; // Chỉ hiển thị reviews được đánh dấu visible
     }
 
     const reviews = await db
@@ -103,6 +103,7 @@ export async function POST(request) {
       comment: body.comment?.trim() || '',
       order_id: body.order_id || '',
       is_approved: false, // Mặc định chưa duyệt, admin sẽ duyệt sau
+      is_visible: false, // Mặc định không hiển thị, admin sẽ bật sau khi duyệt
       avatar: body.avatar || '👤',
       color: body.color || 'from-primary/20 to-primary-light/10',
       borderColor: body.borderColor || 'border-primary/30',

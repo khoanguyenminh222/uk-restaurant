@@ -14,6 +14,7 @@ import Auth from "@/components/Auth/Auth"
 import OrderForm from "@/components/OrderForm/OrderForm"
 import UserProfile from "@/components/UserProfile/UserProfile"
 import OrderHistory from "@/components/OrderHistory/OrderHistory"
+import ReviewForm from "@/components/ReviewForm/ReviewForm"
 
 export default function Home() {
   const [isCartOpen, setIsCartOpen] = useState(false)
@@ -21,6 +22,7 @@ export default function Home() {
   const [isOrderFormOpen, setIsOrderFormOpen] = useState(false)
   const [isUserProfileOpen, setIsUserProfileOpen] = useState(false)
   const [isOrderHistoryOpen, setIsOrderHistoryOpen] = useState(false)
+  const [isReviewFormOpen, setIsReviewFormOpen] = useState(false)
   const [orderFormItems, setOrderFormItems] = useState(null)
   const [authTab, setAuthTab] = useState("login")
   const [toast, setToast] = useState({ message: "", isVisible: false })
@@ -154,7 +156,7 @@ export default function Home() {
         </div> */}
         <Menu onAddToCart={handleAddToCart} onOrderClick={handleOrderNow} />
         <WhyChooseUs />
-        <Testimonials />
+        <Testimonials onReviewFormClick={() => setIsReviewFormOpen(true)} />
       </main>
       <Footer />
       <ScrollToTop />
@@ -177,6 +179,10 @@ export default function Home() {
       <OrderHistory
         isOpen={isOrderHistoryOpen}
         onClose={() => setIsOrderHistoryOpen(false)}
+      />
+      <ReviewForm
+        isOpen={isReviewFormOpen}
+        onClose={() => setIsReviewFormOpen(false)}
       />
       <Toast
         message={toast.message}

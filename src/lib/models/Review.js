@@ -10,10 +10,11 @@ export const ReviewSchema = {
   rating: Number, // required - Điểm đánh giá từ 1-5
   comment: String, // optional - Bình luận
   order_id: String, // optional - ID đơn hàng (nếu đánh giá sau khi đặt hàng)
-  is_approved: Boolean, // optional - Đã được admin duyệt chưa (default: false) - Chỉ hiển thị khi đã duyệt
+  is_approved: Boolean, // optional - Đã được admin duyệt chưa (default: false)
+  is_visible: Boolean, // optional - Cho phép hiển thị trên frontend (default: false) - Chỉ hiển thị khi is_visible = true
   avatar: String, // optional - Emoji hoặc URL avatar
-  color: String, // optional - Màu cho card (from-blue-500/20 to-blue-600/10)
-  borderColor: String, // optional - Màu border (border-blue-500/30)
+  color: String, // optional - Màu gradient cho card background (ví dụ: from-blue-500/20 to-blue-600/10)
+  borderColor: String, // optional - Màu border cho card (ví dụ: border-blue-500/30)
   created_at: Date,
   updated_at: Date,
 };
