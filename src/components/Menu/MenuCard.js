@@ -146,9 +146,9 @@ export default function MenuCard({ food, onOrderClick, onAddToCart, isPopular = 
         {/* Name */}
         <h3 className={`font-semibold font-display text-card-foreground mb-2 line-clamp-2 ${
           size === "large"
-            ? "text-lg sm:text-xl md:text-2xl"
+            ? "text-base sm:text-lg md:text-xl"
             : size === "medium"
-            ? "text-base sm:text-lg"
+            ? "text-sm sm:text-base md:text-lg"
             : "text-sm sm:text-base"
         }`}>
           {food.name}
@@ -173,10 +173,10 @@ export default function MenuCard({ food, onOrderClick, onAddToCart, isPopular = 
           <div className="flex items-center justify-between">
             <span className={`font-bold text-primary ${
               size === "large"
-                ? "text-xl sm:text-2xl md:text-3xl"
+                ? "text-lg sm:text-xl md:text-2xl"
                 : size === "medium"
-                ? "text-lg sm:text-xl"
-                : "text-base sm:text-lg"
+                ? "text-base sm:text-lg md:text-xl"
+                : "text-sm sm:text-base md:text-lg"
             }`}>
               {formatCurrency(food.price)}
             </span>
@@ -188,7 +188,7 @@ export default function MenuCard({ food, onOrderClick, onAddToCart, isPopular = 
             <button
               ref={buttonRef}
               onClick={handleAddToCart}
-              className={`flex-1 cursor-pointer flex items-center justify-center gap-1 px-2 py-1.5 sm:py-2 min-h-8 sm:min-h-9 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg text-xs font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background whitespace-nowrap ${
+              className={`flex-1 cursor-pointer flex items-center justify-center gap-1 px-2 py-1.5 sm:py-2 min-h-8 sm:min-h-9 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg text-xs sm:text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background whitespace-nowrap ${
                 isAnimating ? "scale-95" : "hover:scale-105 active:scale-95"
               }`}
               aria-label={`Thêm ${food.name} vào giỏ hàng`}
@@ -201,7 +201,7 @@ export default function MenuCard({ food, onOrderClick, onAddToCart, isPopular = 
             {onOrderClick && (
               <button
                 onClick={handleOrderClick}
-                className="flex-1 px-2 py-1.5 sm:py-2 min-h-8 sm:min-h-9 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg text-xs font-medium transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background whitespace-nowrap cursor-pointer"
+                className="flex-1 px-2 py-1.5 sm:py-2 min-h-8 sm:min-h-9 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg text-xs sm:text-sm font-medium transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background whitespace-nowrap cursor-pointer"
               >
                 Đặt ngay
               </button>

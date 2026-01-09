@@ -131,9 +131,8 @@ function AnimatedNumber({ value, isVisible, duration = 2000, suffix = "" }) {
 
 export default function Testimonials({ onReviewFormClick }) {
   const [headerRef, isHeaderVisible] = useScrollAnimation({ threshold: 0.2 })
-  const carouselContainerRef = useRef(null)
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const autoScrollIntervalRef = useRef(null)
+  const marqueeRef = useRef(null)
+  const animationRef = useRef(null)
 
   const { config, loading: loadingConfig } = useLandingConfig()
   const [reviewStats, setReviewStats] = useState(null)
@@ -194,6 +193,27 @@ export default function Testimonials({ onReviewFormClick }) {
     return `${Math.floor(diffDays / 365)} năm trước`
   }
 
+  // Mask phone number - ẩn danh, chỉ hiển thị một phần
+  const maskPhone = (phone) => {
+    if (!phone) return ''
+    // Xóa khoảng trắng và ký tự đặc biệt
+    const cleaned = phone.replace(/\s+/g, '').replace(/[^\d]/g, '')
+    if (cleaned.length < 4) return phone // Nếu quá ngắn, trả về nguyên
+    
+    // Hiển thị 3 số đầu và 3 số cuối, phần giữa dùng *
+    // Ví dụ: 0901234567 -> 090***567
+    if (cleaned.length >= 6) {
+      const first3 = cleaned.substring(0, 3)
+      const last3 = cleaned.substring(cleaned.length - 3)
+      const middle = '*'.repeat(Math.max(3, cleaned.length - 6))
+      return `${first3}${middle}${last3}`
+    }
+    // Nếu từ 4-5 số, chỉ hiển thị 2 số đầu và 2 số cuối
+    const first2 = cleaned.substring(0, 2)
+    const last2 = cleaned.substring(cleaned.length - 2)
+    return `${first2}**${last2}`
+  }
+
   // Trust stats - Social proof mạnh mẽ
   // Chỉ sử dụng giá trị từ config khi đã load xong, không dùng default ngay
   const defaultTrustStats = {
@@ -227,7 +247,7 @@ export default function Testimonials({ onReviewFormClick }) {
   const displayReviews = reviews.length > 0 
     ? reviews.map((review, index) => ({
         name: review.customer_name || 'Khách hàng',
-        role: review.customer_phone ? `SĐT: ${review.customer_phone}` : 'Khách hàng',
+        role: review.customer_phone ? `SĐT: ${maskPhone(review.customer_phone)}` : 'Khách hàng',
         rating: review.rating || 5,
         comment: review.comment || '',
         avatar: review.avatar || '👤',
@@ -241,24 +261,66 @@ export default function Testimonials({ onReviewFormClick }) {
         date: t.date || '',
       }))
 
-  // Auto scroll carousel
-  useEffect(() => {
-    if (displayReviews.length > 3) {
-      autoScrollIntervalRef.current = setInterval(() => {
-        setCurrentIndex((prev) => {
-          const maxIndex = Math.max(0, displayReviews.length - 3)
-          return prev >= maxIndex ? 0 : prev + 1
-        })
-      }, 5000) // Chuyển mỗi 5 giây
+  // Tạo duplicate reviews để infinite scroll seamless
+  // Duplicate 2 lần để khi chạy 50% thì nối tiếp với đầu một cách mượt mà
+  const duplicatedReviews = displayReviews.length > 0 
+    ? [...displayReviews, ...displayReviews]
+    : []
 
-      return () => {
-        if (autoScrollIntervalRef.current) {
-          clearInterval(autoScrollIntervalRef.current)
-        }
+  // Animate marquee với requestAnimationFrame để seamless loop
+  useEffect(() => {
+    if (!marqueeRef.current || duplicatedReviews.length === 0 || displayReviews.length === 0) return
+
+    const marqueeElement = marqueeRef.current
+    let position = 0
+    let isPaused = false
+    const speed = 0.5 // pixels per frame
+    // Tính toán chiều rộng thực tế của mỗi card (bao gồm width + gap)
+    const getCardWidth = () => {
+      if (typeof window === 'undefined') return 320
+      if (window.innerWidth >= 1024) return 400 + 32 // lg: 400px + 2rem gap
+      if (window.innerWidth >= 768) return 360 + 24 // md: 360px + 1.5rem gap
+      if (window.innerWidth >= 640) return 320 + 20 // sm: 320px + 1.25rem gap
+      return 280 + 16 // mobile: 280px + 1rem gap
+    }
+    const cardWidth = getCardWidth()
+    const totalWidth = cardWidth * displayReviews.length
+
+    const animate = () => {
+      if (isPaused) {
+        animationRef.current = requestAnimationFrame(animate)
+        return
+      }
+
+      position -= speed
+      
+      // Khi đã scroll hết 50% (một nửa của duplicated), reset về 0 để seamless
+      // Vì chúng ta duplicate 2 lần, nên khi scroll hết 50% thì đã đến vị trí bắt đầu của bản duplicate thứ 2
+      if (Math.abs(position) >= totalWidth) {
+        position = 0
+      }
+      
+      marqueeElement.style.transform = `translateX(${position}px)`
+      animationRef.current = requestAnimationFrame(animate)
+    }
+
+    // Expose pause/resume functions
+    marqueeElement._pause = () => { isPaused = true }
+    marqueeElement._resume = () => { 
+      isPaused = false
+      if (!animationRef.current) {
+        animationRef.current = requestAnimationFrame(animate)
       }
     }
-  }, [displayReviews.length])
 
+    animationRef.current = requestAnimationFrame(animate)
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current)
+      }
+    }
+  }, [duplicatedReviews.length, displayReviews.length])
 
   // Section title và description từ config
   const sectionTitle = config?.testimonials?.section_title || 'Đánh giá từ khách hàng'
@@ -292,7 +354,6 @@ export default function Testimonials({ onReviewFormClick }) {
             {sectionTitle}
           </h2>
 
-          {/* Divider */}
           {/* Divider */}
           <div className="flex items-center justify-center gap-3 sm:gap-4 mb-4 sm:mb-6">
             <div className="h-px w-8 sm:w-12 bg-linear-to-r from-transparent to-primary"></div>
@@ -343,7 +404,7 @@ export default function Testimonials({ onReviewFormClick }) {
           )}
         </div>
 
-        {/* Testimonials Carousel - Auto scroll */}
+        {/* Testimonials Marquee - Infinite scroll */}
         {loadingReviews ? (
           <div className="flex items-center justify-center py-12">
             <div className="text-muted-foreground">Đang tải đánh giá...</div>
@@ -354,117 +415,98 @@ export default function Testimonials({ onReviewFormClick }) {
           </div>
         ) : (
           <div 
-            ref={carouselContainerRef}
             className="relative overflow-hidden"
             onMouseEnter={() => {
-              if (autoScrollIntervalRef.current) {
-                clearInterval(autoScrollIntervalRef.current)
+              if (marqueeRef.current && marqueeRef.current._pause) {
+                marqueeRef.current._pause()
               }
             }}
             onMouseLeave={() => {
-              if (displayReviews.length > 3) {
-                autoScrollIntervalRef.current = setInterval(() => {
-                  setCurrentIndex((prev) => {
-                    const maxIndex = Math.max(0, displayReviews.length - 3)
-                    return prev >= maxIndex ? 0 : prev + 1
-                  })
-                }, 5000)
+              if (marqueeRef.current && marqueeRef.current._resume) {
+                marqueeRef.current._resume()
               }
             }}
           >
-            <div className="relative overflow-hidden">
-              <div 
-                className="flex transition-transform duration-500 ease-in-out gap-4 sm:gap-5 md:gap-6 lg:gap-8"
-                style={{ 
-                  transform: `translateX(calc(-${currentIndex} * (100% / 3)))`,
-                }}
-              >
-                {displayReviews.map((testimonial, index) => (
-                  <div
-                    key={testimonial._id || index}
-                    className="shrink-0"
-                    style={{ width: '33.333%' }}
-                  >
+            {/* Gradient fade edges */}
+            <div className="absolute left-0 top-0 bottom-0 w-20 sm:w-32 bg-linear-to-r from-muted to-transparent z-10 pointer-events-none"></div>
+            <div className="absolute right-0 top-0 bottom-0 w-20 sm:w-32 bg-linear-to-l from-muted to-transparent z-10 pointer-events-none"></div>
+            
+            <div 
+              ref={marqueeRef}
+              className="flex gap-4 sm:gap-5 md:gap-6 lg:gap-8"
+              style={{
+                width: 'fit-content',
+                willChange: 'transform',
+              }}
+            >
+              {duplicatedReviews.map((testimonial, index) => (
+                <div
+                  key={`${testimonial._id || 'testimonial'}-${index}`}
+                  className="shrink-0 w-[280px] sm:w-[320px] md:w-[360px] lg:w-[400px]"
+                >
                   <div className={`
-                    relative bg-card border-2 ${testimonial.borderColor} rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-7 lg:p-8
+                    relative bg-card border-2 ${testimonial.borderColor} rounded-xl sm:rounded-2xl p-5 sm:p-6
                     h-full flex flex-col
                   `}>
-                {/* Gradient background */}
-                <div className={`absolute inset-0 bg-linear-to-br ${testimonial.color} rounded-xl sm:rounded-2xl opacity-20`}></div>
+                    {/* Gradient background */}
+                    <div className={`absolute inset-0 bg-linear-to-br ${testimonial.color} rounded-xl sm:rounded-2xl opacity-20`}></div>
 
-                <div className="relative z-10 flex-1 flex flex-col">
-                  {/* Quote Icon */}
-                  <div className="mb-3 sm:mb-4 flex items-start">
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-primary/20 rounded-lg blur-md"></div>
-                      <Quote className="relative w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 text-primary" />
-                    </div>
-                  </div>
-
-                  {/* Rating với số điểm */}
-                  <div className="flex items-center gap-2 mb-4 sm:mb-5">
-                    <div className="flex items-center gap-0.5">
-                      {[...Array(testimonial.rating)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className="w-4 h-4 sm:w-5 sm:h-5 fill-yellow-400 text-yellow-400 drop-shadow-sm"
-                        />
-                      ))}
-                    </div>
-                    <span className="text-sm sm:text-base font-black text-foreground">{testimonial.rating}.0</span>
-                  </div>
-
-                  {/* Comment - Better typography */}
-                  <p className="text-foreground leading-relaxed mb-4 sm:mb-5 md:mb-6 text-sm sm:text-base md:text-lg font-medium flex-1">
-                    "{testimonial.comment}"
-                  </p>
-
-                  {/* Author Section - Enhanced */}
-                  <div className="mt-auto pt-4 sm:pt-5 md:pt-6 border-t-2 border-border/50">
-                    <div className="flex items-center gap-3 sm:gap-4">
-                      {/* Avatar */}
-                      <div className={`relative w-12 h-12 sm:w-13 sm:h-13 md:w-14 md:h-14 rounded-full bg-linear-to-br ${testimonial.color} flex items-center justify-center text-2xl sm:text-3xl shadow-lg shrink-0`}>
-                        <div className="absolute inset-0 bg-primary/10 rounded-full blur-sm"></div>
-                        <span className="relative z-10">{testimonial.avatar}</span>
-                      </div>
-
-                      {/* Author Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5 sm:mb-1">
-                          <h4 className="font-bold text-base sm:text-lg text-card-foreground truncate">{testimonial.name}</h4>
+                    <div className="relative z-10 flex-1 flex flex-col">
+                      {/* Quote Icon */}
+                      <div className="mb-3 sm:mb-4 flex items-start">
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-primary/20 rounded-lg blur-md"></div>
+                          <Quote className="relative w-7 h-7 sm:w-8 sm:h-8 text-primary" />
                         </div>
-                        <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mb-1">{testimonial.role}</p>
-                        <p className="text-[10px] sm:text-xs text-muted-foreground/70">{testimonial.date}</p>
+                      </div>
+
+                      {/* Rating với số điểm */}
+                      <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                        <div className="flex items-center gap-0.5">
+                          {[...Array(testimonial.rating)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className="w-4 h-4 sm:w-5 sm:h-5 fill-yellow-400 text-yellow-400 drop-shadow-sm"
+                            />
+                          ))}
+                        </div>
+                        <span className="text-sm sm:text-base font-black text-foreground">{testimonial.rating}.0</span>
+                      </div>
+
+                      {/* Comment - Giới hạn chiều cao */}
+                      <div className="mb-4 sm:mb-5 flex-1 overflow-hidden">
+                        <p className="text-foreground leading-relaxed text-sm sm:text-base font-medium line-clamp-4">
+                          "{testimonial.comment}"
+                        </p>
+                      </div>
+
+                      {/* Author Section */}
+                      <div className="mt-auto pt-4 sm:pt-5 border-t-2 border-border/50">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                          {/* Avatar */}
+                          <div className={`relative w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-linear-to-br ${testimonial.color} flex items-center justify-center text-xl sm:text-2xl shadow-lg shrink-0`}>
+                            <div className="absolute inset-0 bg-primary/10 rounded-full blur-sm"></div>
+                            <span className="relative z-10">{testimonial.avatar}</span>
+                          </div>
+
+                          {/* Author Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-0.5 sm:mb-1">
+                              <h4 className="font-bold text-sm sm:text-base text-card-foreground truncate">{testimonial.name}</h4>
+                            </div>
+                            <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mb-1">{testimonial.role}</p>
+                            <p className="text-[10px] sm:text-xs text-muted-foreground/70">{testimonial.date}</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
 
                     {/* Decorative corner */}
-                    <div className="absolute top-0 right-0 w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-primary/5 rounded-bl-full opacity-30"></div>
+                    <div className="absolute top-0 right-0 w-12 h-12 sm:w-16 sm:h-16 bg-primary/5 rounded-bl-full opacity-30"></div>
                   </div>
-                  </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
-            
-            {/* Navigation dots */}
-            {displayReviews.length > 3 && (
-              <div className="flex items-center justify-center gap-2 mt-6">
-                {Array.from({ length: Math.max(1, displayReviews.length - 2) }).map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentIndex(index)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      currentIndex === index 
-                        ? 'bg-primary w-8' 
-                        : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
-                    }`}
-                    aria-label={`Đi đến slide ${index + 1}`}
-                  />
-                ))}
-              </div>
-            )}
           </div>
         )}
 

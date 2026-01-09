@@ -460,7 +460,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
   }, [])
 
   return (
-    <section id="menu" ref={menuSectionRef} className="pt-6 pb-8 md:pt-6 md:pb-12 px-4 sm:px-6 lg:px-8 bg-muted relative">
+    <section id="menu" ref={menuSectionRef} className="pb-8 md:pb-12 px-4 sm:px-6 lg:px-8 bg-muted relative">
       <div className="max-w-7xl mx-auto overflow-hidden">
         {/* Section Header - Design đặc biệt cho landing page */}
         <div
@@ -472,11 +472,16 @@ export default function Menu({ onAddToCart, onOrderClick }) {
             <div className="absolute inset-0 bg-linear-to-r from-primary/10 via-primary/20 to-primary/10 rounded-3xl blur-2xl -z-10 transform scale-110"></div>
             
             <div className="relative px-8 py-6">
-              <h2 className="text-2xl md:text-3xl font-bold font-display mb-2 bg-linear-to-r from-primary via-primary-light to-primary bg-clip-text text-transparent">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold font-display mb-2 bg-linear-to-r from-primary via-primary-light to-primary bg-clip-text text-transparent">
             {sectionTitle}
           </h2>
-              <div className="w-16 h-0.5 bg-primary rounded-full mx-auto mb-2"></div>
-              <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto">
+              {/* Divider */}
+              <div className="flex items-center justify-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+                <div className="h-px w-8 sm:w-12 bg-linear-to-r from-transparent to-primary"></div>
+                <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-primary"></div>
+                <div className="h-px w-8 sm:w-12 bg-linear-to-r from-primary to-transparent"></div>
+              </div>
+              <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-xl mx-auto">
                 {sectionDescription}
               </p>
             </div>
@@ -519,7 +524,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
           <>
             <div className={`mb-4 md:mb-6 flex items-center justify-center gap-2 scroll-fade-in ${isPopularTitleVisible ? "visible" : ""}`} ref={popularTitleRef}>
               <PopularLucideIcon className="w-5 h-5 text-primary" />
-              <h3 className="text-lg md:text-xl font-bold font-display text-primary">
+              <h3 className="text-xl sm:text-2xl md:text-3xl font-bold font-display text-primary">
                 {popularTitle}
               </h3>
               <span className="text-lg">{popularIcon}</span>
@@ -622,7 +627,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
                 <div className={`flex justify-center mt-6 md:mt-8 p-2 scroll-fade-in ${isViewAllButtonVisible ? "visible" : ""}`} ref={viewAllButtonRef}>
                   <button
                     onClick={handleViewAllMenu}
-                    className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg font-medium transition-all duration-200 hover:scale-105 active:scale-95 shadow-sm shadow-primary/20 hover:shadow-md hover:shadow-primary/30 cursor-pointer"
+                    className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg text-sm sm:text-base font-medium transition-all duration-200 hover:scale-105 active:scale-95 shadow-sm shadow-primary/20 hover:shadow-md hover:shadow-primary/30 cursor-pointer"
                   >
                     Xem tất cả
                     <ArrowRight className="w-5 h-5" />
@@ -635,12 +640,12 @@ export default function Menu({ onAddToCart, onOrderClick }) {
             ) : (
               <div className="flex items-center justify-center py-20">
                 <div className="text-center">
-                    <p className="text-muted-foreground text-lg mb-2">
+                    <p className="text-muted-foreground text-sm sm:text-base mb-2">
                     {searchQuery || selectedCategory
                       ? "Không tìm thấy món ăn nào"
                         : "Chưa có món ăn nào"}
                     </p>
-                    <p className="text-muted-foreground text-sm">
+                    <p className="text-muted-foreground text-xs sm:text-sm">
                     {searchQuery || selectedCategory
                       ? "Thử tìm kiếm với từ khóa khác hoặc xóa bộ lọc"
                       : "Vui lòng quay lại sau hoặc thử danh mục khác"}

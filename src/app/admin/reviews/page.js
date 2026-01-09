@@ -765,7 +765,7 @@ export default function AdminReviews() {
                       onChange={(e) => setEditForm({ ...editForm, is_visible: e.target.checked })}
                       className="w-4 h-4 rounded border-border cursor-pointer"
                     />
-                    <span className="text-sm text-card-foreground">Hiển thị trên frontend</span>
+                    <span className="text-sm text-card-foreground">Hiển thị trên Home</span>
                   </label>
                 </div>
 

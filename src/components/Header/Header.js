@@ -27,9 +27,57 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
   const userButtonRef = useRef(null)
   const dropdownRef = useRef(null)
 
+  // Get menu items from config or use defaults (moved up để dùng trong useEffect)
+  const configMenuItems = config?.header?.menu_items || []
+  const defaultMenuItems = [
+    { id: "home", label: "Trang chủ", icon: Home },
+    { id: "menu", label: "Thực đơn", icon: Utensils },
+    { id: "about", label: "Giới thiệu", icon: BookOpen },
+    { id: "contact", label: "Liên hệ", icon: Phone },
+  ]
+  
+  // Helper function to get icon from lucide-react
+  const getIconComponent = (iconName, itemId) => {
+    if (!iconName) {
+      const iconMap = {
+        home: Home,
+        menu: Utensils,
+        about: BookOpen,
+        contact: Phone,
+      }
+      return iconMap[itemId] || Home
+    }
+    
+    // Try to get icon from lucide-react
+    const iconNamePascal = iconName.charAt(0).toUpperCase() + iconName.slice(1)
+    if (lucideIcons[iconNamePascal]) {
+      return lucideIcons[iconNamePascal]
+    }
+    
+    // Fallback to default based on id
+    const iconMap = {
+      home: Home,
+      menu: Utensils,
+      about: BookOpen,
+      contact: Phone,
+    }
+    return iconMap[itemId] || Home
+  }
+  
+  // Map config menu items to component format
+  const menuItems = configMenuItems.length > 0 
+    ? configMenuItems
+        .sort((a, b) => (a.order || 0) - (b.order || 0))
+        .map(item => ({
+          id: item.id,
+          label: item.label,
+          icon: getIconComponent(item.icon, item.id)
+        }))
+    : defaultMenuItems
+
   useEffect(() => {
-    let lastScrollY = window.scrollY
     let ticking = false
+    const headerHeight = 80 // Chiều cao header + offset
 
     const handleScroll = () => {
       if (!ticking) {
@@ -37,28 +85,75 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
           const currentScrollY = window.scrollY
           setIsScrolled(currentScrollY > 20)
 
-          // Update active section based on scroll position
-          const sections = ["home", "menu", "about", "contact"]
-          const current = sections.find((section) => {
-            const element = document.getElementById(section)
+          // Nếu scroll lên đầu trang, active "home"
+          if (currentScrollY < 50) {
+            setActiveSection("home")
+            ticking = false
+            return
+          }
+
+          // Lấy danh sách sections từ menuItems
+          const sectionIds = menuItems.map(item => item.id)
+          
+          // Tìm section nào đang ở gần nhất với header
+          let activeSectionId = "home"
+          let minDistance = Infinity
+
+          sectionIds.forEach((sectionId) => {
+            const element = document.getElementById(sectionId)
             if (element) {
               const rect = element.getBoundingClientRect()
-              return rect.top <= 100 && rect.bottom >= 100
+              const elementTop = rect.top + window.scrollY
+              const distance = Math.abs(elementTop - currentScrollY - headerHeight)
+              
+              // Nếu section đang trong viewport và gần header nhất
+              if (rect.top <= headerHeight + 100 && rect.bottom >= headerHeight) {
+                if (distance < minDistance) {
+                  minDistance = distance
+                  activeSectionId = sectionId
+                }
+              }
             }
-            return false
           })
-          if (current) setActiveSection(current)
 
-          lastScrollY = currentScrollY
+          // Nếu không tìm thấy section nào trong viewport, tìm section gần nhất phía trên
+          if (minDistance === Infinity) {
+            let closestSectionId = "home"
+            let closestDistance = Infinity
+
+            sectionIds.forEach((sectionId) => {
+              const element = document.getElementById(sectionId)
+              if (element) {
+                const rect = element.getBoundingClientRect()
+                const elementTop = rect.top + window.scrollY
+                
+                // Chỉ xét các section phía trên vị trí hiện tại
+                if (elementTop < currentScrollY + headerHeight) {
+                  const distance = currentScrollY + headerHeight - elementTop
+                  if (distance < closestDistance) {
+                    closestDistance = distance
+                    closestSectionId = sectionId
+                  }
+                }
+              }
+            })
+
+            activeSectionId = closestSectionId
+          }
+
+          setActiveSection(activeSectionId)
           ticking = false
         })
         ticking = true
       }
     }
 
+    // Check initial active section
+    handleScroll()
+    
     window.addEventListener("scroll", handleScroll, { passive: true })
     return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+  }, [configMenuItems.length]) // Chỉ re-run khi số lượng menu items thay đổi
 
   // Update cart count
   useEffect(() => {
@@ -169,53 +264,6 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
     window.location.reload()
   }
 
-  // Get menu items from config or use defaults
-  const configMenuItems = config?.header?.menu_items || []
-  const defaultMenuItems = [
-    { id: "home", label: "Trang chủ", icon: Home },
-    { id: "menu", label: "Thực đơn", icon: Utensils },
-    { id: "about", label: "Giới thiệu", icon: BookOpen },
-    { id: "contact", label: "Liên hệ", icon: Phone },
-  ]
-  
-  // Helper function to get icon from lucide-react
-  const getIconComponent = (iconName, itemId) => {
-    if (!iconName) {
-      const iconMap = {
-        home: Home,
-        menu: Utensils,
-        about: BookOpen,
-        contact: Phone,
-      }
-      return iconMap[itemId] || Home
-    }
-    
-    // Try to get icon from lucide-react
-    const iconNamePascal = iconName.charAt(0).toUpperCase() + iconName.slice(1)
-    if (lucideIcons[iconNamePascal]) {
-      return lucideIcons[iconNamePascal]
-    }
-    
-    // Fallback to default based on id
-    const iconMap = {
-      home: Home,
-      menu: Utensils,
-      about: BookOpen,
-      contact: Phone,
-    }
-    return iconMap[itemId] || Home
-  }
-  
-  // Map config menu items to component format
-  const menuItems = configMenuItems.length > 0 
-    ? configMenuItems
-        .sort((a, b) => (a.order || 0) - (b.order || 0))
-        .map(item => ({
-          id: item.id,
-          label: item.label,
-          icon: getIconComponent(item.icon, item.id)
-        }))
-    : defaultMenuItems
 
   return (
     <header

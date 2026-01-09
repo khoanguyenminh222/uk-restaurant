@@ -419,6 +419,16 @@
   animation: fade-in-scale 0.2s ease-out forwards;
 }
 
+/* Marquee Animation - Infinite scroll seamless */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-50% - 0.5rem));
+  }
+}
+
 /* Hide scrollbar for horizontal scroll on mobile */
 .scrollbar-hide {
   -ms-overflow-style: none;  /* IE and Edge */

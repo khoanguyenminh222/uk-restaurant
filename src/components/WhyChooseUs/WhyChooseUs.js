@@ -196,9 +196,10 @@ export default function WhyChooseUs() {
   const featureRefs = [card1Ref, card2Ref, card3Ref, card4Ref, card5Ref, card6Ref]
   const featureVisibles = [isCard1Visible, isCard2Visible, isCard3Visible, isCard4Visible, isCard5Visible, isCard6Visible]
   
-  // Check initial visibility cho feature cards - hiển thị ngay nếu đã trong viewport
+  // Check visibility cho feature cards - hiển thị ngay nếu đã trong viewport
+  // Check liên tục khi scroll để đảm bảo không bỏ lỡ khi scroll nhanh
   useEffect(() => {
-    const checkInitialVisibility = () => {
+    const checkVisibility = () => {
       featureRefs.forEach((ref) => {
         if (ref.current) {
           const el = ref.current
@@ -206,12 +207,14 @@ export default function WhyChooseUs() {
           const windowHeight = window.innerHeight
           const windowWidth = window.innerWidth
           
-          // Kiểm tra xem element có trong viewport không
+          // Kiểm tra xem element có trong viewport không (với margin để dễ bắt hơn)
+          // Thêm 100px margin để trigger sớm hơn
+          const margin = 100
           const isInViewport = (
-            rect.top < windowHeight &&
-            rect.bottom > 0 &&
-            rect.left < windowWidth &&
-            rect.right > 0 &&
+            rect.top < windowHeight + margin &&
+            rect.bottom > -margin &&
+            rect.left < windowWidth + margin &&
+            rect.right > -margin &&
             rect.height > 0 &&
             rect.width > 0
           )
@@ -224,19 +227,70 @@ export default function WhyChooseUs() {
       })
     }
     
-    // Check sau khi DOM render
-    const timeoutId = setTimeout(checkInitialVisibility, 0)
-    const rafId1 = requestAnimationFrame(() => {
-      checkInitialVisibility()
-      const rafId2 = requestAnimationFrame(() => {
-        checkInitialVisibility()
+    // Check ngay sau khi DOM render
+    const checkMultipleTimes = () => {
+      checkVisibility()
+      requestAnimationFrame(() => {
+        checkVisibility()
+        requestAnimationFrame(() => {
+          checkVisibility()
+        })
       })
-      return () => cancelAnimationFrame(rafId2)
-    })
+    }
+    
+    // Check ban đầu
+    const timeoutId = setTimeout(checkMultipleTimes, 0)
+    
+    // Throttle scroll handler để check khi scroll
+    let scrollTimeout = null
+    let lastScrollTime = 0
+    const throttleDelay = 50 // Check mỗi 50ms khi scroll
+    
+    const handleScroll = () => {
+      const now = Date.now()
+      if (now - lastScrollTime >= throttleDelay) {
+        checkVisibility()
+        lastScrollTime = now
+      }
+      
+      // Clear timeout cũ và set timeout mới để check khi scroll dừng
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout)
+      }
+      scrollTimeout = setTimeout(() => {
+        checkVisibility()
+      }, 150) // Check lại sau 150ms khi scroll dừng
+    }
+    
+    // Throttle scroll với requestAnimationFrame để mượt hơn
+    let rafId = null
+    const handleScrollRAF = () => {
+      if (rafId) return
+      rafId = requestAnimationFrame(() => {
+        handleScroll()
+        rafId = null
+      })
+    }
+    
+    window.addEventListener('scroll', handleScrollRAF, { passive: true })
+    window.addEventListener('resize', checkVisibility, { passive: true })
+    
+    // Check khi page load xong
+    if (document.readyState === 'complete') {
+      checkMultipleTimes()
+    } else {
+      window.addEventListener('load', checkMultipleTimes, { once: true })
+    }
     
     return () => {
       clearTimeout(timeoutId)
-      cancelAnimationFrame(rafId1)
+      clearTimeout(scrollTimeout)
+      if (rafId) {
+        cancelAnimationFrame(rafId)
+      }
+      window.removeEventListener('scroll', handleScrollRAF)
+      window.removeEventListener('resize', checkVisibility)
+      window.removeEventListener('load', checkMultipleTimes)
     }
   }, [configFeatures.length]) // Re-check khi features thay đổi
   
