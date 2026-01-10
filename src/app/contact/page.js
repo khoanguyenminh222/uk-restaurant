@@ -492,7 +492,10 @@ export default function ContactPage() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-foreground">{contactForm.fields?.name_label || 'Họ và tên'}</label>
+                      <label className="text-sm font-medium text-foreground flex items-center gap-1">
+                        {contactForm.fields?.name_label || 'Họ và tên'}
+                        <span className="text-red-500 font-semibold" title="Bắt buộc">*</span>
+                      </label>
                       <input
                         type="text"
                         name="name"
@@ -500,11 +503,15 @@ export default function ContactPage() {
                         onChange={handleChange}
                         required
                         className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all"
-                        placeholder="John Doe"
+                        placeholder="Vui lòng nhập..."
+                        aria-required="true"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-foreground">{contactForm.fields?.email_label || 'Email'}</label>
+                      <label className="text-sm font-medium text-foreground flex items-center gap-1">
+                        {contactForm.fields?.email_label || 'Email'}
+                        <span className="text-red-500 font-semibold" title="Bắt buộc">*</span>
+                      </label>
                       <input
                         type="email"
                         name="email"
@@ -512,41 +519,50 @@ export default function ContactPage() {
                         onChange={handleChange}
                         required
                         className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all"
-                        placeholder="john@example.com"
+                        placeholder="Vui lòng nhập..."
+                        aria-required="true"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-foreground">
-                        {contactForm.fields?.phone_label || 'Số điện thoại'} <span className="text-red-500">*</span>
+                      <label className="text-sm font-medium text-foreground flex items-center gap-1">
+                        {contactForm.fields?.phone_label || 'Số điện thoại'}
+                        <span className="text-red-500 font-semibold" title="Bắt buộc">*</span>
                       </label>
                       <input
                         type="tel"
                         name="phone"
                         value={formState.phone}
                         onChange={handleChange}
-                        required // Added requirement
+                        required
                         className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all"
-                        placeholder="+84..."
+                        placeholder="Vui lòng nhập..."
+                        aria-required="true"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-foreground">{contactForm.fields?.subject_label || 'Chủ đề'}</label>
+                      <label className="text-sm font-medium text-foreground">
+                        {contactForm.fields?.subject_label || 'Chủ đề'}
+                        <span className="text-muted-foreground text-xs font-normal ml-1">(Tùy chọn)</span>
+                      </label>
                       <input
                         type="text"
                         name="subject"
                         value={formState.subject}
                         onChange={handleChange}
                         className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all"
-                        placeholder="Đặt tiệc, Góp ý..."
+                        placeholder="Vui lòng nhập..."
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">{contactForm.fields?.message_label || 'Tin nhắn'}</label>
+                    <label className="text-sm font-medium text-foreground flex items-center gap-1">
+                      {contactForm.fields?.message_label || 'Tin nhắn'}
+                      <span className="text-red-500 font-semibold" title="Bắt buộc">*</span>
+                    </label>
                     <textarea
                       name="message"
                       value={formState.message}
@@ -554,7 +570,8 @@ export default function ContactPage() {
                       required
                       rows={5}
                       className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all resize-none"
-                      placeholder="Nội dung tin nhắn..."
+                      placeholder="Vui lòng nhập..."
+                      aria-required="true"
                     ></textarea>
                   </div>
 
