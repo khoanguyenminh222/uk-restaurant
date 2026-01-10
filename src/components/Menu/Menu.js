@@ -9,7 +9,7 @@ import MenuCard from "./MenuCard"
 import { useLandingConfig } from "@/hooks/useLandingConfig"
 
 // Component tinh tế để scroll xuống section tiếp theo
-function ScrollToNextSection({ targetId }) {
+function ScrollToNextSection({ targetId, isVisible }) {
   const scrollToNext = () => {
     const element = document.getElementById(targetId)
     if (element) {
@@ -25,20 +25,23 @@ function ScrollToNextSection({ targetId }) {
   }
 
   return (
-    <div className="flex justify-center mt-6 md:mt-8 pb-4">
+    <div
+      className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-in-out ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8 pointer-events-none"
+        }`}
+    >
       <button
         onClick={scrollToNext}
-        className="group flex flex-col items-center gap-2 text-muted-foreground hover:text-primary transition-colors duration-300 cursor-pointer"
+        className="group flex flex-col items-center gap-1 text-primary/80 hover:text-primary duration-300 cursor-pointer bg-background/80 backdrop-blur-md p-2.5 rounded-full shadow-lg border border-primary/20 hover:border-primary/50 hover:bg-background/95 hover:scale-110 active:scale-95 transition-all animate-bounce"
         aria-label={`Cuộn xuống ${targetId}`}
       >
-        <span className="text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          Xem thêm
-        </span>
         <div className="relative">
-          <ArrowDown className="w-5 h-5 animate-bounce" />
+          <ArrowDown className="w-5 h-5" />
           <div className="absolute inset-0 bg-primary/20 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         </div>
       </button>
+      <span className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-semibold text-primary/80 bg-background/90 px-2 py-0.5 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none border border-primary/10 shadow-xs">
+        Xem tiếp
+      </span>
     </div>
   )
 }
@@ -57,7 +60,7 @@ const getLucideIcon = (iconName) => {
   if (!iconName || typeof iconName !== 'string') {
     return TrendingUp; // Fallback
   }
-  
+
   // Thử các format khác nhau:
   const variants = [
     iconName, // Tên gốc
@@ -65,10 +68,10 @@ const getLucideIcon = (iconName) => {
     iconName + 'Icon', // Với suffix Icon
     toPascalCase(iconName) + 'Icon', // PascalCase + Icon
   ];
-  
+
   // Loại bỏ duplicates
   const uniqueVariants = [...new Set(variants)];
-  
+
   for (const variant of uniqueVariants) {
     const icon = lucideIcons[variant];
     if (icon) {
@@ -82,7 +85,7 @@ const getLucideIcon = (iconName) => {
       }
     }
   }
-  
+
   // Fallback về TrendingUp nếu không tìm thấy
   return TrendingUp;
 };
@@ -90,7 +93,7 @@ const getLucideIcon = (iconName) => {
 // Component wrapper cho food card với scroll-fade-in
 function FoodCardWrapper({ children, delay = 0 }) {
   const [cardRef, isCardVisible] = useScrollAnimation({ threshold: 0.1 })
-  
+
   return (
     <div
       ref={cardRef}
@@ -112,9 +115,9 @@ export default function Menu({ onAddToCart, onOrderClick }) {
   const popularTitle = menuConfig.popular_title || 'Món nổi bật'
   const popularIcon = menuConfig.popular_icon || '🔥'
   const popularLucideIconName = menuConfig.popular_lucide_icon || 'TrendingUp'
-  
+
   const PopularLucideIcon = getLucideIcon(popularLucideIconName)
-  
+
   const router = useRouter()
   const [categories, setCategories] = useState([])
   const [foods, setFoods] = useState([])
@@ -125,6 +128,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
   const [error, setError] = useState(null)
   const [isTransitioning, setIsTransitioning] = useState(false) // Trạng thái đang chuyển category
   const [isSticky, setIsSticky] = useState(false) // Sticky search và category bar
+  const [showScrollButton, setShowScrollButton] = useState(false) // State cho nút scroll fixed
   const [isShowingPopular, setIsShowingPopular] = useState(false) // Đang hiển thị món nổi bật
   const [thresholds, setThresholds] = useState([]) // Danh sách ngưỡng
   const [popularFoodsMap, setPopularFoodsMap] = useState({}) // Map food_id -> total_quantity
@@ -184,7 +188,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
         }
       }
     }
-    
+
     // Bước 2: Hệ thống tự động (Fallback)
     if (food.use_auto_badge !== false) {
       const totalQuantity = popularFoodsMap[food.id] || food.total_quantity || 0
@@ -198,7 +202,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
         }
       }
     }
-    
+
     // Bước 3: Không có badge
     return null
   }
@@ -250,7 +254,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
     const fetchFoods = async () => {
       try {
         setIsTransitioning(true)
-        
+
         // Nếu đã chọn category → fetch theo category (không dùng món nổi bật)
         if (selectedCategory !== null) {
           setIsShowingPopular(false) // Không phải món nổi bật khi chọn category
@@ -269,16 +273,16 @@ export default function Menu({ onAddToCart, onOrderClick }) {
           }, 150)
           return
         }
-        
+
         // Nếu chưa chọn category (selectedCategory === null) → Ưu tiên món có badge thủ công
         if (selectedCategory === null) {
           // Fetch tất cả món để có thể sắp xếp theo badge thủ công
           const response = await fetch("/api/food?limit=100")
           const data = await response.json()
-          
+
           if (data.success && data.data) {
             const availableFoods = data.data.filter((food) => food.is_available !== false)
-            
+
             // Tính badge cho mỗi food và thêm total_quantity
             const foodsWithBadge = availableFoods.map(food => {
               const totalQuantity = popularFoodsMap[food.id] || 0
@@ -289,7 +293,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
                 matchedThreshold: badge
               }
             })
-            
+
             // Sắp xếp: Ưu tiên món có manual_badge lên đầu, sau đó là món có auto badge
             const sortedFoods = foodsWithBadge.sort((a, b) => {
               // Ưu tiên 1: Món có manual_badge
@@ -297,7 +301,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
               const bHasManual = b.matchedThreshold?.isManual === true
               if (aHasManual && !bHasManual) return -1
               if (!aHasManual && bHasManual) return 1
-              
+
               // Ưu tiên 2: Món có auto badge (total_quantity cao hơn)
               if (!aHasManual && !bHasManual) {
                 const aHasAuto = a.matchedThreshold && !a.matchedThreshold.isManual
@@ -308,26 +312,26 @@ export default function Menu({ onAddToCart, onOrderClick }) {
                   return (b.total_quantity || 0) - (a.total_quantity || 0)
                 }
               }
-              
+
               // Ưu tiên 3: Món có manual_badge với order cao hơn (nếu có)
               if (aHasManual && bHasManual) {
                 const aOrder = a.matchedThreshold?.order || 0
                 const bOrder = b.matchedThreshold?.order || 0
                 if (aOrder !== bOrder) return bOrder - aOrder
               }
-              
+
               return 0
             })
-            
-            // Giới hạn 5 món
-            const top5Foods = sortedFoods.slice(0, 5)
-            
+
+            // Giới hạn 6 món
+            const top6Foods = sortedFoods.slice(0, 6)
+
             // Kiểm tra xem có món nào có badge không
-            const hasBadge = top5Foods.some(f => f.matchedThreshold)
+            const hasBadge = top6Foods.some(f => f.matchedThreshold)
             setIsShowingPopular(hasBadge)
-            
-            setFoods(top5Foods)
-            applyFilters(top5Foods, searchQuery)
+
+            setFoods(top6Foods)
+            applyFilters(top6Foods, searchQuery)
             setLoading(false)
             setTimeout(() => {
               setIsTransitioning(false)
@@ -335,7 +339,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
             return
           }
         }
-        
+
         // Fallback: Lấy tất cả món theo thứ tự mặc định
         setIsShowingPopular(false)
         const response = await fetch("/api/food")
@@ -422,31 +426,38 @@ export default function Menu({ onAddToCart, onOrderClick }) {
   }
 
   // Sticky search và category bar khi scroll qua category tabs gốc
+  // Cập nhật logic để handle cả nút scroll button
   useEffect(() => {
     let ticking = false
-    
     const handleScroll = () => {
-      if (menuSectionRef.current && categoryTabsRef.current) {
+      if (menuSectionRef.current) {
         const menuRect = menuSectionRef.current.getBoundingClientRect()
-        const categoryTabsRect = categoryTabsRef.current.getBoundingClientRect()
-        
-        // Header height
         const headerHeight = window.innerWidth >= 768 ? 80 : 64
-        const threshold = 150
-        
-        // Sticky khi:
-        // 1. Category tabs gốc đã scroll qua khỏi viewport (top < 0 hoặc bottom < headerHeight)
-        // 2. Menu section vẫn còn trong viewport và chưa tới gần cuối (bottom > threshold + headerHeight)
-        const shouldBeSticky = 
-          categoryTabsRect.bottom < headerHeight && 
-          menuRect.bottom > (threshold + headerHeight)
-        
-        setIsSticky(shouldBeSticky)
+        const windowHeight = window.innerHeight
+
+        // Logic cho Sticky Bar (giữ nguyên logic cũ)
+        if (categoryTabsRef.current) {
+          const categoryTabsRect = categoryTabsRef.current.getBoundingClientRect()
+          const threshold = 150
+          const shouldBeSticky =
+            categoryTabsRect.bottom < headerHeight &&
+            menuRect.bottom > (threshold + headerHeight)
+          setIsSticky(shouldBeSticky)
+        }
+
+        // Logic cho Scroll Button (Mới)
+        // Hiện khi: Top của Menu đã nằm cao trên màn hình (gần chạm top viewport) -> Đã scroll qua Hero
+        // VÀ Bottom của Menu vẫn còn nằm dưới màn hình một chút
+        // Update: Chỉnh threshold top < 200 (thay vì windowHeight - 100) để tránh overlap với Hero button
+        const shouldShowScrollBtn =
+          menuRect.top < 200 &&
+          menuRect.bottom > windowHeight
+
+        setShowScrollButton(shouldShowScrollBtn)
       }
       ticking = false
     }
 
-    // Sử dụng requestAnimationFrame để scroll mượt hơn
     const optimizedHandleScroll = () => {
       if (!ticking) {
         window.requestAnimationFrame(handleScroll)
@@ -459,9 +470,46 @@ export default function Menu({ onAddToCart, onOrderClick }) {
     return () => window.removeEventListener('scroll', optimizedHandleScroll)
   }, [])
 
+  // Fix lỗi hiển thị Món Nổi Bật: Manual check visibility
+  // Đảm bảo element hiện ra nếu lỡ IntersectionObserver bị miss (khi scroll nhanh hoặc load từ dưới lên)
+  useEffect(() => {
+    const checkVisibility = () => {
+      [popularTitleRef, badgesRef].forEach(ref => {
+        if (ref.current) {
+          const rect = ref.current.getBoundingClientRect()
+          const isInViewport = (
+            rect.top < window.innerHeight &&
+            rect.bottom > 0
+          )
+          // Force add class visible nếu đã trong viewport
+          if (isInViewport && !ref.current.classList.contains('visible')) {
+            ref.current.classList.add('visible')
+          }
+        }
+      })
+    }
+
+    // Check ngay lập tức và sau các khoảng delay để đảm bảo render xong
+    checkVisibility()
+    const timers = [
+      setTimeout(checkVisibility, 100),
+      setTimeout(checkVisibility, 500),
+      setTimeout(checkVisibility, 1000)
+    ]
+
+    window.addEventListener('scroll', checkVisibility, { passive: true })
+    window.addEventListener('resize', checkVisibility, { passive: true })
+
+    return () => {
+      timers.forEach(clearTimeout)
+      window.removeEventListener('scroll', checkVisibility)
+      window.removeEventListener('resize', checkVisibility)
+    }
+  }, [])
+
   return (
     <section id="menu" ref={menuSectionRef} className="pb-8 md:pb-12 px-4 sm:px-6 lg:px-8 bg-muted relative">
-      <div className="max-w-7xl mx-auto overflow-hidden">
+      <div className="max-w-6xl mx-auto overflow-hidden">
         {/* Section Header - Design đặc biệt cho landing page */}
         <div
           ref={headerRef}
@@ -470,18 +518,18 @@ export default function Menu({ onAddToCart, onOrderClick }) {
           <div className="relative inline-block">
             {/* Decorative background */}
             <div className="absolute inset-0 bg-linear-to-r from-primary/10 via-primary/20 to-primary/10 rounded-3xl blur-2xl -z-10 transform scale-110"></div>
-            
+
             <div className="relative px-8 py-6">
               <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold font-display mb-2 bg-linear-to-r from-primary via-primary-light to-primary bg-clip-text text-transparent">
-            {sectionTitle}
-          </h2>
+                {sectionTitle}
+              </h2>
               {/* Divider */}
               <div className="flex items-center justify-center gap-3 sm:gap-4 mb-4 sm:mb-6">
                 <div className="h-px w-8 sm:w-12 bg-linear-to-r from-transparent to-primary"></div>
                 <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-primary"></div>
                 <div className="h-px w-8 sm:w-12 bg-linear-to-r from-primary to-transparent"></div>
               </div>
-              <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-xl mx-auto">
+              <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-xl mx-auto mb-4">
                 {sectionDescription}
               </p>
             </div>
@@ -518,10 +566,20 @@ export default function Menu({ onAddToCart, onOrderClick }) {
             </div>
           </div>
         )}
+        <div className={`mb-4 md:mb-6 flex items-center justify-center gap-2`}>
+          <button
+            onClick={handleViewAllMenu}
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground rounded-full font-medium transition-all duration-300 group cursor-pointer shadow-sm hover:shadow-md text-sm sm:text-base"
+          >
+            <span>Xem tất cả</span>
+            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+          </button>
+        </div>
 
         {/* Section Header - Món nổi bật - Gọn gàng */}
         {!loading && !error && isShowingPopular && selectedCategory === null && !searchQuery && (
           <>
+            {/* View All Link - Elegant style */}
             <div className={`mb-4 md:mb-6 flex items-center justify-center gap-2 scroll-fade-in ${isPopularTitleVisible ? "visible" : ""}`} ref={popularTitleRef}>
               <PopularLucideIcon className="w-5 h-5 text-primary" />
               <h3 className="text-xl sm:text-2xl md:text-3xl font-bold font-display text-primary">
@@ -529,15 +587,15 @@ export default function Menu({ onAddToCart, onOrderClick }) {
               </h3>
               <span className="text-lg">{popularIcon}</span>
             </div>
-            
+
             {/* Hiển thị giá trị các ngưỡng */}
             {(() => {
-              // Lấy manual badges từ 5 món đang hiển thị
-              const top5Foods = filteredFoods.slice(0, 5)
+              // Lấy manual badges từ 6 món đang hiển thị
+              const top6Foods = filteredFoods.slice(0, 6)
               const manualBadges = []
               const thresholdIdsInUse = new Set()
-              
-              top5Foods.forEach(food => {
+
+              top6Foods.forEach(food => {
                 if (food.matchedThreshold?.isManual === true) {
                   const badge = food.matchedThreshold
                   // Nếu có _id (từ threshold config) thì đã có trong thresholds rồi, chỉ track lại
@@ -546,9 +604,9 @@ export default function Menu({ onAddToCart, onOrderClick }) {
                   } else {
                     // Nếu là custom badge (không có _id), thêm vào danh sách
                     // Kiểm tra duplicate dựa trên label + icon + color
-                    const isDuplicate = manualBadges.some(b => 
-                      b.label === badge.label && 
-                      b.icon === badge.icon && 
+                    const isDuplicate = manualBadges.some(b =>
+                      b.label === badge.label &&
+                      b.icon === badge.icon &&
                       b.color === badge.color
                     )
                     if (!isDuplicate) {
@@ -557,16 +615,16 @@ export default function Menu({ onAddToCart, onOrderClick }) {
                   }
                 }
               })
-              
+
               // Kết hợp thresholds và manual badges custom
               // Loại bỏ duplicate: nếu manual badge có _id thì đã có trong thresholds rồi
               const allBadges = [
                 ...thresholds,
                 ...manualBadges.filter(b => !b._id) // Chỉ lấy custom badges (không có _id)
               ]
-              
+
               if (allBadges.length === 0) return null
-              
+
               return (
                 <div className={`mb-6 flex flex-wrap items-center justify-center gap-3 md:gap-4 scroll-fade-in ${isBadgesVisible ? "visible" : ""}`} ref={badgesRef}>
                   {allBadges.map((badge, index) => (
@@ -579,7 +637,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
                       }}
                     >
                       <span className="text-sm">{badge.icon}</span>
-                      <span 
+                      <span
                         className="text-xs font-semibold"
                         style={{
                           color: badge.color,
@@ -603,11 +661,11 @@ export default function Menu({ onAddToCart, onOrderClick }) {
         {/* Menu Preview - Grid 5 cột desktop */}
         {!loading && !error && (
           <>
-              {filteredFoods.length > 0 ? (
+            {filteredFoods.length > 0 ? (
               <>
-                {/* Grid responsive: 2 cột mobile, 3 cột tablet, 5 cột desktop */}
-                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-5">
-                  {filteredFoods.slice(0, 5).map((food, index) => (
+                {/* Grid responsive: 2 cột mobile, 3 cột tablet, 3 cột desktop (để item to hơn) */}
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-3 sm:gap-4 md:gap-5">
+                  {filteredFoods.slice(0, 6).map((food, index) => (
                     <FoodCardWrapper key={food.id || food._id} delay={index * 0.1}>
                       <div className="menu-item h-full">
                         <MenuCard
@@ -623,33 +681,25 @@ export default function Menu({ onAddToCart, onOrderClick }) {
                   ))}
                 </div>
 
-                {/* View All Button - Ngay sau 5 items (1 hàng) */}
-                <div className={`flex justify-center mt-6 md:mt-8 p-2 scroll-fade-in ${isViewAllButtonVisible ? "visible" : ""}`} ref={viewAllButtonRef}>
-                  <button
-                    onClick={handleViewAllMenu}
-                    className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg text-sm sm:text-base font-medium transition-all duration-200 hover:scale-105 active:scale-95 shadow-sm shadow-primary/20 hover:shadow-md hover:shadow-primary/30 cursor-pointer"
-                  >
-                    Xem tất cả
-                    <ArrowRight className="w-5 h-5" />
-                  </button>
-                </div>
+
 
                 {/* Subtle Scroll Indicator - Cuộn xuống WhyChooseUs */}
-                <ScrollToNextSection targetId="why-choose-us" />
+                {/* Fixed position with smart visibility */}
+                <ScrollToNextSection targetId="why-choose-us" isVisible={showScrollButton} />
               </>
             ) : (
               <div className="flex items-center justify-center py-20">
                 <div className="text-center">
-                    <p className="text-muted-foreground text-sm sm:text-base mb-2">
+                  <p className="text-muted-foreground text-sm sm:text-base mb-2">
                     {searchQuery || selectedCategory
                       ? "Không tìm thấy món ăn nào"
-                        : "Chưa có món ăn nào"}
-                    </p>
-                    <p className="text-muted-foreground text-xs sm:text-sm">
+                      : "Chưa có món ăn nào"}
+                  </p>
+                  <p className="text-muted-foreground text-xs sm:text-sm">
                     {searchQuery || selectedCategory
                       ? "Thử tìm kiếm với từ khóa khác hoặc xóa bộ lọc"
                       : "Vui lòng quay lại sau hoặc thử danh mục khác"}
-                    </p>
+                  </p>
                 </div>
               </div>
             )}

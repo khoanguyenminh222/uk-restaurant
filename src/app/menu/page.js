@@ -108,7 +108,7 @@ export default function MenuPage() {
         }
       }
     }
-    
+
     // Bước 2: Hệ thống tự động (Fallback)
     if (food.use_auto_badge !== false) {
       const totalQuantity = popularFoodsMap[food.id] || food.total_quantity || 0
@@ -122,7 +122,7 @@ export default function MenuPage() {
         }
       }
     }
-    
+
     // Bước 3: Không có badge
     return null
   }
@@ -176,7 +176,7 @@ export default function MenuPage() {
   // Filter foods - Chỉ filter client-side cho search và threshold, pagination sẽ ở server-side
   const applyFilters = (foodsList, query, thresholdId = null) => {
     let filtered = foodsList
-    
+
     // Filter by search query
     if (query.trim()) {
       const lowerQuery = query.toLowerCase().trim()
@@ -198,8 +198,8 @@ export default function MenuPage() {
             // Kiểm tra manual_badge tùy chỉnh match
             if (food.manual_badge && !food.manual_badge.threshold_id) {
               return food.manual_badge.label === customBadge.label &&
-                     food.manual_badge.icon === customBadge.icon &&
-                     food.manual_badge.color === customBadge.color
+                food.manual_badge.icon === customBadge.icon &&
+                food.manual_badge.color === customBadge.color
             }
             return false
           })
@@ -213,21 +213,21 @@ export default function MenuPage() {
             if (food.manual_badge && food.manual_badge.threshold_id === thresholdId) {
               return true
             }
-            
+
             // Nếu không có manual_badge hoặc manual_badge không match
             // Kiểm tra auto badge: total_quantity >= threshold.value
             if (food.use_auto_badge !== false) {
               const totalQuantity = popularFoodsMap[food.id] || food.total_quantity || 0
               if (totalQuantity >= threshold.value) {
                 // Kiểm tra xem có threshold nào cao hơn match không
-                const higherThreshold = thresholds.find(t => 
+                const higherThreshold = thresholds.find(t =>
                   t.value > threshold.value && totalQuantity >= t.value
                 )
                 // Chỉ match với threshold cao nhất
                 return !higherThreshold
               }
             }
-            
+
             return false
           })
         }
@@ -244,26 +244,26 @@ export default function MenuPage() {
         setLoading(true)
         setIsTransitioning(true)
         await new Promise(resolve => setTimeout(resolve, 150))
-        
+
         // Nếu có threshold filter, fetch tất cả items để filter chính xác
         // Nếu không, dùng pagination bình thường
         const limit = selectedThreshold ? 10000 : pagination.limit
         const page = selectedThreshold ? 1 : pagination.page
-        
+
         // Build URL với pagination và filters
         const params = new URLSearchParams({
           page: page.toString(),
           limit: limit.toString(),
         })
-        
+
         if (selectedCategory) {
           params.append('category_id', selectedCategory)
         }
-        
+
         if (searchQuery.trim()) {
           params.append('search', searchQuery.trim())
         }
-        
+
         const response = await fetch(`/api/food?${params}`)
         const data = await response.json()
         if (data.success) {
@@ -280,7 +280,7 @@ export default function MenuPage() {
             }
           })
           setFoods(foodsWithQuantity)
-          
+
           // Apply threshold filter client-side (bao gồm cả manual_badge và custom badges)
           let filtered = foodsWithQuantity
           if (selectedThreshold) {
@@ -293,8 +293,8 @@ export default function MenuPage() {
                   // Kiểm tra manual_badge tùy chỉnh match
                   if (food.manual_badge && !food.manual_badge.threshold_id) {
                     return food.manual_badge.label === customBadge.label &&
-                           food.manual_badge.icon === customBadge.icon &&
-                           food.manual_badge.color === customBadge.color
+                      food.manual_badge.icon === customBadge.icon &&
+                      food.manual_badge.color === customBadge.color
                   }
                   return false
                 })
@@ -308,34 +308,34 @@ export default function MenuPage() {
                   if (food.manual_badge && food.manual_badge.threshold_id === selectedThreshold) {
                     return true
                   }
-                  
+
                   // Nếu không có manual_badge hoặc manual_badge không match
                   // Kiểm tra auto badge: total_quantity >= threshold.value
                   if (food.use_auto_badge !== false) {
                     const totalQuantity = food.total_quantity || 0
                     if (totalQuantity >= threshold.value) {
                       // Kiểm tra xem có threshold nào cao hơn match không
-                      const higherThreshold = thresholds.find(t => 
+                      const higherThreshold = thresholds.find(t =>
                         t.value > threshold.value && totalQuantity >= t.value
                       )
                       // Chỉ match với threshold cao nhất
                       return !higherThreshold
                     }
                   }
-                  
+
                   return false
                 })
               }
             }
           }
-          
+
           // Nếu có threshold filter, paginate client-side
           if (selectedThreshold) {
             const startIndex = (pagination.page - 1) * pagination.limit
             const endIndex = startIndex + pagination.limit
             const paginatedFiltered = filtered.slice(startIndex, endIndex)
             setFilteredFoods(paginatedFiltered)
-            
+
             // Update pagination dựa trên filtered items
             setPagination(prev => ({
               ...prev,
@@ -374,14 +374,14 @@ export default function MenuPage() {
   useEffect(() => {
     if (foods.length > 0) {
       const customBadgesMap = new Map()
-      
+
       foods.forEach(food => {
         if (food.manual_badge && !food.manual_badge.threshold_id) {
           // Có manual_badge tùy chỉnh (không có threshold_id)
           if (food.manual_badge.label && food.manual_badge.icon && food.manual_badge.color) {
             // Tạo key unique dựa trên label, icon, color
             const key = `${food.manual_badge.label}|${food.manual_badge.icon}|${food.manual_badge.color}`
-            
+
             if (!customBadgesMap.has(key)) {
               customBadgesMap.set(key, {
                 _id: `custom_${key}`, // ID tạm cho custom badge
@@ -396,7 +396,7 @@ export default function MenuPage() {
           }
         }
       })
-      
+
       setCustomBadges(Array.from(customBadgesMap.values()))
     }
   }, [foods])
@@ -416,10 +416,10 @@ export default function MenuPage() {
           matchedThreshold: badge
         }
       })
-      
+
       // Luôn update foods để đảm bảo matchedThreshold được cập nhật (tránh race condition)
       setFoods(foodsWithQuantity)
-      
+
       // Luôn update filteredFoods để đảm bảo badge hiển thị đúng
       setFilteredFoods(prevFiltered => {
         // Nếu chưa có filteredFoods, tạo mới từ foodsWithQuantity
@@ -435,8 +435,8 @@ export default function MenuPage() {
                   // Kiểm tra manual_badge tùy chỉnh match
                   if (food.manual_badge && !food.manual_badge.threshold_id) {
                     return food.manual_badge.label === customBadge.label &&
-                           food.manual_badge.icon === customBadge.icon &&
-                           food.manual_badge.color === customBadge.color
+                      food.manual_badge.icon === customBadge.icon &&
+                      food.manual_badge.color === customBadge.color
                   }
                   return false
                 })
@@ -450,27 +450,27 @@ export default function MenuPage() {
                   if (food.manual_badge && food.manual_badge.threshold_id === selectedThreshold) {
                     return true
                   }
-                  
+
                   // Nếu không có manual_badge hoặc manual_badge không match
                   // Kiểm tra auto badge: total_quantity >= threshold.value
                   if (food.use_auto_badge !== false) {
                     const totalQuantity = food.total_quantity || 0
                     if (totalQuantity >= threshold.value) {
                       // Kiểm tra xem có threshold nào cao hơn match không
-                      const higherThreshold = thresholds.find(t => 
+                      const higherThreshold = thresholds.find(t =>
                         t.value > threshold.value && totalQuantity >= t.value
                       )
                       // Chỉ match với threshold cao nhất
                       return !higherThreshold
                     }
                   }
-                  
+
                   return false
                 })
               }
             }
           }
-          
+
           if (selectedThreshold) {
             const startIndex = (pagination.page - 1) * pagination.limit
             const endIndex = startIndex + pagination.limit
@@ -480,7 +480,7 @@ export default function MenuPage() {
         } else {
           // Update matchedThreshold cho các items trong filteredFoods
           const updated = prevFiltered.map(filteredFood => {
-            const updatedFood = foodsWithQuantity.find(f => 
+            const updatedFood = foodsWithQuantity.find(f =>
               (f.id && filteredFood.id && f.id === filteredFood.id) ||
               (f._id && filteredFood._id && f._id === filteredFood._id) ||
               (f.id && filteredFood._id && f.id === filteredFood._id) ||
@@ -495,12 +495,12 @@ export default function MenuPage() {
             }
             return filteredFood
           })
-          
+
           // Luôn return updated để đảm bảo badge được update
           return updated
         }
       })
-      
+
       // Update pagination nếu có threshold filter
       if (selectedThreshold) {
         let filtered = foodsWithQuantity
@@ -513,8 +513,8 @@ export default function MenuPage() {
               // Kiểm tra manual_badge tùy chỉnh match
               if (food.manual_badge && !food.manual_badge.threshold_id) {
                 return food.manual_badge.label === customBadge.label &&
-                       food.manual_badge.icon === customBadge.icon &&
-                       food.manual_badge.color === customBadge.color
+                  food.manual_badge.icon === customBadge.icon &&
+                  food.manual_badge.color === customBadge.color
               }
               return false
             })
@@ -528,21 +528,21 @@ export default function MenuPage() {
               if (food.manual_badge && food.manual_badge.threshold_id === selectedThreshold) {
                 return true
               }
-              
+
               // Nếu không có manual_badge hoặc manual_badge không match
               // Kiểm tra auto badge: total_quantity >= threshold.value
               if (food.use_auto_badge !== false) {
                 const totalQuantity = food.total_quantity || 0
                 if (totalQuantity >= threshold.value) {
                   // Kiểm tra xem có threshold nào cao hơn match không
-                  const higherThreshold = thresholds.find(t => 
+                  const higherThreshold = thresholds.find(t =>
                     t.value > threshold.value && totalQuantity >= t.value
                   )
                   // Chỉ match với threshold cao nhất
                   return !higherThreshold
                 }
               }
-              
+
               return false
             })
           }
@@ -560,23 +560,23 @@ export default function MenuPage() {
   // Sticky search và category bar khi scroll qua category tabs gốc
   useEffect(() => {
     let ticking = false
-    
+
     const handleScroll = () => {
       if (menuSectionRef.current && categoryTabsRef.current) {
         const menuRect = menuSectionRef.current.getBoundingClientRect()
         const categoryTabsRect = categoryTabsRef.current.getBoundingClientRect()
-        
+
         // Header height
         const headerHeight = window.innerWidth >= 768 ? 80 : 64
         const threshold = 150
-        
+
         // Sticky khi:
         // 1. Category tabs gốc đã scroll qua khỏi viewport (bottom < headerHeight)
         // 2. Menu section vẫn còn trong viewport và chưa tới gần cuối (bottom > threshold + headerHeight)
-        const shouldBeSticky = 
-          categoryTabsRect.bottom < headerHeight && 
+        const shouldBeSticky =
+          categoryTabsRect.bottom < headerHeight &&
           menuRect.bottom > (threshold + headerHeight)
-        
+
         setIsSticky(shouldBeSticky)
       }
       ticking = false
@@ -652,7 +652,7 @@ export default function MenuPage() {
 
       setTimeout(() => setFlyingItem(null), 800)
     }
-    
+
     // MenuCard đã tự thêm vào cart rồi, chỗ này chỉ xử lý animation/toast
   }
 
@@ -685,13 +685,13 @@ export default function MenuPage() {
       quantity: 1,
     })
     window.dispatchEvent(new CustomEvent("cartUpdated"))
-    
-    const cart = [{ 
-      id: food.id, 
-      name: food.name, 
-      price: food.price, 
-      image: food.image, 
-      quantity: 1 
+
+    const cart = [{
+      id: food.id,
+      name: food.name,
+      price: food.price,
+      image: food.image,
+      quantity: 1
     }]
     setOrderFormItems(cart)
     setIsOrderFormOpen(true)
@@ -723,24 +723,23 @@ export default function MenuPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header 
+      <Header
         onCartClick={handleCartClick}
         onLoginClick={handleLoginClick}
         onProfileClick={handleProfileClick}
         onOrderHistoryClick={handleOrderHistoryClick}
       />
       <main className="pt-20" ref={menuSectionRef}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Sticky Search and Category Bar - Chỉ hiện khi scroll */}
           <div
             ref={stickyBarRef}
-            className={`fixed top-16 sm:top-20 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border shadow-md py-3 px-4 sm:px-6 lg:px-8 transition-all duration-300 ease-in-out ${
-              isSticky 
-                ? 'opacity-100 translate-y-0 pointer-events-auto' 
-                : 'opacity-0 -translate-y-4 pointer-events-none'
-            }`}
+            className={`fixed top-16 sm:top-20 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border shadow-md py-3 px-4 sm:px-6 lg:px-8 transition-all duration-300 ease-in-out ${isSticky
+              ? 'opacity-100 translate-y-0 pointer-events-auto'
+              : 'opacity-0 -translate-y-4 pointer-events-none'
+              }`}
           >
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-6xl mx-auto">
               {/* Search Bar */}
               <div className="mb-3">
                 <div className="relative">
@@ -775,11 +774,10 @@ export default function MenuPage() {
                   {/* Tab "Tất cả" */}
                   <button
                     onClick={() => handleCategoryClick(null)}
-                    className={`shrink-0 px-3 md:px-6 py-1.5 md:py-2 rounded-full font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background cursor-pointer text-sm md:text-base ${
-                      selectedCategory === null
-                        ? "bg-primary text-primary-foreground shadow-md shadow-primary/40 scale-105"
-                        : "bg-card text-card-foreground hover:bg-primary/10 border border-border hover:scale-105 hover:border-primary/50"
-                    }`}
+                    className={`shrink-0 px-3 md:px-6 py-1.5 md:py-2 rounded-full font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background cursor-pointer text-sm md:text-base ${selectedCategory === null
+                      ? "bg-primary text-primary-foreground shadow-md shadow-primary/40 scale-105"
+                      : "bg-card text-card-foreground hover:bg-primary/10 border border-border hover:scale-105 hover:border-primary/50"
+                      }`}
                   >
                     Tất cả
                   </button>
@@ -790,17 +788,16 @@ export default function MenuPage() {
                       <button
                         key={category.id || category._id}
                         onClick={() => handleCategoryClick(category.id)}
-                        className={`shrink-0 px-3 md:px-6 py-1.5 md:py-2 rounded-full font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background active:scale-95 category-tab cursor-pointer hover:scale-105 text-sm md:text-base ${
-                          selectedCategory === category.id
-                            ? "text-primary-foreground shadow-md shadow-primary/40 scale-105"
-                            : "bg-card text-card-foreground border border-border"
-                        }`}
+                        className={`shrink-0 px-3 md:px-6 py-1.5 md:py-2 rounded-full font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background active:scale-95 category-tab cursor-pointer hover:scale-105 text-sm md:text-base ${selectedCategory === category.id
+                          ? "text-primary-foreground shadow-md shadow-primary/40 scale-105"
+                          : "bg-card text-card-foreground border border-border"
+                          }`}
                         style={{
-                          ...(selectedCategory === category.id && category.color ? { 
+                          ...(selectedCategory === category.id && category.color ? {
                             backgroundColor: category.color,
-                            borderColor: category.color 
+                            borderColor: category.color
                           } : {}),
-                          ...(selectedCategory !== category.id && category.color ? { 
+                          ...(selectedCategory !== category.id && category.color ? {
                             borderColor: category.color,
                             '--hover-color': category.color
                           } : {}),
@@ -896,19 +893,18 @@ export default function MenuPage() {
                 {/* Thresholds từ database */}
                 {thresholds.map((threshold) => {
                   const isActive = selectedThreshold === threshold._id
-                  
+
                   return (
                     <button
                       key={threshold._id}
                       onClick={() => handleThresholdClick(threshold._id)}
-                      className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md border backdrop-blur-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background cursor-pointer hover:scale-105 ${
-                        isActive
-                          ? "shadow-md scale-105 ring-2 ring-offset-2"
-                          : "hover:shadow-sm"
-                      }`}
+                      className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md border backdrop-blur-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background cursor-pointer hover:scale-105 ${isActive
+                        ? "shadow-md scale-105 ring-2 ring-offset-2"
+                        : "hover:shadow-sm"
+                        }`}
                       style={{
-                        backgroundColor: isActive 
-                          ? `${threshold.color}30` 
+                        backgroundColor: isActive
+                          ? `${threshold.color}30`
                           : `${threshold.color}10`,
                         borderColor: isActive
                           ? `${threshold.color}60`
@@ -917,7 +913,7 @@ export default function MenuPage() {
                       }}
                     >
                       <span className="text-sm">{threshold.icon}</span>
-                      <span 
+                      <span
                         className="text-xs font-semibold"
                         style={{
                           color: threshold.color,
@@ -933,23 +929,22 @@ export default function MenuPage() {
                     </button>
                   )
                 })}
-                
+
                 {/* Custom badges (manual_badge tùy chỉnh) */}
                 {customBadges.map((customBadge) => {
                   const isActive = selectedThreshold === customBadge._id
-                  
+
                   return (
                     <button
                       key={customBadge._id}
                       onClick={() => handleThresholdClick(customBadge._id)}
-                      className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md border backdrop-blur-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background cursor-pointer hover:scale-105 ${
-                        isActive
-                          ? "shadow-md scale-105 ring-2 ring-offset-2"
-                          : "hover:shadow-sm"
-                      }`}
+                      className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md border backdrop-blur-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background cursor-pointer hover:scale-105 ${isActive
+                        ? "shadow-md scale-105 ring-2 ring-offset-2"
+                        : "hover:shadow-sm"
+                        }`}
                       style={{
-                        backgroundColor: isActive 
-                          ? `${customBadge.color}30` 
+                        backgroundColor: isActive
+                          ? `${customBadge.color}30`
                           : `${customBadge.color}10`,
                         borderColor: isActive
                           ? `${customBadge.color}60`
@@ -958,7 +953,7 @@ export default function MenuPage() {
                       }}
                     >
                       <span className="text-sm">{customBadge.icon}</span>
-                      <span 
+                      <span
                         className="text-xs font-semibold"
                         style={{
                           color: customBadge.color,
@@ -981,11 +976,10 @@ export default function MenuPage() {
             <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
               <button
                 onClick={() => handleCategoryClick(null)}
-                className={`shrink-0 px-4 md:px-6 py-2 md:py-2.5 rounded-full font-medium transition-transform duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background cursor-pointer ${
-                  selectedCategory === null
-                    ? "bg-primary text-primary-foreground shadow-md shadow-primary/40 scale-105"
-                    : "bg-card text-card-foreground hover:bg-muted border border-border hover:scale-105"
-                }`}
+                className={`shrink-0 px-4 md:px-6 py-2 md:py-2.5 rounded-full font-medium transition-transform duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background cursor-pointer ${selectedCategory === null
+                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/40 scale-105"
+                  : "bg-card text-card-foreground hover:bg-muted border border-border hover:scale-105"
+                  }`}
               >
                 Tất cả
               </button>
@@ -994,15 +988,14 @@ export default function MenuPage() {
                   <button
                     key={category.id || category._id}
                     onClick={() => handleCategoryClick(category.id)}
-                    className={`shrink-0 px-4 md:px-6 py-2 md:py-2.5 rounded-full font-medium transition-transform duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background active:scale-95 cursor-pointer hover:scale-105 ${
-                      selectedCategory === category.id
-                        ? "bg-primary text-primary-foreground shadow-md shadow-primary/40 scale-105"
-                        : "bg-card text-card-foreground hover:bg-muted border border-border"
-                    }`}
+                    className={`shrink-0 px-4 md:px-6 py-2 md:py-2.5 rounded-full font-medium transition-transform duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background active:scale-95 cursor-pointer hover:scale-105 ${selectedCategory === category.id
+                      ? "bg-primary text-primary-foreground shadow-md shadow-primary/40 scale-105"
+                      : "bg-card text-card-foreground hover:bg-muted border border-border"
+                      }`}
                     style={{
-                      ...(category.color && selectedCategory === category.id ? { 
+                      ...(category.color && selectedCategory === category.id ? {
                         backgroundColor: category.color,
-                        borderColor: category.color 
+                        borderColor: category.color
                       } : category.color ? { borderColor: category.color } : {}),
                     }}
                   >
@@ -1047,11 +1040,10 @@ export default function MenuPage() {
 
           {/* Menu Grid - Compact Layout */}
           {!loading && !error && (
-            <div className={`transition-all duration-300 ${
-              isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
-            }`}>
+            <div className={`transition-all duration-300 ${isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+              }`}>
               {filteredFoods.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
                   {filteredFoods.map((food, index) => (
                     <div
                       key={food.id}
@@ -1060,8 +1052,8 @@ export default function MenuPage() {
                         animationDelay: `${index * 0.05}s`
                       }}
                     >
-                      <MenuCard 
-                        food={food} 
+                      <MenuCard
+                        food={food}
                         onAddToCart={handleAddToCart}
                         onOrderClick={handleOrderClick}
                         isPopular={food.total_quantity > 0}
@@ -1072,23 +1064,22 @@ export default function MenuPage() {
                   ))}
                 </div>
               ) : null}
-              
+
               {/* Pagination Controls */}
               {!loading && !error && filteredFoods.length > 0 && pagination.totalPages > 1 && (
                 <div className="mt-8 flex items-center justify-center gap-2">
                   <button
                     onClick={() => handlePageChange(pagination.page - 1)}
                     disabled={pagination.page === 1}
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background cursor-pointer ${
-                      pagination.page === 1
-                        ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
-                        : "bg-card text-card-foreground hover:bg-muted border border-border hover:scale-105 active:scale-95"
-                    }`}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background cursor-pointer ${pagination.page === 1
+                      ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
+                      : "bg-card text-card-foreground hover:bg-muted border border-border hover:scale-105 active:scale-95"
+                      }`}
                   >
                     <ChevronLeft className="w-4 h-4" />
                     <span className="hidden sm:inline">Trước</span>
                   </button>
-                  
+
                   <div className="flex items-center gap-1">
                     {/* Show page numbers */}
                     {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
@@ -1102,43 +1093,41 @@ export default function MenuPage() {
                       } else {
                         pageNum = pagination.page - 2 + i
                       }
-                      
+
                       return (
                         <button
                           key={pageNum}
                           onClick={() => handlePageChange(pageNum)}
-                          className={`w-10 h-10 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background cursor-pointer ${
-                            pagination.page === pageNum
-                              ? "bg-primary text-primary-foreground shadow-md shadow-primary/40 scale-105"
-                              : "bg-card text-card-foreground hover:bg-muted border border-border hover:scale-105 active:scale-95"
-                          }`}
+                          className={`w-10 h-10 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background cursor-pointer ${pagination.page === pageNum
+                            ? "bg-primary text-primary-foreground shadow-md shadow-primary/40 scale-105"
+                            : "bg-card text-card-foreground hover:bg-muted border border-border hover:scale-105 active:scale-95"
+                            }`}
                         >
                           {pageNum}
                         </button>
                       )
                     })}
                   </div>
-                  
+
                   <div className="px-4 py-2 text-sm text-muted-foreground">
                     <span className="hidden sm:inline">Trang </span>
                     {pagination.page} / {pagination.totalPages}
                   </div>
-                  
+
                   <button
                     onClick={() => handlePageChange(pagination.page + 1)}
                     disabled={pagination.page === pagination.totalPages}
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background cursor-pointer ${
-                      pagination.page === pagination.totalPages
-                        ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
-                        : "bg-card text-card-foreground hover:bg-muted border border-border hover:scale-105 active:scale-95"
-                    }`}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background cursor-pointer ${pagination.page === pagination.totalPages
+                      ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
+                      : "bg-card text-card-foreground hover:bg-muted border border-border hover:scale-105 active:scale-95"
+                      }`}
                   >
                     <span className="hidden sm:inline">Sau</span>
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
               )}
-              
+
               {!loading && !error && filteredFoods.length === 0 && (
                 <div className="flex items-center justify-center py-20">
                   <div className="text-center">
@@ -1146,8 +1135,8 @@ export default function MenuPage() {
                       {searchQuery
                         ? `Không tìm thấy món nào với từ khóa "${searchQuery}"`
                         : selectedCategory
-                        ? "Không có món nào trong danh mục này"
-                        : "Chưa có món ăn nào"}
+                          ? "Không có món nào trong danh mục này"
+                          : "Chưa có món ăn nào"}
                     </p>
                   </div>
                 </div>
@@ -1195,10 +1184,10 @@ export default function MenuPage() {
       )}
 
       {/* Cart Component */}
-      <Cart 
-        isOpen={isCartOpen} 
-        onClose={handleCartClose} 
-        onCheckout={handleCheckout} 
+      <Cart
+        isOpen={isCartOpen}
+        onClose={handleCartClose}
+        onCheckout={handleCheckout}
       />
 
       {/* Auth Modal */}

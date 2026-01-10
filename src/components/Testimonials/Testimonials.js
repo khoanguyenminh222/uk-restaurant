@@ -46,7 +46,7 @@ function AnimatedNumber({ value, isVisible, duration = 2000, suffix = "" }) {
 
     // Kiểm tra xem value có phải là text không (như "1000+", "11k")
     const isTextValue = typeof value === 'string' && !/^-?\d+(\.\d+)?$/.test(value.trim())
-    
+
     // Nếu là text, hiển thị trực tiếp không animate
     if (isTextValue) {
       setDisplayValue(value + suffix)
@@ -74,12 +74,12 @@ function AnimatedNumber({ value, isVisible, duration = 2000, suffix = "" }) {
     const animate = () => {
       const elapsed = Date.now() - startTime
       const progress = Math.min(elapsed / duration, 1)
-      
+
       // Easing function (ease-out)
       const easeOut = 1 - Math.pow(1 - progress, 3)
-      
+
       let current = target * easeOut
-      
+
       // Format với số chữ số thập phân chính xác
       if (isDecimal && decimalPlaces > 0) {
         current = Math.round(current * Math.pow(10, decimalPlaces)) / Math.pow(10, decimalPlaces)
@@ -184,7 +184,7 @@ export default function Testimonials({ onReviewFormClick }) {
     const now = new Date()
     const diffTime = Math.abs(now - date)
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
-    
+
     if (diffDays === 0) return 'Hôm nay'
     if (diffDays === 1) return 'Hôm qua'
     if (diffDays < 7) return `${diffDays} ngày trước`
@@ -199,7 +199,7 @@ export default function Testimonials({ onReviewFormClick }) {
     // Xóa khoảng trắng và ký tự đặc biệt
     const cleaned = phone.replace(/\s+/g, '').replace(/[^\d]/g, '')
     if (cleaned.length < 4) return phone // Nếu quá ngắn, trả về nguyên
-    
+
     // Hiển thị 3 số đầu và 3 số cuối, phần giữa dùng *
     // Ví dụ: 0901234567 -> 090***567
     if (cleaned.length >= 6) {
@@ -244,26 +244,26 @@ export default function Testimonials({ onReviewFormClick }) {
 
   // Sử dụng reviews từ API hoặc testimonials từ config
   const configTestimonials = config?.testimonials?.testimonials || []
-  const displayReviews = reviews.length > 0 
+  const displayReviews = reviews.length > 0
     ? reviews.map((review, index) => ({
-        name: review.customer_name || 'Khách hàng',
-        role: review.customer_phone ? `SĐT: ${maskPhone(review.customer_phone)}` : 'Khách hàng',
-        rating: review.rating || 5,
-        comment: review.comment || '',
-        avatar: review.avatar || '👤',
-        color: review.color || 'from-primary/20 to-primary-light/10',
-        borderColor: review.borderColor || 'border-primary/30',
-        date: formatDate(review.created_at),
-        _id: review._id,
-      }))
+      name: review.customer_name || 'Khách hàng',
+      role: review.customer_phone ? `SĐT: ${maskPhone(review.customer_phone)}` : 'Khách hàng',
+      rating: review.rating || 5,
+      comment: review.comment || '',
+      avatar: review.avatar || '👤',
+      color: review.color || 'from-primary/20 to-primary-light/10',
+      borderColor: review.borderColor || 'border-primary/30',
+      date: formatDate(review.created_at),
+      _id: review._id,
+    }))
     : configTestimonials.map((t, index) => ({
-        ...t,
-        date: t.date || '',
-      }))
+      ...t,
+      date: t.date || '',
+    }))
 
   // Tạo duplicate reviews để infinite scroll seamless
   // Duplicate 2 lần để khi chạy 50% thì nối tiếp với đầu một cách mượt mà
-  const duplicatedReviews = displayReviews.length > 0 
+  const duplicatedReviews = displayReviews.length > 0
     ? [...displayReviews, ...displayReviews]
     : []
 
@@ -274,7 +274,7 @@ export default function Testimonials({ onReviewFormClick }) {
     const marqueeElement = marqueeRef.current
     let position = 0
     let isPaused = false
-    const speed = 0.5 // pixels per frame
+    const speed = 0.8 // pixels per frame (Smoother read speed)
     // Tính toán chiều rộng thực tế của mỗi card (bao gồm width + gap)
     const getCardWidth = () => {
       if (typeof window === 'undefined') return 320
@@ -293,20 +293,20 @@ export default function Testimonials({ onReviewFormClick }) {
       }
 
       position -= speed
-      
+
       // Khi đã scroll hết 50% (một nửa của duplicated), reset về 0 để seamless
       // Vì chúng ta duplicate 2 lần, nên khi scroll hết 50% thì đã đến vị trí bắt đầu của bản duplicate thứ 2
       if (Math.abs(position) >= totalWidth) {
         position = 0
       }
-      
+
       marqueeElement.style.transform = `translateX(${position}px)`
       animationRef.current = requestAnimationFrame(animate)
     }
 
     // Expose pause/resume functions
     marqueeElement._pause = () => { isPaused = true }
-    marqueeElement._resume = () => { 
+    marqueeElement._resume = () => {
       isPaused = false
       if (!animationRef.current) {
         animationRef.current = requestAnimationFrame(animate)
@@ -334,7 +334,7 @@ export default function Testimonials({ onReviewFormClick }) {
         <div className="absolute bottom-1/4 left-0 w-48 h-48 sm:w-72 sm:h-72 bg-primary-light/5 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="max-w-7xl mx-auto overflow-hidden relative z-10">
+      <div className="max-w-6xl mx-auto overflow-hidden relative z-10">
         {/* Section Header - Enhanced với trust indicators */}
         <div
           ref={headerRef}
@@ -414,7 +414,7 @@ export default function Testimonials({ onReviewFormClick }) {
             <p className="text-muted-foreground">Chưa có đánh giá nào</p>
           </div>
         ) : (
-          <div 
+          <div
             className="relative overflow-hidden"
             onMouseEnter={() => {
               if (marqueeRef.current && marqueeRef.current._pause) {
@@ -430,8 +430,8 @@ export default function Testimonials({ onReviewFormClick }) {
             {/* Gradient fade edges */}
             <div className="absolute left-0 top-0 bottom-0 w-20 sm:w-32 bg-linear-to-r from-muted to-transparent z-10 pointer-events-none"></div>
             <div className="absolute right-0 top-0 bottom-0 w-20 sm:w-32 bg-linear-to-l from-muted to-transparent z-10 pointer-events-none"></div>
-            
-            <div 
+
+            <div
               ref={marqueeRef}
               className="flex gap-4 sm:gap-5 md:gap-6 lg:gap-8"
               style={{

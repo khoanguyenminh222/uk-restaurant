@@ -1,14 +1,14 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { 
-  CheckCircle2, 
-  Zap, 
-  Heart, 
-  Sparkles, 
-  Award, 
-  TrendingUp, 
-  Users, 
+import {
+  CheckCircle2,
+  Zap,
+  Heart,
+  Sparkles,
+  Award,
+  TrendingUp,
+  Users,
   Shield,
   Clock,
   ChefHat,
@@ -41,7 +41,7 @@ const getIconComponent = (icon) => {
 }
 
 // Component tinh tế để scroll xuống section tiếp theo
-function ScrollToNextSection({ targetId }) {
+function ScrollToNextSection({ targetId, isVisible }) {
   const scrollToNext = () => {
     const element = document.getElementById(targetId)
     if (element) {
@@ -57,20 +57,23 @@ function ScrollToNextSection({ targetId }) {
   }
 
   return (
-    <div className="flex justify-center mt-8 md:mt-12 pb-4">
+    <div
+      className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-in-out ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8 pointer-events-none"
+        }`}
+    >
       <button
         onClick={scrollToNext}
-        className="group flex flex-col items-center gap-2 text-muted-foreground hover:text-primary transition-colors duration-300 cursor-pointer"
+        className="group flex flex-col items-center gap-1 text-primary/80 hover:text-primary duration-300 cursor-pointer bg-background/80 backdrop-blur-md p-2.5 rounded-full shadow-lg border border-primary/20 hover:border-primary/50 hover:bg-background/95 hover:scale-110 active:scale-95 transition-all animate-bounce"
         aria-label={`Cuộn xuống ${targetId}`}
       >
-        <span className="text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          Xem thêm
-        </span>
         <div className="relative">
-          <ArrowDown className="w-5 h-5 animate-bounce" />
+          <ArrowDown className="w-5 h-5" />
           <div className="absolute inset-0 bg-primary/20 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         </div>
       </button>
+      <span className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-semibold text-primary/80 bg-background/90 px-2 py-0.5 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none border border-primary/10 shadow-xs">
+        Xem tiếp
+      </span>
     </div>
   )
 }
@@ -114,12 +117,12 @@ function AnimatedNumber({ value, isVisible, duration = 2000 }) {
     const animate = () => {
       const elapsed = Date.now() - startTime
       const progress = Math.min(elapsed / duration, 1)
-      
+
       // Easing function (ease-out)
       const easeOut = 1 - Math.pow(1 - progress, 3)
-      
+
       let current = target * easeOut
-      
+
       if (isDecimal) {
         current = Math.round(current * 10) / 10
       } else {
@@ -164,6 +167,10 @@ export default function WhyChooseUs() {
   const { config } = useLandingConfig()
   const [reviewStats, setReviewStats] = useState(null)
 
+  // State và Ref cho logic scroll button (Mới)
+  const [showScrollButton, setShowScrollButton] = useState(false)
+  const sectionRef = useRef(null)
+
   // Fetch review stats nếu auto_calculate_stats = true
   useEffect(() => {
     const fetchReviewStats = async () => {
@@ -184,7 +191,7 @@ export default function WhyChooseUs() {
 
   // Lấy features từ config hoặc dùng default
   const configFeatures = config?.whyChooseUs?.features || []
-  
+
   // Tạo refs động cho từng feature (tối đa 6)
   const [card1Ref, isCard1Visible] = useScrollAnimation({ threshold: 0.2 })
   const [card2Ref, isCard2Visible] = useScrollAnimation({ threshold: 0.2 })
@@ -192,10 +199,10 @@ export default function WhyChooseUs() {
   const [card4Ref, isCard4Visible] = useScrollAnimation({ threshold: 0.2 })
   const [card5Ref, isCard5Visible] = useScrollAnimation({ threshold: 0.2 })
   const [card6Ref, isCard6Visible] = useScrollAnimation({ threshold: 0.2 })
-  
+
   const featureRefs = [card1Ref, card2Ref, card3Ref, card4Ref, card5Ref, card6Ref]
   const featureVisibles = [isCard1Visible, isCard2Visible, isCard3Visible, isCard4Visible, isCard5Visible, isCard6Visible]
-  
+
   // Check visibility cho feature cards - hiển thị ngay nếu đã trong viewport
   // Check liên tục khi scroll để đảm bảo không bỏ lỡ khi scroll nhanh
   useEffect(() => {
@@ -206,7 +213,7 @@ export default function WhyChooseUs() {
           const rect = el.getBoundingClientRect()
           const windowHeight = window.innerHeight
           const windowWidth = window.innerWidth
-          
+
           // Kiểm tra xem element có trong viewport không (với margin để dễ bắt hơn)
           // Thêm 100px margin để trigger sớm hơn
           const margin = 100
@@ -218,7 +225,7 @@ export default function WhyChooseUs() {
             rect.height > 0 &&
             rect.width > 0
           )
-          
+
           // Nếu đã trong viewport, thêm class visible ngay
           if (isInViewport && !el.classList.contains('visible')) {
             el.classList.add('visible')
@@ -226,7 +233,7 @@ export default function WhyChooseUs() {
         }
       })
     }
-    
+
     // Check ngay sau khi DOM render
     const checkMultipleTimes = () => {
       checkVisibility()
@@ -237,22 +244,22 @@ export default function WhyChooseUs() {
         })
       })
     }
-    
+
     // Check ban đầu
     const timeoutId = setTimeout(checkMultipleTimes, 0)
-    
+
     // Throttle scroll handler để check khi scroll
     let scrollTimeout = null
     let lastScrollTime = 0
     const throttleDelay = 50 // Check mỗi 50ms khi scroll
-    
+
     const handleScroll = () => {
       const now = Date.now()
       if (now - lastScrollTime >= throttleDelay) {
         checkVisibility()
         lastScrollTime = now
       }
-      
+
       // Clear timeout cũ và set timeout mới để check khi scroll dừng
       if (scrollTimeout) {
         clearTimeout(scrollTimeout)
@@ -261,7 +268,7 @@ export default function WhyChooseUs() {
         checkVisibility()
       }, 150) // Check lại sau 150ms khi scroll dừng
     }
-    
+
     // Throttle scroll với requestAnimationFrame để mượt hơn
     let rafId = null
     const handleScrollRAF = () => {
@@ -271,17 +278,17 @@ export default function WhyChooseUs() {
         rafId = null
       })
     }
-    
+
     window.addEventListener('scroll', handleScrollRAF, { passive: true })
     window.addEventListener('resize', checkVisibility, { passive: true })
-    
+
     // Check khi page load xong
     if (document.readyState === 'complete') {
       checkMultipleTimes()
     } else {
       window.addEventListener('load', checkMultipleTimes, { once: true })
     }
-    
+
     return () => {
       clearTimeout(timeoutId)
       clearTimeout(scrollTimeout)
@@ -293,14 +300,41 @@ export default function WhyChooseUs() {
       window.removeEventListener('load', checkMultipleTimes)
     }
   }, [configFeatures.length]) // Re-check khi features thay đổi
-  
+
+  // Logic scroll detection cho nút fixed (Mới)
+  useEffect(() => {
+    let ticking = false
+    const handleScroll = () => {
+      if (sectionRef.current) {
+        const rect = sectionRef.current.getBoundingClientRect()
+        const windowHeight = window.innerHeight
+
+        // Hiện khi: Top section < 200 (đã cuộn qua phần đầu) và Bottom > windowHeight (chưa hết section)
+        const shouldShow = rect.top < 200 && rect.bottom > windowHeight
+        setShowScrollButton(shouldShow)
+      }
+      ticking = false
+    }
+
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(handleScroll)
+        ticking = true
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true })
+    handleScroll()
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   // Features data - Sử dụng từ config, sắp xếp theo order
   const features = configFeatures
     .map((feature, index) => {
       const ref = featureRefs[index] || null
       const isVisible = featureVisibles[index] || false
       const IconComponent = getIconComponent(feature.icon)
-      
+
       return {
         icon: IconComponent,
         title: feature.title,
@@ -317,41 +351,41 @@ export default function WhyChooseUs() {
   // Stats data - Số liệu ấn tượng với giá trị gốc để animate
   // Sử dụng stats từ reviews nếu auto_calculate_stats = true, ngược lại dùng từ config hoặc default
   const defaultStats = [
-    { 
-      icon: Users, 
-      value: "10,000+", 
-      label: "Khách hàng tin tưởng", 
+    {
+      icon: Users,
+      value: "10,000+",
+      label: "Khách hàng tin tưởng",
       color: "from-blue-500/20 to-blue-600/10",
     },
-    { 
-      icon: Star, 
-      value: "4.9/5", 
-      label: "Đánh giá trung bình", 
+    {
+      icon: Star,
+      value: "4.9/5",
+      label: "Đánh giá trung bình",
       color: "from-yellow-500/20 to-yellow-600/10",
     },
-    { 
-      icon: Clock, 
-      value: "30'", 
-      label: "Giao hàng nhanh", 
+    {
+      icon: Clock,
+      value: "30'",
+      label: "Giao hàng nhanh",
       color: "from-green-500/20 to-green-600/10",
     },
-    { 
-      icon: Award, 
-      value: "15+", 
-      label: "Năm kinh nghiệm", 
+    {
+      icon: Award,
+      value: "15+",
+      label: "Năm kinh nghiệm",
       color: "from-primary/20 to-primary-light/10",
     },
   ]
 
   // Nếu auto_calculate_stats = true và có reviewStats, cập nhật stats từ reviews
   let stats = config?.whyChooseUs?.stats || defaultStats
-  
+
   // Convert icon strings thành components nếu cần
   stats = stats.map(stat => ({
     ...stat,
     icon: getIconComponent(stat.icon)
   }))
-  
+
   if (config?.whyChooseUs?.auto_calculate_stats && reviewStats) {
     stats = stats.map(stat => {
       // So sánh bằng tên icon (string) hoặc component
@@ -367,24 +401,24 @@ export default function WhyChooseUs() {
   }
 
   return (
-    <section id="why-choose-us" className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <section id="why-choose-us" ref={sectionRef} className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Animated background gradient */}
       <div className="absolute inset-0 bg-linear-to-br from-background via-muted/20 to-background"></div>
-      
+
       {/* Decorative grid pattern - Ẩn trên mobile để tối ưu */}
       <div className="hidden md:block absolute inset-0 opacity-[0.02] pointer-events-none" style={{
         backgroundImage: `linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)`,
         backgroundSize: '50px 50px'
       }}></div>
-      
+
       {/* Animated orbs - Nhỏ hơn trên mobile */}
       <div className="absolute top-1/4 -left-32 w-64 h-64 md:w-96 md:h-96 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
       <div className="absolute bottom-1/4 -right-32 w-64 h-64 md:w-96 md:h-96 bg-primary-light/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-      
+
       {/* Visual Cue - Nhỏ hơn trên mobile */}
       <div className="absolute bottom-0 left-0 right-0 h-24 md:h-32 bg-muted/50 blur-3xl transform translate-y-1/2 pointer-events-none"></div>
-      
-      <div className="max-w-7xl mx-auto relative z-10 overflow-hidden">
+
+      <div className="max-w-6xl mx-auto relative z-10 overflow-hidden">
         {/* Section Header - Compact hơn cho mobile */}
         <div
           ref={headerRef}
@@ -452,18 +486,17 @@ export default function WhyChooseUs() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
           {features.map((feature, index) => {
             const IconComponent = feature.icon
-            
+
             return (
               <div
                 key={index}
                 ref={feature.ref}
-                className={`relative scroll-fade-in ${
-                  index === 0 ? "scroll-delay-100" : 
-                  index === 1 ? "scroll-delay-200" : 
-                  index === 2 ? "scroll-delay-300" :
-                  index === 3 ? "scroll-delay-100" :
-                  index === 4 ? "scroll-delay-200" : "scroll-delay-300"
-                } ${feature.isVisible ? "visible" : ""}`}
+                className={`relative scroll-fade-in ${index === 0 ? "scroll-delay-100" :
+                  index === 1 ? "scroll-delay-200" :
+                    index === 2 ? "scroll-delay-300" :
+                      index === 3 ? "scroll-delay-100" :
+                        index === 4 ? "scroll-delay-200" : "scroll-delay-300"
+                  } ${feature.isVisible ? "visible" : ""}`}
               >
                 <div className={`
                   relative bg-card/90 backdrop-blur-md border-2 ${feature.borderColor} rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-7
@@ -471,19 +504,19 @@ export default function WhyChooseUs() {
                 `}>
                   {/* Gradient overlay - Static */}
                   <div className={`absolute inset-0 bg-linear-to-br ${feature.color} rounded-xl sm:rounded-2xl opacity-20`}></div>
-                  
+
                   {/* Content */}
                   <div className="relative z-10 flex-1 flex flex-col">
                     {/* Icon Section - Compact hơn */}
                     <div className="relative mb-4 sm:mb-5">
                       {/* Glow effect - Static */}
                       <div className="absolute inset-0 rounded-xl sm:rounded-2xl"></div>
-                      
+
                       {/* Icon container */}
                       <div className="relative w-14 h-14 sm:w-16 sm:h-16 md:w-18 md:h-18 bg-linear-to-br from-primary/20 via-primary/10 to-primary-light/10 rounded-lg sm:rounded-xl flex items-center justify-center text-primary shadow-lg shadow-primary/10 border-2 border-primary/20">
                         <IconComponent className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9" />
                       </div>
-                      
+
                       {/* Decorative dots - Static animation */}
                       <div className="absolute -top-1 -right-1 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-primary rounded-full animate-ping"></div>
                       <div className="absolute -bottom-1 -left-1 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary-light rounded-full animate-pulse"></div>
@@ -520,7 +553,8 @@ export default function WhyChooseUs() {
         </div>
 
         {/* Subtle Scroll Indicator - Cuộn xuống Testimonials */}
-        <ScrollToNextSection targetId="testimonials" />
+        {/* Fixed position with smart visibility */}
+        <ScrollToNextSection targetId="testimonials" isVisible={showScrollButton} />
       </div>
     </section>
   )
