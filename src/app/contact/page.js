@@ -137,11 +137,11 @@ export default function ContactPage() {
   // Trust Stats state (fetched from API)
   const [realStats, setRealStats] = useState(null)
 
-  // Fetch real reviews stats - chỉ khi auto_calculate_stats = true (đồng bộ với home page)
+  // Fetch real reviews stats - chỉ khi auto_calculate_stats = true (đồng bộ với Testimonials component)
   useEffect(() => {
     const fetchStats = async () => {
-      // Kiểm tra flag từ landing config (giống WhyChooseUs component)
-      if (landingConfig?.whyChooseUs?.auto_calculate_stats) {
+      // Kiểm tra flag từ landing config (giống Testimonials component)
+      if (landingConfig?.testimonials?.auto_calculate_stats) {
         try {
           const res = await fetch('/api/reviews/stats');
           const data = await res.json();
@@ -154,7 +154,7 @@ export default function ContactPage() {
       }
     };
     fetchStats();
-  }, [landingConfig?.whyChooseUs?.auto_calculate_stats]);
+  }, [landingConfig?.testimonials?.auto_calculate_stats]);
 
   const handleChange = (e) => {
     setFormState({
@@ -198,18 +198,41 @@ export default function ContactPage() {
   const cta = config?.cta || {}
 
   // Merge config stats with real stats if available
-  // Nếu auto_calculate_stats = true và có realStats, dùng realStats, ngược lại dùng từ config
-  const displayStats = {
-    averageRating: (landingConfig?.whyChooseUs?.auto_calculate_stats && realStats?.averageRating) 
-      ? realStats.averageRating 
-      : (trustStats.averageRating || 4.9),
-    totalReviews: (landingConfig?.whyChooseUs?.auto_calculate_stats && realStats?.totalReviews) 
-      ? realStats.totalReviews 
-      : (trustStats.totalReviews || 1247),
-    verifiedCustomers: (landingConfig?.whyChooseUs?.auto_calculate_stats && realStats?.verifiedCustomers) 
-      ? realStats.verifiedCustomers 
-      : (trustStats.verifiedCustomers || 98)
-  };
+  // Logic giống Testimonials component:
+  // 1. Nếu auto_calculate_stats = true và có realStats → dùng từ API
+  // 2. Nếu không → dùng từ landingConfig.testimonials.trustStats (admin tự chọn)
+  // 3. Nếu không có → dùng từ contact config trustStats
+  // 4. Cuối cùng → default
+  let displayStats = null
+  if (landingConfig?.testimonials?.auto_calculate_stats && realStats) {
+    // Tự động tính từ reviews
+    displayStats = {
+      averageRating: realStats.averageRating,
+      totalReviews: realStats.totalReviews,
+      verifiedCustomers: realStats.verifiedCustomers,
+    }
+  } else if (landingConfig?.testimonials?.trustStats) {
+    // Dùng từ landing config (admin tự chọn)
+    displayStats = {
+      averageRating: landingConfig.testimonials.trustStats.averageRating,
+      totalReviews: landingConfig.testimonials.trustStats.totalReviews,
+      verifiedCustomers: landingConfig.testimonials.trustStats.verifiedCustomers,
+    }
+  } else if (trustStats && (trustStats.averageRating || trustStats.totalReviews || trustStats.verifiedCustomers)) {
+    // Dùng từ contact config
+    displayStats = {
+      averageRating: trustStats.averageRating || 4.9,
+      totalReviews: trustStats.totalReviews || 1247,
+      verifiedCustomers: trustStats.verifiedCustomers || 98,
+    }
+  } else {
+    // Fallback về default
+    displayStats = {
+      averageRating: 4.9,
+      totalReviews: 1247,
+      verifiedCustomers: 98,
+    }
+  }
 
   const contactInfoList = [
     {
@@ -608,7 +631,7 @@ export default function ContactPage() {
                 <div className="absolute inset-0 bg-linear-to-br from-primary/20 to-primary-light/10 rounded-xl opacity-30"></div>
                 <div className="relative z-10 flex flex-col items-center text-center">
                   <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mb-3 sm:mb-4 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-                    <MessageCircle className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8" />
+                    <TrendingUp className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8" />
                   </div>
                   <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-foreground mb-2">
                     <AnimatedNumber value={displayStats.totalReviews} isVisible={isStatsVisible} duration={2000} />
