@@ -104,24 +104,32 @@ export async function PUT(request) {
       if (body.hero) {
         updateData.hero = { ...updateData.hero, ...body.hero };
       }
-      if (body.section_title !== undefined) {
-        updateData.section_title = body.section_title;
+      if (body.info) {
+        updateData.info = { ...updateData.info, ...body.info };
       }
-      if (body.section_description !== undefined) {
-        updateData.section_description = body.section_description;
+
+      // New Map Section
+      if (body.section_map) {
+        updateData.section_map = { ...updateData.section_map, ...body.section_map };
       }
+      // Backup for legacy map_embed_url updates
+      if (body.map_embed_url !== undefined) {
+        if (!updateData.section_map) updateData.section_map = {};
+        updateData.section_map.embed_url = body.map_embed_url;
+      }
+
+      // New Social Section Titles
+      if (body.social_section) {
+        updateData.social_section = { ...updateData.social_section, ...body.social_section };
+      }
+
       if (body.contact_form) {
         updateData.contact_form = { ...updateData.contact_form, ...body.contact_form };
         if (body.contact_form.fields) {
           updateData.contact_form.fields = { ...updateData.contact_form.fields, ...body.contact_form.fields };
         }
       }
-      if (body.info) {
-        updateData.info = { ...updateData.info, ...body.info };
-      }
-      if (body.map_embed_url !== undefined) {
-        updateData.map_embed_url = body.map_embed_url;
-      }
+
       if (body.social_media !== undefined) {
         updateData.social_media = body.social_media;
       }
@@ -131,9 +139,11 @@ export async function PUT(request) {
       if (body.cta) {
         updateData.cta = { ...updateData.cta, ...body.cta };
       }
-      if (body.testimonials !== undefined) {
-        updateData.testimonials = body.testimonials;
-      }
+
+      // Remove legacy top-level strings if they exist, or keep them? 
+      // The mergeWithDefaults will prefer the new ones. 
+      // Actually let's just update the specific fields.
+
       if (body.seo) {
         updateData.seo = { ...updateData.seo, ...body.seo };
       }

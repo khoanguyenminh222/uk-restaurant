@@ -14,18 +14,46 @@ export const defaultContactConfig = {
     badge: '📞 Liên Hệ Với Chúng Tôi',
     title: 'Chúng Tôi Luôn Sẵn Sàng Phục Vụ Bạn',
     description: 'Hãy liên hệ với chúng tôi để được tư vấn, đặt bàn hoặc giải đáp mọi thắc mắc. Đội ngũ của chúng tôi luôn sẵn sàng hỗ trợ bạn 24/7.',
+    image: '', // URL ảnh background hoặc side image
     cta_primary: { text: 'Gọi Ngay', link: 'tel:+84969606095' },
     cta_secondary: { text: 'Xem Thực Đơn', link: '/menu' },
   },
-  section_title: 'Liên hệ',
-  section_description: 'Chúng tôi luôn sẵn sàng lắng nghe và hỗ trợ bạn',
+
+  // Info Section (Cards)
   info: {
     phone: '(+84) 096 960 6095',
+    phone_title: 'Điện thoại',
+    phone_description: 'Gọi ngay để đặt bàn hoặc đặt món',
+
     email: 'khoanguyenminh222@gmail.com',
+    email_title: 'Email',
+    email_description: 'Gửi email cho chúng tôi bất cứ lúc nào',
+
     address: '123 Đường ABC, Quận 1, TP. Hồ Chí Minh',
+    address_title: 'Địa chỉ',
+    address_description: 'Đến thăm chúng tôi tại cửa hàng',
+
     working_hours: 'Thứ 2 - Chủ Nhật: 8:00 - 22:00',
+    working_hours_title: 'Giờ mở cửa',
+    working_hours_description: 'Chúng tôi phục vụ bạn mỗi ngày',
   },
-  map_embed_url: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.1234567890!2d106.6297!3d10.8231!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTDCsDQ5JzIzLjIiTiAxMDbCsDM3JzQ2LjkiRQ!5e0!3m2!1svi!2s!4v1234567890123!5m2!1svi!2s',
+
+  // Map Section
+  section_map: {
+    badge: 'Vị Trí',
+    title: 'Đến Thăm Chúng Tôi',
+    embed_url: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.1234567890!2d106.6297!3d10.8231!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTDCsDQ5JzIzLjIiTiAxMDbCsDM3JzQ2LjkiRQ!5e0!3m2!1svi!2s!4v1234567890123!5m2!1svi!2s',
+    empty_text: 'Chưa có bản đồ',
+  },
+
+  // Social Section Titles
+  social_section: {
+    badge: 'Kết Nối',
+    title: 'Theo Dõi Chúng Tôi',
+    description: 'Kết nối với chúng tôi trên các mạng xã hội để cập nhật những món ăn mới và ưu đãi đặc biệt',
+  },
+
+  // Social Media Links
   social_media: [
     {
       name: 'Facebook',
@@ -52,10 +80,13 @@ export const defaultContactConfig = {
       order: 3,
     },
   ],
+
   // Contact Form Section
   contact_form: {
+    badge: 'Gửi Tin Nhắn',
     title: 'Gửi Tin Nhắn Cho Chúng Tôi',
     description: 'Điền form bên dưới và chúng tôi sẽ phản hồi bạn trong thời gian sớm nhất',
+    success_message: 'Cảm ơn bạn! Chúng tôi đã nhận được tin nhắn và sẽ phản hồi sớm nhất có thể.',
     fields: {
       name_label: 'Họ và tên',
       email_label: 'Email',
@@ -63,75 +94,48 @@ export const defaultContactConfig = {
       subject_label: 'Chủ đề',
       message_label: 'Tin nhắn',
       submit_text: 'Gửi tin nhắn',
+      submit_icon: 'Send',
     },
   },
+
   // Trust Stats Section
   trustStats: {
     show: true,
+    badge: 'Uy Tín',
     title: 'Khách Hàng Tin Tưởng',
     description: 'Những con số nói lên chất lượng dịch vụ của chúng tôi',
     averageRating: 4.9,
+    averageRating_label: 'Đánh giá trung bình',
     totalReviews: 1247,
+    totalReviews_label: 'Tổng đánh giá',
     verifiedCustomers: 98,
+    verifiedCustomers_label: 'Khách hàng đã xác minh',
   },
+
   // CTA Section
   cta: {
     title: 'Sẵn Sàng Đặt Món Ngay?',
     description: 'Gọi điện hoặc đến thăm chúng tôi để trải nghiệm hương vị tuyệt vời',
+    image: '', // URL hình nền cho section CTA
     button_primary: { text: 'Gọi Đặt Bàn', link: 'tel:+84969606095' },
     button_secondary: { text: 'Xem Thực Đơn', link: '/menu' },
   },
-  testimonials: [
-    {
-      name: 'Nguyễn Văn A',
-      role: 'Khách hàng thân thiết',
-      rating: 5,
-      comment: 'Món ăn rất ngon, giao hàng nhanh chóng. Nhà hàng luôn đảm bảo chất lượng và dịch vụ tận tâm. Tôi sẽ quay lại đặt món nhiều lần nữa!',
-      avatar: '👨‍💼',
-      color: 'from-blue-500/20 to-blue-600/10',
-      borderColor: 'border-blue-500/30',
-      verified: true,
-      date: '2 tuần trước',
-      order: 1,
-    },
-    {
-      name: 'Trần Thị B',
-      role: 'Khách hàng mới',
-      rating: 5,
-      comment: 'Lần đầu tiên đặt món và tôi rất hài lòng. Thực đơn đa dạng, giá cả hợp lý. Đặc biệt là món phở bò rất ngon và đậm đà!',
-      avatar: '👩‍💼',
-      color: 'from-pink-500/20 to-pink-600/10',
-      borderColor: 'border-pink-500/30',
-      verified: true,
-      date: '1 tuần trước',
-      order: 2,
-    },
-    {
-      name: 'Lê Văn C',
-      role: 'Food Blogger',
-      rating: 5,
-      comment: 'Chất lượng món ăn vượt ngoài mong đợi. Nguyên liệu tươi ngon, cách chế biến cẩn thận. Đây là một trong những nhà hàng tốt nhất mà tôi từng thử!',
-      avatar: '👨‍🍳',
-      color: 'from-primary/20 to-primary-light/10',
-      borderColor: 'border-primary/30',
-      verified: true,
-      date: '3 ngày trước',
-      order: 3,
-    },
-  ],
+
+  testimonials: [], // Not used in contact page explicitly but part of data model
+
   seo: {
-    meta_title: '',
-    meta_description: '',
-    meta_keywords: '',
-    og_title: '',
-    og_description: '',
+    meta_title: 'Liên Hệ - Nhà Hàng UK Restaurant',
+    meta_description: 'Liên hệ với chúng tôi để đặt bàn và thưởng thức những món ăn ngon miệng.',
+    meta_keywords: 'liên hệ, đặt bàn, nhà hàng, uk restaurant',
+    og_title: 'Liên Hệ - Nhà Hàng UK Restaurant',
+    og_description: 'Liên hệ với chúng tôi để đặt bàn và thưởng thức những món ăn ngon miệng.',
     og_image: '/og-image.jpg',
     og_type: 'website',
     og_locale: 'vi_VN',
     twitter_card: 'summary_large_image',
-    twitter_title: '',
-    twitter_description: '',
-    twitter_image: '',
+    twitter_title: 'Liên Hệ - Nhà Hàng UK Restaurant',
+    twitter_description: 'Liên hệ với chúng tôi để đặt bàn và thưởng thức những món ăn ngon miệng.',
+    twitter_image: '/og-image.jpg',
     robots_index: true,
     robots_follow: true,
   },
@@ -344,31 +348,26 @@ export function validateContactConfig(data) {
 export function mergeWithDefaults(config) {
   const merged = JSON.parse(JSON.stringify(defaultContactConfig));
 
-  if (config.section_title !== undefined) {
-    merged.section_title = config.section_title;
-  }
-
   if (config.hero) {
     merged.hero = { ...merged.hero, ...config.hero };
   }
 
-  if (config.section_description !== undefined) {
-    merged.section_description = config.section_description;
-  }
-
-  if (config.contact_form) {
-    merged.contact_form = { ...merged.contact_form, ...config.contact_form };
-    if (config.contact_form.fields) {
-      merged.contact_form.fields = { ...merged.contact_form.fields, ...config.contact_form.fields };
-    }
-  }
-
+  // Expanded Info merge
   if (config.info) {
     merged.info = { ...merged.info, ...config.info };
   }
 
-  if (config.map_embed_url !== undefined) {
-    merged.map_embed_url = config.map_embed_url;
+  // Map section (replacing map_embed_url)
+  if (config.section_map) {
+    merged.section_map = { ...merged.section_map, ...config.section_map };
+  } else if (config.map_embed_url) {
+    // Legacy support
+    merged.section_map.embed_url = config.map_embed_url;
+  }
+
+  // Social Section Titles
+  if (config.social_section) {
+    merged.social_section = { ...merged.social_section, ...config.social_section };
   }
 
   if (config.social_media) {
@@ -379,13 +378,18 @@ export function mergeWithDefaults(config) {
     merged.trustStats = { ...merged.trustStats, ...config.trustStats };
   }
 
+  if (config.contact_form) {
+    merged.contact_form = { ...merged.contact_form, ...config.contact_form };
+    if (config.contact_form.fields) {
+      merged.contact_form.fields = { ...merged.contact_form.fields, ...config.contact_form.fields };
+    }
+  }
+
   if (config.cta) {
     merged.cta = { ...merged.cta, ...config.cta };
   }
 
-  if (config.testimonials) {
-    merged.testimonials = config.testimonials;
-  }
+  // Note: testimonials not strictly used in Contact page default render but part of model
 
   if (config.seo) {
     merged.seo = { ...merged.seo, ...config.seo };

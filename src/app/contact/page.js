@@ -1,68 +1,53 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useRef } from "react"
-import Link from "next/link"
-import Header from "@/components/Header/Header"
-import Footer from "@/components/Footer/Footer"
-import { useScrollAnimation } from "@/hooks/useScrollAnimation"
-import { useContactConfig } from "@/hooks/useContactConfig"
-import { 
-  Phone, 
-  Mail, 
-  MapPin, 
-  MessageCircle, 
-  Clock,
-  Send,
-  ArrowRight,
-  Star,
-  CheckCircle2,
-  Sparkles
-} from "lucide-react"
-import * as lucideIcons from "lucide-react"
+import { useState, useEffect, useRef } from 'react'
+import {
+  MapPin, Phone, Mail, Clock, Send, Globe, Star,
+  MessageCircle, Facebook, Instagram, Twitter, Youtube,
+  Linkedin, Github, CheckCircle2, TrendingUp, Sparkles,
+  ArrowRight
+} from 'lucide-react'
+import * as lucideIcons from 'lucide-react'
+import { useContactConfig } from '@/hooks/useContactConfig'
+import { useLandingConfig } from '@/hooks/useLandingConfig'
+import { useScrollAnimation } from '@/hooks/useScrollAnimation'
+import Link from 'next/link'
+import Header from '@/components/Header/Header'
+import Footer from '@/components/Footer/Footer'
 
-// Facebook SVG Icon
+// Icons mapping helper
 const FacebookIcon = ({ className }) => (
-  <svg className={className} fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-    <path
-      fillRule="evenodd"
-      d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"
-      clipRule="evenodd"
-    />
+  <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
   </svg>
 )
 
-// Instagram SVG Icon
 const InstagramIcon = ({ className }) => (
-  <svg className={className} fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-    <path
-      fillRule="evenodd"
-      d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058z"
-      clipRule="evenodd"
-    />
-    <path d="M12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z" />
+  <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
   </svg>
 )
 
-// Helper function để lấy icon component
 const getIconComponent = (iconName) => {
-  if (!iconName || typeof iconName !== 'string') return MessageCircle
+  if (!iconName || typeof iconName !== 'string') return Globe
   try {
-    if (iconName === 'FacebookIcon') return FacebookIcon
-    if (iconName === 'InstagramIcon') return InstagramIcon
+    if (iconName === 'FacebookIcon' || iconName === 'Facebook') return FacebookIcon
+    if (iconName === 'InstagramIcon' || iconName === 'Instagram') return InstagramIcon
     const Icon = lucideIcons[iconName]
-    return Icon || MessageCircle
+    return Icon || Globe
   } catch {
-    return MessageCircle
+    return Globe
   }
 }
 
-// Component để animate số đếm tăng dần
+// Component số nhảy
 function AnimatedNumber({ value, isVisible, duration = 2000, suffix = "" }) {
   const [displayValue, setDisplayValue] = useState("0")
   const hasAnimated = useRef(false)
   const lastValue = useRef(value)
 
   useEffect(() => {
+    // Reset animation if value changes significantly or first run
     if (lastValue.current !== value) {
       hasAnimated.current = false
       lastValue.current = value
@@ -70,33 +55,18 @@ function AnimatedNumber({ value, isVisible, duration = 2000, suffix = "" }) {
 
     if (!isVisible || hasAnimated.current) {
       if (lastValue.current !== value) {
-        const isTextValue = typeof value === 'string' && !/^-?\d+(\.\d+)?$/.test(value.trim())
-        if (isTextValue) {
-          setDisplayValue(value + suffix)
-        } else {
-          const numValue = typeof value === 'number' ? value : parseFloat(value) || 0
-          const isDecimal = !Number.isInteger(numValue)
-          let formatted = numValue.toString()
-          if (numValue >= 1000) {
-            formatted = numValue.toLocaleString('vi-VN', {
-              minimumFractionDigits: isDecimal ? 1 : 0,
-              maximumFractionDigits: isDecimal ? 1 : 0
-            })
-          } else if (isDecimal) {
-            formatted = numValue.toFixed(1)
-          }
-          setDisplayValue(formatted + suffix)
+        // Update logic if value changed but visible
+        const numValue = typeof value === 'number' ? value : parseFloat(value) || 0;
+        let formatted = numValue.toString();
+        if (numValue >= 1000) {
+          formatted = numValue.toLocaleString('vi-VN');
+        } else if (!Number.isInteger(numValue)) {
+          formatted = numValue.toFixed(1);
         }
-        hasAnimated.current = true
+        setDisplayValue(formatted + suffix);
+        hasAnimated.current = true;
       }
-      return
-    }
-
-    const isTextValue = typeof value === 'string' && !/^-?\d+(\.\d+)?$/.test(value.trim())
-    if (isTextValue) {
-      setDisplayValue(value + suffix)
-      hasAnimated.current = true
-      return
+      return;
     }
 
     const target = typeof value === 'number' ? value : parseFloat(value) || 0
@@ -104,36 +74,20 @@ function AnimatedNumber({ value, isVisible, duration = 2000, suffix = "" }) {
     const startTime = Date.now()
     hasAnimated.current = true
 
-    const getDecimalPlaces = (num) => {
-      if (Number.isInteger(num)) return 0
-      const str = num.toString()
-      if (str.includes('.')) {
-        return str.split('.')[1].length
-      }
-      return 0
-    }
-    const decimalPlaces = getDecimalPlaces(target)
-
     const animate = () => {
       const elapsed = Date.now() - startTime
       const progress = Math.min(elapsed / duration, 1)
       const easeOut = 1 - Math.pow(1 - progress, 3)
       let current = target * easeOut
-      
-      if (isDecimal && decimalPlaces > 0) {
-        current = Math.round(current * Math.pow(10, decimalPlaces)) / Math.pow(10, decimalPlaces)
-      } else {
-        current = Math.round(current)
-      }
 
+      // Format logic
       let formatted = current.toString()
-      if (current >= 1000) {
-        formatted = current.toLocaleString('vi-VN', {
-          minimumFractionDigits: isDecimal ? decimalPlaces : 0,
-          maximumFractionDigits: isDecimal ? decimalPlaces : 0
-        })
-      } else if (isDecimal && decimalPlaces > 0) {
-        formatted = current.toFixed(decimalPlaces)
+      if (target >= 1000) {
+        formatted = Math.round(current).toLocaleString('vi-VN')
+      } else if (isDecimal) {
+        formatted = current.toFixed(1)
+      } else {
+        formatted = Math.round(current).toString()
       }
 
       setDisplayValue(formatted + suffix)
@@ -141,20 +95,12 @@ function AnimatedNumber({ value, isVisible, duration = 2000, suffix = "" }) {
       if (progress < 1) {
         requestAnimationFrame(animate)
       } else {
-        let final = target
-        if (isDecimal && decimalPlaces > 0) {
-          final = Math.round(target * Math.pow(10, decimalPlaces)) / Math.pow(10, decimalPlaces)
-        } else {
-          final = Math.round(target)
-        }
-        let finalFormatted = final.toString()
-        if (final >= 1000) {
-          finalFormatted = final.toLocaleString('vi-VN', {
-            minimumFractionDigits: isDecimal ? decimalPlaces : 0,
-            maximumFractionDigits: isDecimal ? decimalPlaces : 0
-          })
-        } else if (isDecimal && decimalPlaces > 0) {
-          finalFormatted = final.toFixed(decimalPlaces)
+        // Final set
+        let finalFormatted = target.toString()
+        if (target >= 1000) {
+          finalFormatted = target.toLocaleString('vi-VN')
+        } else if (isDecimal) {
+          finalFormatted = target.toFixed(1)
         }
         setDisplayValue(finalFormatted + suffix)
       }
@@ -168,142 +114,204 @@ function AnimatedNumber({ value, isVisible, duration = 2000, suffix = "" }) {
 
 export default function ContactPage() {
   const { config, loading } = useContactConfig()
-  const [heroRef, isHeroVisible] = useScrollAnimation({ threshold: 0.3 })
-  const [contactInfoRef, isContactInfoVisible] = useScrollAnimation({ threshold: 0.2 })
-  const [formRef, isFormVisible] = useScrollAnimation({ threshold: 0.2 })
-  const [mapRef, isMapVisible] = useScrollAnimation({ threshold: 0.2 })
-  const [socialRef, isSocialVisible] = useScrollAnimation({ threshold: 0.2 })
-  const [statsRef, isStatsVisible] = useScrollAnimation({ threshold: 0.2 })
-  const [ctaRef, isCtaVisible] = useScrollAnimation({ threshold: 0.3 })
+  const { config: landingConfig } = useLandingConfig()
 
-  const [formData, setFormData] = useState({
+  // Animation Refs
+  const [heroRef, isHeroVisible] = useScrollAnimation()
+  const [contactInfoRef, isContactInfoVisible] = useScrollAnimation({ threshold: 0.1 })
+  const [formRef, isFormVisible] = useScrollAnimation()
+  const [mapRef, isMapVisible] = useScrollAnimation()
+  const [statsRef, isStatsVisible] = useScrollAnimation()
+
+  // Form State
+  const [formState, setFormState] = useState({
     name: '',
     email: '',
     phone: '',
     subject: '',
-    message: '',
+    message: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitSuccess, setSubmitSuccess] = useState(false)
 
-  // Lấy data từ config
-  const hero = config?.hero || {}
-  const contactForm = config?.contact_form || {}
-  const contactInfo = config?.info || {}
-  const mapEmbedUrl = config?.map_embed_url || ''
-  const socialMedia = config?.social_media || []
-  const trustStats = config?.trustStats || {}
-  const cta = config?.cta || {}
+  // Trust Stats state (fetched from API)
+  const [realStats, setRealStats] = useState(null)
 
-  const contactInfoList = [
-    {
-      icon: Phone,
-      title: "Điện thoại",
-      value: contactInfo.phone || "(+84) 096 960 6095",
-      href: `tel:${(contactInfo.phone || "").replace(/\D/g, "")}`,
-      color: "from-blue-500/20 to-blue-600/10",
-      borderColor: "border-blue-500/30",
-      description: "Gọi ngay để đặt bàn hoặc đặt món",
-    },
-    {
-      icon: Mail,
-      title: "Email",
-      value: contactInfo.email || "khoanguyenminh222@gmail.com",
-      href: `mailto:${contactInfo.email || "khoanguyenminh222@gmail.com"}`,
-      color: "from-pink-500/20 to-pink-600/10",
-      borderColor: "border-pink-500/30",
-      description: "Gửi email cho chúng tôi bất cứ lúc nào",
-    },
-    {
-      icon: MapPin,
-      title: "Địa chỉ",
-      value: contactInfo.address || "123 Đường ABC, Quận 1, TP. Hồ Chí Minh",
-      href: null,
-      color: "from-green-500/20 to-green-600/10",
-      borderColor: "border-green-500/30",
-      description: "Đến thăm chúng tôi tại cửa hàng",
-    },
-    {
-      icon: Clock,
-      title: "Giờ mở cửa",
-      value: contactInfo.working_hours || "Thứ 2 - Chủ Nhật: 8:00 - 22:00",
-      href: null,
-      color: "from-orange-500/20 to-orange-600/10",
-      borderColor: "border-orange-500/30",
-      description: "Chúng tôi phục vụ bạn mỗi ngày",
-    },
-  ]
+  // Fetch real reviews stats - chỉ khi auto_calculate_stats = true (đồng bộ với home page)
+  useEffect(() => {
+    const fetchStats = async () => {
+      // Kiểm tra flag từ landing config (giống WhyChooseUs component)
+      if (landingConfig?.whyChooseUs?.auto_calculate_stats) {
+        try {
+          const res = await fetch('/api/reviews/stats');
+          const data = await res.json();
+          if (data.success) {
+            setRealStats(data.data);
+          }
+        } catch (error) {
+          console.error('Error fetching review stats:', error);
+        }
+      }
+    };
+    fetchStats();
+  }, [landingConfig?.whyChooseUs?.auto_calculate_stats]);
 
-  const socialMediaList = socialMedia.map((social) => {
-    const Icon = getIconComponent(social.icon)
-    return {
-      ...social,
-      icon: Icon,
-    }
-  })
+  const handleChange = (e) => {
+    setFormState({
+      ...formState,
+      [e.target.name]: e.target.value
+    })
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsSubmitting(true)
-    
-    // Simulate form submission
+
+    // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false)
       setSubmitSuccess(true)
-      setFormData({ name: '', email: '', phone: '', subject: '', message: '' })
+      setFormState({ name: '', email: '', phone: '', subject: '', message: '' })
       setTimeout(() => setSubmitSuccess(false), 5000)
     }, 1500)
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    )
+  }
+
+  // Desconstruct config with defaults safe
+  const hero = config?.hero || {}
+  const info = config?.info || {}
+  const sectionMap = config?.section_map || {
+    // Fallback for legacy support
+    embed_url: config?.map_embed_url
+  }
+  const contactForm = config?.contact_form || {}
+  const trustStats = config?.trustStats || {}
+  const socials = config?.social_media || []
+  const socialSection = config?.social_section || {}
+  const cta = config?.cta || {}
+
+  // Merge config stats with real stats if available
+  // Nếu auto_calculate_stats = true và có realStats, dùng realStats, ngược lại dùng từ config
+  const displayStats = {
+    averageRating: (landingConfig?.whyChooseUs?.auto_calculate_stats && realStats?.averageRating) 
+      ? realStats.averageRating 
+      : (trustStats.averageRating || 4.9),
+    totalReviews: (landingConfig?.whyChooseUs?.auto_calculate_stats && realStats?.totalReviews) 
+      ? realStats.totalReviews 
+      : (trustStats.totalReviews || 1247),
+    verifiedCustomers: (landingConfig?.whyChooseUs?.auto_calculate_stats && realStats?.verifiedCustomers) 
+      ? realStats.verifiedCustomers 
+      : (trustStats.verifiedCustomers || 98)
+  };
+
+  const contactInfoList = [
+    {
+      icon: Phone,
+      title: info.phone_title || 'Điện thoại',
+      value: info.phone || '(+84) 096 960 6095',
+      description: info.phone_description || 'Gọi ngay để đặt bàn hoặc đặt món',
+      href: `tel:${(info.phone || '0969606095').replace(/[^0-9]/g, '')}`,
+      color: 'from-blue-500/20 to-cyan-500/10',
+      borderColor: 'border-blue-500/20'
+    },
+    {
+      icon: Mail,
+      title: info.email_title || 'Email',
+      value: info.email || 'khoanguyenminh222@gmail.com',
+      description: info.email_description || 'Gửi email cho chúng tôi bất cứ lúc nào',
+      href: `mailto:${info.email || 'khoanguyenminh222@gmail.com'}`,
+      color: 'from-purple-500/20 to-pink-500/10',
+      borderColor: 'border-purple-500/20'
+    },
+    {
+      icon: MapPin,
+      title: info.address_title || 'Địa chỉ',
+      value: info.address || '123 Đường ABC, Quận 1, TP. Hồ Chí Minh',
+      description: info.address_description || 'Đến thăm chúng tôi tại cửa hàng',
+      href: null,
+      color: 'from-orange-500/20 to-red-500/10',
+      borderColor: 'border-orange-500/20'
+    },
+    {
+      icon: Clock,
+      title: info.working_hours_title || 'Giờ mở cửa',
+      value: info.working_hours || 'Thứ 2 - Chủ Nhật: 8:00 - 22:00',
+      description: info.working_hours_description || 'Chúng tôi phục vụ bạn mỗi ngày',
+      href: null,
+      color: 'from-green-500/20 to-emerald-500/10',
+      borderColor: 'border-green-500/20'
+    }
+  ]
+
+  const SubmitIcon = getIconComponent(contactForm.fields?.submit_icon || 'Send');
+
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background overflow-hidden selection:bg-primary/20">
       <Header />
+      {/* Decorative Background Elements */}
+      <div className="fixed inset-0 pointer-events-none -z-10">
+        <div className="absolute top-0 right-0 w-3/4 h-3/4 bg-primary/5 rounded-full blur-[100px] translate-x-1/3 -translate-y-1/3"></div>
+        <div className="absolute bottom-0 left-0 w-3/4 h-3/4 bg-blue-500/5 rounded-full blur-[100px] -translate-x-1/3 translate-y-1/3"></div>
+      </div>
 
       {/* Hero Section */}
-      <section
-        ref={heroRef}
-        className={`relative min-h-[600px] md:min-h-[700px] flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-20 pb-12 overflow-hidden bg-linear-to-br from-primary/10 via-background to-primary/5 scroll-fade-in ${
-          isHeroVisible ? "visible" : ""
-        }`}
-      >
-        {/* Decorative background elements */}
-        <div className="absolute top-10 right-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl -z-10"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10"></div>
+      <section ref={heroRef} className="relative pt-32 pb-20 md:pt-40 md:pb-32 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        {hero.image ? (
+          <div className="absolute inset-0 z-0">
+            <img
+              src={hero.image}
+              alt={hero.title || "Contact Hero"}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-black/60"></div>
+          </div>
+        ) : (
+          <div className="absolute inset-0 bg-linear-to-br from-primary/10 via-background to-primary/5 -z-10"></div>
+        )}
 
-        <div className="max-w-6xl mx-auto text-center space-y-6">
-          {hero.badge && (
-            <div className="inline-block">
-              <span className="px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-semibold border border-primary/20">
-                {hero.badge}
-              </span>
-            </div>
-          )}
+        <div className={`max-w-7xl mx-auto text-center relative z-10 transition-all duration-1000 ${isHeroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
+          <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-primary/10 rounded-full border border-primary/20 backdrop-blur-md hover:bg-primary/20 transition-colors">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+            </span>
+            <span className={`text-sm font-semibold tracking-wide uppercase ${hero.image ? 'text-primary-foreground' : 'text-primary'}`}>
+              {hero.badge || 'Liên Hệ Với Chúng Tôi'}
+            </span>
+          </div>
 
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-display bg-linear-to-r from-primary via-primary-light to-primary bg-clip-text text-transparent leading-tight">
+          <h1 className={`text-4xl md:text-5xl lg:text-6xl font-bold font-display leading-tight mb-6 ${hero.image ? 'text-white' : 'bg-linear-to-r from-primary via-primary-light to-primary bg-clip-text text-transparent'}`}>
             {hero.title || 'Chúng Tôi Luôn Sẵn Sàng Phục Vụ Bạn'}
           </h1>
 
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+          <p className={`text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed ${hero.image ? 'text-gray-200' : 'text-muted-foreground'}`}>
             {hero.description || 'Hãy liên hệ với chúng tôi để được tư vấn, đặt bàn hoặc giải đáp mọi thắc mắc. Đội ngũ của chúng tôi luôn sẵn sàng hỗ trợ bạn 24/7.'}
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
-            {hero.cta_primary && (
-              <a
-                href={hero.cta_primary.link || 'tel:+84969606095'}
-                className="inline-flex items-center gap-2 px-8 py-4 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg font-semibold transition-all duration-300 hover:scale-105 active:scale-95"
-              >
-                {hero.cta_primary.text || 'Gọi Ngay'}
-                <Phone className="w-5 h-5" />
-              </a>
-            )}
-            {hero.cta_secondary && (
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a
+              href={hero.cta_primary?.link || "tel:+84969606095"}
+              className="w-full sm:w-auto px-8 py-4 bg-primary hover:bg-primary-dark text-primary-foreground rounded-full font-bold text-lg shadow-lg hover:shadow-primary/30 transition-all duration-300 hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-2"
+            >
+              <Phone className="w-5 h-5" />
+              {hero.cta_primary?.text || "Gọi Ngay"}
+            </a>
+            {hero.cta_secondary && hero.cta_secondary.text && (
               <Link
-                href={hero.cta_secondary.link || '/menu'}
-                className="inline-flex items-center gap-2 px-8 py-4 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg font-semibold transition-all duration-300 hover:scale-105 active:scale-95"
+                href={hero.cta_secondary.link || "/menu"}
+                className={`w-full sm:w-auto px-8 py-4 rounded-full font-bold text-lg border-2 transition-all duration-300 hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-2 ${hero.image
+                    ? 'border-white text-white hover:bg-white hover:text-primary'
+                    : 'border-border bg-card text-card-foreground hover:border-primary hover:text-primary'
+                  }`}
               >
-                {hero.cta_secondary.text || 'Xem Thực Đơn'}
-                <ArrowRight className="w-5 h-5" />
+                {hero.cta_secondary.text}
               </Link>
             )}
           </div>
@@ -313,9 +321,7 @@ export default function ContactPage() {
       {/* Contact Info Cards Section */}
       <section
         ref={contactInfoRef}
-        className={`py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-card/50 backdrop-blur-sm scroll-fade-in ${
-          isContactInfoVisible ? "visible" : ""
-        }`}
+        className={`py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-card/50 backdrop-blur-sm scroll-fade-in ${isContactInfoVisible ? "visible" : ""}`}
       >
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -324,14 +330,11 @@ export default function ContactPage() {
               return (
                 <div
                   key={index}
-                  className={`group relative bg-card border-2 ${info.borderColor} rounded-xl p-6 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 scroll-scale-in ${
-                    isContactInfoVisible ? "visible" : ""
-                  }`}
+                  className={`group relative bg-card border-2 ${info.borderColor} rounded-xl p-6 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 scroll-scale-in ${isContactInfoVisible ? "visible" : ""}`}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  {/* Gradient background */}
                   <div className={`absolute inset-0 bg-linear-to-br ${info.color} rounded-xl opacity-20 group-hover:opacity-30 transition-opacity`}></div>
-                  
+
                   <div className="relative z-10">
                     <div className="mb-4 inline-block p-3 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
                       <Icon className="w-6 h-6 text-primary" />
@@ -356,115 +359,186 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* Contact Form & Map Section */}
+      {/* Main Content Grid (Map + Form) */}
       <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-            {/* Contact Form */}
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+
+            {/* Map Section */}
+            <div
+              ref={mapRef}
+              className={`scroll-slide-right ${isMapVisible ? "visible" : ""}`}
+            >
+              <div className="sticky top-24">
+                <div className="inline-flex items-center gap-2 mb-3 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-full">
+                  <MapPin className="w-4 h-4 text-primary" />
+                  <span className="text-xs font-semibold text-primary uppercase tracking-wider">
+                    {sectionMap.badge || 'Vị Trí'}
+                  </span>
+                </div>
+                <h2 className="text-2xl md:text-3xl font-bold font-display text-card-foreground mb-2">
+                  {sectionMap.title || 'Đến Thăm Chúng Tôi'}
+                </h2>
+                <p className="text-lg text-primary font-medium mb-6 flex items-center gap-2">
+                  <MapPin className="w-5 h-5" />
+                  {info.address || '123 Đường ABC, Quận 1, TP. Hồ Chí Minh'}
+                </p>
+
+                {sectionMap.embed_url ? (
+                  <div className="relative w-full h-96 rounded-2xl overflow-hidden border-2 border-border shadow-2xl skew-y-1 hover:skew-y-0 transition-all duration-500">
+                    <iframe
+                      src={sectionMap.embed_url}
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      allowFullScreen
+                      loading="lazy"
+                      className="absolute inset-0  transition-all duration-700"
+                    ></iframe>
+                  </div>
+                ) : (
+                  <div className="relative w-full h-96 rounded-2xl overflow-hidden border-2 border-border bg-muted flex items-center justify-center">
+                    <div className="text-center space-y-4">
+                      <MapPin className="w-16 h-16 text-primary/30 mx-auto" />
+                      <p className="text-muted-foreground">{sectionMap.empty_text || 'Chưa có bản đồ'}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Social Links below Map */}
+                <div className="mt-10 pl-2">
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    {socialSection.title || 'Theo Dõi Chúng Tôi'}
+                  </h3>
+                  <div className="flex flex-wrap gap-4">
+                    {socials.map((social, idx) => {
+                      const SocialIcon = getIconComponent(social.icon);
+                      return (
+                        <a
+                          key={idx}
+                          href={social.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group relative w-12 h-12 flex items-center justify-center bg-card border border-border rounded-full hover:scale-110 hover:border-primary transition-all duration-300"
+                          title={social.name}
+                        >
+                          <SocialIcon className={`w-5 h-5 ${social.color || 'text-muted-foreground'} group-hover:text-primary transition-colors`} />
+                        </a>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Contact Form Section */}
             <div
               ref={formRef}
-              className={`scroll-fade-in ${isFormVisible ? "visible" : ""}`}
+              className={`bg-card/30 backdrop-blur-md border border-border/50 rounded-2xl p-6 md:p-8 lg:p-10 shadow-xl scroll-slide-left ${isFormVisible ? "visible" : ""}`}
             >
-              <div className="bg-card border border-border rounded-xl p-6 md:p-8 shadow-lg">
-                <div className="mb-6">
-                  <div className="inline-flex items-center gap-2 mb-3 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-full">
-                    <MessageCircle className="w-4 h-4 text-primary" />
-                    <span className="text-xs font-semibold text-primary uppercase tracking-wider">
-                      Gửi Tin Nhắn
-                    </span>
-                  </div>
-                  <h2 className="text-2xl md:text-3xl font-bold font-display text-card-foreground mb-2">
-                    {contactForm.title || 'Gửi Tin Nhắn Cho Chúng Tôi'}
-                  </h2>
-                  <p className="text-muted-foreground">
-                    {contactForm.description || 'Điền form bên dưới và chúng tôi sẽ phản hồi bạn trong thời gian sớm nhất'}
-                  </p>
-                </div>
+              <div className="inline-flex items-center gap-2 mb-3 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-full">
+                <MessageCircle className="w-4 h-4 text-primary" />
+                <span className="text-xs font-semibold text-primary uppercase tracking-wider">
+                  {contactForm.badge || 'Gửi Tin Nhắn'}
+                </span>
+              </div>
+              <h2 className="text-2xl md:text-3xl font-bold font-display text-card-foreground mb-2">
+                {contactForm.title || 'Gửi Tin Nhắn Cho Chúng Tôi'}
+              </h2>
+              <p className="text-muted-foreground mb-8">
+                {contactForm.description || 'Điền form bên dưới và chúng tôi sẽ phản hồi bạn trong thời gian sớm nhất'}
+              </p>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-card-foreground mb-2">
-                        {contactForm.fields?.name_label || 'Họ và tên'} <span className="text-red-400">*</span>
-                      </label>
+              {submitSuccess ? (
+                <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-8 text-center animate-in fade-in zoom-in duration-300">
+                  <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Send className="w-8 h-8 text-green-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-green-600 mb-2">Gửi Thành Công!</h3>
+                  <p className="text-muted-foreground">
+                    {contactForm.success_message || 'Cảm ơn bạn! Chúng tôi đã nhận được tin nhắn và sẽ phản hồi sớm nhất có thể.'}
+                  </p>
+                  <button
+                    onClick={() => setSubmitSuccess(false)}
+                    className="mt-6 text-primary font-medium hover:underline"
+                  >
+                    Gửi tin nhắn khác
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-foreground">{contactForm.fields?.name_label || 'Họ và tên'}</label>
                       <input
                         type="text"
+                        name="name"
+                        value={formState.name}
+                        onChange={handleChange}
                         required
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-                        placeholder="Nguyễn Văn A"
+                        className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all"
+                        placeholder="John Doe"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-card-foreground mb-2">
-                        {contactForm.fields?.email_label || 'Email'} <span className="text-red-400">*</span>
-                      </label>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-foreground">{contactForm.fields?.email_label || 'Email'}</label>
                       <input
                         type="email"
+                        name="email"
+                        value={formState.email}
+                        onChange={handleChange}
                         required
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-                        placeholder="example@email.com"
+                        className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all"
+                        placeholder="john@example.com"
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-card-foreground mb-2">
-                        {contactForm.fields?.phone_label || 'Số điện thoại'}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-foreground">
+                        {contactForm.fields?.phone_label || 'Số điện thoại'} <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="tel"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-                        placeholder="0901234567"
+                        name="phone"
+                        value={formState.phone}
+                        onChange={handleChange}
+                        required // Added requirement
+                        className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all"
+                        placeholder="+84..."
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-card-foreground mb-2">
-                        {contactForm.fields?.subject_label || 'Chủ đề'}
-                      </label>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-foreground">{contactForm.fields?.subject_label || 'Chủ đề'}</label>
                       <input
                         type="text"
-                        value={formData.subject}
-                        onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                        className="w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-                        placeholder="Đặt bàn / Tư vấn / Khác"
+                        name="subject"
+                        value={formState.subject}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all"
+                        placeholder="Đặt tiệc, Góp ý..."
                       />
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-card-foreground mb-2">
-                      {contactForm.fields?.message_label || 'Tin nhắn'} <span className="text-red-400">*</span>
-                    </label>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">{contactForm.fields?.message_label || 'Tin nhắn'}</label>
                     <textarea
+                      name="message"
+                      value={formState.message}
+                      onChange={handleChange}
                       required
                       rows={5}
-                      value={formData.message}
-                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                      className="w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all resize-none"
-                      placeholder="Nhập tin nhắn của bạn..."
-                    />
+                      className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all resize-none"
+                      placeholder="Nội dung tin nhắn..."
+                    ></textarea>
                   </div>
-
-                  {submitSuccess && (
-                    <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg flex items-center gap-2">
-                      <CheckCircle2 className="w-5 h-5 text-green-500" />
-                      <p className="text-sm text-green-500 font-medium">
-                        Cảm ơn bạn! Chúng tôi đã nhận được tin nhắn và sẽ phản hồi sớm nhất có thể.
-                      </p>
-                    </div>
-                  )}
 
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full px-6 py-3 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg font-semibold transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full px-6 py-4 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg font-bold text-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
                   >
                     {isSubmitting ? (
                       <>
@@ -474,57 +548,12 @@ export default function ContactPage() {
                     ) : (
                       <>
                         {contactForm.fields?.submit_text || 'Gửi tin nhắn'}
-                        <Send className="w-5 h-5" />
+                        <SubmitIcon className="w-5 h-5" />
                       </>
                     )}
                   </button>
                 </form>
-              </div>
-            </div>
-
-            {/* Map Section */}
-            <div
-              ref={mapRef}
-              className={`scroll-fade-in ${isMapVisible ? "visible" : ""}`}
-            >
-              <div className="bg-card border border-border rounded-xl p-6 md:p-8 shadow-lg h-full">
-                <div className="mb-6">
-                  <div className="inline-flex items-center gap-2 mb-3 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-full">
-                    <MapPin className="w-4 h-4 text-primary" />
-                    <span className="text-xs font-semibold text-primary uppercase tracking-wider">
-                      Vị Trí
-                    </span>
-                  </div>
-                  <h2 className="text-2xl md:text-3xl font-bold font-display text-card-foreground mb-2">
-                    Đến Thăm Chúng Tôi
-                  </h2>
-                  <p className="text-muted-foreground mb-4">
-                    {contactInfo.address || "123 Đường ABC, Quận 1, TP. Hồ Chí Minh"}
-                  </p>
-                </div>
-
-                {mapEmbedUrl ? (
-                  <div className="relative w-full h-96 rounded-lg overflow-hidden border-2 border-border shadow-lg">
-                    <iframe
-                      src={mapEmbedUrl}
-                      width="100%"
-                      height="100%"
-                      style={{ border: 0 }}
-                      allowFullScreen
-                      loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade"
-                      className="absolute inset-0"
-                    />
-                  </div>
-                ) : (
-                  <div className="relative w-full h-96 rounded-lg overflow-hidden border-2 border-border bg-muted flex items-center justify-center">
-                    <div className="text-center space-y-4">
-                      <MapPin className="w-16 h-16 text-primary/30 mx-auto" />
-                      <p className="text-muted-foreground">Chưa có bản đồ</p>
-                    </div>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -534,157 +563,132 @@ export default function ContactPage() {
       {trustStats.show && (
         <section
           ref={statsRef}
-          className={`py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-linear-to-r from-primary/10 to-primary/5 scroll-fade-in ${
-            isStatsVisible ? "visible" : ""
-          }`}
+          className={`py-20 md:py-28 relative overflow-hidden scroll-fade-in ${isStatsVisible ? "visible" : ""}`}
         >
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 mb-3 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-full">
+          {/* Background decorative elements */}
+          <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-background to-primary/10"></div>
+          <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 bg-primary/10 border border-primary/20 rounded-full backdrop-blur-sm">
                 <Sparkles className="w-4 h-4 text-primary animate-pulse" />
                 <span className="text-xs font-semibold text-primary uppercase tracking-wider">
-                  Uy Tín
+                  {trustStats.badge || 'Uy Tín'}
                 </span>
               </div>
-              <h2 className="text-3xl md:text-4xl font-bold font-display text-card-foreground mb-4">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl p-2 font-bold font-display mb-6 bg-linear-to-r from-primary via-primary-light to-primary bg-clip-text text-transparent">
                 {trustStats.title || 'Khách Hàng Tin Tưởng'}
               </h2>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
                 {trustStats.description || 'Những con số nói lên chất lượng dịch vụ của chúng tôi'}
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="text-center p-6 bg-card rounded-xl border border-border hover:shadow-lg transition-all">
-                <div className="flex justify-center mb-3">
-                  <Star className="w-10 h-10 text-yellow-400 fill-yellow-400" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
+              {/* Stat Card 1 - Rating */}
+              <div className="relative bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl p-5 sm:p-6 md:p-8">
+                <div className="absolute inset-0 bg-linear-to-br from-yellow-500/20 to-yellow-600/10 rounded-xl opacity-30"></div>
+                <div className="relative z-10 flex flex-col items-center text-center">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mb-3 sm:mb-4 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-400">
+                    <Star className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 fill-yellow-400" />
+                  </div>
+                  <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-foreground mb-2">
+                    <AnimatedNumber value={displayStats.averageRating} isVisible={isStatsVisible} duration={1500} />
+                  </div>
+                  <div className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium leading-tight px-1">
+                    {trustStats.averageRating_label || 'Đánh giá trung bình'}
+                  </div>
                 </div>
-                <div className="text-4xl md:text-5xl font-bold text-primary mb-2 font-display">
-                  <AnimatedNumber value={trustStats.averageRating || 4.9} isVisible={isStatsVisible} duration={2000} />
-                </div>
-                <p className="text-muted-foreground text-lg">Đánh giá trung bình</p>
               </div>
-              <div className="text-center p-6 bg-card rounded-xl border border-border hover:shadow-lg transition-all">
-                <div className="flex justify-center mb-3">
-                  <MessageCircle className="w-10 h-10 text-primary" />
-                </div>
-                <div className="text-4xl md:text-5xl font-bold text-primary mb-2 font-display">
-                  <AnimatedNumber value={trustStats.totalReviews || 1247} isVisible={isStatsVisible} duration={2000} />
-                </div>
-                <p className="text-muted-foreground text-lg">Tổng đánh giá</p>
-              </div>
-              <div className="text-center p-6 bg-card rounded-xl border border-border hover:shadow-lg transition-all">
-                <div className="flex justify-center mb-3">
-                  <CheckCircle2 className="w-10 h-10 text-green-500" />
-                </div>
-                <div className="text-4xl md:text-5xl font-bold text-primary mb-2 font-display">
-                  <AnimatedNumber value={trustStats.verifiedCustomers || 98} isVisible={isStatsVisible} duration={2000} suffix="%" />
-                </div>
-                <p className="text-muted-foreground text-lg">Khách hàng đã xác minh</p>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
 
-      {/* Social Media Section */}
-      {socialMediaList.length > 0 && (
-        <section
-          ref={socialRef}
-          className={`py-16 md:py-24 px-4 sm:px-6 lg:px-8 scroll-fade-in ${
-            isSocialVisible ? "visible" : ""
-          }`}
-        >
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 mb-3 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-full">
-                <MessageCircle className="w-4 h-4 text-primary" />
-                <span className="text-xs font-semibold text-primary uppercase tracking-wider">
-                  Kết Nối
-                </span>
+              {/* Stat Card 2 - Reviews */}
+              <div className="relative bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl p-5 sm:p-6 md:p-8">
+                <div className="absolute inset-0 bg-linear-to-br from-primary/20 to-primary-light/10 rounded-xl opacity-30"></div>
+                <div className="relative z-10 flex flex-col items-center text-center">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mb-3 sm:mb-4 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                    <MessageCircle className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8" />
+                  </div>
+                  <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-foreground mb-2">
+                    <AnimatedNumber value={displayStats.totalReviews} isVisible={isStatsVisible} duration={2000} />
+                  </div>
+                  <div className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium leading-tight px-1">
+                    {trustStats.totalReviews_label || 'Tổng đánh giá'}
+                  </div>
+                </div>
               </div>
-              <h2 className="text-3xl md:text-4xl font-bold font-display text-card-foreground mb-4">
-                Theo Dõi Chúng Tôi
-              </h2>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                Kết nối với chúng tôi trên các mạng xã hội để cập nhật những món ăn mới và ưu đãi đặc biệt
-              </p>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {socialMediaList.map((social, index) => {
-                const Icon = social.icon
-                return (
-                  <a
-                    key={index}
-                    href={social.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`group relative bg-card border-2 border-border rounded-xl p-6 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 scroll-scale-in ${
-                      isSocialVisible ? "visible" : ""
-                    } ${social.color || 'text-foreground'}`}
-                    style={{ animationDelay: `${index * 100}ms` }}
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="shrink-0 p-3 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
-                        <Icon className="w-6 h-6" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-card-foreground mb-1">{social.name}</h3>
-                        <p className="text-sm text-muted-foreground">{social.description || 'Kết nối với chúng tôi'}</p>
-                      </div>
-                      <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                    </div>
-                  </a>
-                )
-              })}
+              {/* Stat Card 3 - Verified */}
+              <div className="relative bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl p-5 sm:p-6 md:p-8">
+                <div className="absolute inset-0 bg-linear-to-br from-green-500/20 to-green-600/10 rounded-xl opacity-30"></div>
+                <div className="relative z-10 flex flex-col items-center text-center">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mb-3 sm:mb-4 bg-green-500/10 rounded-xl flex items-center justify-center text-green-500">
+                    <CheckCircle2 className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8" />
+                  </div>
+                  <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-foreground mb-2">
+                    <AnimatedNumber value={displayStats.verifiedCustomers} isVisible={isStatsVisible} duration={1500} suffix="%" />
+                  </div>
+                  <div className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium leading-tight px-1">
+                    {trustStats.verifiedCustomers_label || 'Khách hàng đã xác minh'}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
       )}
 
       {/* CTA Section */}
-      <section
-        ref={ctaRef}
-        className={`py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-linear-to-r from-primary to-primary-dark relative overflow-hidden scroll-fade-in ${
-          isCtaVisible ? "visible" : ""
-        }`}
-      >
-        {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+      {cta && (cta.title || cta.button_primary || cta.button_secondary) && (
+        <section className="py-20 md:py-32 relative overflow-hidden">
+          <div className="absolute inset-0 z-0">
+            {cta.image ? (
+              <img
+                src={cta.image}
+                alt="CTA Background"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <img
+                src="https://images.unsplash.com/photo-1559339352-11d035aa65de?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80"
+                alt="Restaurant Interior"
+                className="w-full h-full object-cover"
+              />
+            )}
+            <div className="absolute inset-0 bg-black/70"></div>
+          </div>
 
-        <div className="max-w-4xl mx-auto text-center relative z-10 space-y-6">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold font-display text-white">
+        <div className="max-w-4xl mx-auto px-4 text-center relative z-10">
+          <h2 className="text-3xl md:text-5xl font-bold font-display text-white mb-6">
             {cta.title || 'Sẵn Sàng Đặt Món Ngay?'}
           </h2>
-
-          <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
             {cta.description || 'Gọi điện hoặc đến thăm chúng tôi để trải nghiệm hương vị tuyệt vời'}
           </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
-            {cta.button_primary && (
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+            {cta.button_primary && cta.button_primary.text && (
               <a
-                href={cta.button_primary.link || 'tel:+84969606095'}
-                className="inline-flex items-center gap-2 px-8 py-4 bg-white hover:bg-white/90 text-primary rounded-lg font-semibold transition-all duration-300 hover:scale-105 active:scale-95"
+                href={cta.button_primary.link || "tel:+84969606095"}
+                className="w-full sm:w-auto px-8 py-4 bg-primary hover:bg-primary-dark text-primary-foreground rounded-full font-bold text-lg shadow-lg hover:shadow-primary/30 transition-transform active:scale-95 flex items-center justify-center gap-2"
               >
-                {cta.button_primary.text || 'Gọi Đặt Bàn'}
                 <Phone className="w-5 h-5" />
+                {cta.button_primary.text}
               </a>
             )}
-            {cta.button_secondary && (
+            {cta.button_secondary && cta.button_secondary.text && (
               <Link
-                href={cta.button_secondary.link || '/menu'}
-                className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 hover:bg-white/20 text-white rounded-lg font-semibold transition-all duration-300 hover:scale-105 active:scale-95 border border-white/30"
+                href={cta.button_secondary.link || "/menu"}
+                className="w-full sm:w-auto px-8 py-4 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30 text-white rounded-full font-bold text-lg transition-transform active:scale-95 flex items-center justify-center gap-2"
               >
-                {cta.button_secondary.text || 'Xem Thực Đơn'}
                 <ArrowRight className="w-5 h-5" />
+                {cta.button_secondary.text}
               </Link>
             )}
           </div>
         </div>
       </section>
+      )}
 
       <Footer />
     </main>
