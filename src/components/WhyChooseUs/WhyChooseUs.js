@@ -16,28 +16,60 @@ import {
   Star,
   ArrowDown,
 } from "lucide-react"
+import * as lucideIcons from "lucide-react"
 import { useScrollAnimation } from "@/hooks/useScrollAnimation"
 import { useLandingConfig } from "@/hooks/useLandingConfig"
 
-// Helper function để convert icon string thành component
-const getIconComponent = (icon) => {
-  if (typeof icon === 'string') {
-    // Nếu là string, tìm component tương ứng
-    const iconMap = {
-      'Users': Users,
-      'Star': Star,
-      'Clock': Clock,
-      'Award': Award,
-      'Leaf': Leaf,
-      'ChefHat': ChefHat,
-      'Zap': Zap,
-      'Shield': Shield,
-      'Heart': Heart,
-    }
-    return iconMap[icon] || Users // Fallback về Users nếu không tìm thấy
+// Helper function để chuyển đổi kebab-case sang PascalCase
+const toPascalCase = (str) => {
+  if (!str) return str
+  return str
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join('')
+}
+
+// Helper function để convert icon string thành component (giống admin config)
+const getIconComponent = (iconName) => {
+  if (!iconName || typeof iconName !== 'string') {
+    return Users // Fallback về Users
   }
-  // Nếu đã là component, trả về luôn
-  return icon || Users
+  try {
+    // Thử các format khác nhau:
+    // 1. Tên gốc (có thể là PascalCase hoặc kebab-case)
+    // 2. PascalCase (nếu input là kebab-case)
+    // 3. Với suffix 'Icon'
+    const variants = [
+      iconName, // Tên gốc
+      toPascalCase(iconName), // Chuyển kebab-case sang PascalCase
+      iconName + 'Icon', // Với suffix Icon
+      toPascalCase(iconName) + 'Icon', // PascalCase + Icon
+    ]
+    
+    // Loại bỏ duplicates
+    const uniqueVariants = [...new Set(variants)]
+    
+    let icon = null
+    for (const variant of uniqueVariants) {
+      icon = lucideIcons[variant]
+      if (icon) break
+    }
+    
+    if (!icon) return Users // Fallback về Users nếu không tìm thấy
+    
+    // Nếu là object với default export, lấy default
+    if (typeof icon === 'object' && icon.default) {
+      return icon.default
+    }
+    // Nếu là function hoặc React component, trả về trực tiếp
+    if (typeof icon === 'function' || (typeof icon === 'object' && icon.$$typeof)) {
+      return icon
+    }
+    
+    return Users // Fallback về Users
+  } catch (error) {
+    return Users // Fallback về Users nếu có lỗi
+  }
 }
 
 // Component tinh tế để scroll xuống section tiếp theo
@@ -350,27 +382,28 @@ export default function WhyChooseUs() {
 
   // Stats data - Số liệu ấn tượng với giá trị gốc để animate
   // Sử dụng stats từ reviews nếu auto_calculate_stats = true, ngược lại dùng từ config hoặc default
+  // Lưu ý: Icon phải là string để đồng bộ với config từ database
   const defaultStats = [
     {
-      icon: Users,
+      icon: 'Users',
       value: "10,000+",
       label: "Khách hàng tin tưởng",
       color: "from-blue-500/20 to-blue-600/10",
     },
     {
-      icon: Star,
+      icon: 'Star',
       value: "4.9/5",
       label: "Đánh giá trung bình",
       color: "from-yellow-500/20 to-yellow-600/10",
     },
     {
-      icon: Clock,
+      icon: 'Clock',
       value: "30'",
       label: "Giao hàng nhanh",
       color: "from-green-500/20 to-green-600/10",
     },
     {
-      icon: Award,
+      icon: 'Award',
       value: "15+",
       label: "Năm kinh nghiệm",
       color: "from-primary/20 to-primary-light/10",
@@ -380,20 +413,21 @@ export default function WhyChooseUs() {
   // Nếu auto_calculate_stats = true và có reviewStats, cập nhật stats từ reviews
   let stats = config?.whyChooseUs?.stats || defaultStats
 
-  // Convert icon strings thành components nếu cần
+  // Đảm bảo tất cả icon đều là string (chuẩn hóa)
   stats = stats.map(stat => ({
     ...stat,
-    icon: getIconComponent(stat.icon)
+    icon: typeof stat.icon === 'string' ? stat.icon : (stat.icon?.name || 'Users')
   }))
 
+  // Cập nhật stats từ reviews nếu auto_calculate_stats = true
   if (config?.whyChooseUs?.auto_calculate_stats && reviewStats) {
     stats = stats.map(stat => {
-      // So sánh bằng tên icon (string) hoặc component
-      const iconName = typeof stat.icon === 'string' ? stat.icon : stat.icon.name || ''
-      if (iconName === 'Users' || stat.icon === Users) {
+      // So sánh bằng tên icon (string)
+      const iconName = stat.icon
+      if (iconName === 'Users') {
         return { ...stat, value: `${reviewStats.totalReviews.toLocaleString('vi-VN')}+` }
       }
-      if (iconName === 'Star' || stat.icon === Star) {
+      if (iconName === 'Star') {
         return { ...stat, value: `${reviewStats.averageRating}/5` }
       }
       return stat
