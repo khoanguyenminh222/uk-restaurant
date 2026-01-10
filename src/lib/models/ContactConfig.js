@@ -9,12 +9,21 @@
  */
 export const defaultContactConfig = {
   config_type: 'contact',
+  // Hero Section
+  hero: {
+    badge: '📞 Liên Hệ Với Chúng Tôi',
+    title: 'Chúng Tôi Luôn Sẵn Sàng Phục Vụ Bạn',
+    description: 'Hãy liên hệ với chúng tôi để được tư vấn, đặt bàn hoặc giải đáp mọi thắc mắc. Đội ngũ của chúng tôi luôn sẵn sàng hỗ trợ bạn 24/7.',
+    cta_primary: { text: 'Gọi Ngay', link: 'tel:+84969606095' },
+    cta_secondary: { text: 'Xem Thực Đơn', link: '/menu' },
+  },
   section_title: 'Liên hệ',
   section_description: 'Chúng tôi luôn sẵn sàng lắng nghe và hỗ trợ bạn',
   info: {
     phone: '(+84) 096 960 6095',
     email: 'khoanguyenminh222@gmail.com',
     address: '123 Đường ABC, Quận 1, TP. Hồ Chí Minh',
+    working_hours: 'Thứ 2 - Chủ Nhật: 8:00 - 22:00',
   },
   map_embed_url: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.1234567890!2d106.6297!3d10.8231!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTDCsDQ5JzIzLjIiTiAxMDbCsDM3JzQ2LjkiRQ!5e0!3m2!1svi!2s!4v1234567890123!5m2!1svi!2s',
   social_media: [
@@ -43,10 +52,34 @@ export const defaultContactConfig = {
       order: 3,
     },
   ],
+  // Contact Form Section
+  contact_form: {
+    title: 'Gửi Tin Nhắn Cho Chúng Tôi',
+    description: 'Điền form bên dưới và chúng tôi sẽ phản hồi bạn trong thời gian sớm nhất',
+    fields: {
+      name_label: 'Họ và tên',
+      email_label: 'Email',
+      phone_label: 'Số điện thoại',
+      subject_label: 'Chủ đề',
+      message_label: 'Tin nhắn',
+      submit_text: 'Gửi tin nhắn',
+    },
+  },
+  // Trust Stats Section
   trustStats: {
+    show: true,
+    title: 'Khách Hàng Tin Tưởng',
+    description: 'Những con số nói lên chất lượng dịch vụ của chúng tôi',
     averageRating: 4.9,
     totalReviews: 1247,
     verifiedCustomers: 98,
+  },
+  // CTA Section
+  cta: {
+    title: 'Sẵn Sàng Đặt Món Ngay?',
+    description: 'Gọi điện hoặc đến thăm chúng tôi để trải nghiệm hương vị tuyệt vời',
+    button_primary: { text: 'Gọi Đặt Bàn', link: 'tel:+84969606095' },
+    button_secondary: { text: 'Xem Thực Đơn', link: '/menu' },
   },
   testimonials: [
     {
@@ -315,8 +348,19 @@ export function mergeWithDefaults(config) {
     merged.section_title = config.section_title;
   }
 
+  if (config.hero) {
+    merged.hero = { ...merged.hero, ...config.hero };
+  }
+
   if (config.section_description !== undefined) {
     merged.section_description = config.section_description;
+  }
+
+  if (config.contact_form) {
+    merged.contact_form = { ...merged.contact_form, ...config.contact_form };
+    if (config.contact_form.fields) {
+      merged.contact_form.fields = { ...merged.contact_form.fields, ...config.contact_form.fields };
+    }
   }
 
   if (config.info) {
@@ -333,6 +377,10 @@ export function mergeWithDefaults(config) {
 
   if (config.trustStats) {
     merged.trustStats = { ...merged.trustStats, ...config.trustStats };
+  }
+
+  if (config.cta) {
+    merged.cta = { ...merged.cta, ...config.cta };
   }
 
   if (config.testimonials) {

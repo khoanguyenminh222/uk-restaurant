@@ -14,12 +14,12 @@ export const defaultLandingConfig = {
   header: {
     restaurant_name: 'UK Restaurant',
     menu_items: [
-      { id: 'home', label: 'Trang chủ', icon: 'Home', order: 1 },
-      { id: 'menu', label: 'Thực đơn', icon: 'Utensils', order: 2 },
-      { id: 'why-choose-us', label: 'Tại sao chọn chúng tôi', icon: 'Star', order: 3 },
-      { id: 'testimonials', label: 'Đánh giá', icon: 'MessageSquare', order: 4 },
-      { id: 'about', label: 'Giới thiệu', icon: 'BookOpen', order: 5 },
-      { id: 'contact', label: 'Liên hệ', icon: 'Phone', order: 6 },
+      { id: 'home', label: 'Trang chủ', icon: 'Home', order: 1, is_visible: true },
+      { id: 'menu', label: 'Thực đơn', icon: 'Utensils', order: 2, is_visible: true },
+      { id: 'why-choose-us', label: 'Tại sao chọn chúng tôi', icon: 'Star', order: 3, is_visible: true },
+      { id: 'testimonials', label: 'Đánh giá', icon: 'MessageSquare', order: 4, is_visible: true },
+      { id: 'about', label: 'Giới thiệu', icon: 'BookOpen', order: 5, is_visible: true },
+      { id: 'contact', label: 'Liên hệ', icon: 'Phone', order: 6, is_visible: true },
     ],
   },
   hero: {

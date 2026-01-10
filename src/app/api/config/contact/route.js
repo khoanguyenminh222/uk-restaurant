@@ -101,11 +101,20 @@ export async function PUT(request) {
 
       const updateData = { ...mergedExisting };
 
+      if (body.hero) {
+        updateData.hero = { ...updateData.hero, ...body.hero };
+      }
       if (body.section_title !== undefined) {
         updateData.section_title = body.section_title;
       }
       if (body.section_description !== undefined) {
         updateData.section_description = body.section_description;
+      }
+      if (body.contact_form) {
+        updateData.contact_form = { ...updateData.contact_form, ...body.contact_form };
+        if (body.contact_form.fields) {
+          updateData.contact_form.fields = { ...updateData.contact_form.fields, ...body.contact_form.fields };
+        }
       }
       if (body.info) {
         updateData.info = { ...updateData.info, ...body.info };
@@ -118,6 +127,9 @@ export async function PUT(request) {
       }
       if (body.trustStats) {
         updateData.trustStats = { ...updateData.trustStats, ...body.trustStats };
+      }
+      if (body.cta) {
+        updateData.cta = { ...updateData.cta, ...body.cta };
       }
       if (body.testimonials !== undefined) {
         updateData.testimonials = body.testimonials;

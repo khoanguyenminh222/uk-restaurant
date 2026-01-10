@@ -68,6 +68,8 @@ export default function AdminLayout({ children }) {
   const isConfigPath = pathname.startsWith('/admin/banners') || 
                        pathname.startsWith('/admin/popular-config') || 
                        pathname.startsWith('/admin/landing-config') ||
+                       pathname.startsWith('/admin/about-config') ||
+                       pathname.startsWith('/admin/contact-config') ||
                        pathname.startsWith('/admin/notification-config') ||
                        pathname.startsWith('/admin/blacklist');
   

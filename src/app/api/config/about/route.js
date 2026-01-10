@@ -101,6 +101,21 @@ export async function PUT(request) {
 
       const updateData = { ...mergedExisting };
 
+      if (body.hero) {
+        updateData.hero = { ...updateData.hero, ...body.hero };
+      }
+      if (body.mission) {
+        updateData.mission = { ...updateData.mission, ...body.mission };
+      }
+      if (body.values) {
+        updateData.values = { ...updateData.values, ...body.values };
+      }
+      if (body.team) {
+        updateData.team = { ...updateData.team, ...body.team };
+      }
+      if (body.cta) {
+        updateData.cta = { ...updateData.cta, ...body.cta };
+      }
       if (body.section_title !== undefined) {
         updateData.section_title = body.section_title;
       }

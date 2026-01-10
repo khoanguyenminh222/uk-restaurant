@@ -64,9 +64,10 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
     return iconMap[itemId] || Home
   }
   
-  // Map config menu items to component format
+  // Map config menu items to component format, filter out hidden items
   const menuItems = configMenuItems.length > 0 
     ? configMenuItems
+        .filter(item => item.is_visible !== false) // Chỉ hiển thị items có is_visible !== false
         .sort((a, b) => (a.order || 0) - (b.order || 0))
         .map(item => ({
           id: item.id,
@@ -75,7 +76,24 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
         }))
     : defaultMenuItems
 
+  // Set active section based on pathname
   useEffect(() => {
+    if (pathname === '/about') {
+      setActiveSection('about')
+    } else if (pathname === '/contact') {
+      setActiveSection('contact')
+    } else if (isHomePage) {
+      // Chỉ set active section khi ở trang chủ
+      setActiveSection('home')
+    }
+  }, [pathname, isHomePage])
+
+  useEffect(() => {
+    // Nếu không ở trang chủ, không cần scroll detection
+    if (!isHomePage) {
+      return
+    }
+
     let ticking = false
     const headerHeight = 80 // Chiều cao header + offset
 
@@ -153,7 +171,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
     
     window.addEventListener("scroll", handleScroll, { passive: true })
     return () => window.removeEventListener("scroll", handleScroll)
-  }, [configMenuItems.length]) // Chỉ re-run khi số lượng menu items thay đổi
+  }, [configMenuItems.length, isHomePage]) // Chỉ re-run khi số lượng menu items thay đổi hoặc trang thay đổi
 
   // Update cart count
   useEffect(() => {
@@ -217,6 +235,19 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
   }, [isMenuOpen])
 
   const scrollToSection = (sectionId) => {
+    // Nếu là "about" hoặc "contact", điều hướng đến trang riêng
+    if (sectionId === "about") {
+      router.push("/about")
+      setIsMenuOpen(false)
+      return
+    }
+    
+    if (sectionId === "contact") {
+      router.push("/contact")
+      setIsMenuOpen(false)
+      return
+    }
+    
     // Nếu không ở trang chủ, điều hướng về trang chủ với hash
     if (!isHomePage) {
       router.push(`/#${sectionId}`)

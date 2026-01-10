@@ -9,6 +9,32 @@
  */
 export const defaultAboutConfig = {
   config_type: 'about',
+  // Hero Section
+  hero: {
+    badge: '🍽️ Khám Phá Câu Chuyện Của Chúng Tôi',
+    title: 'Ẩm Thực Không Chỉ Là Thức Ăn',
+    description: 'Đó là một hành trình tình yêu, sáng tạo và đam mê. Chúng tôi tự hào mang đến những trải nghiệm ẩm thực tuyệt vời cho mỗi khách hàng.',
+    image: '',
+    cta_primary: { text: 'Khám Phá Thực Đơn', link: '/menu' },
+    cta_secondary: { text: 'Liên Hệ Chúng Tôi', link: '#contact' },
+  },
+  // Mission Section
+  mission: {
+    badge: '✨ Sứ Mệnh Của Chúng Tôi',
+    title: 'Nấu Ăn Với Tâm Và Tay',
+    description: 'Tại nhà hàng chúng tôi, mỗi món ăn là một tác phẩm nghệ thuật được tạo ra từ những nguyên liệu tươi sống nhất. Chúng tôi tin rằng ẩm thực là ngôn ngữ quốc tế của tình yêu.',
+    image: '',
+    items: [
+      { icon: 'Award', title: 'Chất Lượng Đảm Bảo', description: 'Kiểm tra chất lượng nghiêm ngặt cho mỗi thành phần trước khi vào bếp.' },
+      { icon: 'Globe', title: 'Hương Vị Đa Sắc', description: 'Kết hợp các nền ẩm thực khác nhau để tạo ra những trải nghiệm độc đáo.' },
+      { icon: 'Clock', title: 'Phục Vụ Nhanh Chóng', description: 'Từ đơn hàng đến bàn của bạn, tất cả đều được làm với tốc độ và chuyên môn.' },
+    ],
+  },
+  // Values Section
+  values: {
+    title: 'Những Giá Trị Cốt Lõi',
+    description: 'Những nguyên tắc này hướng dẫn mọi quyết định của chúng tôi, từ chọn nguyên liệu đến phục vụ khách hàng.',
+  },
   section_title: 'Giới thiệu',
   section_description: 'Cam kết mang đến cho bạn những trải nghiệm ẩm thực tuyệt vời nhất',
   content: 'Nội dung trang giới thiệu...',
@@ -88,6 +114,23 @@ export const defaultAboutConfig = {
       color: 'from-primary/20 to-primary-light/10',
     },
   ],
+  // Team Section
+  team: {
+    title: 'Đội Ngũ Tài Năng',
+    description: 'Những người tài năng, đam mê và tận tâm làm nên sự khác biệt.',
+    members: [
+      { name: 'Nguyễn Văn A', role: 'Đầu Bếp Chính', specialty: 'Chuyên môn: Ẩm Thực Châu Á', icon: 'ChefHat' },
+      { name: 'Trần Thị B', role: 'Quản Lý Nhà Hàng', specialty: 'Chuyên môn: Dịch Vụ Khách Hàng', icon: 'Users' },
+      { name: 'Lê Văn C', role: 'Đầu Bếp Phụ', specialty: 'Chuyên môn: Nấu Ăn Hiện Đại', icon: 'Utensils' },
+    ],
+  },
+  // CTA Section
+  cta: {
+    title: 'Sẵn Sàng Trải Nghiệm Điều Kỳ Diệu?',
+    description: 'Hãy đến thăm chúng tôi ngay hôm nay. Chúng tôi đang mong chờ sự có mặt của bạn.',
+    button_primary: { text: 'Xem Thực Đơn', link: '/menu' },
+    button_secondary: { text: 'Gọi Đặt Bàn', link: 'tel:+84123456789' },
+  },
   seo: {
     meta_title: '',
     meta_description: '',
@@ -256,6 +299,32 @@ export function validateAboutConfig(data) {
  */
 export function mergeWithDefaults(config) {
   const merged = JSON.parse(JSON.stringify(defaultAboutConfig));
+
+  if (config.hero) {
+    merged.hero = { ...merged.hero, ...config.hero };
+  }
+
+  if (config.mission) {
+    merged.mission = { ...merged.mission, ...config.mission };
+    if (config.mission.items) {
+      merged.mission.items = config.mission.items;
+    }
+  }
+
+  if (config.values) {
+    merged.values = { ...merged.values, ...config.values };
+  }
+
+  if (config.team) {
+    merged.team = { ...merged.team, ...config.team };
+    if (config.team.members) {
+      merged.team.members = config.team.members;
+    }
+  }
+
+  if (config.cta) {
+    merged.cta = { ...merged.cta, ...config.cta };
+  }
 
   if (config.section_title !== undefined) {
     merged.section_title = config.section_title;

@@ -368,12 +368,12 @@ export default function AdminLandingConfig() {
         if (data.data.header) {
           // Đảm bảo luôn có đủ 6 menu items mặc định
           const defaultMenuItems = [
-            { id: 'home', label: 'Trang chủ', icon: 'Home', order: 1 },
-            { id: 'menu', label: 'Thực đơn', icon: 'Utensils', order: 2 },
-            { id: 'why-choose-us', label: 'Tại sao chọn chúng tôi', icon: 'Star', order: 3 },
-            { id: 'testimonials', label: 'Đánh giá', icon: 'MessageSquare', order: 4 },
-            { id: 'about', label: 'Giới thiệu', icon: 'BookOpen', order: 5 },
-            { id: 'contact', label: 'Liên hệ', icon: 'Phone', order: 6 },
+            { id: 'home', label: 'Trang chủ', icon: 'Home', order: 1, is_visible: true },
+            { id: 'menu', label: 'Thực đơn', icon: 'Utensils', order: 2, is_visible: true },
+            { id: 'why-choose-us', label: 'Tại sao chọn chúng tôi', icon: 'Star', order: 3, is_visible: true },
+            { id: 'testimonials', label: 'Đánh giá', icon: 'MessageSquare', order: 4, is_visible: true },
+            { id: 'about', label: 'Giới thiệu', icon: 'BookOpen', order: 5, is_visible: true },
+            { id: 'contact', label: 'Liên hệ', icon: 'Phone', order: 6, is_visible: true },
           ];
           
           const existingMenuItems = data.data.header.menu_items || [];
@@ -1222,6 +1222,26 @@ export default function AdminLandingConfig() {
                               Tên icon từ lucide-react (ví dụ: Home, Utensils, BookOpen, Phone)
                             </p>
                           </div>
+                        </div>
+                        <div className="pt-2 border-t border-border">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={item.is_visible !== false}
+                              onChange={(e) => {
+                                const newItems = [...headerData.menu_items];
+                                newItems[index].is_visible = e.target.checked;
+                                setHeaderData({ ...headerData, menu_items: newItems });
+                              }}
+                              className="w-4 h-4 rounded border-border cursor-pointer"
+                            />
+                            <span className="text-sm text-card-foreground">
+                              Hiển thị trên menu
+                            </span>
+                          </label>
+                          <p className="text-xs text-muted-foreground mt-1 ml-6">
+                            Bỏ chọn để ẩn menu item này trên client
+                          </p>
                         </div>
                         <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
                           <button
