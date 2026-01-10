@@ -88,7 +88,7 @@ export function validateOrder(data) {
   
   // Phải có items array với ít nhất 1 món
   if (!data.items || !Array.isArray(data.items) || data.items.length === 0) {
-    errors.push('Đơn hàng phải có ít nhất 1 món');
+    errors.push('Đơn hàng phải có ít nhất 1 sản phẩm');
   }
   
   if (data.total_price === undefined || typeof data.total_price !== 'number' || data.total_price <= 0) {

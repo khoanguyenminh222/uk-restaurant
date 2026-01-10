@@ -265,7 +265,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
             setFoods(data.data || [])
             applyFilters(data.data || [], searchQuery)
           } else {
-            setError(data.error || "Không thể tải danh sách món ăn")
+            setError(data.error || "Không thể tải danh sách sản phẩm")
           }
           setLoading(false)
           setTimeout(() => {
@@ -359,11 +359,11 @@ export default function Menu({ onAddToCart, onOrderClick }) {
           setFoods(foodsWithBadge)
           applyFilters(foodsWithBadge, searchQuery)
         } else {
-          setError(data.error || "Không thể tải danh sách món ăn")
+          setError(data.error || "Không thể tải danh sách sản phẩm")
         }
       } catch (err) {
         console.error("Error fetching foods:", err)
-        setError("Không thể tải danh sách món ăn")
+        setError("Không thể tải danh sách sản phẩm")
       } finally {
         setLoading(false)
         setTimeout(() => {
@@ -543,7 +543,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
           <div className="flex items-center justify-center py-20">
             <div className="flex flex-col items-center gap-4">
               <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-muted-foreground">Đang tải thực đơn...</p>
+              <p className="text-muted-foreground">Đang tải sản phẩm...</p>
             </div>
           </div>
         )}
@@ -692,8 +692,8 @@ export default function Menu({ onAddToCart, onOrderClick }) {
                 <div className="text-center">
                   <p className="text-muted-foreground text-sm sm:text-base mb-2">
                     {searchQuery || selectedCategory
-                      ? "Không tìm thấy món ăn nào"
-                      : "Chưa có món ăn nào"}
+                      ? "Không tìm thấy sản phẩm nào"
+                      : "Chưa có sản phẩm nào"}
                   </p>
                   <p className="text-muted-foreground text-xs sm:text-sm">
                     {searchQuery || selectedCategory

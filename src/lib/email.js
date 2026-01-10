@@ -264,7 +264,7 @@ export async function sendOrderConfirmationEmail(email, name, orderId, trackOrde
               <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
                 <thead>
                   <tr style="background-color: #f9fafb;">
-                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb; color: #374151;">Món</th>
+                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb; color: #374151;">Sản phẩm</th>
                     <th style="padding: 10px; text-align: center; border-bottom: 2px solid #e5e7eb; color: #374151;">SL</th>
                     <th style="padding: 10px; text-align: right; border-bottom: 2px solid #e5e7eb; color: #374151;">Đơn giá</th>
                     <th style="padding: 10px; text-align: right; border-bottom: 2px solid #e5e7eb; color: #374151;">Thành tiền</th>
@@ -446,23 +446,23 @@ function formatOrderItemsForEmail(items) {
   let itemsText = '';
   
   if (!items) {
-    return { html: '<p style="color: #6b7280;">Không có món nào.</p>', text: 'Không có món nào.' };
+    return { html: '<p style="color: #6b7280;">Không có sản phẩm nào.</p>', text: 'Không có sản phẩm nào.' };
   }
   
   let itemsArray = [];
   if (Array.isArray(items)) {
     itemsArray = items;
-  } else if (typeof items === 'object' && items.tên_món) {
+  } else if (typeof items === 'object' && items.name) {
     itemsArray = [items];
   }
   
   if (itemsArray.length === 0) {
-    return { html: '<p style="color: #6b7280;">Không có món nào.</p>', text: 'Không có món nào.' };
+    return { html: '<p style="color: #6b7280;">Không có sản phẩm nào.</p>', text: 'Không có sản phẩm nào.' };
   }
   
   itemsHtml = itemsArray.map(item => {
     const quantity = item.quantity || 1;
-    const price = item.giá || 0;
+    const price = item.price || 0;
     const totalItemPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price * quantity);
     return `
       <tr>
@@ -476,7 +476,7 @@ function formatOrderItemsForEmail(items) {
   
   itemsText = itemsArray.map(item => {
     const quantity = item.quantity || 1;
-    const price = item.giá || 0;
+    const price = item.price || 0;
     const totalItemPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price * quantity);
     return `- ${item.name} (x${quantity}): ${totalItemPrice}`;
   }).join('\n');
@@ -755,7 +755,7 @@ export async function sendOrderStatusEmail(order, newStatus, previousStatus = nu
               <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
                 <thead>
                   <tr style="background-color: #f9fafb;">
-                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb; color: #374151;">Món</th>
+                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb; color: #374151;">Sản phẩm</th>
                     <th style="padding: 10px; text-align: center; border-bottom: 2px solid #e5e7eb; color: #374151;">SL</th>
                     <th style="padding: 10px; text-align: right; border-bottom: 2px solid #e5e7eb; color: #374151;">Đơn giá</th>
                     <th style="padding: 10px; text-align: right; border-bottom: 2px solid #e5e7eb; color: #374151;">Thành tiền</th>

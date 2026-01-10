@@ -350,18 +350,14 @@ export default function OrderHistory({ isOpen, onClose }) {
 
                         {/* Order Items */}
                         <div className="mt-3 space-y-1">
-                          {order.items && order.items.length > 0 ? (
-                            // Multiple items
+                          {order.items && Array.isArray(order.items) && order.items.length > 0 ? (
                             order.items.map((item, index) => (
                               <p key={index} className="text-sm text-card-foreground">
-                                {item.name || item.tên_món} × {item.quantity} - {formatCurrency((item.price || item.giá || 0) * item.quantity)}
+                                {item.name} × {item.quantity} - {formatCurrency((item.price || 0) * item.quantity)}
                               </p>
                             ))
                           ) : (
-                            // Single item (legacy)
-                            <p className="text-sm text-card-foreground">
-                              {order.name || order.tên_món} × {order.quantity || 1} - {formatCurrency((order.price || order.giá || 0) * (order.quantity || 1))}
-                            </p>
+                            <p className="text-sm text-muted-foreground">Không có sản phẩm nào trong đơn hàng</p>
                           )}
                         </div>
 
@@ -499,23 +495,22 @@ export default function OrderHistory({ isOpen, onClose }) {
 
                 {/* Items */}
                 <div className="border-t border-border pt-4">
-                  <h3 className="font-semibold text-card-foreground mb-3">Danh sách món</h3>
+                  <h3 className="font-semibold text-card-foreground mb-3">Danh sách sản phẩm</h3>
                   {selectedOrder.items && Array.isArray(selectedOrder.items) && selectedOrder.items.length > 0 ? (
                     <div className="space-y-2">
                       {selectedOrder.items.map((item, index) => (
                         <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                           <div>
-                            <p className="font-medium text-card-foreground">{item.name || item.tên_món}</p>
-                            <p className="text-sm text-muted-foreground">x{item.quantity} - {formatCurrency(item.price || item.giá || 0)}</p>
+                            <p className="font-medium text-card-foreground">{item.name}</p>
+                            <p className="text-sm text-muted-foreground">x{item.quantity} - {formatCurrency(item.price || 0)}</p>
                           </div>
-                          <p className="font-medium text-primary">{formatCurrency((item.price || item.giá || 0) * item.quantity)}</p>
+                          <p className="font-medium text-primary">{formatCurrency((item.price || 0) * item.quantity)}</p>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="p-3 bg-muted rounded-lg">
-                      <p className="font-medium text-card-foreground">{selectedOrder.name || selectedOrder.tên_món || 'N/A'}</p>
-                      <p className="text-sm text-muted-foreground">x{selectedOrder.quantity || 1} - {formatCurrency(selectedOrder.price || selectedOrder.giá || 0)}</p>
+                    <div className="p-3 bg-muted rounded-lg text-center">
+                      <p className="text-muted-foreground">Không có sản phẩm nào trong đơn hàng</p>
                     </div>
                   )}
                 </div>
@@ -723,7 +718,7 @@ export default function OrderHistory({ isOpen, onClose }) {
                                             total_price: 'Tổng tiền',
                                             status: 'Trạng thái',
                                             admin_notes: 'Ghi chú admin',
-                                            items: 'Danh sách món',
+                                            items: 'Danh sách sản phẩm',
                                           };
                                           return labels[field] || field;
                                         };
@@ -750,7 +745,7 @@ export default function OrderHistory({ isOpen, onClose }) {
                                             try {
                                               const items = typeof value === 'string' ? JSON.parse(value) : value;
                                               if (Array.isArray(items)) {
-                                                return `${items.length} món: ${items.map(i => `${i.name || i.tên_món} (x${i.quantity})`).join(', ')}`;
+                                                return `${items.length} sản phẩm: ${items.map(i => `${i.name || 'N/A'} (x${i.quantity || 1})`).join(', ')}`;
                                               }
                                             } catch (e) {
                                               return String(value);

@@ -29,7 +29,7 @@ export function validateFood(data) {
   const errors = [];
   
   if (!data.name || typeof data.name !== 'string' || data.name.trim().length === 0) {
-    errors.push('Tên món là bắt buộc');
+    errors.push('Tên sản phẩm là bắt buộc');
   }
   
   if (data.category_id === undefined || typeof data.category_id !== 'number') {

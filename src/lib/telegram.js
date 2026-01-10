@@ -103,7 +103,7 @@ export function formatNewOrderMessage(order) {
       return `• <b>${item.name || 'N/A'}</b> x${item.quantity || 1} - ${total}`;
     }).join('\n');
   } else {
-    itemsText = '• Không có thông tin món';
+    itemsText = '• Không có thông tin sản phẩm';
   }
   
   const totalPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.total_price || 0);

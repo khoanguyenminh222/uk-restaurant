@@ -354,11 +354,11 @@ export default function MenuPage() {
             }
           }
         } else {
-          setError(data.error || "Lỗi khi tải món ăn")
+          setError(data.error || "Lỗi khi tải sản phẩm")
         }
       } catch (err) {
         console.error("Error fetching foods:", err)
-        setError("Lỗi khi tải món ăn")
+        setError("Lỗi khi tải sản phẩm")
       } finally {
         setTimeout(() => {
           setLoading(false)
@@ -748,7 +748,7 @@ export default function MenuPage() {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => handleSearchChange(e.target.value)}
-                    placeholder="Tìm kiếm món ăn..."
+                    placeholder="Tìm kiếm sản phẩm..."
                     className="w-full pl-12 pr-12 py-2.5 md:py-3 bg-card border-2 border-primary/30 rounded-xl text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary shadow-sm shadow-primary/10 transition-all text-sm md:text-base font-medium"
                   />
                   {searchQuery && (
@@ -763,7 +763,7 @@ export default function MenuPage() {
                 </div>
                 {searchQuery && (
                   <p className="mt-1.5 text-xs md:text-sm text-muted-foreground text-right">
-                    Tìm thấy {filteredFoods.length} món{filteredFoods.length !== 1 ? "" : ""}
+                    Tìm thấy {filteredFoods.length} sản phẩm{filteredFoods.length !== 1 ? "" : ""}
                   </p>
                 )}
               </div>
@@ -848,10 +848,10 @@ export default function MenuPage() {
               <span>Quay lại</span>
             </button>
             <h1 className="text-3xl md:text-4xl font-bold font-display text-foreground mb-2">
-              Thực đơn
+              Sản phẩm
             </h1>
             <p className="text-muted-foreground">
-              Khám phá thực đơn đa dạng với các món ăn được chế biến từ nguyên liệu tươi ngon nhất
+              Khám phá đa dạng
             </p>
           </div>
 
@@ -863,7 +863,7 @@ export default function MenuPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder="Tìm kiếm món ăn..."
+                placeholder="Tìm kiếm sản phẩm..."
                 className="w-full pl-12 pr-12 py-3 bg-card border-2 border-primary/30 rounded-xl text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary shadow-lg shadow-primary/10 transition-all text-base font-medium"
               />
               {searchQuery && (
@@ -877,7 +877,7 @@ export default function MenuPage() {
             </div>
             {searchQuery && (
               <p className="mt-2 text-sm text-muted-foreground">
-                Tìm thấy {filteredFoods.length} món
+                Tìm thấy {filteredFoods.length} sản phẩm
               </p>
             )}
           </div>
@@ -1133,10 +1133,10 @@ export default function MenuPage() {
                   <div className="text-center">
                     <p className="text-muted-foreground text-lg mb-2">
                       {searchQuery
-                        ? `Không tìm thấy món nào với từ khóa "${searchQuery}"`
+                        ? `Không tìm thấy sản phẩm nào với từ khóa "${searchQuery}"`
                         : selectedCategory
-                          ? "Không có món nào trong danh mục này"
-                          : "Chưa có món ăn nào"}
+                          ? "Không có sản phẩm nào trong danh mục này"
+                          : "Chưa có sản phẩm nào"}
                     </p>
                   </div>
                 </div>

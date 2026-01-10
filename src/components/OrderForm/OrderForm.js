@@ -580,7 +580,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
     }
 
     if (orderItems.length === 0) {
-      setError("Không có món nào để đặt")
+      setError("Không có sản phẩm nào để đặt")
       return
     }
 
@@ -661,14 +661,14 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
           window.dispatchEvent(
             new CustomEvent("showToast", {
               detail: {
-                message: "Đặt món thành công! Đơn hàng của bạn đang được xử lý.",
+                message: "Đặt hàng thành công! Đơn hàng của bạn đang được xử lý.",
                 type: "success",
               },
             })
           )
         }
       } else {
-        setError(data.error || "Đặt món thất bại. Vui lòng thử lại sau.")
+        setError(data.error || "Đặt hàng thất bại. Vui lòng thử lại sau.")
       }
     } catch (err) {
       console.error("Order error:", err)
@@ -710,7 +710,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
             </div>
 
             {/* Success Title */}
-            <h2 className="text-xl sm:text-2xl font-bold text-card-foreground mb-2">Đặt món thành công!</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-card-foreground mb-2">Đặt hàng thành công!</h2>
             <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 px-2">
               Đơn hàng của bạn đã được tiếp nhận và đang được xử lý.
             </p>
@@ -933,7 +933,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
         <div className="border-b border-border bg-primary/10 py-4 px-6">
           <h2 className="text-xl font-semibold text-card-foreground flex items-center gap-2">
             <ShoppingBag className="w-6 h-6 text-primary" />
-            Đặt món
+            Đặt hàng
           </h2>
         </div>
 
@@ -977,7 +977,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
             <div className="border-t border-border pt-3 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Tổng số lượng:</span>
-                <span className="text-card-foreground font-medium">{totalQuantity} món</span>
+                <span className="text-card-foreground font-medium">{totalQuantity} sản phẩm</span>
               </div>
               <div className="flex justify-between text-lg">
                 <span className="text-card-foreground font-semibold">Tổng tiền:</span>
@@ -1285,7 +1285,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                   <span>Đang xử lý...</span>
                 </>
               ) : (
-                <span>Đặt món ngay</span>
+                <span>Đặt hàng ngay</span>
               )}
             </button>
           </form>

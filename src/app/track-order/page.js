@@ -127,7 +127,7 @@ function TrackOrderForm() {
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-6 py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
             >
               {loading ? (
                 <>
@@ -229,27 +229,19 @@ function TrackOrderForm() {
                       className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
                     >
                       <div className="flex-1">
-                        <p className="text-card-foreground font-medium">{item.tên_món}</p>
+                        <p className="text-card-foreground font-medium">{item.name}</p>
                         <p className="text-sm text-muted-foreground">
-                          {formatCurrency(item.giá)} × {item.quantity}
+                          {formatCurrency(item.price)} × {item.quantity}
                         </p>
                       </div>
                       <p className="text-primary font-semibold">
-                        {formatCurrency(item.giá * item.quantity)}
+                        {formatCurrency(item.price * item.quantity)}
                       </p>
                     </div>
                   ))
                 ) : (
-                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                    <div className="flex-1">
-                      <p className="text-card-foreground font-medium">{order.tên_món}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {formatCurrency(order.giá || 0)} × {order.quantity || 1}
-                      </p>
-                    </div>
-                    <p className="text-primary font-semibold">
-                      {formatCurrency((order.giá || 0) * (order.quantity || 1))}
-                    </p>
+                  <div className="text-center py-4 text-muted-foreground">
+                    <p>Không có món nào trong đơn hàng</p>
                   </div>
                 )}
               </div>

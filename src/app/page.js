@@ -98,7 +98,7 @@ export default function Home() {
 
   const handleOrderSuccess = (orderData) => {
     setToast({
-      message: `Đặt món thành công! Mã đơn hàng: ${orderData.order_id}`,
+      message: `Đặt hàng thành công! Mã đơn hàng: ${orderData.order_id}`,
       isVisible: true,
     })
   }

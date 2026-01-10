@@ -191,7 +191,7 @@ export default function Cart({ isOpen, onClose, onCheckout }) {
             <div className="flex flex-col items-center justify-center h-full text-center py-12">
               <ShoppingBag className="w-20 h-20 text-muted-foreground mb-4" />
               <p className="text-muted-foreground text-lg mb-2">Giỏ hàng trống</p>
-              <p className="text-muted-foreground text-sm">Thêm món ăn vào giỏ hàng để bắt đầu đặt hàng</p>
+              <p className="text-muted-foreground text-sm">Thêm săn phẩm vào giỏ hàng để bắt đầu đặt hàng</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -230,7 +230,7 @@ export default function Cart({ isOpen, onClose, onCheckout }) {
                         {item.name}
                       </h3>
                       <p className="text-primary font-bold text-sm mb-3">
-                        {formatCurrency(item.price)} / món
+                        {formatCurrency(item.price)} / sản phẩm
                       </p>
 
                       {/* Quantity Controls and Total */}
@@ -270,8 +270,8 @@ export default function Cart({ isOpen, onClose, onCheckout }) {
                           <button
                             onClick={() => handleRemoveItem(item.id)}
                             className="p-1.5 text-destructive hover:text-destructive/80 hover:bg-muted rounded-lg transition-all duration-200 hover:scale-110 active:scale-95 group relative cursor-pointer"
-                            aria-label="Xóa món"
-                            title="Xóa món này"
+                            aria-label="Xóa sản phẩm"
+                            title="Xóa sản phẩm này"
                           >
                             <Trash2 className="w-4 h-4 group-hover:rotate-12 transition-transform duration-200" />
                           </button>
