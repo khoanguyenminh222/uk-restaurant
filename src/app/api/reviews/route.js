@@ -7,13 +7,24 @@ import { validateReview, calculateReviewStats } from '@/lib/models/Review';
  * Lấy danh sách đánh giá
  * Query params:
  * - approved: true/false (lọc theo trạng thái duyệt)
+ * - rating: 1-5 (lọc theo điểm đánh giá)
+ * - search: tìm kiếm theo tên, comment, phone, email
+ * - visible: true/false (lọc theo trạng thái hiển thị)
+ * - date_from: YYYY-MM-DD (lọc từ ngày)
+ * - date_to: YYYY-MM-DD (lọc đến ngày)
  * - limit: số lượng (default: 50)
  * - skip: bỏ qua (default: 0)
+ * - all: true (cho phép admin lấy tất cả reviews)
  */
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const approved = searchParams.get('approved');
+    const rating = searchParams.get('rating');
+    const search = searchParams.get('search');
+    const visible = searchParams.get('visible');
+    const dateFrom = searchParams.get('date_from');
+    const dateTo = searchParams.get('date_to');
     const limit = parseInt(searchParams.get('limit') || '50');
     const skip = parseInt(searchParams.get('skip') || '0');
 
@@ -22,9 +33,50 @@ export async function GET(request) {
 
     const query = {};
     const all = searchParams.get('all'); // Cho phép admin lấy tất cả reviews
+    
+    // Filter by approval status
     if (approved !== null) {
       query.is_approved = approved === 'true';
     }
+    
+    // Filter by rating
+    if (rating && rating !== 'all') {
+      query.rating = parseInt(rating);
+    }
+    
+    // Filter by visibility
+    if (visible !== null && visible !== 'all') {
+      query.is_visible = visible === 'true';
+    }
+    
+    // Search filter
+    if (search && search.trim()) {
+      const searchRegex = { $regex: search.trim(), $options: 'i' };
+      query.$or = [
+        { customer_name: searchRegex },
+        { comment: searchRegex },
+        { customer_phone: searchRegex },
+        { customer_email: searchRegex },
+      ];
+    }
+    
+    // Filter by date range
+    if (dateFrom || dateTo) {
+      query.created_at = {};
+      if (dateFrom) {
+        // Từ đầu ngày (00:00:00)
+        const fromDate = new Date(dateFrom);
+        fromDate.setHours(0, 0, 0, 0);
+        query.created_at.$gte = fromDate;
+      }
+      if (dateTo) {
+        // Đến cuối ngày (23:59:59)
+        const toDate = new Date(dateTo);
+        toDate.setHours(23, 59, 59, 999);
+        query.created_at.$lte = toDate;
+      }
+    }
+    
     // Nếu không có approved param và không phải all, chỉ lấy reviews đã được duyệt và visible (cho public)
     if (approved === null && all !== 'true') {
       query.is_approved = { $ne: false };

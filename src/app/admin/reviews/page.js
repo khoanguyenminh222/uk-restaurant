@@ -13,7 +13,9 @@ import {
   Trash2, 
   CheckCircle2,
   XCircle,
-  MessageSquare
+  MessageSquare,
+  Calendar,
+  Info
 } from 'lucide-react';
 import * as lucideIcons from 'lucide-react';
 
@@ -69,11 +71,13 @@ export default function AdminReviews() {
   const [statusFilter, setStatusFilter] = useState('all'); // all, approved, pending
   const [ratingFilter, setRatingFilter] = useState('all'); // all, 5, 4, 3, 2, 1
   const [visibilityFilter, setVisibilityFilter] = useState('all'); // all, visible, hidden
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [selectedReview, setSelectedReview] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [stats, setStats] = useState(null);
-  const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0 });
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0 });
 
   // Edit form state
   const [editForm, setEditForm] = useState({
@@ -87,10 +91,30 @@ export default function AdminReviews() {
     borderColor: 'border-primary/30',
   });
 
+  // Track previous filter values để reset page khi filter thay đổi
+  const prevFiltersRef = useRef({ statusFilter, ratingFilter, visibilityFilter, searchTerm, dateFrom, dateTo });
+
+  useEffect(() => {
+    // Kiểm tra xem có filter nào thay đổi không (trừ pagination.page)
+    const filtersChanged = 
+      prevFiltersRef.current.statusFilter !== statusFilter ||
+      prevFiltersRef.current.ratingFilter !== ratingFilter ||
+      prevFiltersRef.current.visibilityFilter !== visibilityFilter ||
+      prevFiltersRef.current.searchTerm !== searchTerm ||
+      prevFiltersRef.current.dateFrom !== dateFrom ||
+      prevFiltersRef.current.dateTo !== dateTo;
+
+    if (filtersChanged) {
+      // Reset về trang 1 khi filter thay đổi
+      setPagination(prev => ({ ...prev, page: 1 }));
+      prevFiltersRef.current = { statusFilter, ratingFilter, visibilityFilter, searchTerm, dateFrom, dateTo };
+    }
+  }, [statusFilter, ratingFilter, visibilityFilter, searchTerm, dateFrom, dateTo]);
+
   useEffect(() => {
     fetchReviews();
     fetchStats();
-  }, [statusFilter, ratingFilter, visibilityFilter, pagination.page, searchTerm]);
+  }, [statusFilter, ratingFilter, visibilityFilter, pagination.page, searchTerm, dateFrom, dateTo]);
 
   // Listen for toast events
   useEffect(() => {
@@ -108,6 +132,7 @@ export default function AdminReviews() {
       setLoading(true);
       let url = `/api/reviews?limit=${pagination.limit}&skip=${(pagination.page - 1) * pagination.limit}`;
       
+      // Filter by approval status
       if (statusFilter === 'approved') {
         url += '&approved=true';
       } else if (statusFilter === 'pending') {
@@ -117,30 +142,38 @@ export default function AdminReviews() {
         url += '&all=true';
       }
       
+      // Filter by rating (gửi lên backend)
+      if (ratingFilter !== 'all') {
+        url += `&rating=${ratingFilter}`;
+      }
+      
+      // Filter by visibility (gửi lên backend)
+      if (visibilityFilter !== 'all') {
+        url += `&visible=${visibilityFilter === 'visible' ? 'true' : 'false'}`;
+      }
+      
+      // Filter by search term (gửi lên backend)
+      if (searchTerm && searchTerm.trim()) {
+        url += `&search=${encodeURIComponent(searchTerm.trim())}`;
+      }
+      
+      // Filter by date range (gửi lên backend)
+      if (dateFrom) {
+        url += `&date_from=${dateFrom}`;
+      }
+      if (dateTo) {
+        url += `&date_to=${dateTo}`;
+      }
+      
       const res = await fetch(url);
       const data = await res.json();
       
       if (data.success) {
-        let filteredReviews = data.data;
-        
-        // Filter by rating
-        if (ratingFilter !== 'all') {
-          filteredReviews = filteredReviews.filter(r => r.rating === parseInt(ratingFilter));
-        }
-        
-        // Filter by search term
-        if (searchTerm) {
-          const term = searchTerm.toLowerCase();
-          filteredReviews = filteredReviews.filter(r => 
-            r.customer_name?.toLowerCase().includes(term) ||
-            r.comment?.toLowerCase().includes(term) ||
-            r.customer_phone?.includes(term) ||
-            r.customer_email?.toLowerCase().includes(term)
-          );
-        }
-        
-        setReviews(filteredReviews);
+        // Dữ liệu đã được filter từ backend, không cần filter lại ở frontend
+        setReviews(data.data);
         setPagination(prev => ({ ...prev, total: data.pagination?.total || 0 }));
+      } else {
+        setToast({ message: data.error || 'Lỗi khi tải danh sách đánh giá', isVisible: true });
       }
     } catch (error) {
       console.error('Error fetching reviews:', error);
@@ -218,10 +251,16 @@ export default function AdminReviews() {
     if (!selectedReview) return;
 
     try {
+      // Nếu chưa được duyệt, tự động tắt hiển thị
+      const updateData = { ...editForm };
+      if (updateData.is_approved === false) {
+        updateData.is_visible = false;
+      }
+
       const res = await fetch(`/api/reviews/${selectedReview._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editForm),
+        body: JSON.stringify(updateData),
       });
 
       const data = await res.json();
@@ -274,31 +313,8 @@ export default function AdminReviews() {
     return null;
   }
 
-  const filteredReviews = reviews.filter(review => {
-    // Filter by search term
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      const matchesSearch = (
-        review.customer_name?.toLowerCase().includes(term) ||
-        review.comment?.toLowerCase().includes(term) ||
-        review.customer_phone?.includes(term) ||
-        review.customer_email?.toLowerCase().includes(term)
-      );
-      if (!matchesSearch) return false;
-    }
-    
-    // Filter by visibility
-    if (visibilityFilter === 'visible') {
-      // Chỉ hiển thị reviews có is_visible === true (strict check)
-      if (review.is_visible !== true) return false;
-    } else if (visibilityFilter === 'hidden') {
-      // Hiển thị reviews có is_visible !== true (false, undefined, null đều được coi là hidden)
-      // Sử dụng Boolean() để convert undefined/null thành false
-      if (Boolean(review.is_visible) === true) return false;
-    }
-    
-    return true;
-  });
+  // Không cần filter ở frontend nữa vì đã filter từ backend
+  const filteredReviews = reviews;
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
@@ -319,6 +335,15 @@ export default function AdminReviews() {
               <div className="flex items-center gap-2 mb-2">
                 <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
                 <span className="text-sm text-muted-foreground">Điểm trung bình</span>
+                <div className="relative group/info">
+                  <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover/info:block z-50 pointer-events-none">
+                    <div className="bg-popover border border-border rounded-lg p-2 shadow-lg w-64 text-xs text-popover-foreground whitespace-normal">
+                      Điểm trung bình được tính từ tất cả reviews đã duyệt trong database
+                    </div>
+                    <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-border"></div>
+                  </div>
+                </div>
               </div>
               <div className="text-2xl font-bold text-foreground">{stats.averageRating}/5</div>
             </div>
@@ -326,6 +351,15 @@ export default function AdminReviews() {
               <div className="flex items-center gap-2 mb-2">
                 <MessageSquare className="w-5 h-5 text-primary" />
                 <span className="text-sm text-muted-foreground">Tổng đánh giá</span>
+                <div className="relative group/info">
+                  <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover/info:block z-50 pointer-events-none">
+                    <div className="bg-popover border border-border rounded-lg p-2 shadow-lg w-64 text-xs text-popover-foreground whitespace-normal">
+                      Tổng số reviews đã duyệt trong database (không phụ thuộc filter/phân trang)
+                    </div>
+                    <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-border"></div>
+                  </div>
+                </div>
               </div>
               <div className="text-2xl font-bold text-foreground">{stats.totalReviews}</div>
             </div>
@@ -333,18 +367,36 @@ export default function AdminReviews() {
               <div className="flex items-center gap-2 mb-2">
                 <CheckCircle2 className="w-5 h-5 text-green-400" />
                 <span className="text-sm text-muted-foreground">Đã duyệt</span>
+                <div className="relative group/info">
+                  <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover/info:block z-50 pointer-events-none">
+                    <div className="bg-popover border border-border rounded-lg p-2 shadow-lg w-64 text-xs text-popover-foreground whitespace-normal">
+                      Tổng số reviews đã duyệt trong database (không phụ thuộc filter/phân trang)
+                    </div>
+                    <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-border"></div>
+                  </div>
+                </div>
               </div>
               <div className="text-2xl font-bold text-foreground">
-                {reviews.filter(r => r.is_approved !== false).length}
+                {stats.totalApproved || 0}
               </div>
             </div>
             <div className="bg-card border border-border rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
                 <XCircle className="w-5 h-5 text-yellow-400" />
                 <span className="text-sm text-muted-foreground">Chờ duyệt</span>
+                <div className="relative group/info">
+                  <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover/info:block z-50 pointer-events-none">
+                    <div className="bg-popover border border-border rounded-lg p-2 shadow-lg w-64 text-xs text-popover-foreground whitespace-normal">
+                      Tổng số reviews chờ duyệt trong database (không phụ thuộc filter/phân trang)
+                    </div>
+                    <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-border"></div>
+                  </div>
+                </div>
               </div>
               <div className="text-2xl font-bold text-foreground">
-                {reviews.filter(r => r.is_approved === false).length}
+                {stats.totalPending || 0}
               </div>
             </div>
           </div>
@@ -352,6 +404,32 @@ export default function AdminReviews() {
 
         {/* Filters */}
         <div className="bg-card border border-border rounded-lg p-4 mb-6">
+          {/* Date Range Filter */}
+          <div className="mb-4 pb-4 border-b border-border">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Từ ngày"
+                />
+                <label className="block text-xs text-muted-foreground mt-1 ml-1">Từ ngày</label>
+              </div>
+              <div className="relative flex-1">
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Đến ngày"
+                />
+                <label className="block text-xs text-muted-foreground mt-1 ml-1">Đến ngày</label>
+              </div>
+            </div>
+          </div>
+          
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -399,6 +477,8 @@ export default function AdminReviews() {
                 setStatusFilter('all');
                 setVisibilityFilter('all');
                 setRatingFilter('all');
+                setDateFrom('');
+                setDateTo('');
               }}
               className="px-4 py-2 bg-muted hover:bg-muted/80 border border-border rounded-lg text-foreground transition-colors cursor-pointer"
             >
@@ -753,7 +833,15 @@ export default function AdminReviews() {
                     <input
                       type="checkbox"
                       checked={editForm.is_approved}
-                      onChange={(e) => setEditForm({ ...editForm, is_approved: e.target.checked })}
+                      onChange={(e) => {
+                        const newApproved = e.target.checked;
+                        // Nếu hủy duyệt, tự động tắt hiển thị
+                        if (!newApproved) {
+                          setEditForm({ ...editForm, is_approved: false, is_visible: false });
+                        } else {
+                          setEditForm({ ...editForm, is_approved: true });
+                        }
+                      }}
                       className="w-4 h-4 rounded border-border cursor-pointer"
                     />
                     <span className="text-sm text-card-foreground">Đã duyệt</span>
@@ -762,10 +850,23 @@ export default function AdminReviews() {
                     <input
                       type="checkbox"
                       checked={editForm.is_visible}
-                      onChange={(e) => setEditForm({ ...editForm, is_visible: e.target.checked })}
-                      className="w-4 h-4 rounded border-border cursor-pointer"
+                      onChange={(e) => {
+                        // Nếu đang bật hiển thị nhưng chưa được duyệt, không cho phép
+                        if (e.target.checked && editForm.is_approved === false) {
+                          setToast({ message: 'Không thể hiển thị review chưa được duyệt. Vui lòng duyệt review trước.', isVisible: true });
+                          return;
+                        }
+                        setEditForm({ ...editForm, is_visible: e.target.checked });
+                      }}
+                      disabled={editForm.is_approved === false}
+                      className="w-4 h-4 rounded border-border cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     />
-                    <span className="text-sm text-card-foreground">Hiển thị trên Home</span>
+                    <span className={`text-sm ${editForm.is_approved === false ? 'text-muted-foreground' : 'text-card-foreground'}`}>
+                      Hiển thị trên Home
+                      {editForm.is_approved === false && (
+                        <span className="text-xs text-muted-foreground ml-1">(Cần duyệt trước)</span>
+                      )}
+                    </span>
                   </label>
                 </div>
 

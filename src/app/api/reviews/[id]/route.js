@@ -23,8 +23,23 @@ export async function PUT(request, { params }) {
     // Chỉ cho phép cập nhật các field được phép
     if (body.is_approved !== undefined) {
       updateData.is_approved = body.is_approved;
+      // Nếu chưa được duyệt, tự động tắt hiển thị
+      if (body.is_approved === false) {
+        updateData.is_visible = false;
+      }
     }
     if (body.is_visible !== undefined) {
+      // Chỉ cho phép set is_visible = true nếu đã được duyệt
+      if (body.is_visible === true) {
+        // Kiểm tra review hiện tại có được duyệt không
+        const currentReview = await db.collection('reviews').findOne({ _id: new ObjectId(id) });
+        if (currentReview && currentReview.is_approved === false) {
+          return NextResponse.json(
+            { success: false, error: 'Không thể hiển thị review chưa được duyệt. Vui lòng duyệt review trước.' },
+            { status: 400 }
+          );
+        }
+      }
       updateData.is_visible = body.is_visible;
     }
     if (body.avatar !== undefined) {
