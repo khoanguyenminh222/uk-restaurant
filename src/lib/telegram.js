@@ -129,7 +129,7 @@ export function formatNewOrderMessage(order) {
     ? `\n<b>Ghi chú:</b> ${order.notes.trim()}` 
     : '';
 
-  const message = `🆕 <b>ĐƠN HÀNG MỚI</b>
+  const message = `📌 [<b>Mới</b>]
 
 <b>Mã đơn:</b> <code>${orderId}</code>
 <b>Khách hàng:</b> ${customerName}
@@ -204,7 +204,7 @@ export function formatCancelledOrderMessage(order, cancelledBy = 'admin', reason
     }
   }
   
-  const message = `❌ <b>ĐƠN HÀNG BỊ HỦY</b>
+  const message = `❌ [<b>HỦY</b>]
 
 <b>Mã đơn:</b> <code>${orderId}</code>
 <b>Khách hàng:</b> ${customerName}
