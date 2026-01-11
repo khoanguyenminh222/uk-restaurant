@@ -91,16 +91,64 @@ export default function UserProfile({ isOpen, onClose }) {
       return
     }
 
+    // Kiểm tra email có thay đổi không
+    const currentEmail = (user.email || "").trim().toLowerCase()
+    const newEmail = editForm.email.trim().toLowerCase()
+    const emailChanged = currentEmail !== newEmail
+
+    // Nếu email thay đổi, kiểm tra email đã tồn tại chưa
+    if (emailChanged) {
+      // API sẽ tự động kiểm tra, nhưng có thể check trước để UX tốt hơn
+      // Tuy nhiên, để đảm bảo chính xác, ta sẽ để API kiểm tra
+    }
+
     setLoading(true)
     try {
-      // TODO: Call API to update user profile
-      // For now, just update localStorage
-      const updatedUser = {
-        ...user,
+      // Gọi API để cập nhật thông tin user
+      if (!user.user_id) {
+        setError("Không tìm thấy ID người dùng. Vui lòng đăng nhập lại.")
+        return
+      }
+
+      const updateData = {
         name: editForm.name.trim(),
         address: editForm.address.trim(),
         email: editForm.email.trim(),
       }
+
+      const response = await fetch(`/api/users/${user.user_id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.success) {
+        // Xử lý lỗi từ API
+        if (data.error) {
+          if (data.error.includes('Email đã được sử dụng') || data.error.includes('email')) {
+            setError("Email này đã được sử dụng bởi tài khoản khác. Vui lòng chọn email khác.")
+          } else {
+            setError(data.error || "Lỗi khi cập nhật thông tin")
+          }
+        } else {
+          setError("Lỗi khi cập nhật thông tin")
+        }
+        return
+      }
+
+      // Cập nhật thành công - lưu vào localStorage
+      const updatedUser = {
+        ...user,
+        ...data.data, // Dữ liệu từ API (đã được normalize)
+        name: editForm.name.trim(),
+        address: editForm.address.trim(),
+        email: editForm.email.trim().toLowerCase(),
+      }
+      
       saveUser(updatedUser)
       setUser(updatedUser)
       setIsEditing(false)
@@ -110,7 +158,7 @@ export default function UserProfile({ isOpen, onClose }) {
       setTimeout(() => setSuccess(""), 3000)
     } catch (err) {
       console.error("Error updating profile:", err)
-      setError("Lỗi khi cập nhật thông tin")
+      setError("Lỗi kết nối khi cập nhật thông tin. Vui lòng thử lại sau.")
     } finally {
       setLoading(false)
     }
