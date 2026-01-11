@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRoleCheck } from '@/hooks/useRoleCheck';
 import Toast from '@/components/Toast/Toast';
 import { Settings, Save, Loader2, RotateCcw, Mail, MessageSquare, X } from 'lucide-react';
@@ -27,6 +27,7 @@ export default function AdminNotificationConfig() {
 
   // Reset Modal state
   const [showResetModal, setShowResetModal] = useState(false);
+  const resetModalRef = useRef(null);
   const [resetSections, setResetSections] = useState({
     email: false,
     telegram: false,
@@ -58,6 +59,35 @@ export default function AdminNotificationConfig() {
     if (roleLoading) return;
     fetchConfig();
   }, [roleLoading]);
+
+  // Handle click outside for all modals
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Don't close if saving
+      if (saving) return;
+
+      if (showResetModal && resetModalRef.current && !resetModalRef.current.contains(event.target)) {
+        setShowResetModal(false);
+      }
+    };
+
+    if (showResetModal) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showResetModal, saving]);
+
+  // Handle scroll lock when any modal is open
+  useEffect(() => {
+    if (showResetModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showResetModal]);
 
   // Listen for toast events
   useEffect(() => {
@@ -819,13 +849,20 @@ export default function AdminNotificationConfig() {
 
       {/* Reset Modal */}
       {showResetModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-          <div className="bg-card border border-border rounded-xl p-6 w-full max-w-md shadow-2xl animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300">
+          <div
+            ref={resetModalRef}
+            className="bg-card border border-border rounded-xl p-6 w-full max-w-md shadow-2xl animate-in fade-in zoom-in duration-200"
+          >
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold text-card-foreground">Reset về mặc định</h3>
               <button
-                onClick={() => setShowResetModal(false)}
-                className="text-muted-foreground hover:text-foreground cursor-pointer"
+                onClick={() => {
+                  if (saving) return;
+                  setShowResetModal(false);
+                }}
+                disabled={saving}
+                className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
               >
                 <X className="w-5 h-5" />
               </button>

@@ -88,11 +88,21 @@ export default function AdminOrders() {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
   const [isSaving, setIsSaving] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [showCancelReasonModal, setShowCancelReasonModal] = useState(false);
+  const [pendingCancelOrderId, setPendingCancelOrderId] = useState(null);
+  const [pendingCancelStatus, setPendingCancelStatus] = useState(null);
+  const [updatingOrderId, setUpdatingOrderId] = useState(null);
+  const [deletingOrderId, setDeletingOrderId] = useState(null);
+  const [isConfirmingAction, setIsConfirmingAction] = useState(false);
 
   // Refs for modals
   const detailModalRef = useRef(null);
   const editModalRef = useRef(null);
   const confirmModalRef = useRef(null);
+  const cancelReasonModalRef = useRef(null);
+  const historyModalRef = useRef(null);
 
   useEffect(() => {
     fetchOrders();
@@ -111,6 +121,57 @@ export default function AdminOrders() {
     window.addEventListener('showToast', handleShowToast);
     return () => window.removeEventListener('showToast', handleShowToast);
   }, []);
+
+
+  // Handle click outside to close modals
+  useEffect(() => {
+    function handleClickOutside(event) {
+      // Don't close if an operation is active
+      if (isSaving || isConfirmingAction || updatingOrderId || deletingOrderId) return;
+
+      if (showDetailModal && detailModalRef.current && !detailModalRef.current.contains(event.target)) {
+        setShowDetailModal(false);
+        setSelectedOrder(null);
+      }
+      if (showEditModal && editModalRef.current && !editModalRef.current.contains(event.target)) {
+        setShowEditModal(false);
+        setSelectedOrder(null);
+      }
+      if (showConfirmModal && confirmModalRef.current && !confirmModalRef.current.contains(event.target)) {
+        setShowConfirmModal(false);
+        setConfirmAction(null);
+        setConfirmMessage('');
+      }
+      if (showCancelReasonModal && cancelReasonModalRef.current && !cancelReasonModalRef.current.contains(event.target)) {
+        setShowCancelReasonModal(false);
+        setPendingCancelOrderId(null);
+        setPendingCancelStatus(null);
+        setCancelReason('');
+      }
+      if (showHistoryModal && historyModalRef.current && !historyModalRef.current.contains(event.target)) {
+        setShowHistoryModal(false);
+      }
+    }
+
+    if (showDetailModal || showEditModal || showConfirmModal || showCancelReasonModal || showHistoryModal) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDetailModal, showEditModal, showConfirmModal, showCancelReasonModal, showHistoryModal, isSaving, isConfirmingAction, updatingOrderId, deletingOrderId]);
+
+  // Handle scroll lock when modal is open
+  useEffect(() => {
+    if (showDetailModal || showEditModal || showConfirmModal || showCancelReasonModal || showHistoryModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showDetailModal, showEditModal, showConfirmModal, showCancelReasonModal, showHistoryModal]);
 
   const fetchOrders = async () => {
     try {
@@ -173,8 +234,6 @@ export default function AdminOrders() {
     }
   };
 
-  const [searching, setSearching] = useState(false);
-
   const handleSearch = async () => {
     setPagination(prev => ({ ...prev, page: 1 }));
     setSearching(true);
@@ -184,14 +243,6 @@ export default function AdminOrders() {
       setSearching(false);
     }
   };
-
-  const [cancelReason, setCancelReason] = useState('');
-  const [showCancelReasonModal, setShowCancelReasonModal] = useState(false);
-  const [pendingCancelOrderId, setPendingCancelOrderId] = useState(null);
-  const [pendingCancelStatus, setPendingCancelStatus] = useState(null);
-  const [updatingOrderId, setUpdatingOrderId] = useState(null);
-  const [deletingOrderId, setDeletingOrderId] = useState(null);
-  const [isConfirmingAction, setIsConfirmingAction] = useState(false);
 
   const handleUpdateStatus = (orderId, newStatus) => {
     // Nếu là hủy đơn, hiển thị modal nhập lý do
@@ -969,17 +1020,10 @@ export default function AdminOrders() {
 
       {/* Detail Modal */}
       {showDetailModal && selectedOrder && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onClick={() => {
-            setShowDetailModal(false);
-            setSelectedOrder(null);
-          }}
-        >
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
           <div
             ref={detailModalRef}
-            className="bg-card rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto relative"
-            onClick={(e) => e.stopPropagation()}
+            className="bg-card rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto relative shadow-2xl border border-border animate-in fade-in zoom-in duration-200"
           >
             <div className="p-6">
               <div className="flex items-center justify-between mb-6 relative">
@@ -1002,7 +1046,7 @@ export default function AdminOrders() {
                       setShowDetailModal(false);
                       setSelectedOrder(null);
                     }}
-                    className="p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
+                    className="p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer z-20"
                     aria-label="Đóng"
                   >
                     <X className="w-5 h-5" />
@@ -1127,26 +1171,10 @@ export default function AdminOrders() {
 
       {/* Edit Modal */}
       {showEditModal && selectedOrder && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onClick={() => {
-            if (!isSaving) {
-              setShowEditModal(false);
-              setSelectedOrder(null);
-              setEditingStatus('');
-              setEditingAdminNotes('');
-              setEditingCustomerName('');
-              setEditingCustomerPhone('');
-              setEditingCustomerAddress('');
-              setEditingTotalPrice(0);
-              setEditingItems([]);
-            }
-          }}
-        >
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
           <div
             ref={editModalRef}
-            className="bg-card rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 border border-border relative"
-            onClick={(e) => e.stopPropagation()}
+            className="bg-card rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 border border-border relative shadow-2xl animate-in fade-in zoom-in duration-200"
           >
             <button
               onClick={() => {
@@ -1163,7 +1191,7 @@ export default function AdminOrders() {
                 }
               }}
               disabled={isSaving}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
               aria-label="Đóng"
             >
               <X className="w-5 h-5" />
@@ -1499,18 +1527,10 @@ export default function AdminOrders() {
 
       {/* Confirm Modal */}
       {showConfirmModal && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onClick={() => {
-            setShowConfirmModal(false);
-            setConfirmAction(null);
-            setConfirmMessage('');
-          }}
-        >
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
           <div
             ref={confirmModalRef}
-            className="bg-card rounded-lg max-w-md w-full p-6 border border-border"
-            onClick={(e) => e.stopPropagation()}
+            className="bg-card rounded-xl max-w-md w-full p-6 border border-border shadow-2xl animate-in fade-in zoom-in duration-200"
           >
             <h2 className="text-xl font-bold text-card-foreground mb-4">Xác nhận</h2>
             <p className="text-card-foreground mb-6">{confirmMessage}</p>
@@ -1549,19 +1569,10 @@ export default function AdminOrders() {
 
       {/* Cancel Reason Modal */}
       {showCancelReasonModal && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onClick={() => {
-            setShowCancelReasonModal(false);
-            setPendingCancelOrderId(null);
-            setPendingCancelStatus(null);
-            setCancelReason('');
-          }}
-        >
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
           <div
-            ref={confirmModalRef}
-            className="bg-card rounded-lg max-w-md w-full p-6 border border-border"
-            onClick={(e) => e.stopPropagation()}
+            ref={cancelReasonModalRef}
+            className="bg-card rounded-xl max-w-md w-full p-6 border border-border shadow-2xl animate-in fade-in zoom-in duration-200"
           >
             <h2 className="text-xl font-bold text-card-foreground mb-4">Hủy đơn hàng</h2>
             <p className="text-sm text-muted-foreground mb-4">
@@ -1618,13 +1629,10 @@ export default function AdminOrders() {
 
       {/* Status History Modal */}
       {showHistoryModal && selectedOrder && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onClick={() => setShowHistoryModal(false)}
-        >
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
           <div
-            className="bg-card rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 border border-border"
-            onClick={(e) => e.stopPropagation()}
+            ref={historyModalRef}
+            className="bg-card rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 border border-border shadow-2xl animate-in fade-in zoom-in duration-200"
           >
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">

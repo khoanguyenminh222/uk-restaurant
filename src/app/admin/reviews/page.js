@@ -82,6 +82,8 @@ export default function AdminReviews() {
   const [isApprovingId, setIsApprovingId] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const editModalRef = useRef(null);
+  const deleteModalRef = useRef(null);
 
   // Edit form state
   const [editForm, setEditForm] = useState({
@@ -130,6 +132,40 @@ export default function AdminReviews() {
     window.addEventListener('showToast', handleShowToast);
     return () => window.removeEventListener('showToast', handleShowToast);
   }, []);
+
+  // Handle click outside to close modals
+  useEffect(() => {
+    function handleClickOutside(event) {
+      // Don't close if an operation is active
+      if (isSaving || isDeleting) return;
+
+      if (showEditModal && editModalRef.current && !editModalRef.current.contains(event.target)) {
+        setShowEditModal(false);
+      }
+      if (showDeleteModal && deleteModalRef.current && !deleteModalRef.current.contains(event.target)) {
+        setShowDeleteModal(false);
+      }
+    }
+
+    if (showEditModal || showDeleteModal) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showEditModal, showDeleteModal, isSaving, isDeleting]);
+
+  // Handle scroll lock when modal is open
+  useEffect(() => {
+    if (showEditModal || showDeleteModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showEditModal, showDeleteModal]);
 
   const fetchReviews = async () => {
     try {
@@ -647,24 +683,20 @@ export default function AdminReviews() {
 
         {/* Edit Modal */}
         {showEditModal && selectedReview && (
-          <div
-            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-            onClick={(e) => {
-              if (e.target === e.currentTarget && !isSaving) {
-                setShowEditModal(false);
-              }
-            }}
-          >
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300">
             <div
-              className="bg-card border border-border rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
+              ref={editModalRef}
+              className="bg-card border border-border rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-200"
             >
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-card-foreground">Chỉnh sửa đánh giá</h2>
                 <button
-                  onClick={() => setShowEditModal(false)}
+                  onClick={() => {
+                    if (isSaving) return;
+                    setShowEditModal(false);
+                  }}
                   disabled={isSaving}
-                  className="p-2 hover:bg-muted rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="p-2 hover:bg-muted rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -913,17 +945,10 @@ export default function AdminReviews() {
 
         {/* Delete Confirmation Modal */}
         {showDeleteModal && selectedReview && (
-          <div
-            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-            onClick={(e) => {
-              if (e.target === e.currentTarget && !isDeleting) {
-                setShowDeleteModal(false);
-              }
-            }}
-          >
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300">
             <div
-              className="bg-card border border-border rounded-lg p-6 max-w-md w-full"
-              onClick={(e) => e.stopPropagation()}
+              ref={deleteModalRef}
+              className="bg-card border border-border rounded-xl p-6 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200"
             >
               <h2 className="text-xl font-bold text-card-foreground mb-4">Xác nhận xóa</h2>
               <p className="text-muted-foreground mb-6">

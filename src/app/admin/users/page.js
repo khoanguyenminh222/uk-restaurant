@@ -87,6 +87,47 @@ export default function AdminUsers() {
     return () => window.removeEventListener('showToast', handleShowToast);
   }, []);
 
+  // Handle click outside to close modals
+  useEffect(() => {
+    function handleClickOutside(event) {
+      // Don't close if an operation is active
+      if (editing || deleting) return;
+
+      if (showDetailModal && detailModalRef.current && !detailModalRef.current.contains(event.target)) {
+        setShowDetailModal(false);
+        setSelectedUser(null);
+      }
+      if (showEditModal && editModalRef.current && !editModalRef.current.contains(event.target)) {
+        setShowEditModal(false);
+        setSelectedUser(null);
+        setEditFormData({ name: '', email: '', address: '', role: 'user' });
+      }
+      if (showDeleteModal && deleteModalRef.current && !deleteModalRef.current.contains(event.target)) {
+        setShowDeleteModal(false);
+        setSelectedUser(null);
+      }
+    }
+
+    if (showDetailModal || showEditModal || showDeleteModal) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDetailModal, showEditModal, showDeleteModal, editing, deleting]);
+
+  // Handle scroll lock when modal is open
+  useEffect(() => {
+    if (showDetailModal || showEditModal || showDeleteModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showDetailModal, showEditModal, showDeleteModal]);
+
   const fetchUsers = async () => {
     try {
       setLoading(true);
@@ -745,24 +786,17 @@ export default function AdminUsers() {
 
       {/* Detail Modal */}
       {showDetailModal && selectedUser && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onClick={() => {
-            setShowDetailModal(false);
-            setSelectedUser(null);
-          }}
-        >
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
           <div
             ref={detailModalRef}
-            className="bg-card rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto relative"
-            onClick={(e) => e.stopPropagation()}
+            className="bg-card rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative shadow-2xl border border-border animate-in fade-in zoom-in duration-200"
           >
             <button
               onClick={() => {
                 setShowDetailModal(false);
                 setSelectedUser(null);
               }}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer z-20"
               aria-label="Đóng"
             >
               <X className="w-5 h-5" />
@@ -845,26 +879,20 @@ export default function AdminUsers() {
 
       {/* Edit Modal */}
       {showEditModal && selectedUser && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onClick={() => {
-            setShowEditModal(false);
-            setSelectedUser(null);
-            setEditFormData({ name: '', email: '', address: '', role: 'user' });
-          }}
-        >
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
           <div
             ref={editModalRef}
-            className="bg-card rounded-lg max-w-md w-full p-6 border border-border relative"
-            onClick={(e) => e.stopPropagation()}
+            className="bg-card rounded-xl max-w-md w-full p-6 border border-border relative shadow-2xl animate-in fade-in zoom-in duration-200"
           >
             <button
               onClick={() => {
+                if (editing) return;
                 setShowEditModal(false);
                 setSelectedUser(null);
                 setEditFormData({ name: '', email: '', address: '', role: 'user' });
               }}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
+              disabled={editing}
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
               aria-label="Đóng"
             >
               <X className="w-5 h-5" />
@@ -963,24 +991,19 @@ export default function AdminUsers() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && selectedUser && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onClick={() => {
-            setShowDeleteModal(false);
-            setSelectedUser(null);
-          }}
-        >
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
           <div
             ref={deleteModalRef}
-            className="bg-card rounded-lg max-w-md w-full p-6 border border-border relative"
-            onClick={(e) => e.stopPropagation()}
+            className="bg-card rounded-xl max-w-md w-full p-6 border border-border relative shadow-2xl animate-in fade-in zoom-in duration-200"
           >
             <button
               onClick={() => {
+                if (deleting) return;
                 setShowDeleteModal(false);
                 setSelectedUser(null);
               }}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
+              disabled={deleting}
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
               aria-label="Đóng"
             >
               <X className="w-5 h-5" />

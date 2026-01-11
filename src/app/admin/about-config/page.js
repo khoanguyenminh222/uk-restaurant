@@ -266,6 +266,10 @@ export default function AdminAboutConfig() {
   const statModalRef = useRef(null);
   const missionItemModalRef = useRef(null);
   const teamMemberModalRef = useRef(null);
+  const resetModalRef = useRef(null);
+  const deleteFeatureModalRef = useRef(null);
+  const deleteMissionItemModalRef = useRef(null);
+  const deleteTeamMemberModalRef = useRef(null);
 
   useEffect(() => {
     if (!isChecking) {
@@ -448,9 +452,12 @@ export default function AdminAboutConfig() {
     }
   };
 
-  // Click outside handler for modals
+  // Handle click outside for all modals
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // Don't close if saving
+      if (saving) return;
+
       if (showFeatureModal && featureModalRef.current && !featureModalRef.current.contains(event.target)) {
         setShowFeatureModal(false);
         setEditingFeature(null);
@@ -467,11 +474,50 @@ export default function AdminAboutConfig() {
         setShowTeamMemberModal(false);
         setEditingTeamMember(null);
       }
+      if (showResetModal && resetModalRef.current && !resetModalRef.current.contains(event.target)) {
+        setShowResetModal(false);
+      }
+      if (showDeleteFeatureModal && deleteFeatureModalRef.current && !deleteFeatureModalRef.current.contains(event.target)) {
+        setShowDeleteFeatureModal(false);
+        setFeatureToDelete(null);
+      }
+      if (showDeleteMissionItemModal && deleteMissionItemModalRef.current && !deleteMissionItemModalRef.current.contains(event.target)) {
+        setShowDeleteMissionItemModal(false);
+        setMissionItemToDelete(null);
+      }
+      if (showDeleteTeamMemberModal && deleteTeamMemberModalRef.current && !deleteTeamMemberModalRef.current.contains(event.target)) {
+        setShowDeleteTeamMemberModal(false);
+        setTeamMemberToDelete(null);
+      }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    const isAnyModalOpen = showFeatureModal || showStatModal || showMissionItemModal ||
+      showTeamMemberModal || showResetModal || showDeleteFeatureModal ||
+      showDeleteMissionItemModal || showDeleteTeamMemberModal;
+
+    if (isAnyModalOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showFeatureModal, showStatModal, showMissionItemModal, showTeamMemberModal]);
+  }, [showFeatureModal, showStatModal, showMissionItemModal, showTeamMemberModal, showResetModal,
+    showDeleteFeatureModal, showDeleteMissionItemModal, showDeleteTeamMemberModal, saving]);
+
+  // Handle scroll lock when any modal is open
+  useEffect(() => {
+    const isAnyModalOpen = showFeatureModal || showStatModal || showMissionItemModal ||
+      showTeamMemberModal || showResetModal || showDeleteFeatureModal ||
+      showDeleteMissionItemModal || showDeleteTeamMemberModal;
+
+    if (isAnyModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showFeatureModal, showStatModal, showMissionItemModal, showTeamMemberModal, showResetModal,
+    showDeleteFeatureModal, showDeleteMissionItemModal, showDeleteTeamMemberModal]);
 
   // Icon change handlers
   const handleFeatureIconChange = (value) => {
@@ -1376,15 +1422,23 @@ export default function AdminAboutConfig() {
 
       {/* Feature Modal */}
       {showFeatureModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={(e) => e.target === e.currentTarget && (setShowFeatureModal(false), setEditingFeature(null))}>
-          <div ref={featureModalRef} className="bg-card border border-border rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
+          <div
+            ref={featureModalRef}
+            className="bg-card border border-border rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-200"
+          >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-card-foreground">
                 {editingFeature !== null ? 'Chỉnh sửa Feature' : 'Thêm Feature mới'}
               </h3>
               <button
-                onClick={() => { setShowFeatureModal(false); setEditingFeature(null); }}
-                className="p-2 hover:bg-muted rounded-lg cursor-pointer"
+                onClick={() => {
+                  if (saving) return;
+                  setShowFeatureModal(false);
+                  setEditingFeature(null);
+                }}
+                disabled={saving}
+                className="p-2 hover:bg-muted rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1572,15 +1626,23 @@ export default function AdminAboutConfig() {
 
       {/* Stat Modal */}
       {showStatModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={(e) => e.target === e.currentTarget && (setShowStatModal(false), setEditingStat(null))}>
-          <div ref={statModalRef} className="bg-card border border-border rounded-lg p-6 max-w-md w-full">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
+          <div
+            ref={statModalRef}
+            className="bg-card border border-border rounded-xl p-6 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200"
+          >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-card-foreground">
                 {editingStat !== null ? 'Chỉnh sửa Stat' : 'Thêm Stat mới'}
               </h3>
               <button
-                onClick={() => { setShowStatModal(false); setEditingStat(null); }}
-                className="p-2 hover:bg-muted rounded-lg cursor-pointer"
+                onClick={() => {
+                  if (saving) return;
+                  setShowStatModal(false);
+                  setEditingStat(null);
+                }}
+                disabled={saving}
+                className="p-2 hover:bg-muted rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1651,15 +1713,23 @@ export default function AdminAboutConfig() {
 
       {/* Mission Item Modal */}
       {showMissionItemModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={(e) => e.target === e.currentTarget && (setShowMissionItemModal(false), setEditingMissionItem(null))}>
-          <div ref={missionItemModalRef} className="bg-card border border-border rounded-lg p-6 max-w-md w-full">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
+          <div
+            ref={missionItemModalRef}
+            className="bg-card border border-border rounded-xl p-6 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200"
+          >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-card-foreground">
                 {editingMissionItem !== null ? 'Chỉnh sửa Mission Item' : 'Thêm Mission Item mới'}
               </h3>
               <button
-                onClick={() => { setShowMissionItemModal(false); setEditingMissionItem(null); }}
-                className="p-2 hover:bg-muted rounded-lg cursor-pointer"
+                onClick={() => {
+                  if (saving) return;
+                  setShowMissionItemModal(false);
+                  setEditingMissionItem(null);
+                }}
+                disabled={saving}
+                className="p-2 hover:bg-muted rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1788,15 +1858,23 @@ export default function AdminAboutConfig() {
 
       {/* Team Member Modal */}
       {showTeamMemberModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={(e) => e.target === e.currentTarget && (setShowTeamMemberModal(false), setEditingTeamMember(null))}>
-          <div ref={teamMemberModalRef} className="bg-card border border-border rounded-lg p-6 max-w-md w-full">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
+          <div
+            ref={teamMemberModalRef}
+            className="bg-card border border-border rounded-xl p-6 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200"
+          >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-card-foreground">
                 {editingTeamMember !== null ? 'Chỉnh sửa Thành viên' : 'Thêm Thành viên mới'}
               </h3>
               <button
-                onClick={() => { setShowTeamMemberModal(false); setEditingTeamMember(null); }}
-                className="p-2 hover:bg-muted rounded-lg cursor-pointer"
+                onClick={() => {
+                  if (saving) return;
+                  setShowTeamMemberModal(false);
+                  setEditingTeamMember(null);
+                }}
+                disabled={saving}
+                className="p-2 hover:bg-muted rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1934,26 +2012,23 @@ export default function AdminAboutConfig() {
 
       {/* Delete Feature Modal */}
       {showDeleteFeatureModal && featureToDelete !== null && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowDeleteFeatureModal(false);
-              setFeatureToDelete(null);
-            }
-          }}
-        >
-          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
+          <div
+            ref={deleteFeatureModalRef}
+            className="bg-card border border-border rounded-xl p-6 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200"
+          >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-semibold text-card-foreground">
                 Xác nhận xóa Feature
               </h3>
               <button
                 onClick={() => {
+                  if (saving) return;
                   setShowDeleteFeatureModal(false);
                   setFeatureToDelete(null);
                 }}
-                className="text-muted-foreground hover:text-foreground cursor-pointer"
+                disabled={saving}
+                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1986,26 +2061,23 @@ export default function AdminAboutConfig() {
 
       {/* Delete Mission Item Modal */}
       {showDeleteMissionItemModal && missionItemToDelete !== null && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowDeleteMissionItemModal(false);
-              setMissionItemToDelete(null);
-            }
-          }}
-        >
-          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
+          <div
+            ref={deleteMissionItemModalRef}
+            className="bg-card border border-border rounded-xl p-6 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200"
+          >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-semibold text-card-foreground">
                 Xác nhận xóa Mission Item
               </h3>
               <button
                 onClick={() => {
+                  if (saving) return;
                   setShowDeleteMissionItemModal(false);
                   setMissionItemToDelete(null);
                 }}
-                className="text-muted-foreground hover:text-foreground cursor-pointer"
+                disabled={saving}
+                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2038,26 +2110,23 @@ export default function AdminAboutConfig() {
 
       {/* Delete Team Member Modal */}
       {showDeleteTeamMemberModal && teamMemberToDelete !== null && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowDeleteTeamMemberModal(false);
-              setTeamMemberToDelete(null);
-            }
-          }}
-        >
-          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
+          <div
+            ref={deleteTeamMemberModalRef}
+            className="bg-card border border-border rounded-xl p-6 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200"
+          >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-semibold text-card-foreground">
                 Xác nhận xóa Thành viên
               </h3>
               <button
                 onClick={() => {
+                  if (saving) return;
                   setShowDeleteTeamMemberModal(false);
                   setTeamMemberToDelete(null);
                 }}
-                className="text-muted-foreground hover:text-foreground cursor-pointer"
+                disabled={saving}
+                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2090,22 +2159,22 @@ export default function AdminAboutConfig() {
 
       {/* Reset Modal */}
       {showResetModal && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowResetModal(false);
-            }
-          }}
-        >
-          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
+          <div
+            ref={resetModalRef}
+            className="bg-card border border-border rounded-xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-200"
+          >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-semibold text-card-foreground">
                 Chọn phần muốn reset
               </h3>
               <button
-                onClick={() => setShowResetModal(false)}
-                className="text-muted-foreground hover:text-foreground cursor-pointer"
+                onClick={() => {
+                  if (saving) return;
+                  setShowResetModal(false);
+                }}
+                disabled={saving}
+                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
               >
                 <X className="w-5 h-5" />
               </button>

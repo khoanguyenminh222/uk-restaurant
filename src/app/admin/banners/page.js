@@ -50,6 +50,41 @@ export default function AdminBanners() {
     return () => window.removeEventListener('showToast', handleShowToast);
   }, []);
 
+  // Handle click outside to close modals
+  useEffect(() => {
+    function handleClickOutside(event) {
+      // Don't close if an operation is active
+      if (saving || deleting) return;
+
+      if (showModal && modalRef.current && !modalRef.current.contains(event.target)) {
+        handleCloseModal();
+      }
+      if (showDeleteModal && deleteModalRef.current && !deleteModalRef.current.contains(event.target)) {
+        setShowDeleteModal(false);
+        setDeletingBannerId(null);
+      }
+    }
+
+    if (showModal || showDeleteModal) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showModal, showDeleteModal, saving, deleting]);
+
+  // Handle scroll lock when modal is open
+  useEffect(() => {
+    if (showModal || showDeleteModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showModal, showDeleteModal]);
+
   const fetchBanners = async () => {
     try {
       setLoading(true);
@@ -396,8 +431,8 @@ export default function AdminBanners() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 text-xs rounded-full ${banner.is_active !== false
-                          ? 'bg-success/10 text-success'
-                          : 'bg-muted text-muted-foreground'
+                        ? 'bg-success/10 text-success'
+                        : 'bg-muted text-muted-foreground'
                         }`}>
                         {banner.is_active !== false ? 'Hoạt động' : 'Tắt'}
                       </span>
@@ -470,8 +505,8 @@ export default function AdminBanners() {
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <span>Order: {banner.order || 0}</span>
                     <span className={`px-2 py-0.5 text-xs rounded-full ${banner.is_active !== false
-                        ? 'bg-success/10 text-success'
-                        : 'bg-muted text-muted-foreground'
+                      ? 'bg-success/10 text-success'
+                      : 'bg-muted text-muted-foreground'
                       }`}>
                       {banner.is_active !== false ? 'Hoạt động' : 'Tắt'}
                     </span>
@@ -501,18 +536,18 @@ export default function AdminBanners() {
 
       {/* Modal */}
       {showModal && (
-        <div
-          ref={modalRef}
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onClick={handleCloseModal}
-        >
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
           <div
-            className="bg-card rounded-lg max-w-2xl w-full p-6 border border-border relative max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
+            ref={modalRef}
+            className="bg-card rounded-xl max-w-2xl w-full p-6 border border-border relative max-h-[90vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-200"
           >
             <button
-              onClick={handleCloseModal}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
+              onClick={() => {
+                if (saving) return;
+                handleCloseModal();
+              }}
+              disabled={saving}
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
               aria-label="Đóng"
             >
               <X className="w-5 h-5" />
@@ -612,8 +647,8 @@ export default function AdminBanners() {
                       type="button"
                       onClick={() => setFormData({ ...formData, is_active: !formData.is_active })}
                       className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-colors font-medium cursor-pointer ${formData.is_active
-                          ? 'bg-success/10 text-success border border-success/20'
-                          : 'bg-muted text-muted-foreground border border-border'
+                        ? 'bg-success/10 text-success border border-success/20'
+                        : 'bg-muted text-muted-foreground border border-border'
                         }`}
                     >
                       {formData.is_active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
@@ -653,17 +688,10 @@ export default function AdminBanners() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div
-          ref={deleteModalRef}
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onClick={() => {
-            setShowDeleteModal(false);
-            setDeletingBannerId(null);
-          }}
-        >
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
           <div
-            className="bg-card rounded-lg max-w-md w-full p-6 border border-border"
-            onClick={(e) => e.stopPropagation()}
+            ref={deleteModalRef}
+            className="bg-card rounded-xl max-w-md w-full p-6 border border-border shadow-2xl animate-in fade-in zoom-in duration-200"
           >
             <h2 className="text-xl font-bold text-card-foreground mb-4">Xác nhận xóa</h2>
             <p className="text-card-foreground mb-6">

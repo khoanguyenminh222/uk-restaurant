@@ -106,9 +106,12 @@ export default function AdminPopularConfig() {
     return () => window.removeEventListener('showToast', handleShowToast);
   }, []);
 
-  // Close modal when clicking outside
+  // Handle click outside for all modals
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // Don't close if saving
+      if (saving || deleting) return;
+
       if (showModal && modalRef.current && !modalRef.current.contains(event.target)) {
         setShowModal(false);
         setEditingThreshold(null);
@@ -126,13 +129,24 @@ export default function AdminPopularConfig() {
       }
     };
 
-    if (showModal || showDeleteModal) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.body.style.overflow = 'hidden';
-    }
+    const isAnyModalOpen = showModal || showDeleteModal;
 
+    if (isAnyModalOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showModal, showDeleteModal, saving, deleting]);
+
+  // Handle scroll lock when any modal is open
+  useEffect(() => {
+    const isAnyModalOpen = showModal || showDeleteModal;
+
+    if (isAnyModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
       document.body.style.overflow = 'unset';
     };
   }, [showModal, showDeleteModal]);
@@ -683,15 +697,22 @@ export default function AdminPopularConfig() {
 
       {/* Add/Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div ref={modalRef} className="bg-card rounded-lg border border-border w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300">
+          <div
+            ref={modalRef}
+            className="bg-card border border-border rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-200"
+          >
             <div className="sticky top-0 bg-card border-b border-border px-6 py-4 flex items-center justify-between">
               <h2 className="text-xl font-bold text-card-foreground">
                 {editingThreshold ? 'Sửa ngưỡng' : 'Thêm ngưỡng mới'}
               </h2>
               <button
-                onClick={handleCloseModal}
-                className="p-1 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded transition-colors cursor-pointer"
+                onClick={() => {
+                  if (saving) return;
+                  handleCloseModal();
+                }}
+                disabled={saving}
+                className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -837,8 +858,11 @@ export default function AdminPopularConfig() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div ref={deleteModalRef} className="bg-card rounded-lg border border-border w-full max-w-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300">
+          <div
+            ref={deleteModalRef}
+            className="bg-card border border-border rounded-xl w-full max-w-md shadow-2xl animate-in fade-in zoom-in duration-200"
+          >
             <div className="p-6">
               <h2 className="text-xl font-bold text-card-foreground mb-4">
                 Xác nhận xóa

@@ -6,6 +6,8 @@ import { FolderOpen, Plus, Edit2, Trash2, Loader2, X, Palette, Search, ChevronDo
 import { adminFetch } from '@/lib/adminAuth';
 
 export default function AdminCategories() {
+  const categoryModalRef = useRef(null);
+  const deleteModalRef = useRef(null);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -43,6 +45,41 @@ export default function AdminCategories() {
     window.addEventListener('showToast', handleShowToast);
     return () => window.removeEventListener('showToast', handleShowToast);
   }, []);
+
+  // Handle click outside to close modals
+  useEffect(() => {
+    function handleClickOutside(event) {
+      // Don't close if an operation is active
+      if (saving || deleting) return;
+
+      if (showModal && categoryModalRef.current && !categoryModalRef.current.contains(event.target)) {
+        handleCloseModal();
+      }
+      if (showDeleteModal && deleteModalRef.current && !deleteModalRef.current.contains(event.target)) {
+        setShowDeleteModal(false);
+        setDeletingCategoryId(null);
+      }
+    }
+
+    if (showModal || showDeleteModal) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showModal, showDeleteModal, saving, deleting]);
+
+  // Handle scroll lock when modal is open
+  useEffect(() => {
+    if (showModal || showDeleteModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showModal, showDeleteModal]);
 
   const fetchCategories = async () => {
     try {
@@ -487,17 +524,18 @@ export default function AdminCategories() {
 
       {/* Modal */}
       {showModal && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onClick={handleCloseModal}
-        >
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
           <div
-            className="bg-card rounded-lg max-w-md w-full p-6 border border-border relative"
-            onClick={(e) => e.stopPropagation()}
+            ref={categoryModalRef}
+            className="bg-card rounded-xl max-w-md w-full p-6 border border-border relative shadow-2xl animate-in fade-in zoom-in duration-200"
           >
             <button
-              onClick={handleCloseModal}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
+              onClick={() => {
+                if (saving) return;
+                handleCloseModal();
+              }}
+              disabled={saving}
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
               aria-label="Đóng"
             >
               <X className="w-5 h-5" />
@@ -616,16 +654,10 @@ export default function AdminCategories() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onClick={() => {
-            setShowDeleteModal(false);
-            setDeletingCategoryId(null);
-          }}
-        >
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
           <div
-            className="bg-card rounded-lg max-w-md w-full p-6 border border-border"
-            onClick={(e) => e.stopPropagation()}
+            ref={deleteModalRef}
+            className="bg-card rounded-xl max-w-md w-full p-6 border border-border shadow-2xl animate-in fade-in zoom-in duration-200"
           >
             <h2 className="text-xl font-bold text-card-foreground mb-4">Xác nhận xóa</h2>
             <p className="text-card-foreground mb-6">

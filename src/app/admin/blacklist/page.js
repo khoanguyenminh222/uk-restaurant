@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRoleCheck } from '@/hooks/useRoleCheck'
 import { Shield, Search, Plus, Edit, Trash2, Filter, X, Loader2, CheckCircle, XCircle, Calendar, FileText } from 'lucide-react'
 import Toast from '@/components/Toast/Toast';
@@ -26,6 +26,9 @@ export default function AdminBlacklist() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [editingEmail, setEditingEmail] = useState(null)
   const [emailToDelete, setEmailToDelete] = useState(null)
+  const addModalRef = useRef(null)
+  const editModalRef = useRef(null)
+  const deleteModalRef = useRef(null)
   const [toast, setToast] = useState({ message: '', isVisible: false, type: 'success' })
   const [formData, setFormData] = useState({
     email: "",
@@ -97,6 +100,59 @@ export default function AdminBlacklist() {
       setLoading(false)
     }
   }
+
+  // Handle click outside to close modals
+  useEffect(() => {
+    function handleClickOutside(event) {
+      // Don't close if an operation is active
+      if (adding || updating || deleting) return;
+
+      if (showAddModal && addModalRef.current && !addModalRef.current.contains(event.target)) {
+        setShowAddModal(false)
+        setFormData({
+          email: "",
+          reason: "manual_block",
+          is_permanent: false,
+          blocked_until: "",
+          admin_notes: "",
+        })
+      }
+      if (showEditModal && editModalRef.current && !editModalRef.current.contains(event.target)) {
+        setShowEditModal(false)
+        setEditingEmail(null)
+        setFormData({
+          email: "",
+          reason: "manual_block",
+          is_permanent: false,
+          blocked_until: "",
+          admin_notes: "",
+        })
+      }
+      if (showDeleteModal && deleteModalRef.current && !deleteModalRef.current.contains(event.target)) {
+        setShowDeleteModal(false)
+        setEmailToDelete(null)
+      }
+    }
+
+    if (showAddModal || showEditModal || showDeleteModal) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showAddModal, showEditModal, showDeleteModal, adding, updating, deleting]);
+
+  // Handle scroll lock when modal is open
+  useEffect(() => {
+    if (showAddModal || showEditModal || showDeleteModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showAddModal, showEditModal, showDeleteModal]);
 
   useEffect(() => {
     fetchBlacklist()
@@ -518,22 +574,10 @@ export default function AdminBlacklist() {
 
       {/* Add Modal */}
       {showAddModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-          onClick={() => {
-            setShowAddModal(false)
-            setFormData({
-              email: "",
-              reason: "manual_block",
-              is_permanent: false,
-              blocked_until: "",
-              admin_notes: "",
-            })
-          }}
-        >
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300">
           <div
-            className="bg-card border border-border rounded-lg shadow-2xl w-full max-w-md"
-            onClick={(e) => e.stopPropagation()}
+            ref={addModalRef}
+            className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in duration-200"
           >
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
@@ -543,6 +587,7 @@ export default function AdminBlacklist() {
                 </h2>
                 <button
                   onClick={() => {
+                    if (adding) return;
                     setShowAddModal(false)
                     setFormData({
                       email: "",
@@ -552,7 +597,8 @@ export default function AdminBlacklist() {
                       admin_notes: "",
                     })
                   }}
-                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg cursor-pointer"
+                  disabled={adding}
+                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -669,16 +715,10 @@ export default function AdminBlacklist() {
 
       {/* Delete Modal */}
       {showDeleteModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-          onClick={() => {
-            setShowDeleteModal(false)
-            setEmailToDelete(null)
-          }}
-        >
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300">
           <div
-            className="bg-card border border-border rounded-lg shadow-2xl w-full max-w-md"
-            onClick={(e) => e.stopPropagation()}
+            ref={deleteModalRef}
+            className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in duration-200"
           >
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
@@ -688,11 +728,12 @@ export default function AdminBlacklist() {
                 </h2>
                 <button
                   onClick={() => {
+                    if (deleting) return;
                     setShowDeleteModal(false)
                     setEmailToDelete(null)
                   }}
                   disabled={deleting}
-                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg disabled:opacity-50 cursor-pointer"
+                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg disabled:opacity-50 cursor-pointer z-20"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -749,23 +790,10 @@ export default function AdminBlacklist() {
 
       {/* Edit Modal */}
       {showEditModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-          onClick={() => {
-            setShowEditModal(false)
-            setEditingEmail(null)
-            setFormData({
-              email: "",
-              reason: "manual_block",
-              is_permanent: false,
-              blocked_until: "",
-              admin_notes: "",
-            })
-          }}
-        >
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300">
           <div
-            className="bg-card border border-border rounded-lg shadow-2xl w-full max-w-md"
-            onClick={(e) => e.stopPropagation()}
+            ref={editModalRef}
+            className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in duration-200"
           >
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
@@ -775,6 +803,7 @@ export default function AdminBlacklist() {
                 </h2>
                 <button
                   onClick={() => {
+                    if (updating) return;
                     setShowEditModal(false)
                     setEditingEmail(null)
                     setFormData({
@@ -785,7 +814,8 @@ export default function AdminBlacklist() {
                       admin_notes: "",
                     })
                   }}
-                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg cursor-pointer"
+                  disabled={updating}
+                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
                 >
                   <X className="w-5 h-5" />
                 </button>

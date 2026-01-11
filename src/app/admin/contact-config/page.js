@@ -78,6 +78,8 @@ export default function AdminContactConfig() {
 
     // Modal refs
     const socialModalRef = useRef(null);
+    const deleteModalRef = useRef(null);
+    const resetModalRef = useRef(null);
 
     useEffect(() => {
         if (!isChecking) {
@@ -99,18 +101,46 @@ export default function AdminContactConfig() {
         return () => window.removeEventListener('showToast', handleShowToast);
     }, []);
 
-    // Handle Click Outside for Modals
+    // Handle click outside for all modals
     useEffect(() => {
         const handleClickOutside = (event) => {
+            // Don't close if saving
+            if (saving) return;
+
             if (showSocialModal && socialModalRef.current && !socialModalRef.current.contains(event.target)) {
                 setShowSocialModal(false);
                 setEditingSocial(null);
             }
+            if (showDeleteModal && deleteModalRef.current && !deleteModalRef.current.contains(event.target)) {
+                setShowDeleteModal(false);
+                setDeleteIndex(null);
+            }
+            if (showResetModal && resetModalRef.current && !resetModalRef.current.contains(event.target)) {
+                setShowResetModal(false);
+            }
         };
 
-        document.addEventListener('mousedown', handleClickOutside);
+        const isAnyModalOpen = showSocialModal || showDeleteModal || showResetModal;
+
+        if (isAnyModalOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [showSocialModal]);
+    }, [showSocialModal, showDeleteModal, showResetModal, saving]);
+
+    // Handle scroll lock when any modal is open
+    useEffect(() => {
+        const isAnyModalOpen = showSocialModal || showDeleteModal || showResetModal;
+
+        if (isAnyModalOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [showSocialModal, showDeleteModal, showResetModal]);
 
 
 
@@ -1235,11 +1265,22 @@ export default function AdminContactConfig() {
 
             {/* Social Modal */}
             {showSocialModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-                    <div ref={socialModalRef} className="bg-background rounded-xl p-6 w-full max-w-lg shadow-2xl animate-in fade-in zoom-in duration-200 overflow-y-auto max-h-[90vh]">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300">
+                    <div
+                        ref={socialModalRef}
+                        className="bg-background rounded-xl p-6 w-full max-w-lg shadow-2xl animate-in fade-in zoom-in duration-200 overflow-y-auto max-h-[90vh]"
+                    >
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-xl font-bold">{editingSocial !== null ? 'Sửa Liên Kết' : 'Thêm Mạng Xã Hội'}</h3>
-                            <button onClick={() => setShowSocialModal(false)} className="text-muted-foreground hover:text-foreground cursor-pointer">
+                            <button
+                                onClick={() => {
+                                    if (saving) return;
+                                    setShowSocialModal(false);
+                                    setEditingSocial(null);
+                                }}
+                                disabled={saving}
+                                className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
+                            >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
@@ -1342,8 +1383,11 @@ export default function AdminContactConfig() {
 
             {/* Delete Confirmation Modal */}
             {showDeleteModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-                    <div className="bg-background rounded-xl p-6 w-full max-w-sm shadow-2xl animate-in fade-in zoom-in duration-200">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300">
+                    <div
+                        ref={deleteModalRef}
+                        className="bg-background rounded-xl p-6 w-full max-w-sm shadow-2xl animate-in fade-in zoom-in duration-200"
+                    >
                         <div className="text-center mb-4">
                             <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-3">
                                 <Trash2 className="w-6 h-6 text-red-600" />
@@ -1354,14 +1398,17 @@ export default function AdminContactConfig() {
                         <div className="flex gap-3 justify-center">
                             <button
                                 onClick={() => setShowDeleteModal(false)}
-                                className="px-4 py-2 rounded-lg bg-muted hover:bg-muted/80 font-medium transition-colors cursor-pointer"
+                                disabled={saving}
+                                className="px-4 py-2 rounded-lg bg-muted hover:bg-muted/80 font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Không
                             </button>
                             <button
                                 onClick={handleConfirmDelete}
-                                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-colors cursor-pointer"
+                                disabled={saving}
+                                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                             >
+                                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                                 Có, xóa ngay
                             </button>
                         </div>
@@ -1371,22 +1418,22 @@ export default function AdminContactConfig() {
 
             {/* Reset Modal */}
             {showResetModal && (
-                <div
-                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-                    onClick={(e) => {
-                        if (e.target === e.currentTarget) {
-                            setShowResetModal(false);
-                        }
-                    }}
-                >
-                    <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300">
+                    <div
+                        ref={resetModalRef}
+                        className="bg-card border border-border rounded-xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-200"
+                    >
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xl font-semibold text-card-foreground">
                                 Chọn phần muốn reset
                             </h3>
                             <button
-                                onClick={() => setShowResetModal(false)}
-                                className="text-muted-foreground hover:text-foreground cursor-pointer"
+                                onClick={() => {
+                                    if (saving) return;
+                                    setShowResetModal(false);
+                                }}
+                                disabled={saving}
+                                className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
                             >
                                 <X className="w-5 h-5" />
                             </button>
