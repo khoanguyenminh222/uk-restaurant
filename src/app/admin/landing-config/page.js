@@ -9,6 +9,7 @@ import {
   ArrowUp, ArrowDown, Home, Sparkles, BookOpen, Info, Phone,
   Mail, MapPin, Share2, Link as LinkIcon, CheckCircle2, Zap, Heart, MessageCircle, Shield, Star, MessageSquare, Users, TrendingUp
 } from 'lucide-react';
+import { adminFetch } from '@/lib/adminAuth';
 import * as lucideIcons from 'lucide-react';
 
 // Helper function để chuyển đổi kebab-case sang PascalCase
@@ -345,7 +346,7 @@ export default function AdminLandingConfig() {
 
   const fetchReviewStats = async () => {
     try {
-      const res = await fetch('/api/reviews/stats');
+      const res = await adminFetch('/api/reviews/stats');
       const data = await res.json();
       if (data.success) {
         setReviewStats(data.data);
@@ -358,7 +359,7 @@ export default function AdminLandingConfig() {
   const fetchConfig = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/config/landing');
+      const res = await adminFetch('/api/config/landing');
       const data = await res.json();
       if (data.success) {
         setConfig(data.data);
@@ -472,7 +473,7 @@ export default function AdminLandingConfig() {
         spam: spamData,
       };
 
-      const res = await fetch('/api/config/landing', {
+      const res = await adminFetch('/api/config/landing', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updateData),
@@ -580,7 +581,7 @@ export default function AdminLandingConfig() {
       }
 
       // Gửi request reset
-      const res = await fetch('/api/config/landing', {
+      const res = await adminFetch('/api/config/landing', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(resetData),
@@ -806,7 +807,7 @@ export default function AdminLandingConfig() {
       // Fetch reviewStats nếu chưa có hoặc cần cập nhật
       if (!reviewStats) {
         try {
-          const res = await fetch('/api/reviews/stats');
+          const res = await adminFetch('/api/reviews/stats');
           const data = await res.json();
           if (data.success && data.data) {
             setReviewStats(data.data);

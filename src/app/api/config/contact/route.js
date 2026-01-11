@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { defaultContactConfig, validateContactConfig, mergeWithDefaults } from '@/lib/models/ContactConfig';
+import { getAdminFromToken } from '@/lib/auth';
 
 /**
  * GET /api/config/contact
@@ -60,6 +61,15 @@ export async function GET(request) {
  */
 export async function PUT(request) {
   try {
+    // Check admin authentication
+    const admin = await getAdminFromToken(request);
+    if (!admin) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
 
     const validation = validateContactConfig(body);

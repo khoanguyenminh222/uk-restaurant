@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Home, Menu, X, LayoutDashboard, FolderOpen, UtensilsCrossed, Users, LogOut, ShoppingCart, UserCircle, Image as ImageIcon, TrendingUp, Settings, ChevronDown, ChevronRight, Shield, Bell, BookOpen, Phone, MessageSquare } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle/ThemeToggle';
 import { useLandingConfig } from '@/hooks/useLandingConfig';
+import { isAdminLoggedIn, getAdminData, clearAdminSession } from '@/lib/adminAuth';
 
 export default function AdminLayout({ children }) {
   const router = useRouter();
@@ -18,30 +19,26 @@ export default function AdminLayout({ children }) {
   const restaurantName = config?.restaurant_name || 'UK Restaurant';
 
   useEffect(() => {
-    const checkAuth = () => {
-      const adminData = localStorage.getItem('admin_data');
-      const loggedIn = localStorage.getItem('admin_logged_in');
+    // Skip auth check for login page
+    if (pathname === '/admin') {
+      setIsLoggedIn(false);
+      setAdminInfo(null);
+      return;
+    }
 
-      if (loggedIn === 'true' && adminData) {
-        try {
-          const admin = JSON.parse(adminData);
-          // Check if user is admin, manager, or super_admin
-          if (admin.role === 'admin' || admin.role === 'super_admin' || admin.role === 'manager') {
-            setIsLoggedIn(true);
-            setAdminInfo(admin);
-            return;
-          }
-        } catch (e) {
-          // Invalid data, clear it
-          localStorage.removeItem('admin_data');
-          localStorage.removeItem('admin_logged_in');
+    // Check authentication for other admin pages
+    const checkAuth = () => {
+      if (isAdminLoggedIn()) {
+        const admin = getAdminData();
+        if (admin && (admin.role === 'admin' || admin.role === 'super_admin' || admin.role === 'manager')) {
+          setIsLoggedIn(true);
+          setAdminInfo(admin);
+          return;
         }
       }
 
-      // Not logged in, redirect to login
-      if (pathname !== '/admin') {
-        router.push('/admin');
-      }
+      // Not logged in, redirect to login page
+      router.push('/admin');
     };
 
     checkAuth();
@@ -65,14 +62,14 @@ export default function AdminLayout({ children }) {
   }, [mobileMenuOpen]);
 
   // Check if current path is in config submenu
-  const isConfigPath = pathname.startsWith('/admin/banners') || 
-                       pathname.startsWith('/admin/popular-config') || 
-                       pathname.startsWith('/admin/landing-config') ||
-                       pathname.startsWith('/admin/about-config') ||
-                       pathname.startsWith('/admin/contact-config') ||
-                       pathname.startsWith('/admin/notification-config') ||
-                       pathname.startsWith('/admin/blacklist');
-  
+  const isConfigPath = pathname.startsWith('/admin/banners') ||
+    pathname.startsWith('/admin/popular-config') ||
+    pathname.startsWith('/admin/landing-config') ||
+    pathname.startsWith('/admin/about-config') ||
+    pathname.startsWith('/admin/contact-config') ||
+    pathname.startsWith('/admin/notification-config') ||
+    pathname.startsWith('/admin/blacklist');
+
   // Auto expand config menu if on config page
   useEffect(() => {
     if (isConfigPath) {
@@ -81,10 +78,9 @@ export default function AdminLayout({ children }) {
   }, [isConfigPath]);
 
   const handleLogout = () => {
-    // Xóa admin data
-    localStorage.removeItem('admin_data');
-    localStorage.removeItem('admin_logged_in');
-    
+    // Clear admin session using adminAuth utility
+    clearAdminSession();
+
     // Xóa user data nếu có (trường hợp admin cũng là user)
     if (typeof window !== 'undefined') {
       try {
@@ -94,7 +90,7 @@ export default function AdminLayout({ children }) {
         console.error('Error clearing user data:', error);
       }
     }
-    
+
     router.push('/admin');
   };
 
@@ -120,21 +116,21 @@ export default function AdminLayout({ children }) {
     // Config menu - only for admin and super_admin (not manager)
     ...(adminInfo && (adminInfo.role === 'admin' || adminInfo.role === 'super_admin')
       ? [{
-          type: 'group',
-          label: 'Cấu hình',
-          icon: Settings,
-          isOpen: configMenuOpen,
-          onToggle: () => setConfigMenuOpen(!configMenuOpen),
-          children: [
-            { href: '/admin/banners', label: 'Banner', icon: ImageIcon },
-            { href: '/admin/landing-config', label: 'Cấu hình Home', icon: Settings },
-            { href: '/admin/about-config', label: 'Cấu hình About', icon: BookOpen },
-            { href: '/admin/contact-config', label: 'Cấu hình Contact', icon: Phone },
-            { href: '/admin/popular-config', label: 'Cấu hình Ngưỡng', icon: TrendingUp },
-            { href: '/admin/notification-config', label: 'Cấu hình Thông báo', icon: Bell },
-            { href: '/admin/blacklist', label: 'Blacklist Email', icon: Shield },
-          ]
-        }]
+        type: 'group',
+        label: 'Cấu hình',
+        icon: Settings,
+        isOpen: configMenuOpen,
+        onToggle: () => setConfigMenuOpen(!configMenuOpen),
+        children: [
+          { href: '/admin/banners', label: 'Banner', icon: ImageIcon },
+          { href: '/admin/landing-config', label: 'Cấu hình Home', icon: Settings },
+          { href: '/admin/about-config', label: 'Cấu hình About', icon: BookOpen },
+          { href: '/admin/contact-config', label: 'Cấu hình Contact', icon: Phone },
+          { href: '/admin/popular-config', label: 'Cấu hình Ngưỡng', icon: TrendingUp },
+          { href: '/admin/notification-config', label: 'Cấu hình Thông báo', icon: Bell },
+          { href: '/admin/blacklist', label: 'Blacklist Email', icon: Shield },
+        ]
+      }]
       : []
     ),
 
@@ -181,9 +177,8 @@ export default function AdminLayout({ children }) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-screen w-64 bg-card border-r border-border z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${
-          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0`}
+        className={`fixed left-0 top-0 h-screen w-64 bg-card border-r border-border z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+          } lg:translate-x-0`}
       >
         <div className="p-6 border-b border-border shrink-0">
           <div className="flex items-center justify-between mb-4">
@@ -199,13 +194,12 @@ export default function AdminLayout({ children }) {
             <div className="mt-3 pt-3 border-t border-border">
               <p className="text-xs text-muted-foreground">Đăng nhập bởi</p>
               <p className="text-sm text-card-foreground font-medium">{adminInfo.name}</p>
-              <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                adminInfo.role === 'super_admin'
-                  ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50'
-                  : adminInfo.role === 'admin'
+              <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${adminInfo.role === 'super_admin'
+                ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50'
+                : adminInfo.role === 'admin'
                   ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
                   : 'bg-green-500/20 text-green-400 border border-green-500/50'
-              }`}>
+                }`}>
                 {adminInfo.role === 'super_admin' ? 'Super Admin' : adminInfo.role === 'admin' ? 'Admin' : 'Manager'}
               </span>
             </div>
@@ -223,11 +217,10 @@ export default function AdminLayout({ children }) {
                   <li key={`group-${index}`}>
                     <button
                       onClick={item.onToggle}
-                      className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-colors cursor-pointer ${
-                        hasActiveChild
-                          ? 'bg-primary/10 text-primary'
-                          : 'text-muted-foreground hover:bg-muted hover:text-card-foreground'
-                      }`}
+                      className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-colors cursor-pointer ${hasActiveChild
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:bg-muted hover:text-card-foreground'
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         <IconComponent className="w-5 h-5" />
@@ -248,11 +241,10 @@ export default function AdminLayout({ children }) {
                             <li key={child.href}>
                               <Link
                                 href={child.href}
-                                className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
-                                  isActive
-                                    ? 'bg-primary text-primary-foreground'
-                                    : 'text-muted-foreground hover:bg-muted hover:text-card-foreground'
-                                }`}
+                                className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${isActive
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'text-muted-foreground hover:bg-muted hover:text-card-foreground'
+                                  }`}
                               >
                                 <ChildIcon className="w-4 h-4" />
                                 <span className="text-sm font-medium">{child.label}</span>
@@ -265,7 +257,7 @@ export default function AdminLayout({ children }) {
                   </li>
                 );
               }
-              
+
               // Menu item thông thường
               const isActive = pathname === item.href;
               const IconComponent = item.icon;
@@ -273,11 +265,10 @@ export default function AdminLayout({ children }) {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                      isActive
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:bg-muted hover:text-card-foreground'
-                    }`}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:bg-muted hover:text-card-foreground'
+                      }`}
                   >
                     <IconComponent className="w-5 h-5" />
                     <span className="font-medium">{item.label}</span>

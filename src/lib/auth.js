@@ -1,45 +1,56 @@
-/**
- * Authentication Utilities
- * Helper functions for admin authentication
- */
-
+import { SignJWT, jwtVerify } from 'jose';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || 'uk-restaurant-super-secret-key-12345'
+);
+
 /**
- * Get admin from request
- * Hệ thống sử dụng localStorage ở client-side, nên cần gửi admin phone trong request
- * @param {Request} request - Next.js request object
- * @returns {Promise<Object|null>} Admin object or null
+ * Sign a JWT token
+ */
+export async function signJWT(payload) {
+  return await new SignJWT(payload)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('24h')
+    .sign(JWT_SECRET);
+}
+
+/**
+ * Verify a JWT token
+ */
+export async function verifyJWT(token) {
+  try {
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    return payload;
+  } catch (error) {
+    return null;
+  }
+}
+
+/**
+ * Get admin from request using JWT
  */
 export async function getAdminFromToken(request) {
   try {
-    // Lấy admin phone từ header hoặc body
-    // Client sẽ gửi admin phone trong header 'x-admin-phone' hoặc trong request body
-    const adminPhone = request.headers.get('x-admin-phone');
-    
-    // Nếu không có trong header, thử lấy từ body (chỉ khi method là POST/PUT)
-    let body = null;
-    if (!adminPhone && (request.method === 'POST' || request.method === 'PUT')) {
-      try {
-        const clonedRequest = request.clone();
-        body = await clonedRequest.json();
-      } catch (e) {
-        // Body không phải JSON hoặc đã được đọc
-      }
-    }
-    
-    const phone = adminPhone || body?.currentAdminPhone || body?.admin_phone;
-
-    if (!phone) {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return null;
     }
 
-    // Tìm admin theo phone
+    const token = authHeader.split(' ')[1];
+    const payload = await verifyJWT(token);
+
+    if (!payload || !payload.phone) {
+      return null;
+    }
+
+    // Tìm admin theo phone từ payload
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
-    
+
     const admin = await db.collection('users').findOne({
-      phone: phone,
+      phone: payload.phone,
       role: { $in: ['admin', 'super_admin', 'manager'] },
       is_deleted: { $ne: true }
     });
@@ -48,7 +59,6 @@ export async function getAdminFromToken(request) {
       return null;
     }
 
-    // Return admin without sensitive data
     const { password, verification_code, verification_code_expires, ...adminWithoutPassword } = admin;
     return adminWithoutPassword;
   } catch (error) {

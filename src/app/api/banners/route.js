@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
+import { getAdminFromToken } from '@/lib/auth';
 
 /**
  * GET /api/banners
@@ -16,7 +17,7 @@ export async function GET(request) {
     const db = client.db(getDatabaseName());
 
     const query = {};
-    
+
     if (isActive !== null && isActive !== undefined) {
       if (isActive === 'true') {
         // Lấy banner active (is_active !== false, tức là true hoặc undefined/null)
@@ -41,8 +42,8 @@ export async function GET(request) {
       .toArray();
 
     return NextResponse.json(
-      { 
-        success: true, 
+      {
+        success: true,
         data: banners,
       },
       { status: 200 }
@@ -62,6 +63,15 @@ export async function GET(request) {
  */
 export async function POST(request) {
   try {
+    // Check admin authentication
+    const admin = await getAdminFromToken(request);
+    if (!admin) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { title, image, description, link, order, is_active } = body;
 

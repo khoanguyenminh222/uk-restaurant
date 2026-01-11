@@ -1,5 +1,18 @@
 import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
+import { getAdminFromToken } from '@/lib/auth';
+import { ObjectId } from 'mongodb';
+
+/**
+ * Helper to safely convert string to ObjectId if valid
+ */
+function toObjectId(id) {
+  try {
+    return new ObjectId(id);
+  } catch (e) {
+    return null;
+  }
+}
 
 /**
  * GET /api/users/:id
@@ -7,15 +20,25 @@ import clientPromise, { getDatabaseName } from '@/lib/mongodb';
  */
 export async function GET(request, { params }) {
   try {
+    // Check admin authentication
+    const admin = await getAdminFromToken(request);
+    if (!admin) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const { id } = await params;
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
 
-    const user = await db.collection('users').findOne({ 
+    const user = await db.collection('users').findOne({
       $or: [
         { user_id: id },
-        { _id: id }
-      ],
+        { _id: id },
+        { _id: toObjectId(id) }
+      ].filter(item => item._id !== null),
       is_deleted: { $ne: true }
     });
 
@@ -66,17 +89,27 @@ export async function GET(request, { params }) {
  */
 export async function PUT(request, { params }) {
   try {
+    // Check admin authentication
+    const adminInfo = await getAdminFromToken(request);
+    if (!adminInfo) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const { id } = await params;
     const body = await request.json();
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
 
     // Find user (including soft-deleted for admin to restore)
-    const user = await db.collection('users').findOne({ 
+    const user = await db.collection('users').findOne({
       $or: [
         { user_id: id },
-        { _id: id }
-      ]
+        { _id: id },
+        { _id: toObjectId(id) }
+      ].filter(item => item._id !== null)
     });
 
     if (!user) {
@@ -125,11 +158,30 @@ export async function PUT(request, { params }) {
       updateData.address = body.address.trim() || null;
     }
 
-    // Only super_admin can change role
+    // Only authorized roles can change role to a DIFFERENT value
     if (body.role !== undefined) {
-      // TODO: Check if current user is super_admin
-      // For now, allow role update
-      if (['user', 'admin', 'super_admin'].includes(body.role)) {
+      if (body.role !== user.role) {
+        const isAdmin = adminInfo.role === 'admin';
+        const isSuperAdmin = adminInfo.role === 'super_admin';
+
+        // Check permission:
+        // - Admin can promote to user, manager, admin
+        // - Super Admin can promote to any role including super_admin
+        if (body.role === 'super_admin' && !isSuperAdmin) {
+          return NextResponse.json(
+            { success: false, error: 'Chỉ Super Admin mới có quyền cấp quyền Super Admin' },
+            { status: 403 }
+          );
+        }
+
+        if (!isAdmin && !isSuperAdmin) {
+          return NextResponse.json(
+            { success: false, error: 'Bạn không có quyền thay đổi vai trò' },
+            { status: 403 }
+          );
+        }
+      }
+      if (['user', 'manager', 'admin', 'super_admin'].includes(body.role)) {
         updateData.role = body.role;
       }
     }
@@ -170,16 +222,26 @@ export async function PUT(request, { params }) {
  */
 export async function DELETE(request, { params }) {
   try {
+    // Check admin authentication
+    const admin = await getAdminFromToken(request);
+    if (!admin) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const { id } = await params;
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
 
     // Find user
-    const user = await db.collection('users').findOne({ 
+    const user = await db.collection('users').findOne({
       $or: [
         { user_id: id },
-        { _id: id }
-      ],
+        { _id: id },
+        { _id: toObjectId(id) }
+      ].filter(item => item._id !== null),
       is_deleted: { $ne: true }
     });
 
@@ -196,11 +258,11 @@ export async function DELETE(request, { params }) {
     // Soft delete: set is_deleted = true
     const result = await db.collection('users').updateOne(
       { _id: user._id },
-      { 
-        $set: { 
+      {
+        $set: {
           is_deleted: true,
           updated_at: new Date(),
-        } 
+        }
       }
     );
 
@@ -212,8 +274,8 @@ export async function DELETE(request, { params }) {
     }
 
     return NextResponse.json(
-      { 
-        success: true, 
+      {
+        success: true,
         message: 'Đã xóa người dùng',
         has_orders: orderCount > 0,
         order_count: orderCount,

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
+import { getAdminFromToken } from '@/lib/auth';
 import { ObjectId } from 'mongodb';
 
 /**
@@ -12,6 +13,13 @@ export async function PUT(request, { params }) {
     const body = await request.json();
 
     // TODO: Thêm admin authentication check
+    const adminInfo = await getAdminFromToken(request);
+    if (!adminInfo) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
@@ -97,6 +105,13 @@ export async function DELETE(request, { params }) {
     const { id } = await params;
 
     // TODO: Thêm admin authentication check
+    const adminInfo = await getAdminFromToken(request);
+    if (!adminInfo) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
     const client = await clientPromise;
     const db = client.db(getDatabaseName());

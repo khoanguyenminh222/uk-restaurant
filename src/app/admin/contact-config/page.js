@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRoleCheck } from '@/hooks/useRoleCheck';
 import { defaultContactConfig } from '@/lib/models/ContactConfig';
+import Toast from '@/components/Toast/Toast';
 import {
     Settings, Save, RotateCcw, Loader2, X, Plus, Edit2, Trash2,
     Sparkles, Info, Users, ArrowRight, MapPin, MessageCircle,
@@ -10,6 +11,7 @@ import {
     CheckCircle2, AlertCircle, HelpCircle
 } from 'lucide-react';
 import * as lucideIcons from 'lucide-react';
+import { adminFetch } from '@/lib/adminAuth';
 
 const TABS = [
     { id: 'hero', label: 'Hero', icon: Sparkles },
@@ -32,7 +34,7 @@ export default function AdminContactConfig() {
     const [activeTab, setActiveTab] = useState('hero');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [toast, setToast] = useState({ message: '', isVisible: false, type: 'success' });
+    const [toast, setToast] = useState({ message: '', isVisible: false });
 
     // Data states
     const [heroData, setHeroData] = useState(defaultContactConfig.hero);
@@ -83,7 +85,7 @@ export default function AdminContactConfig() {
         }
     }, [isChecking]);
 
-    // Handle Toast
+    // Listen for toast events
     useEffect(() => {
         const handleShowToast = (event) => {
             setToast({
@@ -91,7 +93,6 @@ export default function AdminContactConfig() {
                 isVisible: true,
                 type: event.detail.type || 'success',
             });
-            setTimeout(() => setToast({ ...toast, isVisible: false }), 3000);
         };
 
         window.addEventListener('showToast', handleShowToast);
@@ -111,20 +112,12 @@ export default function AdminContactConfig() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [showSocialModal]);
 
-    const showToast = (message, type = 'success') => {
-        if (typeof window !== 'undefined') {
-            window.dispatchEvent(
-                new CustomEvent('showToast', {
-                    detail: { message, type },
-                })
-            );
-        }
-    };
+
 
     const fetchConfig = async () => {
         try {
             setLoading(true);
-            const res = await fetch('/api/config/contact');
+            const res = await adminFetch('/api/config/contact');
             const data = await res.json();
             if (data.success) {
                 const config = data.data;
@@ -147,7 +140,13 @@ export default function AdminContactConfig() {
             }
         } catch (error) {
             console.error('Error fetching config:', error);
-            showToast('Lỗi khi tải cấu hình', 'error');
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(
+                    new CustomEvent('showToast', {
+                        detail: { message: 'Lỗi khi tải cấu hình', type: 'error' },
+                    })
+                );
+            }
         } finally {
             setLoading(false);
         }
@@ -168,7 +167,7 @@ export default function AdminContactConfig() {
                 seo: seoData
             };
 
-            const res = await fetch('/api/config/contact', {
+            const res = await adminFetch('/api/config/contact', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updateData),
@@ -176,13 +175,31 @@ export default function AdminContactConfig() {
 
             const data = await res.json();
             if (data.success) {
-                showToast('Lưu cấu hình thành công!', 'success');
+                if (typeof window !== 'undefined') {
+                    window.dispatchEvent(
+                        new CustomEvent('showToast', {
+                            detail: { message: 'Lưu cấu hình thành công!', type: 'success' },
+                        })
+                    );
+                }
             } else {
-                showToast(data.error || 'Lỗi khi lưu cấu hình', 'error');
+                if (typeof window !== 'undefined') {
+                    window.dispatchEvent(
+                        new CustomEvent('showToast', {
+                            detail: { message: data.error || 'Lỗi khi lưu cấu hình', type: 'error' },
+                        })
+                    );
+                }
             }
         } catch (error) {
             console.error('Error saving config:', error);
-            showToast('Lỗi khi lưu cấu hình', 'error');
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(
+                    new CustomEvent('showToast', {
+                        detail: { message: 'Lỗi khi lưu cấu hình', type: 'error' },
+                    })
+                );
+            }
         } finally {
             setSaving(false);
         }
@@ -206,7 +223,13 @@ export default function AdminContactConfig() {
             .map(([key, _]) => key);
 
         if (selectedSections.length === 0) {
-            showToast('Vui lòng chọn ít nhất một phần để reset', 'error');
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(
+                    new CustomEvent('showToast', {
+                        detail: { message: 'Vui lòng chọn ít nhất một phần để reset', type: 'error' },
+                    })
+                );
+            }
             return;
         }
 
@@ -244,7 +267,7 @@ export default function AdminContactConfig() {
             }
 
             // Gửi request reset
-            const res = await fetch('/api/config/contact', {
+            const res = await adminFetch('/api/config/contact', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(resetData),
@@ -257,14 +280,32 @@ export default function AdminContactConfig() {
                     .map(([key, _]) => sectionNames[key])
                     .join(', ');
 
-                showToast(`Đã reset phần "${resetParts}" về giá trị mặc định!`, 'success');
+                if (typeof window !== 'undefined') {
+                    window.dispatchEvent(
+                        new CustomEvent('showToast', {
+                            detail: { message: `Đã reset phần "${resetParts}" về giá trị mặc định!`, type: 'success' },
+                        })
+                    );
+                }
                 fetchConfig(); // Reload dữ liệu từ database
             } else {
-                showToast(data.error || 'Lỗi khi reset', 'error');
+                if (typeof window !== 'undefined') {
+                    window.dispatchEvent(
+                        new CustomEvent('showToast', {
+                            detail: { message: data.error || 'Lỗi khi reset', type: 'error' },
+                        })
+                    );
+                }
             }
         } catch (error) {
             console.error('Error resetting config:', error);
-            showToast('Lỗi khi reset', 'error');
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(
+                    new CustomEvent('showToast', {
+                        detail: { message: 'Lỗi khi reset', type: 'error' },
+                    })
+                );
+            }
         } finally {
             setSaving(false);
             setResetSections({
@@ -309,7 +350,13 @@ export default function AdminContactConfig() {
         if (deleteIndex !== null) {
             const newList = socialMedia.filter((_, i) => i !== deleteIndex);
             setSocialMedia(newList);
-            showToast('Đã xóa liên kết', 'success');
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(
+                    new CustomEvent('showToast', {
+                        detail: { message: 'Đã xóa liên kết', type: 'success' },
+                    })
+                );
+            }
             setShowDeleteModal(false);
             setDeleteIndex(null);
         }
@@ -317,7 +364,13 @@ export default function AdminContactConfig() {
 
     const handleSaveSocial = () => {
         if (!socialForm.name || !socialForm.url) {
-            showToast('Tên và URL là bắt buộc', 'error');
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(
+                    new CustomEvent('showToast', {
+                        detail: { message: 'Tên và URL là bắt buộc', type: 'error' },
+                    })
+                );
+            }
             return;
         }
 
@@ -345,21 +398,21 @@ export default function AdminContactConfig() {
     return (
         <div className="min-h-screen bg-background p-4 md:p-8">
             {/* Toast Notification */}
-            {toast.isVisible && (
-                <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 ${toast.type === 'error' ? 'bg-red-500' : 'bg-green-500'
-                    } text-white`}>
-                    {toast.message}
-                </div>
-            )}
+            <Toast
+                message={toast.message}
+                isVisible={toast.isVisible}
+                type={toast.type}
+                onClose={() => setToast({ message: '', isVisible: false })}
+            />
 
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-6">
-                            <div className="flex items-center gap-3 mb-2">
-                                <Settings className="w-8 h-8 text-primary" />
-                                <h1 className="text-3xl font-bold text-foreground">Cấu hình Trang Liên Hệ</h1>
-                            </div>
-                            <p className="text-muted-foreground">Quản lý nội dung, hình ảnh và thông tin liên hệ</p>
+                    <div className="flex items-center gap-3 mb-2">
+                        <Settings className="w-8 h-8 text-primary" />
+                        <h1 className="text-3xl font-bold text-foreground">Cấu hình Trang Liên Hệ</h1>
+                    </div>
+                    <p className="text-muted-foreground">Quản lý nội dung, hình ảnh và thông tin liên hệ</p>
                 </div>
 
                 {/* Tabs */}
@@ -706,20 +759,20 @@ export default function AdminContactConfig() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 border border-border rounded-lg bg-card/50">
                                 <div>
-                                        <label className="block text-sm font-medium text-card-foreground mb-2">Badge (Nhãn)</label>
-                                        <input
-                                            value={formData.badge || 'Gửi Tin Nhắn'}
-                                            onChange={(e) => setFormData({ ...formData, badge: e.target.value })}
-                                            className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground"
-                                        />
-                                    </div>
+                                    <label className="block text-sm font-medium text-card-foreground mb-2">Badge (Nhãn)</label>
+                                    <input
+                                        value={formData.badge || 'Gửi Tin Nhắn'}
+                                        onChange={(e) => setFormData({ ...formData, badge: e.target.value })}
+                                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground"
+                                    />
+                                </div>
                                 <div>
-                                        <label className="block text-sm font-medium text-card-foreground mb-2">Tiêu đề Form</label>
-                                        <input
-                                            value={formData.title}
-                                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                            className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground font-bold"
-                                        />
+                                    <label className="block text-sm font-medium text-card-foreground mb-2">Tiêu đề Form</label>
+                                    <input
+                                        value={formData.title}
+                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground font-bold"
+                                    />
                                 </div>
 
                                 <div className="md:col-span-2">
@@ -991,14 +1044,14 @@ export default function AdminContactConfig() {
                                                 className="w-full h-full object-cover"
                                                 onError={(e) => e.target.src = 'https://via.placeholder.com/800x400?text=Invalid+Image+URL'}
                                             />
-                                </div>
+                                        </div>
                                     )}
                                 </div>
 
                                 <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border">
                                     <div className="space-y-2">
                                         <label className="block text-sm font-medium text-card-foreground mb-2">Nút Chính (Primary Button)</label>
-                                    <input
+                                        <input
                                             placeholder="Text (VD: Gọi Đặt Bàn)"
                                             value={ctaData.button_primary?.text || ''}
                                             onChange={(e) => setCtaData({ ...ctaData, button_primary: { ...ctaData.button_primary, text: e.target.value } })}
@@ -1215,8 +1268,8 @@ export default function AdminContactConfig() {
                                             type="button"
                                             onClick={() => setSocialForm({ ...socialForm, icon: iconName })}
                                             className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer ${socialForm.icon === iconName
-                                                    ? 'bg-primary text-primary-foreground border-primary'
-                                                    : 'bg-muted hover:bg-muted/80 border-transparent'
+                                                ? 'bg-primary text-primary-foreground border-primary'
+                                                : 'bg-muted hover:bg-muted/80 border-transparent'
                                                 }`}
                                         >
                                             {iconName}
@@ -1318,7 +1371,7 @@ export default function AdminContactConfig() {
 
             {/* Reset Modal */}
             {showResetModal && (
-                <div 
+                <div
                     className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
                     onClick={(e) => {
                         if (e.target === e.currentTarget) {
@@ -1342,7 +1395,7 @@ export default function AdminContactConfig() {
                             <p className="text-sm text-muted-foreground">
                                 Chọn các phần bạn muốn reset về giá trị mặc định. Các phần không được chọn sẽ giữ nguyên.
                             </p>
-                            
+
                             <div className="space-y-3">
                                 {TABS.map((tab) => {
                                     const sectionKey = tab.id;

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
+import { getAdminFromToken } from '@/lib/auth';
 
 /**
  * GET /api/admin/admins/:id
@@ -7,11 +8,20 @@ import clientPromise, { getDatabaseName } from '@/lib/mongodb';
  */
 export async function GET(request, { params }) {
   try {
+    // Check super admin authentication
+    const currentAdmin = await getAdminFromToken(request);
+    if (!currentAdmin || currentAdmin.role !== 'super_admin') {
+      return NextResponse.json(
+        { success: false, error: 'Chỉ Super Admin mới có quyền xem thông tin admin khác' },
+        { status: 403 }
+      );
+    }
+
     const { id } = await params;
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
 
-    const admin = await db.collection('users').findOne({ 
+    const admin = await db.collection('users').findOne({
       $or: [
         { user_id: id },
         { _id: id }
@@ -49,6 +59,15 @@ export async function GET(request, { params }) {
  */
 export async function PUT(request, { params }) {
   try {
+    // Check super admin authentication
+    const currentAdmin = await getAdminFromToken(request);
+    if (!currentAdmin || currentAdmin.role !== 'super_admin') {
+      return NextResponse.json(
+        { success: false, error: 'Chỉ Super Admin mới có quyền cập nhật admin' },
+        { status: 403 }
+      );
+    }
+
     const { id } = await params;
     const body = await request.json();
     const client = await clientPromise;
@@ -107,8 +126,6 @@ export async function PUT(request, { params }) {
 
     // Only super_admin can change role
     if (body.role !== undefined) {
-      // TODO: Check if current user is super_admin
-      // For now, allow role update
       if (['admin', 'super_admin', 'manager'].includes(body.role)) {
         updateData.role = body.role;
       }
@@ -150,12 +167,21 @@ export async function PUT(request, { params }) {
  */
 export async function DELETE(request, { params }) {
   try {
+    // Check super admin authentication
+    const currentAdmin = await getAdminFromToken(request);
+    if (!currentAdmin || currentAdmin.role !== 'super_admin') {
+      return NextResponse.json(
+        { success: false, error: 'Chỉ Super Admin mới có quyền xóa admin' },
+        { status: 403 }
+      );
+    }
+
     const { id } = await params;
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
 
     // Find admin
-    const admin = await db.collection('users').findOne({ 
+    const admin = await db.collection('users').findOne({
       $or: [
         { user_id: id },
         { _id: id }
@@ -191,11 +217,11 @@ export async function DELETE(request, { params }) {
     // Soft delete: set is_deleted = true
     const result = await db.collection('users').updateOne(
       { _id: admin._id },
-      { 
-        $set: { 
+      {
+        $set: {
           is_deleted: true,
           updated_at: new Date(),
-        } 
+        }
       }
     );
 

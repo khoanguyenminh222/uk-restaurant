@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { validateUserRegistration } from '@/lib/models/User';
 import bcrypt from 'bcryptjs';
+import { getAdminFromToken } from '@/lib/auth';
 
 /**
  * POST /api/admin/create-admin
@@ -14,23 +15,13 @@ export async function POST(request) {
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
 
-    // Check super admin authentication from request headers
-    // Get admin info from Authorization header or body
-    const adminPhone = body.currentAdminPhone || request.headers.get('x-admin-phone');
-    
-    if (adminPhone) {
-      const currentAdmin = await db.collection('users').findOne({ phone: adminPhone });
-      if (!currentAdmin || currentAdmin.role !== 'super_admin') {
-        return NextResponse.json(
-          { success: false, error: 'Chỉ Super Admin mới có quyền tạo tài khoản admin' },
-          { status: 403 }
-        );
-      }
-    } else {
-      // TODO: Implement proper authentication check (JWT/session)
-      // For now, allow if no adminPhone provided (development mode)
-      // In production, this should be required
-      console.warn('Warning: No admin authentication provided. Allowing in development mode.');
+    // Check super admin authentication
+    const currentAdmin = await getAdminFromToken(request);
+    if (!currentAdmin || currentAdmin.role !== 'super_admin') {
+      return NextResponse.json(
+        { success: false, error: 'Chỉ Super Admin mới có quyền tạo tài khoản admin' },
+        { status: 403 }
+      );
     }
 
     // Validate input

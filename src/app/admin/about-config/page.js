@@ -12,6 +12,7 @@ import {
   ChevronDown, CheckCircle2
 } from 'lucide-react';
 import * as lucideIcons from 'lucide-react';
+import { adminFetch } from '@/lib/adminAuth';
 
 // Helper function để chuyển đổi kebab-case sang PascalCase
 const toPascalCase = (str) => {
@@ -288,7 +289,7 @@ export default function AdminAboutConfig() {
   const fetchConfig = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/config/about');
+      const res = await adminFetch('/api/config/about');
       const data = await res.json();
       if (data.success) {
         setConfig(data.data);
@@ -336,7 +337,7 @@ export default function AdminAboutConfig() {
         seo: seoData,
       };
 
-      const res = await fetch('/api/config/about', {
+      const res = await adminFetch('/api/config/about', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updateData),
@@ -412,7 +413,7 @@ export default function AdminAboutConfig() {
       }
 
       // Gửi request reset
-      const res = await fetch('/api/config/about', {
+      const res = await adminFetch('/api/config/about', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(resetData),

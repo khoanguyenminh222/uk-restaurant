@@ -64,17 +64,17 @@ export async function PUT(request, { params }) {
     });
 
     // Nếu unblock (blocked_until = null hoặc trong quá khứ, và is_permanent = false), reset cache rate limit
-    const isUnblocked = updated && 
-      !updated.is_permanent && 
+    const isUnblocked = updated &&
+      !updated.is_permanent &&
       (!updated.blocked_until || new Date(updated.blocked_until) < new Date());
-    
+
     if (isUnblocked) {
       const { getSpamConfig } = await import('@/lib/restaurantConfig');
       const spamConfig = await getSpamConfig();
       const ORDER_RATE_LIMIT_TTL = spamConfig.order_rate_limit_ttl || parseInt(process.env.SPAM_ORDER_RATE_LIMIT_TTL || '1800');
       const rateLimitKey = `order_count:${normalizedEmail}:${ORDER_RATE_LIMIT_TTL}s`;
       cache.delete(rateLimitKey);
-      console.log(`[Update Blacklist] ✅ Đã unblock và reset cache rate limit cho email: ${normalizedEmail}`);
+      //console.log(`[Update Blacklist] ✅ Đã unblock và reset cache rate limit cho email: ${normalizedEmail}`);
     }
 
     return NextResponse.json(
@@ -131,7 +131,7 @@ export async function DELETE(request, { params }) {
     const ORDER_RATE_LIMIT_TTL = spamConfig.order_rate_limit_ttl || parseInt(process.env.SPAM_ORDER_RATE_LIMIT_TTL || '1800');
     const rateLimitKey = `order_count:${normalizedEmail}:${ORDER_RATE_LIMIT_TTL}s`;
     cache.delete(rateLimitKey);
-    console.log(`[Delete Blacklist] ✅ Đã xóa blacklist và reset cache rate limit cho email: ${normalizedEmail}`);
+    //console.log(`[Delete Blacklist] ✅ Đã xóa blacklist và reset cache rate limit cho email: ${normalizedEmail}`);
 
     return NextResponse.json(
       {

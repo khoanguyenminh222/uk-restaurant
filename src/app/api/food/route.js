@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { validateFood } from '@/lib/models/Food';
 import { ObjectId } from 'mongodb';
+import { getAdminFromToken } from '@/lib/auth';
 
 /**
  * GET /api/food
@@ -26,7 +27,7 @@ export async function GET(request) {
     const db = client.db(getDatabaseName());
 
     const query = {};
-    
+
     if (categoryId && categoryId !== 'all') {
       query.category_id = parseInt(categoryId);
     }
@@ -55,8 +56,8 @@ export async function GET(request) {
       .toArray();
 
     return NextResponse.json(
-      { 
-        success: true, 
+      {
+        success: true,
         data: food,
         pagination: {
           page,
@@ -86,7 +87,14 @@ export async function POST(request) {
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
 
-    // TODO: Add admin authentication check
+    // Check admin authentication
+    const admin = await getAdminFromToken(request);
+    if (!admin) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
     // Validate using Food model
     const validation = validateFood(body);
@@ -102,7 +110,7 @@ export async function POST(request) {
       const threshold = await db
         .collection('popularConfig')
         .findOne({ _id: new ObjectId(body.manual_badge.threshold_id) });
-      
+
       if (!threshold) {
         return NextResponse.json(
           { success: false, error: 'Ngưỡng không tồn tại' },

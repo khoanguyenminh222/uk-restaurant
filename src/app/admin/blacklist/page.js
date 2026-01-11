@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRoleCheck } from '@/hooks/useRoleCheck'
 import { Shield, Search, Plus, Edit, Trash2, Filter, X, Loader2, CheckCircle, XCircle, Calendar, FileText } from 'lucide-react'
-import Toast from '@/components/Toast/Toast'
+import Toast from '@/components/Toast/Toast';
+import { adminFetch } from '@/lib/adminAuth';
 
 export default function AdminBlacklist() {
   // Check if user has permission (only admin and super_admin)
@@ -69,7 +70,7 @@ export default function AdminBlacklist() {
         headers['x-admin-phone'] = adminPhone
       }
 
-      const response = await fetch(`/api/admin/blacklist?${params}`, {
+      const response = await adminFetch(`/api/admin/blacklist?${params}`, {
         headers
       })
       const data = await response.json()
@@ -115,7 +116,7 @@ export default function AdminBlacklist() {
         headers['x-admin-phone'] = adminPhone
       }
 
-      const response = await fetch("/api/admin/blacklist", {
+      const response = await adminFetch("/api/admin/blacklist", {
         method: "POST",
         headers,
         body: JSON.stringify({
@@ -192,7 +193,7 @@ export default function AdminBlacklist() {
         headers['x-admin-phone'] = adminPhone
       }
 
-      const response = await fetch(`/api/admin/blacklist/${encodeURIComponent(editingEmail)}`, {
+      const response = await adminFetch(`/api/admin/blacklist/${encodeURIComponent(editingEmail)}`, {
         method: "PUT",
         headers,
         body: JSON.stringify({
@@ -258,7 +259,7 @@ export default function AdminBlacklist() {
         headers['x-admin-phone'] = adminPhone
       }
 
-      const response = await fetch(`/api/admin/blacklist/${encodeURIComponent(emailToDelete)}`, {
+      const response = await adminFetch(`/api/admin/blacklist/${encodeURIComponent(emailToDelete)}`, {
         method: "DELETE",
         headers
       })
@@ -517,7 +518,7 @@ export default function AdminBlacklist() {
 
       {/* Add Modal */}
       {showAddModal && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={() => {
             setShowAddModal(false)
@@ -530,7 +531,7 @@ export default function AdminBlacklist() {
             })
           }}
         >
-          <div 
+          <div
             className="bg-card border border-border rounded-lg shadow-2xl w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
@@ -668,14 +669,14 @@ export default function AdminBlacklist() {
 
       {/* Delete Modal */}
       {showDeleteModal && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={() => {
             setShowDeleteModal(false)
             setEmailToDelete(null)
           }}
         >
-          <div 
+          <div
             className="bg-card border border-border rounded-lg shadow-2xl w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
@@ -748,7 +749,7 @@ export default function AdminBlacklist() {
 
       {/* Edit Modal */}
       {showEditModal && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={() => {
             setShowEditModal(false)
@@ -762,7 +763,7 @@ export default function AdminBlacklist() {
             })
           }}
         >
-          <div 
+          <div
             className="bg-card border border-border rounded-lg shadow-2xl w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >

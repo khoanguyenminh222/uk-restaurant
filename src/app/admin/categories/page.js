@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Toast from '@/components/Toast/Toast';
 import { FolderOpen, Plus, Edit2, Trash2, Loader2, X, Palette, Search, ChevronDown } from 'lucide-react';
+import { adminFetch } from '@/lib/adminAuth';
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState([]);
@@ -55,7 +56,7 @@ export default function AdminCategories() {
         params.append('search', searchTerm);
       }
 
-      const res = await fetch(`/api/categories?${params}`);
+      const res = await adminFetch(`/api/categories?${params}`);
       const data = await res.json();
       if (data.success) {
         setCategories(data.data);
@@ -153,7 +154,7 @@ export default function AdminCategories() {
         : '/api/categories';
       const method = editingCategory ? 'PUT' : 'POST';
 
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -206,7 +207,7 @@ export default function AdminCategories() {
 
     setDeleting(true);
     try {
-      const res = await fetch(`/api/categories/${deletingCategoryId}`, {
+      const res = await adminFetch(`/api/categories/${deletingCategoryId}`, {
         method: 'DELETE',
       });
 
@@ -486,11 +487,11 @@ export default function AdminCategories() {
 
       {/* Modal */}
       {showModal && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={handleCloseModal}
         >
-          <div 
+          <div
             className="bg-card rounded-lg max-w-md w-full p-6 border border-border relative"
             onClick={(e) => e.stopPropagation()}
           >
@@ -615,14 +616,14 @@ export default function AdminCategories() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={() => {
             setShowDeleteModal(false);
             setDeletingCategoryId(null);
           }}
         >
-          <div 
+          <div
             className="bg-card rounded-lg max-w-md w-full p-6 border border-border"
             onClick={(e) => e.stopPropagation()}
           >

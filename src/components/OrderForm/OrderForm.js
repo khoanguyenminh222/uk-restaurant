@@ -48,7 +48,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
           // Lấy từ API và convert từ giây sang milliseconds
           const ttlSeconds = data.data.verified_session_ttl
           setVerifiedSessionTTL(ttlSeconds * 1000)
-          console.log('✅ Đã lấy config từ API:', { verified_session_ttl: ttlSeconds, verified_session_ttl_ms: ttlSeconds * 1000 })
+          //console.log('✅ Đã lấy config từ API:', { verified_session_ttl: ttlSeconds, verified_session_ttl_ms: ttlSeconds * 1000 })
         } else {
           console.warn('⚠️ API không trả về verified_session_ttl, dùng default:', 1800 * 1000)
         }
@@ -88,7 +88,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
             // Xóa khỏi localStorage
             delete verifiedEmails[emailKey]
             localStorage.setItem('verified_emails', JSON.stringify(verifiedEmails))
-            console.log(`[Email Verification] ⏰ Session đã hết hạn cho email: ${emailKey}`)
+            //console.log(`[Email Verification] ⏰ Session đã hết hạn cho email: ${emailKey}`)
           }
         }
       }
@@ -132,7 +132,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
           // Xóa khỏi localStorage
           delete verifiedEmails[emailKey]
           localStorage.setItem('verified_emails', JSON.stringify(verifiedEmails))
-          console.log(`[Email Verification] ⏰ Session đã hết hạn cho email: ${emailKey}`)
+          //console.log(`[Email Verification] ⏰ Session đã hết hạn cho email: ${emailKey}`)
         }
       }
     }
@@ -215,7 +215,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
           error: ""
         }))
 
-        console.log(`[Email Verification] ✅ Tự động xác thực email cho user đã login: ${emailKey}${isAdmin ? ` (${user.role})` : ''}`)
+        //console.log(`[Email Verification] ✅ Tự động xác thực email cho user đã login: ${emailKey}${isAdmin ? ` (${user.role})` : ''}`)
       }
     } else {
       // Fill from localStorage (previous orders)

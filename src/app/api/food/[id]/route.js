@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { validateFood } from '@/lib/models/Food';
 import { ObjectId } from 'mongodb';
+import { getAdminFromToken } from '@/lib/auth';
 
 /**
  * GET /api/food/:id
@@ -12,7 +13,7 @@ export async function GET(request, { params }) {
     const { id } = await params;
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
-    
+
     const food = await db
       .collection('food')
       .findOne({ id: parseInt(id) });
@@ -48,7 +49,14 @@ export async function PUT(request, { params }) {
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
 
-    // TODO: Add admin authentication check
+    // Check admin authentication
+    const admin = await getAdminFromToken(request);
+    if (!admin) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
     // Get existing food to merge with update data
     const existingFood = await db
@@ -79,7 +87,7 @@ export async function PUT(request, { params }) {
       const threshold = await db
         .collection('popularConfig')
         .findOne({ _id: new ObjectId(body.manual_badge.threshold_id) });
-      
+
       if (!threshold) {
         return NextResponse.json(
           { success: false, error: 'Ngưỡng không tồn tại' },
@@ -137,7 +145,14 @@ export async function DELETE(request, { params }) {
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
 
-    // TODO: Add admin authentication check
+    // Check admin authentication
+    const admin = await getAdminFromToken(request);
+    if (!admin) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
     const result = await db
       .collection('food')

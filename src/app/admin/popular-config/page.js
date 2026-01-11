@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRoleCheck } from '@/hooks/useRoleCheck';
 import Toast from '@/components/Toast/Toast';
 import { TrendingUp, Plus, Edit2, Trash2, Loader2, X, ArrowUp, ArrowDown, Eye, Settings } from 'lucide-react';
+import { adminFetch } from '@/lib/adminAuth';
 
 export default function AdminPopularConfig() {
   // Check if user has permission (only admin and super_admin)
@@ -39,7 +40,7 @@ export default function AdminPopularConfig() {
 
   const fetchSettings = async () => {
     try {
-      const res = await fetch('/api/config/popular/settings');
+      const res = await adminFetch('/api/config/popular/settings');
       const data = await res.json();
       if (data.success) {
         setShowValue(data.data.show_value !== false);
@@ -53,7 +54,7 @@ export default function AdminPopularConfig() {
     const newValue = !showValue;
     setSavingSettings(true);
     try {
-      const res = await fetch('/api/config/popular/settings', {
+      const res = await adminFetch('/api/config/popular/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ show_value: newValue }),
@@ -139,7 +140,7 @@ export default function AdminPopularConfig() {
   const fetchThresholds = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/config/popular?sortBy=order');
+      const res = await adminFetch('/api/config/popular?sortBy=order');
       const data = await res.json();
       if (data.success) {
         setThresholds(data.data || []);
@@ -178,8 +179,8 @@ export default function AdminPopularConfig() {
       });
     } else {
       setEditingThreshold(null);
-      const maxOrder = thresholds.length > 0 
-        ? Math.max(...thresholds.map(t => t.order || 0)) 
+      const maxOrder = thresholds.length > 0
+        ? Math.max(...thresholds.map(t => t.order || 0))
         : 0;
       setFormData({
         label: '',
@@ -258,7 +259,7 @@ export default function AdminPopularConfig() {
         : '/api/config/popular';
       const method = editingThreshold ? 'PUT' : 'POST';
 
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -311,7 +312,7 @@ export default function AdminPopularConfig() {
 
     setDeleting(true);
     try {
-      const res = await fetch(`/api/config/popular/${deletingThresholdId}`, {
+      const res = await adminFetch(`/api/config/popular/${deletingThresholdId}`, {
         method: 'DELETE',
       });
 
@@ -361,25 +362,48 @@ export default function AdminPopularConfig() {
     // Swap order values
     const current = thresholds[currentIndex];
     const target = thresholds[newIndex];
-    
+
     const newOrder = target.order;
     const oldOrder = current.order;
 
     try {
       // Update both thresholds
-      await Promise.all([
-        fetch(`/api/config/popular/${current._id}`, {
+      const responses = await Promise.all([
+        adminFetch(`/api/config/popular/${current._id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...current, order: newOrder }),
         }),
-        fetch(`/api/config/popular/${target._id}`, {
+        adminFetch(`/api/config/popular/${target._id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...target, order: oldOrder }),
         }),
       ]);
 
+      // Check if both requests succeeded
+      const results = await Promise.all(responses.map(res => res.json()));
+      const hasError = results.some(data => !data.success);
+
+      if (hasError) {
+        const errorMessage = results.find(data => !data.success)?.error || 'Lỗi khi sắp xếp lại thứ tự';
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: errorMessage, type: 'error' },
+            })
+          );
+        }
+        return;
+      }
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('showToast', {
+            detail: { message: 'Đã cập nhật thứ tự thành công!', type: 'success' },
+          })
+        );
+      }
       fetchThresholds();
     } catch (error) {
       console.error('Error moving order:', error);
@@ -432,6 +456,14 @@ export default function AdminPopularConfig() {
 
   return (
     <div className="space-y-6">
+      {/* Toast Notification */}
+      <Toast
+        message={toast.message}
+        isVisible={toast.isVisible}
+        type={toast.type}
+        onClose={() => setToast({ message: '', isVisible: false })}
+      />
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-3">
           <TrendingUp className="w-7 h-7 text-primary" />
@@ -464,14 +496,12 @@ export default function AdminPopularConfig() {
           <button
             onClick={handleToggleShowValue}
             disabled={savingSettings}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
-              showValue ? 'bg-primary' : 'bg-destructive'
-            }`}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${showValue ? 'bg-primary' : 'bg-destructive'
+              }`}
           >
             <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                showValue ? 'translate-x-6' : 'translate-x-1'
-              }`}
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showValue ? 'translate-x-6' : 'translate-x-1'
+                }`}
             />
           </button>
         </div>

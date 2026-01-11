@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Toast from '@/components/Toast/Toast';
 import { UserPlus, X, Mail, Phone, User, Shield, ShieldCheck, Loader2, Edit2, Trash2, Search, Filter, ChevronDown, Eye } from 'lucide-react';
+import { adminFetch } from '@/lib/adminAuth';
 
 export default function AdminsPage() {
   const router = useRouter();
@@ -40,6 +41,7 @@ export default function AdminsPage() {
   const [formErrors, setFormErrors] = useState({});
 
   // Refs for modals
+  const createModalRef = useRef(null);
   const editModalRef = useRef(null);
   const deleteModalRef = useRef(null);
 
@@ -73,6 +75,47 @@ export default function AdminsPage() {
     }
   }, [roleFilter, pagination.page, currentAdmin]);
 
+  // Close modal when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Don't close if any action is in progress
+      if (creating || editing || deleting) return;
+
+      if (showCreateForm && createModalRef.current && !createModalRef.current.contains(event.target)) {
+        setShowCreateForm(false);
+        setFormData({
+          phone: '',
+          name: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+          address: '',
+          role: 'admin',
+        });
+        setFormErrors({});
+      }
+      if (showEditModal && editModalRef.current && !editModalRef.current.contains(event.target)) {
+        setShowEditModal(false);
+        setEditingAdmin(null);
+        setEditFormData({ name: '', email: '', address: '', role: 'admin' });
+      }
+      if (showDeleteModal && deleteModalRef.current && !deleteModalRef.current.contains(event.target)) {
+        setShowDeleteModal(false);
+        setEditingAdmin(null);
+      }
+    };
+
+    if (showCreateForm || showEditModal || showDeleteModal) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.body.style.overflow = 'unset';
+    };
+  }, [showCreateForm, showEditModal, showDeleteModal, creating, editing, deleting]);
+
   // Listen for toast events
   useEffect(() => {
     const handleShowToast = (event) => {
@@ -103,7 +146,7 @@ export default function AdminsPage() {
         params.append('search', searchTerm);
       }
 
-      const response = await fetch(`/api/admin/admins?${params}`);
+      const response = await adminFetch(`/api/admin/admins?${params}`);
       const data = await response.json();
 
       if (data.success) {
@@ -164,7 +207,7 @@ export default function AdminsPage() {
 
     setEditing(true);
     try {
-      const response = await fetch(`/api/admin/admins/${editingAdmin.user_id || editingAdmin._id}`, {
+      const response = await adminFetch(`/api/admin/admins/${editingAdmin.user_id || editingAdmin._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -218,7 +261,7 @@ export default function AdminsPage() {
 
     setDeleting(true);
     try {
-      const response = await fetch(`/api/admin/admins/${editingAdmin.user_id || editingAdmin._id}`, {
+      const response = await adminFetch(`/api/admin/admins/${editingAdmin.user_id || editingAdmin._id}`, {
         method: 'DELETE',
       });
 
@@ -310,7 +353,7 @@ export default function AdminsPage() {
 
     setCreating(true);
     try {
-      const response = await fetch('/api/admin/create-admin', {
+      const response = await adminFetch('/api/admin/create-admin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -382,10 +425,10 @@ export default function AdminsPage() {
     });
   };
 
-  // Show loading while checking auth or fetching data
-  if (isCheckingAuth || loading) {
+  // No longer returning centered loader here as we use skeletons
+  if (isCheckingAuth) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -399,17 +442,20 @@ export default function AdminsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl lg:text-3xl font-bold text-card-foreground flex items-center gap-2">
-          <Shield className="w-6 h-6 text-primary" />
-          Quản lý Admin
-        </h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-card-foreground flex items-center gap-2">
+            <Shield className="w-7 h-7 text-primary" />
+            Quản lý Admin
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">Danh sách tài khoản quản trị hệ thống</p>
+        </div>
         <button
           onClick={() => setShowCreateForm(true)}
-          className="flex cursor-pointer items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg font-medium transition-colors"
+          className="flex cursor-pointer items-center justify-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg font-medium transition-colors shadow-lg shadow-primary/20"
         >
           <UserPlus className="w-5 h-5" />
-          Tạo Admin mới
+          <span>Tạo Admin mới</span>
         </button>
       </div>
 
@@ -467,9 +513,10 @@ export default function AdminsPage() {
       {/* Create Admin Form Modal */}
       {showCreateForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="relative w-full max-w-md bg-card rounded-xl shadow-2xl border border-border overflow-hidden">
+          <div ref={createModalRef} className="relative w-full max-w-md bg-card rounded-xl shadow-2xl border border-border overflow-hidden">
             <button
               onClick={() => {
+                if (creating) return;
                 setShowCreateForm(false);
                 setFormData({
                   phone: '',
@@ -482,7 +529,8 @@ export default function AdminsPage() {
                 });
                 setFormErrors({});
               }}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors z-10"
+              disabled={creating}
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors z-10 cursor-pointer disabled:opacity-50"
             >
               <X className="w-5 h-5" />
             </button>
@@ -507,9 +555,8 @@ export default function AdminsPage() {
                       value={formData.phone}
                       onChange={handleInputChange}
                       placeholder="0901234567"
-                      className={`w-full pl-10 pr-4 py-2 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
-                        formErrors.phone ? 'border-destructive' : 'border-border'
-                      }`}
+                      className={`w-full pl-10 pr-4 py-2 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${formErrors.phone ? 'border-destructive' : 'border-border'
+                        }`}
                     />
                   </div>
                   {formErrors.phone && (
@@ -530,9 +577,8 @@ export default function AdminsPage() {
                       value={formData.name}
                       onChange={handleInputChange}
                       placeholder="Nguyễn Văn A"
-                      className={`w-full pl-10 pr-4 py-2 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
-                        formErrors.name ? 'border-destructive' : 'border-border'
-                      }`}
+                      className={`w-full pl-10 pr-4 py-2 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${formErrors.name ? 'border-destructive' : 'border-border'
+                        }`}
                     />
                   </div>
                   {formErrors.name && (
@@ -553,9 +599,8 @@ export default function AdminsPage() {
                       value={formData.email}
                       onChange={handleInputChange}
                       placeholder="admin@ukrestaurant.com"
-                      className={`w-full pl-10 pr-4 py-2 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
-                        formErrors.email ? 'border-destructive' : 'border-border'
-                      }`}
+                      className={`w-full pl-10 pr-4 py-2 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${formErrors.email ? 'border-destructive' : 'border-border'
+                        }`}
                     />
                   </div>
                   {formErrors.email && (
@@ -574,9 +619,8 @@ export default function AdminsPage() {
                     value={formData.password}
                     onChange={handleInputChange}
                     placeholder="Ít nhất 6 ký tự"
-                    className={`w-full px-4 py-2 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
-                      formErrors.password ? 'border-destructive' : 'border-border'
-                    }`}
+                    className={`w-full px-4 py-2 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${formErrors.password ? 'border-destructive' : 'border-border'
+                      }`}
                   />
                   {formErrors.password && (
                     <p className="mt-1 text-sm text-destructive">{formErrors.password}</p>
@@ -594,9 +638,8 @@ export default function AdminsPage() {
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
                     placeholder="Nhập lại mật khẩu"
-                    className={`w-full px-4 py-2 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
-                      formErrors.confirmPassword ? 'border-destructive' : 'border-border'
-                    }`}
+                    className={`w-full px-4 py-2 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${formErrors.confirmPassword ? 'border-destructive' : 'border-border'
+                      }`}
                   />
                   {formErrors.confirmPassword && (
                     <p className="mt-1 text-sm text-destructive">{formErrors.confirmPassword}</p>
@@ -636,7 +679,7 @@ export default function AdminsPage() {
                     </select>
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Manager: Chỉ truy cập Dashboard, Danh mục, Món ăn, Đơn hàng<br/>
+                    Manager: Chỉ truy cập Dashboard, Danh mục, Món ăn, Đơn hàng<br />
                     Admin: Truy cập tất cả trừ quản lý Admin
                   </p>
                 </div>
@@ -646,7 +689,7 @@ export default function AdminsPage() {
                   <button
                     type="submit"
                     disabled={creating}
-                    className="flex-1 py-2 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex-1 py-2 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {creating ? (
                       <>
@@ -659,6 +702,7 @@ export default function AdminsPage() {
                   </button>
                   <button
                     type="button"
+                    disabled={creating}
                     onClick={() => {
                       setShowCreateForm(false);
                       setFormData({
@@ -672,7 +716,7 @@ export default function AdminsPage() {
                       });
                       setFormErrors({});
                     }}
-                    className="px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors"
+                    className="px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                   >
                     Hủy
                   </button>
@@ -684,42 +728,58 @@ export default function AdminsPage() {
       )}
 
       {/* Desktop Table View */}
-      <div className="hidden lg:block bg-card/50 rounded-lg border border-border overflow-hidden">
+      <div className="hidden lg:block bg-card rounded-lg border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-muted/50">
+            <thead className="bg-muted">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Tên</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Số điện thoại</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Email</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Vai trò</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Ngày tạo</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Đăng nhập cuối</th>
-                <th className="px-4 py-3 text-right text-sm font-semibold text-muted-foreground">Thao tác</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tên</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Số điện thoại</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Email</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Vai trò</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Ngày tạo</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Đăng nhập cuối</th>
+                <th className="px-6 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {admins.length === 0 ? (
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="px-4 py-4"><div className="h-4 bg-muted rounded w-24"></div></td>
+                    <td className="px-4 py-4"><div className="h-4 bg-muted rounded w-28"></div></td>
+                    <td className="px-4 py-4"><div className="h-4 bg-muted rounded w-32"></div></td>
+                    <td className="px-4 py-4"><div className="h-6 bg-muted rounded-full w-20"></div></td>
+                    <td className="px-4 py-4"><div className="h-4 bg-muted rounded w-24"></div></td>
+                    <td className="px-4 py-4"><div className="h-4 bg-muted rounded w-24"></div></td>
+                    <td className="px-4 py-4 text-right"><div className="h-8 bg-muted rounded ml-auto w-16"></div></td>
+                  </tr>
+                ))
+              ) : admins.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-4 py-8 text-center text-muted-foreground">
-                    {searchTerm || roleFilter !== 'all' ? 'Không tìm thấy admin' : 'Chưa có admin nào'}
+                  <td colSpan="7" className="px-4 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <Shield className="w-12 h-12 text-muted-foreground/30" />
+                      <p className="text-muted-foreground">
+                        {searchTerm || roleFilter !== 'all' ? 'Không tìm thấy admin phù hợp' : 'Chưa có tài khoản admin nào'}
+                      </p>
+                    </div>
                   </td>
                 </tr>
               ) : (
                 admins.map((admin) => (
                   <tr key={admin._id} className="hover:bg-muted/50 transition-colors">
-                    <td className="px-4 py-3 text-sm text-card-foreground">{admin.name}</td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{admin.phone}</td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{admin.email}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-card-foreground font-medium">{admin.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{admin.phone}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{admin.email}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                          admin.role === 'super_admin'
-                            ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50'
-                            : admin.role === 'admin'
+                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${admin.role === 'super_admin'
+                          ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50'
+                          : admin.role === 'admin'
                             ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
                             : 'bg-green-500/20 text-green-400 border border-green-500/50'
-                        }`}
+                          }`}
                       >
                         {admin.role === 'super_admin' ? (
                           <ShieldCheck className="w-3 h-3" />
@@ -729,24 +789,24 @@ export default function AdminsPage() {
                         {admin.role === 'super_admin' ? 'Super Admin' : admin.role === 'admin' ? 'Admin' : 'Manager'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {formatDate(admin.created_at)}
                     </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {formatDate(admin.last_login)}
                     </td>
-                    <td className="px-4 py-3 text-right text-sm font-medium">
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleEdit(admin)}
-                            className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
+                          className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
                           aria-label="Sửa"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(admin)}
-                            className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors cursor-pointer"
+                          className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors cursor-pointer"
                           aria-label="Xóa"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -786,69 +846,105 @@ export default function AdminsPage() {
 
       {/* Mobile Card View */}
       <div className="lg:hidden space-y-4">
-        {admins.length === 0 ? (
-          <div className="bg-card rounded-lg border border-border p-8 text-center">
-            <Shield className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+        {loading ? (
+          Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="bg-card rounded-xl border border-border p-4 space-y-4 animate-pulse">
+              <div className="flex justify-between items-start">
+                <div className="space-y-2">
+                  <div className="h-5 bg-muted rounded w-32"></div>
+                  <div className="h-4 bg-muted rounded w-24"></div>
+                </div>
+                <div className="h-6 bg-muted rounded-full w-20"></div>
+              </div>
+              <div className="h-4 bg-muted rounded w-full"></div>
+              <div className="flex gap-2 pt-2">
+                <div className="h-10 bg-muted rounded flex-1"></div>
+                <div className="h-10 bg-muted rounded flex-1"></div>
+              </div>
+            </div>
+          ))
+        ) : admins.length === 0 ? (
+          <div className="bg-card rounded-lg border border-border p-12 text-center">
+            <Shield className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
             <p className="text-muted-foreground">
-              {searchTerm || roleFilter !== 'all' ? 'Không tìm thấy admin' : 'Chưa có admin nào'}
+              {searchTerm || roleFilter !== 'all' ? 'Không tìm thấy admin phù hợp' : 'Chưa có tài khoản admin nào'}
             </p>
           </div>
         ) : (
           admins.map((admin) => (
             <div
               key={admin._id}
-              className="bg-card rounded-lg border border-border p-4 space-y-3"
+              className="bg-card rounded-xl border border-border p-4 space-y-4 hover:shadow-md transition-shadow relative overflow-hidden group"
             >
-              <div className="flex items-start justify-between gap-3">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 -mr-8 -mt-8 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors"></div>
+
+              <div className="flex items-start justify-between gap-3 relative z-10">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="font-semibold text-card-foreground">{admin.name}</h3>
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <h3 className="font-bold text-card-foreground truncate">{admin.name}</h3>
                     <span
-                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium shrink-0 ${
-                        admin.role === 'super_admin'
-                          ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50'
-                          : 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
-                      }`}
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase shrink-0 ${admin.role === 'super_admin'
+                        ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50'
+                        : admin.role === 'admin'
+                          ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
+                          : 'bg-green-500/20 text-green-400 border border-green-500/50'
+                        }`}
                     >
                       {admin.role === 'super_admin' ? (
                         <ShieldCheck className="w-3 h-3" />
                       ) : (
                         <Shield className="w-3 h-3" />
                       )}
-                      {admin.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+                      {admin.role === 'super_admin' ? 'Super Admin' : admin.role === 'admin' ? 'Admin' : 'Manager'}
                     </span>
                   </div>
-                  <div className="space-y-1 text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Phone className="w-4 h-4" />
-                      <span>{admin.phone}</span>
+                  <div className="space-y-2 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 bg-muted rounded-md shrink-0">
+                        <Phone className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="font-medium">{admin.phone}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Mail className="w-4 h-4" />
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 bg-muted rounded-md shrink-0">
+                        <Mail className="w-3.5 h-3.5" />
+                      </div>
                       <span className="truncate">{admin.email}</span>
                     </div>
-                    <div className="pt-2 border-t border-border space-y-1">
-                      <p className="text-xs text-muted-foreground">
-                        <span className="font-medium">Ngày tạo:</span> {formatDate(admin.created_at)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        <span className="font-medium">Đăng nhập cuối:</span> {formatDate(admin.last_login)}
-                      </p>
-                    </div>
+                    {admin.address && (
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 bg-muted rounded-md shrink-0">
+                          <Eye className="w-3.5 h-3.5 text-muted-foreground/60" />
+                        </div>
+                        <span className="truncate">{admin.address}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 pt-2 border-t border-border">
+
+              <div className="pt-3 border-t border-border/50 grid grid-cols-2 gap-4 text-[11px] text-muted-foreground relative z-10">
+                <div>
+                  <span className="block text-muted-foreground/60">Ngày tạo</span>
+                  <span className="font-medium">{formatDate(admin.created_at)}</span>
+                </div>
+                <div>
+                  <span className="block text-muted-foreground/60">Đăng nhập cuối</span>
+                  <span className="font-medium text-right block truncate">{formatDate(admin.last_login)}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 pt-3 relative z-10">
                 <button
                   onClick={() => handleEdit(admin)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium cursor-pointer"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-all font-semibold text-sm cursor-pointer border border-primary/20"
                 >
                   <Edit2 className="w-4 h-4" />
                   <span>Sửa</span>
                 </button>
                 <button
                   onClick={() => handleDelete(admin)}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg transition-colors font-medium"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg transition-all font-semibold text-sm cursor-pointer border border-destructive/20"
                 >
                   <Trash2 className="w-4 h-4" />
                   <span>Xóa</span>
@@ -861,26 +957,20 @@ export default function AdminsPage() {
 
       {/* Edit Modal */}
       {showEditModal && editingAdmin && (
-        <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onClick={() => {
-            setShowEditModal(false);
-            setEditingAdmin(null);
-            setEditFormData({ name: '', email: '', address: '', role: 'admin' });
-          }}
-        >
-          <div 
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div
             ref={editModalRef}
             className="bg-card rounded-lg max-w-md w-full p-6 border border-border relative"
-            onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => {
+                if (editing) return;
                 setShowEditModal(false);
                 setEditingAdmin(null);
                 setEditFormData({ name: '', email: '', address: '', role: 'admin' });
               }}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
+              disabled={editing}
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50"
               aria-label="Đóng"
             >
               <X className="w-5 h-5" />
@@ -950,7 +1040,7 @@ export default function AdminsPage() {
                 <button
                   onClick={handleUpdateAdmin}
                   disabled={editing}
-                  className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {editing ? (
                     <>
@@ -962,12 +1052,13 @@ export default function AdminsPage() {
                   )}
                 </button>
                 <button
+                  disabled={editing}
                   onClick={() => {
                     setShowEditModal(false);
                     setEditingAdmin(null);
                     setEditFormData({ name: '', email: '', address: '', role: 'admin' });
                   }}
-                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium cursor-pointer"
+                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium cursor-pointer disabled:opacity-50"
                 >
                   Hủy
                 </button>
@@ -979,24 +1070,19 @@ export default function AdminsPage() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && editingAdmin && (
-        <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onClick={() => {
-            setShowDeleteModal(false);
-            setEditingAdmin(null);
-          }}
-        >
-          <div 
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div
             ref={deleteModalRef}
             className="bg-card rounded-lg max-w-md w-full p-6 border border-border relative"
-            onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => {
+                if (deleting) return;
                 setShowDeleteModal(false);
                 setEditingAdmin(null);
               }}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
+              disabled={deleting}
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50"
               aria-label="Đóng"
             >
               <X className="w-5 h-5" />
@@ -1025,7 +1111,7 @@ export default function AdminsPage() {
                 <button
                   onClick={handleConfirmDelete}
                   disabled={deleting}
-                  className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive/90 text-white rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive/90 text-white rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {deleting ? (
                     <>
@@ -1037,11 +1123,12 @@ export default function AdminsPage() {
                   )}
                 </button>
                 <button
+                  disabled={deleting}
                   onClick={() => {
                     setShowDeleteModal(false);
                     setEditingAdmin(null);
                   }}
-                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium cursor-pointer"
+                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium cursor-pointer disabled:opacity-50"
                 >
                   Hủy
                 </button>

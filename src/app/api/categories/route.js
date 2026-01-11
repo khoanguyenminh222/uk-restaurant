@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
+import { getAdminFromToken } from '@/lib/auth';
 
 /**
  * GET /api/categories
@@ -42,8 +43,8 @@ export async function GET(request) {
       .toArray();
 
     return NextResponse.json(
-      { 
-        success: true, 
+      {
+        success: true,
         data: categories,
         pagination: {
           page,
@@ -73,7 +74,14 @@ export async function POST(request) {
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
 
-    // TODO: Add admin authentication check
+    // Check admin authentication
+    const admin = await getAdminFromToken(request);
+    if (!admin) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
     // Validate
     if (!body.name) {

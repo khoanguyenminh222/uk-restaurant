@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
+import { getAdminFromToken } from '@/lib/auth';
 
 /**
  * GET /api/config/popular/settings
@@ -42,7 +43,14 @@ export async function GET() {
  */
 export async function PUT(request) {
   try {
-    // TODO: Thêm admin authentication check
+    // Check admin authentication
+    const admin = await getAdminFromToken(request);
+    if (!admin) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
     const body = await request.json();
     const { show_value } = body;

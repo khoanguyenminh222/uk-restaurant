@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRoleCheck } from '@/hooks/useRoleCheck';
 import Toast from '@/components/Toast/Toast';
-import { Image as ImageIcon, Plus, Edit2, Trash2, Loader2, X, Search, Eye, EyeOff } from 'lucide-react';
+import { Image as ImageIcon, Plus, Edit2, Trash2, Loader2, X, Search, Eye, EyeOff, ArrowUp, ArrowDown } from 'lucide-react';
+import { adminFetch } from '@/lib/adminAuth';
 
 export default function AdminBanners() {
   // Check if user has permission (only admin and super_admin)
@@ -52,14 +53,14 @@ export default function AdminBanners() {
   const fetchBanners = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/banners');
+      const res = await adminFetch('/api/banners');
       const data = await res.json();
       if (data.success) {
         // Filter by search term if exists
         let filtered = data.data;
         if (searchTerm) {
           const lowerSearch = searchTerm.toLowerCase();
-          filtered = filtered.filter(banner => 
+          filtered = filtered.filter(banner =>
             (banner.title || '').toLowerCase().includes(lowerSearch) ||
             (banner.description || '').toLowerCase().includes(lowerSearch)
           );
@@ -156,7 +157,7 @@ export default function AdminBanners() {
         : '/api/banners';
       const method = editingBanner ? 'PUT' : 'POST';
 
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -209,7 +210,7 @@ export default function AdminBanners() {
 
     setDeleting(true);
     try {
-      const res = await fetch(`/api/banners/${deletingBannerId}`, {
+      const res = await adminFetch(`/api/banners/${deletingBannerId}`, {
         method: 'DELETE',
       });
 
@@ -394,11 +395,10 @@ export default function AdminBanners() {
                       {banner.order || 0}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        banner.is_active !== false
+                      <span className={`px-2 py-1 text-xs rounded-full ${banner.is_active !== false
                           ? 'bg-success/10 text-success'
                           : 'bg-muted text-muted-foreground'
-                      }`}>
+                        }`}>
                         {banner.is_active !== false ? 'Hoạt động' : 'Tắt'}
                       </span>
                     </td>
@@ -469,11 +469,10 @@ export default function AdminBanners() {
                   )}
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <span>Order: {banner.order || 0}</span>
-                    <span className={`px-2 py-0.5 text-xs rounded-full ${
-                      banner.is_active !== false
+                    <span className={`px-2 py-0.5 text-xs rounded-full ${banner.is_active !== false
                         ? 'bg-success/10 text-success'
                         : 'bg-muted text-muted-foreground'
-                    }`}>
+                      }`}>
                       {banner.is_active !== false ? 'Hoạt động' : 'Tắt'}
                     </span>
                   </div>
@@ -502,12 +501,12 @@ export default function AdminBanners() {
 
       {/* Modal */}
       {showModal && (
-        <div 
+        <div
           ref={modalRef}
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={handleCloseModal}
         >
-          <div 
+          <div
             className="bg-card rounded-lg max-w-2xl w-full p-6 border border-border relative max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
@@ -612,11 +611,10 @@ export default function AdminBanners() {
                     <button
                       type="button"
                       onClick={() => setFormData({ ...formData, is_active: !formData.is_active })}
-                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-colors font-medium cursor-pointer ${
-                        formData.is_active
+                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-colors font-medium cursor-pointer ${formData.is_active
                           ? 'bg-success/10 text-success border border-success/20'
                           : 'bg-muted text-muted-foreground border border-border'
-                      }`}
+                        }`}
                     >
                       {formData.is_active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                       <span>{formData.is_active ? 'Hoạt động' : 'Tắt'}</span>
@@ -655,7 +653,7 @@ export default function AdminBanners() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div 
+        <div
           ref={deleteModalRef}
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={() => {
@@ -663,7 +661,7 @@ export default function AdminBanners() {
             setDeletingBannerId(null);
           }}
         >
-          <div 
+          <div
             className="bg-card rounded-lg max-w-md w-full p-6 border border-border"
             onClick={(e) => e.stopPropagation()}
           >

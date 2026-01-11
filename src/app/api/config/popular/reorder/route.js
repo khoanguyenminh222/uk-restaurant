@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
+import { getAdminFromToken } from '@/lib/auth';
 
 /**
  * PUT /api/config/popular/reorder
@@ -9,14 +10,14 @@ import clientPromise, { getDatabaseName } from '@/lib/mongodb';
  */
 export async function PUT(request) {
   try {
-    // TODO: Thêm admin authentication check
-    // const user = await getUserFromRequest(request);
-    // if (!user || !(await isAdmin(user.user_id))) {
-    //   return NextResponse.json(
-    //     { success: false, error: 'Unauthorized' },
-    //     { status: 401 }
-    //   );
-    // }
+    // Check admin authentication
+    const admin = await getAdminFromToken(request);
+    if (!admin) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
     const body = await request.json();
     const { thresholdIds } = body;

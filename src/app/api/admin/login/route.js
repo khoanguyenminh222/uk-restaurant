@@ -21,7 +21,7 @@ export async function POST(request) {
     }
 
     // Find user by phone (exclude soft-deleted users)
-    const user = await db.collection('users').findOne({ 
+    const user = await db.collection('users').findOne({
       phone: body.phone,
       is_deleted: { $ne: true }
     });
@@ -63,6 +63,14 @@ export async function POST(request) {
       { $set: { last_login: new Date() } }
     );
 
+    // Generate JWT token
+    const { signJWT } = await import('@/lib/auth');
+    const token = await signJWT({
+      user_id: user.user_id,
+      phone: user.phone,
+      role: user.role
+    });
+
     // Return admin user without password
     const { password, verification_code, verification_code_expires, ...adminWithoutPassword } = user;
 
@@ -70,6 +78,7 @@ export async function POST(request) {
       {
         success: true,
         data: adminWithoutPassword,
+        token: token,
         message: 'Đăng nhập thành công',
       },
       { status: 200 }

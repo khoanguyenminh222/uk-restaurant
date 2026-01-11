@@ -3,16 +3,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { formatCurrency } from '@/utils/helpers';
 import Toast from '@/components/Toast/Toast';
-import { 
-  ShoppingCart, 
-  Loader2, 
-  Search, 
-  Filter, 
-  X, 
-  Eye, 
-  Edit2, 
-  Trash2, 
-  Phone, 
+import {
+  ShoppingCart,
+  Loader2,
+  Search,
+  Filter,
+  X,
+  Eye,
+  Edit2,
+  Trash2,
+  Phone,
   Mail,
   Calendar,
   ChevronDown,
@@ -29,6 +29,7 @@ import {
   Plus,
   Minus
 } from 'lucide-react';
+import { adminFetch } from '@/lib/adminAuth';
 
 const STATUS_CONFIG = {
   pending: { label: 'Chờ xử lý', color: 'bg-yellow-500/20 text-yellow-600 border-yellow-500/50', icon: Clock },
@@ -86,7 +87,8 @@ export default function AdminOrders() {
   const [editingItems, setEditingItems] = useState([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
-  
+  const [isSaving, setIsSaving] = useState(false);
+
   // Refs for modals
   const detailModalRef = useRef(null);
   const editModalRef = useRef(null);
@@ -138,7 +140,7 @@ export default function AdminOrders() {
         params.append('search', searchTerm);
       }
 
-      const response = await fetch(`/api/orders?${params}`);
+      const response = await adminFetch(`/api/orders?${params}`);
       const data = await response.json();
 
       if (data.success) {
@@ -206,7 +208,7 @@ export default function AdminOrders() {
       try {
         setUpdatingOrderId(orderId);
         setIsConfirmingAction(true);
-        
+
         // Lấy thông tin admin từ localStorage
         const adminData = localStorage.getItem('admin_data');
         let adminPhone = null;
@@ -222,13 +224,13 @@ export default function AdminOrders() {
         const headers = {
           'Content-Type': 'application/json',
         };
-        
+
         // Gửi admin phone trong header
         if (adminPhone) {
           headers['x-admin-phone'] = adminPhone;
         }
 
-        const response = await fetch(`/api/orders/${orderId}`, {
+        const response = await adminFetch(`/api/orders/${orderId}`, {
           method: 'PUT',
           headers,
           body: JSON.stringify({
@@ -292,7 +294,7 @@ export default function AdminOrders() {
       try {
         setUpdatingOrderId(pendingCancelOrderId);
         setIsConfirmingAction(true);
-        
+
         // Lấy thông tin admin từ localStorage
         const adminData = localStorage.getItem('admin_data');
         let adminPhone = null;
@@ -308,13 +310,13 @@ export default function AdminOrders() {
         const headers = {
           'Content-Type': 'application/json',
         };
-        
+
         // Gửi admin phone trong header
         if (adminPhone) {
           headers['x-admin-phone'] = adminPhone;
         }
 
-        const response = await fetch(`/api/orders/${pendingCancelOrderId}`, {
+        const response = await adminFetch(`/api/orders/${pendingCancelOrderId}`, {
           method: 'PUT',
           headers,
           body: JSON.stringify({
@@ -371,8 +373,8 @@ export default function AdminOrders() {
       try {
         setDeletingOrderId(orderId);
         setIsConfirmingAction(true);
-        
-        const response = await fetch(`/api/orders/${orderId}`, {
+
+        const response = await adminFetch(`/api/orders/${orderId}`, {
           method: 'DELETE',
         });
 
@@ -427,7 +429,7 @@ export default function AdminOrders() {
   const handleViewDetail = async (orderId) => {
     try {
       setViewingDetailId(orderId);
-      const response = await fetch(`/api/orders/${orderId}`);
+      const response = await adminFetch(`/api/orders/${orderId}`);
       const data = await response.json();
 
       if (data.success) {
@@ -567,7 +569,7 @@ export default function AdminOrders() {
             )}
           </button>
         </div>
-        
+
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Date From */}
           <div className="relative flex-1">
@@ -967,46 +969,46 @@ export default function AdminOrders() {
 
       {/* Detail Modal */}
       {showDetailModal && selectedOrder && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={() => {
             setShowDetailModal(false);
             setSelectedOrder(null);
           }}
         >
-          <div 
+          <div
             ref={detailModalRef}
             className="bg-card rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto relative"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6">
-            <div className="flex items-center justify-between mb-6 relative">
-              <div className="flex items-center gap-3">
-                <ShoppingCart className="w-6 h-6 text-primary" />
-                <h2 className="text-2xl font-bold text-card-foreground">Chi tiết đơn hàng</h2>
-              </div>
-              <div className="flex items-center gap-2">
-                {selectedOrder.status_history && selectedOrder.status_history.length > 0 && (
+              <div className="flex items-center justify-between mb-6 relative">
+                <div className="flex items-center gap-3">
+                  <ShoppingCart className="w-6 h-6 text-primary" />
+                  <h2 className="text-2xl font-bold text-card-foreground">Chi tiết đơn hàng</h2>
+                </div>
+                <div className="flex items-center gap-2">
+                  {selectedOrder.status_history && selectedOrder.status_history.length > 0 && (
+                    <button
+                      onClick={() => setShowHistoryModal(true)}
+                      className="flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium cursor-pointer"
+                    >
+                      <History className="w-4 h-4" />
+                      <span>Lịch sử thay đổi</span>
+                    </button>
+                  )}
                   <button
-                    onClick={() => setShowHistoryModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium cursor-pointer"
+                    onClick={() => {
+                      setShowDetailModal(false);
+                      setSelectedOrder(null);
+                    }}
+                    className="p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
+                    aria-label="Đóng"
                   >
-                    <History className="w-4 h-4" />
-                    <span>Lịch sử thay đổi</span>
+                    <X className="w-5 h-5" />
                   </button>
-                )}
-                <button
-                  onClick={() => {
-                    setShowDetailModal(false);
-                    setSelectedOrder(null);
-                  }}
-                  className="p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
-                  aria-label="Đóng"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                </div>
               </div>
-            </div>
 
               <div className="space-y-6">
                 {/* Order Info */}
@@ -1125,38 +1127,43 @@ export default function AdminOrders() {
 
       {/* Edit Modal */}
       {showEditModal && selectedOrder && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={() => {
-            setShowEditModal(false);
-            setSelectedOrder(null);
-            setEditingStatus('');
-            setEditingAdminNotes('');
-            setEditingCustomerName('');
-            setEditingCustomerPhone('');
-            setEditingCustomerAddress('');
-            setEditingTotalPrice(0);
-            setEditingItems([]);
+            if (!isSaving) {
+              setShowEditModal(false);
+              setSelectedOrder(null);
+              setEditingStatus('');
+              setEditingAdminNotes('');
+              setEditingCustomerName('');
+              setEditingCustomerPhone('');
+              setEditingCustomerAddress('');
+              setEditingTotalPrice(0);
+              setEditingItems([]);
+            }
           }}
         >
-          <div 
+          <div
             ref={editModalRef}
             className="bg-card rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 border border-border relative"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => {
-                setShowEditModal(false);
-                setSelectedOrder(null);
-                setEditingStatus('');
-                setEditingAdminNotes('');
-                setEditingCustomerName('');
-                setEditingCustomerPhone('');
-                setEditingCustomerAddress('');
-                setEditingTotalPrice(0);
-                setEditingItems([]);
+                if (!isSaving) {
+                  setShowEditModal(false);
+                  setSelectedOrder(null);
+                  setEditingStatus('');
+                  setEditingAdminNotes('');
+                  setEditingCustomerName('');
+                  setEditingCustomerPhone('');
+                  setEditingCustomerAddress('');
+                  setEditingTotalPrice(0);
+                  setEditingItems([]);
+                }
               }}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
+              disabled={isSaving}
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Đóng"
             >
               <X className="w-5 h-5" />
@@ -1333,70 +1340,71 @@ export default function AdminOrders() {
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={async () => {
+                    // Lấy thông tin admin từ localStorage
+                    const adminData = localStorage.getItem('admin_data');
+                    let adminPhone = null;
+                    if (adminData) {
+                      try {
+                        const admin = JSON.parse(adminData);
+                        adminPhone = admin.phone;
+                      } catch (e) {
+                        console.error('Error parsing admin data:', e);
+                      }
+                    }
+
+                    const headers = {
+                      'Content-Type': 'application/json',
+                    };
+
+                    if (adminPhone) {
+                      headers['x-admin-phone'] = adminPhone;
+                    }
+
+                    // Validate
+                    if (!editingCustomerName.trim()) {
+                      if (typeof window !== 'undefined') {
+                        window.dispatchEvent(
+                          new CustomEvent('showToast', {
+                            detail: { message: 'Tên khách hàng là bắt buộc', type: 'error' },
+                          })
+                        );
+                      }
+                      return;
+                    }
+                    if (!editingCustomerPhone.trim()) {
+                      if (typeof window !== 'undefined') {
+                        window.dispatchEvent(
+                          new CustomEvent('showToast', {
+                            detail: { message: 'Số điện thoại là bắt buộc', type: 'error' },
+                          })
+                        );
+                      }
+                      return;
+                    }
+                    if (editingItems.length === 0) {
+                      if (typeof window !== 'undefined') {
+                        window.dispatchEvent(
+                          new CustomEvent('showToast', {
+                            detail: { message: 'Đơn hàng phải có ít nhất 1 món', type: 'error' },
+                          })
+                        );
+                      }
+                      return;
+                    }
+                    if (editingTotalPrice <= 0) {
+                      if (typeof window !== 'undefined') {
+                        window.dispatchEvent(
+                          new CustomEvent('showToast', {
+                            detail: { message: 'Tổng tiền phải > 0', type: 'error' },
+                          })
+                        );
+                      }
+                      return;
+                    }
+
+                    setIsSaving(true);
                     try {
-                      // Lấy thông tin admin từ localStorage
-                      const adminData = localStorage.getItem('admin_data');
-                      let adminPhone = null;
-                      if (adminData) {
-                        try {
-                          const admin = JSON.parse(adminData);
-                          adminPhone = admin.phone;
-                        } catch (e) {
-                          console.error('Error parsing admin data:', e);
-                        }
-                      }
-
-                      const headers = {
-                        'Content-Type': 'application/json',
-                      };
-                      
-                      if (adminPhone) {
-                        headers['x-admin-phone'] = adminPhone;
-                      }
-
-                      // Validate
-                      if (!editingCustomerName.trim()) {
-                        if (typeof window !== 'undefined') {
-                          window.dispatchEvent(
-                            new CustomEvent('showToast', {
-                              detail: { message: 'Tên khách hàng là bắt buộc', type: 'error' },
-                            })
-                          );
-                        }
-                        return;
-                      }
-                      if (!editingCustomerPhone.trim()) {
-                        if (typeof window !== 'undefined') {
-                          window.dispatchEvent(
-                            new CustomEvent('showToast', {
-                              detail: { message: 'Số điện thoại là bắt buộc', type: 'error' },
-                            })
-                          );
-                        }
-                        return;
-                      }
-                      if (editingItems.length === 0) {
-                        if (typeof window !== 'undefined') {
-                          window.dispatchEvent(
-                            new CustomEvent('showToast', {
-                              detail: { message: 'Đơn hàng phải có ít nhất 1 món', type: 'error' },
-                            })
-                          );
-                        }
-                        return;
-                      }
-                      if (editingTotalPrice <= 0) {
-                        if (typeof window !== 'undefined') {
-                          window.dispatchEvent(
-                            new CustomEvent('showToast', {
-                              detail: { message: 'Tổng tiền phải > 0', type: 'error' },
-                            })
-                          );
-                        }
-                        return;
-                      }
-
-                      const response = await fetch(`/api/orders/${selectedOrder.order_id}`, {
+                      const response = await adminFetch(`/api/orders/${selectedOrder.order_id}`, {
                         method: 'PUT',
                         headers,
                         body: JSON.stringify({
@@ -1450,11 +1458,21 @@ export default function AdminOrders() {
                           })
                         );
                       }
+                    } finally {
+                      setIsSaving(false);
                     }
                   }}
-                  className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer"
+                  disabled={isSaving}
+                  className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  Cập nhật
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Đang cập nhật...</span>
+                    </>
+                  ) : (
+                    'Cập nhật'
+                  )}
                 </button>
                 <button
                   onClick={() => {
@@ -1468,7 +1486,8 @@ export default function AdminOrders() {
                     setEditingTotalPrice(0);
                     setEditingItems([]);
                   }}
-                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium cursor-pointer"
+                  disabled={isSaving}
+                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Hủy
                 </button>
@@ -1480,7 +1499,7 @@ export default function AdminOrders() {
 
       {/* Confirm Modal */}
       {showConfirmModal && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={() => {
             setShowConfirmModal(false);
@@ -1488,7 +1507,7 @@ export default function AdminOrders() {
             setConfirmMessage('');
           }}
         >
-          <div 
+          <div
             ref={confirmModalRef}
             className="bg-card rounded-lg max-w-md w-full p-6 border border-border"
             onClick={(e) => e.stopPropagation()}
@@ -1530,7 +1549,7 @@ export default function AdminOrders() {
 
       {/* Cancel Reason Modal */}
       {showCancelReasonModal && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={() => {
             setShowCancelReasonModal(false);
@@ -1539,7 +1558,7 @@ export default function AdminOrders() {
             setCancelReason('');
           }}
         >
-          <div 
+          <div
             ref={confirmModalRef}
             className="bg-card rounded-lg max-w-md w-full p-6 border border-border"
             onClick={(e) => e.stopPropagation()}
@@ -1599,11 +1618,11 @@ export default function AdminOrders() {
 
       {/* Status History Modal */}
       {showHistoryModal && selectedOrder && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={() => setShowHistoryModal(false)}
         >
-          <div 
+          <div
             className="bg-card rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 border border-border"
             onClick={(e) => e.stopPropagation()}
           >
@@ -1636,11 +1655,10 @@ export default function AdminOrders() {
                     return (
                       <div key={index} className="relative border-l-2 border-border pl-4 pb-4">
                         <div className="flex items-start gap-3">
-                          <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center border-2 ${
-                            isLast 
-                              ? 'bg-primary border-primary text-primary-foreground' 
-                              : 'bg-muted border-border text-muted-foreground'
-                          }`}>
+                          <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center border-2 ${isLast
+                            ? 'bg-primary border-primary text-primary-foreground'
+                            : 'bg-muted border-border text-muted-foreground'
+                            }`}>
                             <Edit2 className="w-3 h-3" />
                           </div>
                           <div className="flex-1">
@@ -1663,7 +1681,7 @@ export default function AdminOrders() {
                                 )}
                               </span>
                             </div>
-                            
+
                             {/* Display changes */}
                             {changeEntry.changes && changeEntry.changes.length > 0 && (
                               <div className="space-y-2 mt-2">
@@ -1680,20 +1698,19 @@ export default function AdminOrders() {
                                     };
                                     return labels[field] || field;
                                   };
-                                  
+
                                   const field = change.field;
                                   const oldValue = change.old_value;
                                   const newValue = change.new_value;
-                                  
+
                                   const formatDisplayValue = (value, fieldName) => {
                                     if (value === null || value === undefined || value === '') return '(trống)';
                                     if (fieldName === 'total_price') return formatCurrency(parseFloat(value) || 0);
                                     if (fieldName === 'status') {
                                       const StatusIcon = STATUS_CONFIG[value]?.icon || Clock;
                                       return (
-                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full border ${
-                                          STATUS_CONFIG[value]?.color || 'bg-gray-500/20 text-gray-600 border-gray-500/50'
-                                        }`}>
+                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full border ${STATUS_CONFIG[value]?.color || 'bg-gray-500/20 text-gray-600 border-gray-500/50'
+                                          }`}>
                                           <StatusIcon className="w-3 h-3" />
                                           {STATUS_CONFIG[value]?.label || value}
                                         </span>
@@ -1711,7 +1728,7 @@ export default function AdminOrders() {
                                     }
                                     return String(value);
                                   };
-                                  
+
                                   return (
                                     <div key={changeIndex} className="bg-muted rounded-lg p-3 border border-border">
                                       <p className="text-sm font-medium text-card-foreground mb-2">
@@ -1773,18 +1790,16 @@ export default function AdminOrders() {
                       return (
                         <div key={index} className="relative border-l-2 border-border pl-4 pb-4">
                           <div className="flex items-start gap-3">
-                            <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center border-2 ${
-                              isLast 
-                                ? 'bg-primary border-primary text-primary-foreground' 
-                                : 'bg-muted border-border text-muted-foreground'
-                            }`}>
+                            <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center border-2 ${isLast
+                              ? 'bg-primary border-primary text-primary-foreground'
+                              : 'bg-muted border-border text-muted-foreground'
+                              }`}>
                               <StatusIcon className="w-3 h-3" />
                             </div>
                             <div className="flex-1">
                               <div className="flex items-center justify-between mb-1">
-                                <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full border ${
-                                  STATUS_CONFIG[history.status]?.color || 'bg-gray-500/20 text-gray-600 border-gray-500/50'
-                                }`}>
+                                <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full border ${STATUS_CONFIG[history.status]?.color || 'bg-gray-500/20 text-gray-600 border-gray-500/50'
+                                  }`}>
                                   <StatusIcon className="w-3 h-3" />
                                   {STATUS_CONFIG[history.status]?.label || history.status}
                                 </span>

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { validateThreshold } from '@/lib/models/PopularConfig';
+import { getAdminFromToken } from '@/lib/auth';
 
 /**
  * GET /api/config/popular
@@ -51,14 +52,14 @@ export async function GET(request) {
  */
 export async function POST(request) {
   try {
-    // TODO: Thêm admin authentication check
-    // const user = await getUserFromRequest(request);
-    // if (!user || !(await isAdmin(user.user_id))) {
-    //   return NextResponse.json(
-    //     { success: false, error: 'Unauthorized' },
-    //     { status: 401 }
-    //   );
-    // }
+    // Check admin authentication
+    const admin = await getAdminFromToken(request);
+    if (!admin) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
     const body = await request.json();
     const { label, value, icon, color, order } = body;

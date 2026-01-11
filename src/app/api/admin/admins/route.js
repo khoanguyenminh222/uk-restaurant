@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
+import { getAdminFromToken } from '@/lib/auth';
 
 /**
  * GET /api/admin/admins
@@ -12,6 +13,15 @@ import clientPromise, { getDatabaseName } from '@/lib/mongodb';
  */
 export async function GET(request) {
   try {
+    // Check admin authentication
+    const admin = await getAdminFromToken(request);
+    if (!admin || admin.role !== 'super_admin') {
+      return NextResponse.json(
+        { success: false, error: 'Chỉ Super Admin mới có quyền xem danh sách admin' },
+        { status: 403 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const role = searchParams.get('role');
     const search = searchParams.get('search');
@@ -60,8 +70,8 @@ export async function GET(request) {
     });
 
     return NextResponse.json(
-      { 
-        success: true, 
+      {
+        success: true,
         data: adminsWithoutPassword,
         pagination: {
           page,

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Phone, Lock, Eye, EyeOff, Loader2, Shield } from 'lucide-react';
 import Toast from '@/components/Toast/Toast';
 import { useLandingConfig } from '@/hooks/useLandingConfig';
+import { saveAdminSession, isAdminLoggedIn, getAdminData } from '@/lib/adminAuth';
 
 export default function AdminLogin() {
   const [phone, setPhone] = useState('');
@@ -18,21 +19,15 @@ export default function AdminLogin() {
   const restaurantName = config?.restaurant_name || 'UK Restaurant';
 
   useEffect(() => {
-    // Kiểm tra nếu đã đăng nhập
-    const adminData = localStorage.getItem('admin_data');
-    if (adminData) {
-      try {
-        const admin = JSON.parse(adminData);
-        if (admin.role === 'admin' || admin.role === 'super_admin') {
-          router.push('/admin/dashboard');
-        }
-      } catch (e) {
-        // Invalid data, clear it
-        localStorage.removeItem('admin_data');
-        localStorage.removeItem('admin_logged_in');
+    // Kiểm tra nếu đã đăng nhập (sử dụng adminAuth utility)
+    if (isAdminLoggedIn()) {
+      const admin = getAdminData();
+      if (admin && (admin.role === 'admin' || admin.role === 'super_admin' || admin.role === 'manager')) {
+        router.push('/admin/dashboard');
+        return;
       }
     }
-    
+
     // Check for logout success message
     const logoutMessage = localStorage.getItem('admin_logout_success_message');
     if (logoutMessage) {
@@ -76,13 +71,12 @@ export default function AdminLogin() {
       const data = await response.json();
 
       if (data.success) {
-        // Lưu thông tin admin vào localStorage
-        localStorage.setItem('admin_data', JSON.stringify(data.data));
-        localStorage.setItem('admin_logged_in', 'true');
-        
+        // Lưu thông tin admin và token vào localStorage
+        saveAdminSession(data.data, data.token);
+
         // Save success message
         localStorage.setItem('admin_login_success_message', 'Đăng nhập thành công!');
-        
+
         // Redirect đến dashboard
         router.push('/admin/dashboard');
       } else {
@@ -208,7 +202,7 @@ export default function AdminLogin() {
           </div>
         </div>
       </div>
-      
+
       <Toast
         message={toast.message}
         isVisible={toast.isVisible}

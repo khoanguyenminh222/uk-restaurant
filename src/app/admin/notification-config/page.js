@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRoleCheck } from '@/hooks/useRoleCheck';
 import Toast from '@/components/Toast/Toast';
 import { Settings, Save, Loader2, RotateCcw, Mail, MessageSquare, X } from 'lucide-react';
+import { adminFetch } from '@/lib/adminAuth';
 
 const TABS = [
   { id: 'email', label: 'Email', icon: Mail },
@@ -75,13 +76,13 @@ export default function AdminNotificationConfig() {
   const fetchConfig = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/config/landing');
+      const response = await adminFetch('/api/config/landing');
       if (!response.ok) throw new Error('Failed to fetch configuration');
       const result = await response.json();
-      
+
       // API returns { success: true, data: {...} }
       const data = result.data || result;
-      
+
       // Set email configuration
       if (data.email_config) {
         setEmailData({
@@ -191,7 +192,7 @@ export default function AdminNotificationConfig() {
         };
       }
 
-      const response = await fetch('/api/config/landing', {
+      const response = await adminFetch('/api/config/landing', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -199,9 +200,16 @@ export default function AdminNotificationConfig() {
         body: JSON.stringify(updateData),
       });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to save configuration');
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: data.error || 'Có lỗi xảy ra khi lưu cấu hình', type: 'error' },
+            })
+          );
+        }
+        return;
       }
 
       if (typeof window !== 'undefined') {
@@ -280,7 +288,7 @@ export default function AdminNotificationConfig() {
       }
 
       // Gửi request reset
-      const res = await fetch('/api/config/landing', {
+      const res = await adminFetch('/api/config/landing', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(resetData),
@@ -358,7 +366,7 @@ export default function AdminNotificationConfig() {
       // Save config first
       await handleSave();
 
-      const response = await fetch('/api/config/test-telegram', {
+      const response = await adminFetch('/api/config/test-telegram', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -367,8 +375,15 @@ export default function AdminNotificationConfig() {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to send test Telegram message');
+      if (!response.ok || !data.success) {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: data.error || 'Có lỗi xảy ra khi gửi thông báo Telegram thử nghiệm', type: 'error' },
+            })
+          );
+        }
+        return;
       }
 
       if (typeof window !== 'undefined') {
@@ -408,7 +423,7 @@ export default function AdminNotificationConfig() {
         return;
       }
 
-      const response = await fetch('/api/config/test-email', {
+      const response = await adminFetch('/api/config/test-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -420,8 +435,15 @@ export default function AdminNotificationConfig() {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to send test email');
+      if (!response.ok || !data.success) {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: data.error || 'Có lỗi xảy ra khi gửi email thử nghiệm', type: 'error' },
+            })
+          );
+        }
+        return;
       }
 
       if (typeof window !== 'undefined') {
@@ -455,6 +477,14 @@ export default function AdminNotificationConfig() {
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
+      {/* Toast Notification */}
+      <Toast
+        message={toast.message}
+        isVisible={toast.isVisible}
+        type={toast.type}
+        onClose={() => setToast({ message: '', isVisible: false })}
+      />
+
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
@@ -474,11 +504,10 @@ export default function AdminNotificationConfig() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors cursor-pointer ${
-                    activeTab === tab.id
-                      ? 'text-primary border-b-2 border-primary'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors cursor-pointer ${activeTab === tab.id
+                    ? 'text-primary border-b-2 border-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                    }`}
                 >
                   <Icon className="w-4 h-4" />
                   {tab.label}
@@ -494,7 +523,7 @@ export default function AdminNotificationConfig() {
           {activeTab === 'email' && (
             <div className="space-y-6">
               <h2 className="text-xl font-semibold text-card-foreground mb-4">Cấu hình Email</h2>
-              
+
               <div className="bg-blue-500/10 border border-blue-500/50 rounded-lg p-4 mb-6">
                 <p className="text-sm text-blue-400 mb-2">
                   <strong>Lưu ý quan trọng:</strong>
@@ -604,7 +633,7 @@ export default function AdminNotificationConfig() {
 
                 <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/50 rounded-lg">
                   <p className="text-xs text-blue-400">
-                    <strong>Lưu ý:</strong> Nếu tắt email cho một trạng thái, khách hàng sẽ không nhận được email thông báo khi đơn hàng chuyển sang trạng thái đó. 
+                    <strong>Lưu ý:</strong> Nếu tắt email cho một trạng thái, khách hàng sẽ không nhận được email thông báo khi đơn hàng chuyển sang trạng thái đó.
                     Chỉ nên tắt các trạng thái không quan trọng để tránh làm phiền khách hàng.
                   </p>
                 </div>
@@ -652,7 +681,7 @@ export default function AdminNotificationConfig() {
           {activeTab === 'telegram' && (
             <div className="space-y-6">
               <h2 className="text-xl font-semibold text-card-foreground mb-4">Cấu hình Telegram</h2>
-              
+
               <div className="bg-blue-500/10 border border-blue-500/50 rounded-lg p-4 mb-6">
                 <p className="text-sm text-blue-400 mb-2">
                   <strong>Lưu ý quan trọng:</strong>
@@ -805,7 +834,7 @@ export default function AdminNotificationConfig() {
               <p className="text-sm text-muted-foreground">
                 Chọn các phần bạn muốn reset về giá trị mặc định. Các phần không được chọn sẽ giữ nguyên.
               </p>
-              
+
               <div className="space-y-3">
                 {TABS.map((tab) => {
                   const sectionKey = tab.id;

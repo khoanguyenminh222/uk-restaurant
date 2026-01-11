@@ -3,14 +3,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRoleCheck } from '@/hooks/useRoleCheck';
 import Toast from '@/components/Toast/Toast';
-import { 
-  Star, 
-  Loader2, 
-  Search, 
-  Filter, 
-  X, 
-  Edit2, 
-  Trash2, 
+import {
+  Star,
+  Loader2,
+  Search,
+  Filter,
+  X,
+  Edit2,
+  Trash2,
   CheckCircle2,
   XCircle,
   MessageSquare,
@@ -18,6 +18,7 @@ import {
   Info
 } from 'lucide-react';
 import * as lucideIcons from 'lucide-react';
+import { adminFetch } from '@/lib/adminAuth';
 
 // Helper function để lấy icon component
 const getLucideIcon = (iconName) => {
@@ -30,7 +31,7 @@ const getLucideIcon = (iconName) => {
       iconName.charAt(0).toUpperCase() + iconName.slice(1),
       iconName + 'Icon',
     ];
-    
+
     for (const variant of variants) {
       const icon = lucideIcons[variant];
       if (icon && (typeof icon === 'function' || (typeof icon === 'object' && icon.$$typeof))) {
@@ -63,7 +64,7 @@ const REVIEW_COLORS = [
 
 export default function AdminReviews() {
   const { isAuthorized, isChecking } = useRoleCheck(['admin', 'super_admin']);
-  
+
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState({ message: '', isVisible: false });
@@ -78,6 +79,9 @@ export default function AdminReviews() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [stats, setStats] = useState(null);
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0 });
+  const [isApprovingId, setIsApprovingId] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Edit form state
   const [editForm, setEditForm] = useState({
@@ -96,7 +100,7 @@ export default function AdminReviews() {
 
   useEffect(() => {
     // Kiểm tra xem có filter nào thay đổi không (trừ pagination.page)
-    const filtersChanged = 
+    const filtersChanged =
       prevFiltersRef.current.statusFilter !== statusFilter ||
       prevFiltersRef.current.ratingFilter !== ratingFilter ||
       prevFiltersRef.current.visibilityFilter !== visibilityFilter ||
@@ -119,8 +123,8 @@ export default function AdminReviews() {
   // Listen for toast events
   useEffect(() => {
     const handleShowToast = (event) => {
-      setToast({ message: event.detail.message, isVisible: true });
-      setTimeout(() => setToast({ message: '', isVisible: false }), 3000);
+      setToast({ message: event.detail.message, isVisible: true, type: event.detail.type });
+      setTimeout(() => setToast({ message: '', isVisible: false, type: null }), 3000);
     };
 
     window.addEventListener('showToast', handleShowToast);
@@ -131,7 +135,7 @@ export default function AdminReviews() {
     try {
       setLoading(true);
       let url = `/api/reviews?limit=${pagination.limit}&skip=${(pagination.page - 1) * pagination.limit}`;
-      
+
       // Filter by approval status
       if (statusFilter === 'approved') {
         url += '&approved=true';
@@ -141,22 +145,22 @@ export default function AdminReviews() {
         // Admin có thể xem tất cả reviews (bao gồm cả pending)
         url += '&all=true';
       }
-      
+
       // Filter by rating (gửi lên backend)
       if (ratingFilter !== 'all') {
         url += `&rating=${ratingFilter}`;
       }
-      
+
       // Filter by visibility (gửi lên backend)
       if (visibilityFilter !== 'all') {
         url += `&visible=${visibilityFilter === 'visible' ? 'true' : 'false'}`;
       }
-      
+
       // Filter by search term (gửi lên backend)
       if (searchTerm && searchTerm.trim()) {
         url += `&search=${encodeURIComponent(searchTerm.trim())}`;
       }
-      
+
       // Filter by date range (gửi lên backend)
       if (dateFrom) {
         url += `&date_from=${dateFrom}`;
@@ -164,20 +168,20 @@ export default function AdminReviews() {
       if (dateTo) {
         url += `&date_to=${dateTo}`;
       }
-      
-      const res = await fetch(url);
+
+      const res = await adminFetch(url);
       const data = await res.json();
-      
+
       if (data.success) {
         // Dữ liệu đã được filter từ backend, không cần filter lại ở frontend
         setReviews(data.data);
         setPagination(prev => ({ ...prev, total: data.pagination?.total || 0 }));
       } else {
-        setToast({ message: data.error || 'Lỗi khi tải danh sách đánh giá', isVisible: true });
+        setToast({ message: data.error || 'Lỗi khi tải danh sách đánh giá', isVisible: true, type: 'error' });
       }
     } catch (error) {
       console.error('Error fetching reviews:', error);
-      setToast({ message: 'Lỗi khi tải danh sách đánh giá', isVisible: true });
+      setToast({ message: 'Lỗi khi tải danh sách đánh giá', isVisible: true, type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -185,7 +189,7 @@ export default function AdminReviews() {
 
   const fetchStats = async () => {
     try {
-      const res = await fetch('/api/reviews/stats');
+      const res = await adminFetch('/api/reviews/stats');
       const data = await res.json();
       if (data.success) {
         setStats(data.data);
@@ -196,8 +200,9 @@ export default function AdminReviews() {
   };
 
   const handleApprove = async (review, approved) => {
+    setIsApprovingId(review._id);
     try {
-      const res = await fetch(`/api/reviews/${review._id}`, {
+      const res = await adminFetch(`/api/reviews/${review._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ is_approved: approved }),
@@ -205,18 +210,21 @@ export default function AdminReviews() {
 
       const data = await res.json();
       if (data.success) {
-        setToast({ 
-          message: approved ? 'Đã duyệt đánh giá' : 'Đã hủy duyệt đánh giá', 
-          isVisible: true 
+        setToast({
+          message: approved ? 'Đã duyệt đánh giá' : 'Đã hủy duyệt đánh giá',
+          isVisible: true,
+          type: 'success'
         });
         fetchReviews();
         fetchStats();
       } else {
-        setToast({ message: data.error || 'Lỗi khi cập nhật', isVisible: true });
+        setToast({ message: data.error || 'Lỗi khi cập nhật', isVisible: true, type: 'error' });
       }
     } catch (error) {
       console.error('Error updating review:', error);
-      setToast({ message: 'Lỗi khi cập nhật đánh giá', isVisible: true });
+      setToast({ message: 'Lỗi khi cập nhật đánh giá', isVisible: true, type: 'error' });
+    } finally {
+      setIsApprovingId(null);
     }
   };
 
@@ -250,6 +258,7 @@ export default function AdminReviews() {
   const handleSaveEdit = async () => {
     if (!selectedReview) return;
 
+    setIsSaving(true);
     try {
       // Nếu chưa được duyệt, tự động tắt hiển thị
       const updateData = { ...editForm };
@@ -257,7 +266,7 @@ export default function AdminReviews() {
         updateData.is_visible = false;
       }
 
-      const res = await fetch(`/api/reviews/${selectedReview._id}`, {
+      const res = await adminFetch(`/api/reviews/${selectedReview._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updateData),
@@ -265,39 +274,44 @@ export default function AdminReviews() {
 
       const data = await res.json();
       if (data.success) {
-        setToast({ message: 'Cập nhật đánh giá thành công', isVisible: true });
+        setToast({ message: 'Cập nhật đánh giá thành công', isVisible: true, type: 'success' });
         setShowEditModal(false);
         fetchReviews();
         fetchStats();
       } else {
-        setToast({ message: data.error || 'Lỗi khi cập nhật', isVisible: true });
+        setToast({ message: data.error || 'Lỗi khi cập nhật', isVisible: true, type: 'error' });
       }
     } catch (error) {
       console.error('Error updating review:', error);
-      setToast({ message: 'Lỗi khi cập nhật đánh giá', isVisible: true });
+      setToast({ message: 'Lỗi khi cập nhật đánh giá', isVisible: true, type: 'error' });
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleDelete = async () => {
     if (!selectedReview) return;
 
+    setIsDeleting(true);
     try {
-      const res = await fetch(`/api/reviews/${selectedReview._id}`, {
+      const res = await adminFetch(`/api/reviews/${selectedReview._id}`, {
         method: 'DELETE',
       });
 
       const data = await res.json();
       if (data.success) {
-        setToast({ message: 'Xóa đánh giá thành công', isVisible: true });
+        setToast({ message: 'Xóa đánh giá thành công', isVisible: true, type: 'success' });
         setShowDeleteModal(false);
         fetchReviews();
         fetchStats();
       } else {
-        setToast({ message: data.error || 'Lỗi khi xóa', isVisible: true });
+        setToast({ message: data.error || 'Lỗi khi xóa', isVisible: true, type: 'error' });
       }
     } catch (error) {
       console.error('Error deleting review:', error);
-      setToast({ message: 'Lỗi khi xóa đánh giá', isVisible: true });
+      setToast({ message: 'Lỗi khi xóa đánh giá', isVisible: true, type: 'error' });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -429,7 +443,7 @@ export default function AdminReviews() {
               </div>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -503,11 +517,10 @@ export default function AdminReviews() {
             {filteredReviews.map((review) => (
               <div
                 key={review._id}
-                className={`bg-card border-2 rounded-lg p-5 ${
-                  review.is_approved === false
-                    ? 'border-gray-500/30 bg-gray-500/5 opacity-60' 
-                    : 'border-border'
-                }`}
+                className={`bg-card border-2 rounded-lg p-5 ${review.is_approved === false
+                  ? 'border-gray-500/30 bg-gray-500/5 opacity-60'
+                  : 'border-border'
+                  }`}
               >
                 <div className="flex items-start justify-between gap-4">
                   {/* Left: Review Info */}
@@ -517,7 +530,7 @@ export default function AdminReviews() {
                       <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-2xl">
                         {review.avatar || '👤'}
                       </div>
-                      
+
                       {/* Customer Info */}
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -536,11 +549,10 @@ export default function AdminReviews() {
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
-                            className={`w-5 h-5 ${
-                              i < review.rating
-                                ? `fill-yellow-400 text-yellow-400 ${RATING_COLORS[review.rating]}`
-                                : 'text-gray-300'
-                            }`}
+                            className={`w-5 h-5 ${i < review.rating
+                              ? `fill-yellow-400 text-yellow-400 ${RATING_COLORS[review.rating]}`
+                              : 'text-gray-300'
+                              }`}
                           />
                         ))}
                         <span className="ml-2 font-bold text-foreground">{review.rating}.0</span>
@@ -570,14 +582,16 @@ export default function AdminReviews() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleApprove(review, !review.is_approved)}
-                        className={`p-2 rounded-lg transition-colors cursor-pointer ${
-                          review.is_approved !== false
-                            ? 'bg-green-500/20 text-green-600 hover:bg-green-500/30'
-                            : 'bg-yellow-500/20 text-yellow-600 hover:bg-yellow-500/30'
-                        }`}
+                        disabled={isApprovingId === review._id}
+                        className={`p-2 rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${review.is_approved !== false
+                          ? 'bg-green-500/20 text-green-600 hover:bg-green-500/30'
+                          : 'bg-yellow-500/20 text-yellow-600 hover:bg-yellow-500/30'
+                          }`}
                         title={review.is_approved !== false ? 'Hủy duyệt' : 'Duyệt'}
                       >
-                        {review.is_approved !== false ? (
+                        {isApprovingId === review._id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : review.is_approved !== false ? (
                           <CheckCircle2 className="w-4 h-4" />
                         ) : (
                           <XCircle className="w-4 h-4" />
@@ -633,15 +647,15 @@ export default function AdminReviews() {
 
         {/* Edit Modal */}
         {showEditModal && selectedReview && (
-          <div 
+          <div
             className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
             onClick={(e) => {
-              if (e.target === e.currentTarget) {
+              if (e.target === e.currentTarget && !isSaving) {
                 setShowEditModal(false);
               }
             }}
           >
-            <div 
+            <div
               className="bg-card border border-border rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
@@ -649,7 +663,8 @@ export default function AdminReviews() {
                 <h2 className="text-xl font-bold text-card-foreground">Chỉnh sửa đánh giá</h2>
                 <button
                   onClick={() => setShowEditModal(false)}
-                  className="p-2 hover:bg-muted rounded-lg cursor-pointer"
+                  disabled={isSaving}
+                  className="p-2 hover:bg-muted rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -742,21 +757,20 @@ export default function AdminReviews() {
                           key={idx}
                           type="button"
                           onClick={() => setEditForm({ ...editForm, color: colorOption.color, borderColor: colorOption.borderColor })}
-                          className={`h-10 rounded border-2 transition-all ${
-                            editForm.color === colorOption.color ? 'border-primary scale-105' : 'border-border hover:border-primary/50'
-                          }`}
+                          className={`h-10 rounded border-2 transition-all ${editForm.color === colorOption.color ? 'border-primary scale-105' : 'border-border hover:border-primary/50'
+                            }`}
                           style={{
-                            background: `linear-gradient(to bottom right, ${colorOption.color.includes('green') ? 'rgba(34, 197, 94, 0.2)' : 
+                            background: `linear-gradient(to bottom right, ${colorOption.color.includes('green') ? 'rgba(34, 197, 94, 0.2)' :
                               colorOption.color.includes('orange') ? 'rgba(249, 115, 22, 0.2)' :
-                              colorOption.color.includes('blue') ? 'rgba(59, 130, 246, 0.2)' :
-                              colorOption.color.includes('purple') ? 'rgba(168, 85, 247, 0.2)' :
-                              colorOption.color.includes('pink') ? 'rgba(236, 72, 153, 0.2)' :
-                              'rgba(234, 179, 8, 0.2)'}, ${colorOption.color.includes('green') ? 'rgba(5, 150, 105, 0.1)' : 
-                              colorOption.color.includes('orange') ? 'rgba(217, 119, 6, 0.1)' :
-                              colorOption.color.includes('blue') ? 'rgba(37, 99, 235, 0.1)' :
-                              colorOption.color.includes('purple') ? 'rgba(124, 58, 237, 0.1)' :
-                              colorOption.color.includes('pink') ? 'rgba(219, 39, 119, 0.1)' :
-                              'rgba(217, 119, 6, 0.1)'})`
+                                colorOption.color.includes('blue') ? 'rgba(59, 130, 246, 0.2)' :
+                                  colorOption.color.includes('purple') ? 'rgba(168, 85, 247, 0.2)' :
+                                    colorOption.color.includes('pink') ? 'rgba(236, 72, 153, 0.2)' :
+                                      'rgba(234, 179, 8, 0.2)'}, ${colorOption.color.includes('green') ? 'rgba(5, 150, 105, 0.1)' :
+                                        colorOption.color.includes('orange') ? 'rgba(217, 119, 6, 0.1)' :
+                                          colorOption.color.includes('blue') ? 'rgba(37, 99, 235, 0.1)' :
+                                            colorOption.color.includes('purple') ? 'rgba(124, 58, 237, 0.1)' :
+                                              colorOption.color.includes('pink') ? 'rgba(219, 39, 119, 0.1)' :
+                                                'rgba(217, 119, 6, 0.1)'})`
                           }}
                         />
                       ))}
@@ -796,16 +810,15 @@ export default function AdminReviews() {
                           key={idx}
                           type="button"
                           onClick={() => setEditForm({ ...editForm, color: colorOption.color, borderColor: colorOption.borderColor })}
-                          className={`h-10 rounded border-2 transition-all ${
-                            editForm.borderColor === colorOption.borderColor ? 'border-primary scale-105' : 'border-border hover:border-primary/50'
-                          }`}
+                          className={`h-10 rounded border-2 transition-all ${editForm.borderColor === colorOption.borderColor ? 'border-primary scale-105' : 'border-border hover:border-primary/50'
+                            }`}
                           style={{
                             borderColor: colorOption.borderColor.includes('green') ? 'rgba(34, 197, 94, 0.3)' :
                               colorOption.borderColor.includes('orange') ? 'rgba(249, 115, 22, 0.3)' :
-                              colorOption.borderColor.includes('blue') ? 'rgba(59, 130, 246, 0.3)' :
-                              colorOption.borderColor.includes('purple') ? 'rgba(168, 85, 247, 0.3)' :
-                              colorOption.borderColor.includes('pink') ? 'rgba(236, 72, 153, 0.3)' :
-                              'rgba(234, 179, 8, 0.3)',
+                                colorOption.borderColor.includes('blue') ? 'rgba(59, 130, 246, 0.3)' :
+                                  colorOption.borderColor.includes('purple') ? 'rgba(168, 85, 247, 0.3)' :
+                                    colorOption.borderColor.includes('pink') ? 'rgba(236, 72, 153, 0.3)' :
+                                      'rgba(234, 179, 8, 0.3)',
                             background: 'transparent'
                           }}
                         />
@@ -853,7 +866,7 @@ export default function AdminReviews() {
                       onChange={(e) => {
                         // Nếu đang bật hiển thị nhưng chưa được duyệt, không cho phép
                         if (e.target.checked && editForm.is_approved === false) {
-                          setToast({ message: 'Không thể hiển thị review chưa được duyệt. Vui lòng duyệt review trước.', isVisible: true });
+                          setToast({ message: 'Không thể hiển thị review chưa được duyệt. Vui lòng duyệt review trước.', isVisible: true, type: 'error' });
                           return;
                         }
                         setEditForm({ ...editForm, is_visible: e.target.checked });
@@ -873,13 +886,22 @@ export default function AdminReviews() {
                 <div className="flex items-center gap-3 pt-4 border-t border-border">
                   <button
                     onClick={handleSaveEdit}
-                    className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark cursor-pointer"
+                    disabled={isSaving}
+                    className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    Lưu
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Đang lưu...</span>
+                      </>
+                    ) : (
+                      'Lưu'
+                    )}
                   </button>
                   <button
                     onClick={() => setShowEditModal(false)}
-                    className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 border border-border rounded-lg text-foreground cursor-pointer"
+                    disabled={isSaving}
+                    className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 border border-border rounded-lg text-foreground cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Hủy
                   </button>
@@ -891,15 +913,15 @@ export default function AdminReviews() {
 
         {/* Delete Confirmation Modal */}
         {showDeleteModal && selectedReview && (
-          <div 
+          <div
             className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
             onClick={(e) => {
-              if (e.target === e.currentTarget) {
+              if (e.target === e.currentTarget && !isDeleting) {
                 setShowDeleteModal(false);
               }
             }}
           >
-            <div 
+            <div
               className="bg-card border border-border rounded-lg p-6 max-w-md w-full"
               onClick={(e) => e.stopPropagation()}
             >
@@ -910,13 +932,22 @@ export default function AdminReviews() {
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleDelete}
-                  className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 cursor-pointer"
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  Xóa
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Đang xóa...</span>
+                    </>
+                  ) : (
+                    'Xóa'
+                  )}
                 </button>
                 <button
                   onClick={() => setShowDeleteModal(false)}
-                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 border border-border rounded-lg text-foreground cursor-pointer"
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 border border-border rounded-lg text-foreground cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Hủy
                 </button>
@@ -925,9 +956,9 @@ export default function AdminReviews() {
           </div>
         )}
 
-        <Toast 
-          message={toast.message} 
-          isVisible={toast.isVisible} 
+        <Toast
+          message={toast.message}
+          isVisible={toast.isVisible}
           onClose={() => setToast({ message: '', isVisible: false })}
           type={toast.type || 'success'}
         />

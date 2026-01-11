@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
+import { getAdminFromToken } from '@/lib/auth';
 
 /**
  * GET /api/categories/:id
@@ -10,7 +11,7 @@ export async function GET(request, { params }) {
     const { id } = await params;
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
-    
+
     const category = await db
       .collection('categories')
       .findOne({ id: parseInt(id) });
@@ -46,7 +47,14 @@ export async function PUT(request, { params }) {
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
 
-    // TODO: Add admin authentication check
+    // Check admin authentication
+    const admin = await getAdminFromToken(request);
+    if (!admin) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
     // Validate
     if (body.name !== undefined && (!body.name || typeof body.name !== 'string' || body.name.trim().length === 0)) {
@@ -100,7 +108,14 @@ export async function DELETE(request, { params }) {
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
 
-    // TODO: Add admin authentication check
+    // Check admin authentication
+    const admin = await getAdminFromToken(request);
+    if (!admin) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
     // Kiểm tra xem danh mục có món ăn không
     const foodCount = await db
@@ -109,9 +124,9 @@ export async function DELETE(request, { params }) {
 
     if (foodCount > 0) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: `Không thể xóa danh mục. Có ${foodCount} món ăn đang thuộc danh mục này. Vui lòng chuyển hoặc xóa các món ăn trước.` 
+        {
+          success: false,
+          error: `Không thể xóa danh mục. Có ${foodCount} món ăn đang thuộc danh mục này. Vui lòng chuyển hoặc xóa các món ăn trước.`
         },
         { status: 400 }
       );

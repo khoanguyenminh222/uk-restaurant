@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
+import { getAdminFromToken } from '@/lib/auth';
 
 /**
  * GET /api/banners/:id
@@ -10,7 +11,7 @@ export async function GET(request, { params }) {
     const { id } = await params;
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
-    
+
     const banner = await db
       .collection('banners')
       .findOne({ id: parseInt(id) });
@@ -46,7 +47,14 @@ export async function PUT(request, { params }) {
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
 
-    // TODO: Add admin authentication check
+    // Check admin authentication
+    const admin = await getAdminFromToken(request);
+    if (!admin) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
     // Validate
     if (body.image !== undefined && (!body.image || typeof body.image !== 'string' || body.image.trim().length === 0)) {
@@ -100,7 +108,14 @@ export async function DELETE(request, { params }) {
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
 
-    // TODO: Add admin authentication check
+    // Check admin authentication
+    const admin = await getAdminFromToken(request);
+    if (!admin) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
     const result = await db
       .collection('banners')

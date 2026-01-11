@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { defaultLandingConfig, validateLandingConfig, mergeWithDefaults } from '@/lib/models/LandingConfig';
 import { calculateReviewStats } from '@/lib/models/Review';
+import { getAdminFromToken } from '@/lib/auth';
 
 /**
  * GET /api/config/landing
@@ -70,14 +71,14 @@ export async function GET(request) {
  */
 export async function PUT(request) {
   try {
-    // TODO: Thêm admin authentication check
-    // const user = await getUserFromRequest(request);
-    // if (!user || !(await isAdmin(user.user_id))) {
-    //   return NextResponse.json(
-    //     { success: false, error: 'Unauthorized' },
-    //     { status: 401 }
-    //   );
-    // }
+    // Check admin authentication
+    const admin = await getAdminFromToken(request);
+    if (!admin) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
     const body = await request.json();
 
@@ -103,7 +104,7 @@ export async function PUT(request) {
     if (!existing) {
       // Tạo mới: merge với defaults
       const newConfig = mergeWithDefaults(body);
-      
+
       // Tự động thêm color và borderColor mặc định cho các feature thiếu
       if (newConfig.whyChooseUs && newConfig.whyChooseUs.features) {
         const defaultColors = [
@@ -114,7 +115,7 @@ export async function PUT(request) {
           { color: 'from-pink-500/20 to-rose-600/10', borderColor: 'border-pink-500/30' },
           { color: 'from-yellow-500/20 to-amber-600/10', borderColor: 'border-yellow-500/30' },
         ];
-        
+
         newConfig.whyChooseUs.features = newConfig.whyChooseUs.features.map((feature, index) => {
           if (feature.color && feature.borderColor) {
             return feature;
@@ -127,7 +128,7 @@ export async function PUT(request) {
           };
         });
       }
-      
+
       newConfig.config_type = 'landing';
       newConfig.created_at = now;
       newConfig.updated_at = now;
@@ -179,7 +180,7 @@ export async function PUT(request) {
             { color: 'from-pink-500/20 to-rose-600/10', borderColor: 'border-pink-500/30' },
             { color: 'from-yellow-500/20 to-amber-600/10', borderColor: 'border-yellow-500/30' },
           ];
-          
+
           updateData.whyChooseUs.features = body.whyChooseUs.features.map((feature, index) => {
             // Nếu feature đã có color và borderColor, giữ nguyên
             if (feature.color && feature.borderColor) {
@@ -204,9 +205,9 @@ export async function PUT(request) {
               .collection('reviews')
               .find({ is_approved: { $ne: false } })
               .toArray();
-            
+
             const stats = calculateReviewStats(reviews);
-            
+
             // Cập nhật stats từ reviews
             updateData.whyChooseUs.stats = updateData.whyChooseUs.stats || [];
             updateData.whyChooseUs.stats = updateData.whyChooseUs.stats.map(stat => {
@@ -238,9 +239,9 @@ export async function PUT(request) {
               .collection('reviews')
               .find({ is_approved: { $ne: false } })
               .toArray();
-            
+
             const stats = calculateReviewStats(reviews);
-            
+
             updateData.testimonials.trustStats = {
               averageRating: stats.averageRating,
               totalReviews: stats.totalReviews,

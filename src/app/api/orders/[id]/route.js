@@ -44,16 +44,16 @@ export async function PUT(request, { params }) {
   try {
     const { id } = await params;
     const body = await request.json();
-    
-    // Lấy thông tin admin từ request (nếu có)
-    let adminInfo = null;
-    try {
-      adminInfo = await getAdminFromToken(request);
-    } catch (adminError) {
-      console.error('Error getting admin info:', adminError);
-      // Continue without admin info
+
+    // Check admin authentication
+    const adminInfo = await getAdminFromToken(request);
+    if (!adminInfo) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
-    
+
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
 
@@ -104,7 +104,7 @@ export async function PUT(request, { params }) {
 
     // Track changes for change_history
     const changes = [];
-    
+
     // Helper function to format value for display
     const formatValue = (value) => {
       if (value === null || value === undefined) return null;
@@ -117,7 +117,7 @@ export async function PUT(request, { params }) {
     const trackChange = (field, oldValue, newValue) => {
       const formattedOld = formatValue(oldValue);
       const formattedNew = formatValue(newValue);
-      
+
       // Only track if values are different
       if (JSON.stringify(formattedOld) !== JSON.stringify(formattedNew)) {
         changes.push({
@@ -132,40 +132,40 @@ export async function PUT(request, { params }) {
     if (body.customer_name !== undefined && body.customer_name !== order.customer_name) {
       trackChange('customer_name', order.customer_name, body.customer_name);
     }
-    
+
     if (body.customer_phone !== undefined && body.customer_phone !== order.customer_phone) {
       trackChange('customer_phone', order.customer_phone, body.customer_phone);
     }
-    
+
     if (body.customer_address !== undefined && body.customer_address !== order.customer_address) {
       trackChange('customer_address', order.customer_address || '', body.customer_address || '');
     }
-    
+
     if (body.total_price !== undefined && body.total_price !== order.total_price) {
       trackChange('total_price', order.total_price, body.total_price);
     }
-    
+
     if (body.admin_notes !== undefined && body.admin_notes !== (order.admin_notes || '')) {
       trackChange('admin_notes', order.admin_notes || '', body.admin_notes || '');
     }
-    
+
     // Track items changes (compare JSON strings)
     if (body.items !== undefined) {
       // Normalize old items
       const oldItems = order.items && Array.isArray(order.items) && order.items.length > 0
         ? JSON.stringify(order.items)
         : null;
-      
+
       // Normalize new items
       const newItems = Array.isArray(body.items) && body.items.length > 0
         ? JSON.stringify(body.items)
         : null;
-      
+
       if (oldItems !== newItems) {
         trackChange('items', order.items || null, body.items || null);
       }
     }
-    
+
     // Track status change (will also be in status_history)
     if (body.status && body.status !== order.status) {
       trackChange('status', order.status, body.status);
@@ -173,14 +173,14 @@ export async function PUT(request, { params }) {
 
     if (body.status) {
       updateData.status = body.status;
-      
+
       // Add to status_history if exists
       if (!order.status_history) {
         updateData.status_history = [];
       } else {
         updateData.status_history = [...order.status_history];
       }
-      
+
       // Prepare changed_by_detail
       let changedByDetail = null;
       if (adminInfo) {
@@ -196,7 +196,7 @@ export async function PUT(request, { params }) {
       } else if (body.user_id) {
         // User (nếu có user_id trong body)
         try {
-          const user = await db.collection('users').findOne({ 
+          const user = await db.collection('users').findOne({
             user_id: body.user_id,
             role: { $ne: 'admin' } // Không phải admin
           });
@@ -213,14 +213,14 @@ export async function PUT(request, { params }) {
           console.error('Error fetching user info:', userError);
         }
       }
-      
+
       // Fallback to system if no detail
       if (!changedByDetail) {
         changedByDetail = {
           type: body.changed_by || 'system',
         };
       }
-      
+
       updateData.status_history.push({
         status: body.status,
         changed_at: new Date(),
@@ -284,7 +284,7 @@ export async function PUT(request, { params }) {
         };
       } else if (body.user_id) {
         try {
-          const user = await db.collection('users').findOne({ 
+          const user = await db.collection('users').findOne({
             user_id: body.user_id,
             role: { $ne: 'admin' }
           });
@@ -301,20 +301,20 @@ export async function PUT(request, { params }) {
           console.error('Error fetching user info:', userError);
         }
       }
-      
+
       if (!changedByDetail) {
         changedByDetail = {
           type: body.changed_by || (adminInfo ? 'admin' : 'system'),
         };
       }
-      
+
       // Initialize change_history if not exists
       if (!order.change_history) {
         updateData.change_history = [];
       } else {
         updateData.change_history = [...order.change_history];
       }
-      
+
       // Add new change entry
       updateData.change_history.push({
         changed_at: new Date(),
@@ -330,7 +330,7 @@ export async function PUT(request, { params }) {
         delete updateData[key];
       }
     });
-    
+
     const updateOperation = { $set: updateData };
 
     const result = await db.collection('orders').updateOne(
@@ -352,12 +352,12 @@ export async function PUT(request, { params }) {
     if (body.status === 'cancelled') {
       try {
         let cancelledBy = body.changed_by || 'admin';
-        
+
         // Nếu là admin/manager/super_admin và có thông tin admin, sử dụng tên admin
         if ((cancelledBy === 'admin' || cancelledBy === 'manager' || cancelledBy === 'super_admin') && adminInfo) {
           cancelledBy = adminInfo.name || adminInfo.phone || cancelledBy;
         }
-        
+
         const reason = body.cancel_reason || body.admin_notes || body.notes || updatedOrder.cancel_reason || '';
         await sendCancelledOrderNotification(updatedOrder, cancelledBy, reason, adminInfo);
       } catch (telegramError) {
@@ -415,37 +415,31 @@ export async function DELETE(request, { params }) {
     };
 
     // Get admin info for status_history
-    let adminInfo = null;
-    try {
-      adminInfo = await getAdminFromToken(request);
-    } catch (adminError) {
-      console.error('Error getting admin info:', adminError);
+    const adminInfo = await getAdminFromToken(request);
+    if (!adminInfo) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
-    
+
     // Add to status_history
     if (!order.status_history) {
       updateData.status_history = [];
     } else {
       updateData.status_history = [...order.status_history];
     }
-    
+
     // Prepare changed_by_detail
-    let changedByDetail = null;
-    if (adminInfo) {
-      changedByDetail = {
-        type: 'admin',
-        user_id: adminInfo.user_id || adminInfo._id?.toString() || '',
-        name: adminInfo.name || '',
-        phone: adminInfo.phone || '',
-        email: adminInfo.email || '',
-        role: adminInfo.role || 'admin',
-      };
-    } else {
-      changedByDetail = {
-        type: 'admin', // Default to admin for delete action
-      };
-    }
-    
+    const changedByDetail = {
+      type: 'admin',
+      user_id: adminInfo.user_id || adminInfo._id?.toString() || '',
+      name: adminInfo.name || '',
+      phone: adminInfo.phone || '',
+      email: adminInfo.email || '',
+      role: adminInfo.role || 'admin',
+    };
+
     updateData.status_history.push({
       status: 'deleted',
       changed_at: new Date(),

@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { formatCurrency } from '@/utils/helpers';
 import Toast from '@/components/Toast/Toast';
-import { UtensilsCrossed, Plus, Edit2, Trash2, Loader2, Image as ImageIcon, X, CheckCircle2, XCircle, Search, Filter, ChevronDown } from 'lucide-react';
+import { UtensilsCrossed, Plus, Edit2, Trash2, Loader2, X, Search, TrendingUp, Eye, EyeOff, Filter, ChevronDown, CheckCircle2, XCircle, ImageIcon } from 'lucide-react';
+import { adminFetch } from '@/lib/adminAuth';
 
 export default function AdminFood() {
   const [food, setFood] = useState([]);
@@ -57,7 +58,7 @@ export default function AdminFood() {
 
   const fetchThresholds = async () => {
     try {
-      const res = await fetch('/api/config/popular?sortBy=order');
+      const res = await adminFetch('/api/config/popular?sortBy=order');
       const data = await res.json();
       if (data.success) {
         setThresholds(data.data || []);
@@ -69,7 +70,7 @@ export default function AdminFood() {
 
   const fetchCategories = async () => {
     try {
-      const categoriesRes = await fetch('/api/categories');
+      const categoriesRes = await adminFetch('/api/categories');
       const categoriesData = await categoriesRes.json();
       if (categoriesData.success) {
         setCategories(categoriesData.data);
@@ -99,7 +100,7 @@ export default function AdminFood() {
         params.append('search', searchTerm);
       }
 
-      const foodRes = await fetch(`/api/food?${params}`);
+      const foodRes = await adminFetch(`/api/food?${params}`);
       const foodData = await foodRes.json();
 
       if (foodData.success) {
@@ -152,7 +153,7 @@ export default function AdminFood() {
       } else if (foodItem.use_auto_badge === false) {
         badgeType = 'none';
       }
-      
+
       setFormData({
         name: foodItem.name || '',
         category_id: foodItem.category_id || '',
@@ -268,7 +269,7 @@ export default function AdminFood() {
         ...badgeData,
       };
 
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -321,7 +322,7 @@ export default function AdminFood() {
 
     setDeleting(true);
     try {
-      const res = await fetch(`/api/food/${deletingFoodId}`, {
+      const res = await adminFetch(`/api/food/${deletingFoodId}`, {
         method: 'DELETE',
       });
 
@@ -390,13 +391,13 @@ export default function AdminFood() {
         }
       }
     }
-    
+
     // Bước 2: Hệ thống tự động (Fallback) - Trong admin không có popularFoodsMap nên chỉ hiển thị manual
     // Nếu use_auto_badge === false → không có badge
     if (foodItem.use_auto_badge === false) {
       return null
     }
-    
+
     // Trong admin, không tính auto badge (cần popularFoodsMap)
     // Chỉ hiển thị "Tự động" indicator
     return { isAuto: true }
@@ -599,11 +600,10 @@ export default function AdminFood() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
-                          item.is_available
-                            ? 'bg-success/20 text-success'
-                            : 'bg-destructive/20 text-destructive'
-                        }`}
+                        className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${item.is_available
+                          ? 'bg-success/20 text-success'
+                          : 'bg-destructive/20 text-destructive'
+                          }`}
                       >
                         {item.is_available ? (
                           <CheckCircle2 className="w-3 h-3" />
@@ -675,11 +675,10 @@ export default function AdminFood() {
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <h3 className="font-semibold text-card-foreground truncate">{item.name}</h3>
                     <span
-                      className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full shrink-0 ${
-                        item.is_available
-                          ? 'bg-success/20 text-success'
-                          : 'bg-destructive/20 text-destructive'
-                      }`}
+                      className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full shrink-0 ${item.is_available
+                        ? 'bg-success/20 text-success'
+                        : 'bg-destructive/20 text-destructive'
+                        }`}
                     >
                       {item.is_available ? (
                         <CheckCircle2 className="w-3 h-3" />
@@ -741,11 +740,11 @@ export default function AdminFood() {
 
       {/* Modal */}
       {showModal && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={handleCloseModal}
         >
-          <div 
+          <div
             className="bg-card rounded-lg max-w-2xl w-full p-6 border border-border max-h-[90vh] overflow-y-auto relative"
             onClick={(e) => e.stopPropagation()}
           >
@@ -872,8 +871,8 @@ export default function AdminFood() {
                         value="manual"
                         checked={formData.badgeType === 'manual'}
                         onChange={(e) => {
-                          setFormData({ 
-                            ...formData, 
+                          setFormData({
+                            ...formData,
                             badgeType: e.target.value,
                             manual_badge: formData.manual_badge || { threshold_id: '', label: '', icon: '', color: '#FF0000' }
                           })
@@ -1016,7 +1015,7 @@ export default function AdminFood() {
                               } else if (formData.manual_badge.label && formData.manual_badge.icon && formData.manual_badge.color) {
                                 badge = formData.manual_badge
                               }
-                              
+
                               if (badge) {
                                 return (
                                   <div
@@ -1085,14 +1084,14 @@ export default function AdminFood() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={() => {
             setShowDeleteModal(false);
             setDeletingFoodId(null);
           }}
         >
-          <div 
+          <div
             className="bg-card rounded-lg max-w-md w-full p-6 border border-border"
             onClick={(e) => e.stopPropagation()}
           >

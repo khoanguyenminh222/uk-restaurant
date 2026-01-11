@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { LayoutDashboard, FolderOpen, UtensilsCrossed, Loader2, ArrowRight } from 'lucide-react';
+import { adminFetch } from '@/lib/adminAuth';
 import Toast from '@/components/Toast/Toast';
 
 export default function AdminDashboard() {
@@ -15,7 +16,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchStats();
-    
+
     // Check for login success message
     const loginMessage = localStorage.getItem('admin_login_success_message');
     if (loginMessage) {
@@ -27,8 +28,8 @@ export default function AdminDashboard() {
   const fetchStats = async () => {
     try {
       const [categoriesRes, foodRes] = await Promise.all([
-        fetch('/api/categories'),
-        fetch('/api/food'),
+        adminFetch('/api/categories'),
+        adminFetch('/api/food'),
       ]);
 
       const categoriesData = await categoriesRes.json();
@@ -122,7 +123,7 @@ export default function AdminDashboard() {
           </Link>
         </div>
       </div>
-      
+
       <Toast
         message={toast.message}
         isVisible={toast.isVisible}

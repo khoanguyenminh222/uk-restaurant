@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRoleCheck } from '@/hooks/useRoleCheck';
 import { formatCurrency } from '@/utils/helpers';
 import Toast from '@/components/Toast/Toast';
+import { adminFetch } from '@/lib/adminAuth';
 import {
   Users,
   Loader2,
@@ -104,7 +105,7 @@ export default function AdminUsers() {
         params.append('search', searchTerm);
       }
 
-      const response = await fetch(`/api/users?${params}`);
+      const response = await adminFetch(`/api/users?${params}`);
       const data = await response.json();
 
       if (data.success) {
@@ -176,7 +177,7 @@ export default function AdminUsers() {
 
     setEditing(true);
     try {
-      const response = await fetch(`/api/users/${selectedUser.user_id || selectedUser._id}`, {
+      const response = await adminFetch(`/api/users/${selectedUser.user_id || selectedUser._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -241,7 +242,7 @@ export default function AdminUsers() {
 
     setDeleting(true);
     try {
-      const response = await fetch(`/api/users/${selectedUser.user_id || selectedUser._id}`, {
+      const response = await adminFetch(`/api/users/${selectedUser.user_id || selectedUser._id}`, {
         method: 'DELETE',
       });
 
@@ -286,7 +287,7 @@ export default function AdminUsers() {
 
     setEditing(true);
     try {
-      const response = await fetch(`/api/users/${user.user_id || user._id}`, {
+      const response = await adminFetch(`/api/users/${user.user_id || user._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -572,9 +573,8 @@ export default function AdminUsers() {
                               <button
                                 onClick={() => handleEdit(user)}
                                 disabled={!canInteractWithUser(user)}
-                                className={`p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors ${
-                                  canInteractWithUser(user) ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
-                                }`}
+                                className={`p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors ${canInteractWithUser(user) ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
+                                  }`}
                                 aria-label="Sửa"
                                 title={!canInteractWithUser(user) ? 'Bạn không có quyền sửa tài khoản admin/super_admin' : 'Sửa'}
                               >
@@ -583,9 +583,8 @@ export default function AdminUsers() {
                               <button
                                 onClick={() => handleDelete(user)}
                                 disabled={!canInteractWithUser(user)}
-                                className={`p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors ${
-                                  canInteractWithUser(user) ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
-                                }`}
+                                className={`p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors ${canInteractWithUser(user) ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
+                                  }`}
                                 aria-label="Xóa"
                                 title={!canInteractWithUser(user) ? 'Bạn không có quyền xóa tài khoản admin/super_admin' : 'Xóa'}
                               >
@@ -696,9 +695,8 @@ export default function AdminUsers() {
                       <button
                         onClick={() => handleEdit(user)}
                         disabled={!canInteractWithUser(user)}
-                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium ${
-                          canInteractWithUser(user) ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
-                        }`}
+                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium ${canInteractWithUser(user) ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
+                          }`}
                         title={!canInteractWithUser(user) ? 'Bạn không có quyền sửa tài khoản admin/super_admin' : 'Sửa'}
                       >
                         <Edit2 className="w-4 h-4" />
@@ -707,9 +705,8 @@ export default function AdminUsers() {
                       <button
                         onClick={() => handleDelete(user)}
                         disabled={!canInteractWithUser(user)}
-                        className={`px-4 py-2 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg transition-colors ${
-                          canInteractWithUser(user) ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
-                        }`}
+                        className={`px-4 py-2 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg transition-colors ${canInteractWithUser(user) ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
+                          }`}
                         title={!canInteractWithUser(user) ? 'Bạn không có quyền xóa tài khoản admin/super_admin' : 'Xóa'}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -748,14 +745,14 @@ export default function AdminUsers() {
 
       {/* Detail Modal */}
       {showDetailModal && selectedUser && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={() => {
             setShowDetailModal(false);
             setSelectedUser(null);
           }}
         >
-          <div 
+          <div
             ref={detailModalRef}
             className="bg-card rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto relative"
             onClick={(e) => e.stopPropagation()}
@@ -848,7 +845,7 @@ export default function AdminUsers() {
 
       {/* Edit Modal */}
       {showEditModal && selectedUser && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={() => {
             setShowEditModal(false);
@@ -856,7 +853,7 @@ export default function AdminUsers() {
             setEditFormData({ name: '', email: '', address: '', role: 'user' });
           }}
         >
-          <div 
+          <div
             ref={editModalRef}
             className="bg-card rounded-lg max-w-md w-full p-6 border border-border relative"
             onClick={(e) => e.stopPropagation()}
@@ -937,7 +934,7 @@ export default function AdminUsers() {
                 <button
                   onClick={handleUpdateUser}
                   disabled={editing}
-                  className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {editing ? (
                     <>
@@ -966,14 +963,14 @@ export default function AdminUsers() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && selectedUser && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={() => {
             setShowDeleteModal(false);
             setSelectedUser(null);
           }}
         >
-          <div 
+          <div
             ref={deleteModalRef}
             className="bg-card rounded-lg max-w-md w-full p-6 border border-border relative"
             onClick={(e) => e.stopPropagation()}

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { validateThreshold } from '@/lib/models/PopularConfig';
+import { getAdminFromToken } from '@/lib/auth';
 
 /**
  * PUT /api/config/popular/:id
@@ -10,13 +11,13 @@ import { validateThreshold } from '@/lib/models/PopularConfig';
 export async function PUT(request, { params }) {
   try {
     // TODO: Thêm admin authentication check
-    // const user = await getUserFromRequest(request);
-    // if (!user || !(await isAdmin(user.user_id))) {
-    //   return NextResponse.json(
-    //     { success: false, error: 'Unauthorized' },
-    //     { status: 401 }
-    //   );
-    // }
+    const admin = await getAdminFromToken(request);
+    if (!admin) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
     const { id } = await params;
     if (!ObjectId.isValid(id)) {
@@ -101,13 +102,13 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     // TODO: Thêm admin authentication check
-    // const user = await getUserFromRequest(request);
-    // if (!user || !(await isAdmin(user.user_id))) {
-    //   return NextResponse.json(
-    //     { success: false, error: 'Unauthorized' },
-    //     { status: 401 }
-    //   );
-    // }
+    const admin = await getAdminFromToken(request);
+    if (!admin) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
     const { id } = await params;
     if (!ObjectId.isValid(id)) {

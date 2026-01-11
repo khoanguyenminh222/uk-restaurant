@@ -1,21 +1,31 @@
 import { NextResponse } from 'next/server';
 import { sendTestTelegramMessage } from '@/lib/telegram';
 import { getTelegramConfig } from '@/lib/restaurantConfig';
+import { getAdminFromToken } from '@/lib/auth';
 
 export async function POST(req) {
   try {
+    // Check admin authentication
+    const admin = await getAdminFromToken(req);
+    if (!admin) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     // Check if Telegram configuration exists
     const telegramConfig = await getTelegramConfig();
-    
+
     // Check database config first, then env variables
     const hasBotToken = telegramConfig?.bot_token || process.env.TELEGRAM_BOT_TOKEN;
     const hasChatId = telegramConfig?.chat_id || process.env.TELEGRAM_CHAT_ID;
-    
+
     if (!hasBotToken || !hasChatId) {
       return NextResponse.json(
-        { 
+        {
           error: 'Vui lòng cấu hình Bot Token và Chat ID trước khi gửi thông báo thử nghiệm. ' +
-                 'Bạn có thể cấu hình trong Admin > Notification Config hoặc set environment variables.'
+            'Bạn có thể cấu hình trong Admin > Notification Config hoặc set environment variables.'
         },
         { status: 400 }
       );
@@ -38,10 +48,10 @@ export async function POST(req) {
     });
   } catch (error) {
     console.error('Error sending test Telegram message:', error);
-    
+
     // Provide more specific error messages
     let errorMessage = error.message || 'Không thể gửi thông báo Telegram thử nghiệm';
-    
+
     if (error.message && error.message.includes('Unauthorized')) {
       errorMessage = 'Bot Token không hợp lệ. Vui lòng kiểm tra lại Bot Token.';
     } else if (error.message && error.message.includes('chat not found')) {
@@ -49,7 +59,7 @@ export async function POST(req) {
     } else if (error.message && error.message.includes('Bad Request')) {
       errorMessage = 'Yêu cầu không hợp lệ. Vui lòng kiểm tra lại Bot Token và Chat ID.';
     }
-    
+
     return NextResponse.json(
       { error: errorMessage },
       { status: 500 }
