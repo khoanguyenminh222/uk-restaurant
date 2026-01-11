@@ -13,6 +13,8 @@ export const defaultLandingConfig = {
   slogan: 'Ăn no khỏi "bàn"', // Slogan/tagline của cửa hàng (dùng cho email, metadata)
   header: {
     restaurant_name: 'UK Restaurant',
+    display_mode: 'name', // 'name' | 'logo'
+    logo_url: '', // URL to logo image
     menu_items: [
       { id: 'home', label: 'Trang chủ', icon: 'Home', order: 1, is_visible: true },
       { id: 'menu', label: 'Thực đơn', icon: 'Utensils', order: 2, is_visible: true },
@@ -228,12 +230,12 @@ export const defaultLandingConfig = {
     max_orders: 5, // Số đơn hàng tối đa mà 1 email có thể đặt trong khoảng thời gian
     order_rate_limit_ttl: 1800, // Thời gian giới hạn đặt hàng (giây) - 30 phút
     order_rate_limit_blacklist_hours: 24, // Thời gian blacklist khi vượt quá giới hạn (giờ)
-    
+
     // Xác thực email
     verification_code_ttl: 600, // Thời gian mã xác thực có hiệu lực (giây) - 10 phút
     verified_session_ttl: 1800, // Thời gian session sau khi verify (giây) - 30 phút
     max_verify_attempts: 5, // Số lần thử nhập mã xác thực sai tối đa
-    
+
     // Giới hạn gửi mã
     max_send_code: 5, // Số lần gửi mã xác thực tối đa trong khoảng thời gian
     send_code_rate_limit_ttl: 3600, // Thời gian giới hạn gửi mã (giây) - 1 giờ
@@ -543,7 +545,7 @@ export function validateLandingConfig(data) {
     if (data.email_config.email_notifications) {
       const validStatuses = ['confirmed', 'preparing', 'ready', 'delivered', 'completed', 'cancelled'];
       const notifications = data.email_config.email_notifications;
-      
+
       if (typeof notifications !== 'object') {
         errors.push('Email Config: email_notifications phải là object');
       } else {

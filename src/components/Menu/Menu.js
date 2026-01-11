@@ -517,7 +517,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
         >
           <div className="relative inline-block">
             {/* Decorative background */}
-            <div className="absolute inset-0 bg-linear-to-r from-primary/10 via-primary/20 to-primary/10 rounded-3xl blur-2xl -z-10 transform scale-110"></div>
+            {/* <div className="absolute inset-0 bg-linear-to-r from-primary/20 via-primary/20 to-primary/20 rounded-3xl blur-3xl -z-10 transform"></div> */}
 
             <div className="relative px-8 py-6">
               <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold font-display mb-2 bg-linear-to-r from-primary via-primary-light to-primary bg-clip-text text-transparent">

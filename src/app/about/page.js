@@ -9,12 +9,12 @@ import { useScrollAnimation } from "@/hooks/useScrollAnimation"
 import { useAboutConfig } from "@/hooks/useAboutConfig"
 import { useLandingConfig } from "@/hooks/useLandingConfig"
 import * as lucideIcons from "lucide-react"
-import { 
-  Award, 
-  Users, 
-  Heart, 
-  Leaf, 
-  Zap, 
+import {
+  Award,
+  Users,
+  Heart,
+  Leaf,
+  Zap,
   Globe,
   ChefHat,
   Utensils,
@@ -49,7 +49,7 @@ export default function AboutPage() {
   const values = config?.values || {}
   const team = config?.team || {}
   const cta = config?.cta || {}
-  
+
   // Features từ config (dùng cho values section)
   const configFeatures = config?.features || []
   const features = configFeatures
@@ -88,9 +88,8 @@ export default function AboutPage() {
       {/* Hero Section */}
       <section
         ref={heroRef}
-        className={`relative min-h-[600px] md:min-h-[700px] flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-20 pb-12 overflow-hidden bg-linear-to-br from-primary/10 via-background to-primary/5 scroll-fade-in ${
-          isHeroVisible ? "visible" : ""
-        }`}
+        className={`relative min-h-[600px] md:min-h-[700px] flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-20 pb-12 overflow-hidden bg-linear-to-br from-primary/50 via-background to-primary/30 scroll-fade-in ${isHeroVisible ? "visible" : ""
+          }`}
       >
         {/* Background Image */}
         {hero.image && (
@@ -108,7 +107,7 @@ export default function AboutPage() {
             <div className="absolute inset-0 z-10 bg-black/40"></div>
           </>
         )}
-        
+
         {/* Decorative background elements */}
         <div className="absolute top-10 right-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl -z-10"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10"></div>
@@ -116,29 +115,26 @@ export default function AboutPage() {
         <div className="max-w-6xl mx-auto text-center space-y-6 relative z-10">
           {hero.badge && (
             <div className="inline-block">
-              <span className={`px-4 py-2 rounded-full text-sm font-semibold border ${
-                hero.image 
-                  ? 'bg-white/90 text-primary border-white/50 backdrop-blur-sm' 
-                  : 'bg-primary/10 text-primary border-primary/20'
-              }`}>
+              <span className={`px-4 py-2 rounded-full text-sm font-semibold border ${hero.image
+                ? 'bg-white/90 text-primary border-white/50 backdrop-blur-sm'
+                : 'bg-primary/10 text-primary border-primary/20'
+                }`}>
                 {hero.badge}
               </span>
             </div>
           )}
 
-          <h1 className={`text-4xl md:text-5xl lg:text-6xl font-bold font-display leading-tight ${
-            hero.image 
-              ? 'text-white drop-shadow-lg' 
-              : 'bg-linear-to-r from-primary via-primary-light to-primary bg-clip-text text-transparent'
-          }`}>
+          <h1 className={`text-4xl md:text-5xl lg:text-6xl font-bold font-display leading-tight ${hero.image
+            ? 'text-white drop-shadow-lg'
+            : 'bg-linear-to-r from-primary via-primary-light to-primary bg-clip-text text-transparent'
+            }`}>
             {hero.title || 'Ẩm Thực Không Chỉ Là Thức Ăn'}
           </h1>
 
-          <p className={`text-lg md:text-xl max-w-2xl mx-auto leading-relaxed ${
-            hero.image 
-              ? 'text-white/95 drop-shadow-md' 
-              : 'text-muted-foreground'
-          }`}>
+          <p className={`text-lg md:text-xl max-w-2xl mx-auto leading-relaxed ${hero.image
+            ? 'text-white/95 drop-shadow-md'
+            : 'text-muted-foreground'
+            }`}>
             {hero.description || 'Đó là một hành trình tình yêu, sáng tạo và đam mê. Chúng tôi tự hào mang đến những trải nghiệm ẩm thực tuyệt vời cho mỗi khách hàng.'}
           </p>
 
@@ -167,9 +163,8 @@ export default function AboutPage() {
       {/* Mission Section */}
       <section
         ref={missionRef}
-        className={`py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-card/50 backdrop-blur-sm scroll-fade-in ${
-          isMissionVisible ? "visible" : ""
-        }`}
+        className={`py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-card/50 backdrop-blur-sm scroll-fade-in ${isMissionVisible ? "visible" : ""
+          }`}
       >
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
@@ -251,9 +246,8 @@ export default function AboutPage() {
       {/* Values Section */}
       <section
         ref={valuesRef}
-        className={`py-16 md:py-24 px-4 sm:px-6 lg:px-8 scroll-fade-in ${
-          isValuesVisible ? "visible" : ""
-        }`}
+        className={`py-16 md:py-24 px-4 sm:px-6 lg:px-8 scroll-fade-in ${isValuesVisible ? "visible" : ""
+          }`}
       >
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
@@ -271,9 +265,8 @@ export default function AboutPage() {
               return (
                 <div
                   key={index}
-                  className={`group p-6 bg-card rounded-lg border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 scroll-scale-in ${
-                    isValuesVisible ? "visible" : ""
-                  }`}
+                  className={`group p-6 bg-card rounded-lg border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 scroll-scale-in ${isValuesVisible ? "visible" : ""
+                    }`}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <div className="mb-4 inline-block p-3 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
@@ -291,9 +284,8 @@ export default function AboutPage() {
       {/* Stats Section */}
       <section
         ref={statsRef}
-        className={`py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-linear-to-r from-primary/10 to-primary/5 scroll-fade-in ${
-          isStatsVisible ? "visible" : ""
-        }`}
+        className={`py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-linear-to-r from-primary/10 to-primary/5 scroll-fade-in ${isStatsVisible ? "visible" : ""
+          }`}
       >
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -323,9 +315,8 @@ export default function AboutPage() {
       {/* Team Section */}
       <section
         ref={teamRef}
-        className={`py-16 md:py-24 px-4 sm:px-6 lg:px-8 scroll-fade-in ${
-          isTeamVisible ? "visible" : ""
-        }`}
+        className={`py-16 md:py-24 px-4 sm:px-6 lg:px-8 scroll-fade-in ${isTeamVisible ? "visible" : ""
+          }`}
       >
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
@@ -343,9 +334,8 @@ export default function AboutPage() {
               return (
                 <div
                   key={index}
-                  className={`group bg-card rounded-lg overflow-hidden border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 scroll-scale-in ${
-                    isTeamVisible ? "visible" : ""
-                  }`}
+                  className={`group bg-card rounded-lg overflow-hidden border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 scroll-scale-in ${isTeamVisible ? "visible" : ""
+                    }`}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <div className="relative h-48 bg-linear-to-br from-primary/20 to-primary/5 flex items-center justify-center overflow-hidden group-hover:from-primary/30 transition-all">
@@ -366,20 +356,37 @@ export default function AboutPage() {
       {/* CTA Section */}
       <section
         ref={ctaRef}
-        className={`py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-linear-to-r from-primary to-primary-dark relative overflow-hidden scroll-fade-in ${
-          isCtaVisible ? "visible" : ""
-        }`}
+        className={`py-16 md:py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden scroll-fade-in ${isCtaVisible ? "visible" : ""
+          }`}
       >
+        {/* Background - Image or Gradient */}
+        <div className="absolute inset-0 z-0">
+          {cta.image ? (
+            <>
+              <img
+                src={cta.image}
+                alt="CTA Background"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black/60"></div>
+            </>
+          ) : (
+            <div className="absolute inset-0 bg-linear-to-br from-primary/50 via-background to-primary/30"></div>
+          )}
+        </div>
+
         {/* Decorative elements */}
         <div className="absolute top-0 right-0 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
 
         <div className="max-w-4xl mx-auto text-center relative z-10 space-y-6">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold font-display text-white">
+          <h2 className={`text-3xl md:text-4xl lg:text-5xl font-bold font-display ${cta.image ? 'text-white' : 'bg-linear-to-r from-primary via-primary-light to-primary bg-clip-text text-transparent'
+            }`}>
             {cta.title || 'Sẵn Sàng Trải Nghiệm Điều Kỳ Diệu?'}
           </h2>
 
-          <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto leading-relaxed">
+          <p className={`text-lg md:text-xl max-w-2xl mx-auto leading-relaxed ${cta.image ? 'text-white/90' : 'text-muted-foreground'
+            }`}>
             {cta.description || 'Hãy đến thăm chúng tôi ngay hôm nay. Chúng tôi đang mong chờ sự có mặt của bạn.'}
           </p>
 
@@ -387,7 +394,7 @@ export default function AboutPage() {
             {cta.button_primary && (
               <Link
                 href={cta.button_primary.link || '/menu'}
-                className="inline-flex items-center gap-2 px-8 py-4 bg-white hover:bg-white/90 text-primary rounded-lg font-semibold transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg font-semibold transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
               >
                 {cta.button_primary.text || 'Xem Thực Đơn'}
                 <ArrowRight className="w-5 h-5" />
@@ -396,7 +403,10 @@ export default function AboutPage() {
             {cta.button_secondary && (
               <a
                 href={cta.button_secondary.link || 'tel:+84123456789'}
-                className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 hover:bg-white/20 text-white rounded-lg font-semibold transition-all duration-300 hover:scale-105 active:scale-95 border border-white/30 cursor-pointer"
+                className={`inline-flex items-center gap-2 px-8 py-4 rounded-lg font-semibold transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer ${cta.image
+                  ? 'bg-white/10 hover:bg-white/20 text-white border border-white/30'
+                  : 'bg-background hover:bg-muted text-primary border-2 border-primary/20 hover:border-primary'
+                  }`}
               >
                 {cta.button_secondary.text || 'Gọi Đặt Bàn'}
               </a>

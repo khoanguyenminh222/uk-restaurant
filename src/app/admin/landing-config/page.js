@@ -38,13 +38,13 @@ const isValidLucideIcon = (iconName) => {
       iconName + 'Icon', // Với suffix Icon
       toPascalCase(iconName) + 'Icon', // PascalCase + Icon
     ];
-    
+
     // Loại bỏ duplicates
     const uniqueVariants = [...new Set(variants)];
-    
+
     let icon = null;
     let foundVariant = null;
-    
+
     for (const variant of uniqueVariants) {
       icon = lucideIcons[variant];
       if (icon) {
@@ -52,7 +52,7 @@ const isValidLucideIcon = (iconName) => {
         break;
       }
     }
-    
+
     if (!icon) {
       // console.log(`[isValidLucideIcon] Icon "${iconName}" not found. Tried variants:`, uniqueVariants);
       // console.log(`[isValidLucideIcon] Sample available keys:`, Object.keys(lucideIcons).filter(k => {
@@ -62,15 +62,15 @@ const isValidLucideIcon = (iconName) => {
       // }).slice(0, 10));
       return false;
     }
-    
+
     // Icon có thể là function (React component) hoặc object (React component được wrap)
     // Kiểm tra xem có phải là React component không
     const isValid = icon && (
-      typeof icon === 'function' || 
+      typeof icon === 'function' ||
       (typeof icon === 'object' && icon.$$typeof) || // React element type
       (typeof icon === 'object' && icon.default) // Default export
     );
-    
+
     // console.log(`[isValidLucideIcon] Result for "${iconName}":`, isValid, {
     //   foundVariant,
     //   type: typeof icon,
@@ -78,7 +78,7 @@ const isValidLucideIcon = (iconName) => {
     //   hasTypeof: icon?.$$typeof,
     //   hasDefault: icon?.default ? true : false,
     // });
-    
+
     return !!isValid;
   } catch (error) {
     console.error('[isValidLucideIcon] Error checking icon:', error);
@@ -103,13 +103,13 @@ const getLucideIcon = (iconName) => {
       iconName + 'Icon', // Với suffix Icon
       toPascalCase(iconName) + 'Icon', // PascalCase + Icon
     ];
-    
+
     // Loại bỏ duplicates
     const uniqueVariants = [...new Set(variants)];
-    
+
     let icon = null;
     let foundVariant = null;
-    
+
     for (const variant of uniqueVariants) {
       icon = lucideIcons[variant];
       if (icon) {
@@ -117,7 +117,7 @@ const getLucideIcon = (iconName) => {
         break;
       }
     }
-    
+
     if (!icon) {
       // console.log(`[getLucideIcon] Icon "${iconName}" not found. Tried variants:`, uniqueVariants);
       // console.log(`[getLucideIcon] Sample available keys:`, Object.keys(lucideIcons).filter(k => {
@@ -127,7 +127,7 @@ const getLucideIcon = (iconName) => {
       // }).slice(0, 10));
       return null;
     }
-    
+
     // Nếu là object với default export, lấy default
     if (typeof icon === 'object' && icon.default) {
       //console.log(`[getLucideIcon] Using default export for "${iconName}" (variant: ${foundVariant})`);
@@ -138,7 +138,7 @@ const getLucideIcon = (iconName) => {
       //console.log(`[getLucideIcon] Using direct export for "${iconName}" (variant: ${foundVariant})`);
       return icon;
     }
-    
+
     //console.log(`[getLucideIcon] Icon "${iconName}" found but not usable. Type:`, typeof icon, 'Keys:', Object.keys(icon || {}).slice(0, 10));
     return null;
   } catch (error) {
@@ -161,7 +161,7 @@ const TABS = [
 
 // Default icons cho features (lucide-react)
 const FEATURE_ICONS = [
-  'CheckCircle2', 'Zap', 'Heart', 'Star', 'Award', 'Shield', 
+  'CheckCircle2', 'Zap', 'Heart', 'Star', 'Award', 'Shield',
   'Clock', 'Truck', 'Users', 'ThumbsUp', 'Gift', 'TrendingUp',
   'Leaf', 'ChefHat', 'Sparkles'
 ];
@@ -194,7 +194,7 @@ const STAT_COLORS = [
 
 // Default icons cho social media
 const SOCIAL_ICONS = [
-  'FacebookIcon', 'MessageCircle', 'InstagramIcon', 'Twitter', 
+  'FacebookIcon', 'MessageCircle', 'InstagramIcon', 'Twitter',
   'Youtube', 'Tiktok', 'Linkedin', 'Share2'
 ];
 
@@ -211,24 +211,24 @@ export default function AdminLandingConfig() {
   // Form states cho từng section
   const [restaurantName, setRestaurantName] = useState('');
   const [slogan, setSlogan] = useState('');
-  const [headerData, setHeaderData] = useState({ 
+  const [headerData, setHeaderData] = useState({
     restaurant_name: '',
     menu_items: []
   });
-  const [heroData, setHeroData] = useState({ 
-    title: '', subtitle: '', description: '', cta_button_text: '' 
+  const [heroData, setHeroData] = useState({
+    title: '', subtitle: '', description: '', cta_button_text: ''
   });
-  const [menuData, setMenuData] = useState({ 
-    section_title: '', 
+  const [menuData, setMenuData] = useState({
+    section_title: '',
     section_description: '',
     popular_title: '',
     popular_icon: '',
     popular_lucide_icon: '',
   });
-  const [whyChooseUsData, setWhyChooseUsData] = useState({ 
+  const [whyChooseUsData, setWhyChooseUsData] = useState({
     section_title: '', section_description: '', features: [], stats: [], auto_calculate_stats: false
   });
-  const [testimonialsData, setTestimonialsData] = useState({ 
+  const [testimonialsData, setTestimonialsData] = useState({
     section_title: '',
     section_description: '',
     trustStats: { averageRating: 0, totalReviews: 0, verifiedCustomers: 0 },
@@ -236,9 +236,9 @@ export default function AdminLandingConfig() {
     auto_calculate_stats: false
   });
   const [reviewStats, setReviewStats] = useState(null); // Stats từ reviews API
-  const [footerData, setFooterData] = useState({ 
-    restaurant_name: '', slogan: '', description: '', 
-    copyright_text: '', links: [] 
+  const [footerData, setFooterData] = useState({
+    restaurant_name: '', slogan: '', description: '',
+    copyright_text: '', links: []
   });
   const [seoData, setSeoData] = useState({
     meta_title: '',
@@ -272,32 +272,32 @@ export default function AdminLandingConfig() {
   // Modal states
   const [showFeatureModal, setShowFeatureModal] = useState(false);
   const [editingFeature, setEditingFeature] = useState(null);
-  const [featureForm, setFeatureForm] = useState({ 
-    title: '', 
-    description: '', 
-    icon: 'CheckCircle2', 
+  const [featureForm, setFeatureForm] = useState({
+    title: '',
+    description: '',
+    icon: 'CheckCircle2',
     color: 'from-green-500/20 to-emerald-600/10',
     borderColor: 'border-green-500/30',
-    order: 1 
+    order: 1
   });
   const [featureIconSuggestions, setFeatureIconSuggestions] = useState([]);
   const [showFeatureIconDropdown, setShowFeatureIconDropdown] = useState(false);
 
   const [showStatModal, setShowStatModal] = useState(false);
   const [editingStat, setEditingStat] = useState(null);
-  const [statForm, setStatForm] = useState({ 
-    icon: 'Users', 
-    value: '', 
-    label: '', 
-    color: 'from-blue-500/20 to-blue-600/10' 
+  const [statForm, setStatForm] = useState({
+    icon: 'Users',
+    value: '',
+    label: '',
+    color: 'from-blue-500/20 to-blue-600/10'
   });
   const [statIconSuggestions, setStatIconSuggestions] = useState([]);
   const [showStatIconDropdown, setShowStatIconDropdown] = useState(false);
 
   const [showSocialModal, setShowSocialModal] = useState(false);
   const [editingSocial, setEditingSocial] = useState(null);
-  const [socialForm, setSocialForm] = useState({ 
-    name: '', url: '', icon: 'FacebookIcon', description: '', color: 'text-blue-400', order: 1 
+  const [socialForm, setSocialForm] = useState({
+    name: '', url: '', icon: 'FacebookIcon', description: '', color: 'text-blue-400', order: 1
   });
   const [socialIconSuggestions, setSocialIconSuggestions] = useState([]);
   const [showSocialIconDropdown, setShowSocialIconDropdown] = useState(false);
@@ -375,13 +375,13 @@ export default function AdminLandingConfig() {
             { id: 'about', label: 'Giới thiệu', icon: 'BookOpen', order: 5, is_visible: true },
             { id: 'contact', label: 'Liên hệ', icon: 'Phone', order: 6, is_visible: true },
           ];
-          
+
           const existingMenuItems = data.data.header.menu_items || [];
           const menuItems = defaultMenuItems.map(defaultItem => {
             const existing = existingMenuItems.find(item => item.id === defaultItem.id);
             return existing || defaultItem;
           });
-          
+
           setHeaderData({
             ...data.data.header,
             menu_items: menuItems
@@ -407,7 +407,7 @@ export default function AdminLandingConfig() {
             auto_calculate_stats: data.data.testimonials.auto_calculate_stats || false,
           });
         }
-        
+
         // Load review stats để hiển thị
         fetchReviewStats();
         if (data.data.footer) setFooterData(data.data.footer);
@@ -449,7 +449,7 @@ export default function AdminLandingConfig() {
         { id: 'about', label: 'Giới thiệu', icon: 'BookOpen', order: 5 },
         { id: 'contact', label: 'Liên hệ', icon: 'Phone', order: 6 },
       ];
-      
+
       const existingMenuItems = headerData.menu_items || [];
       const menuItems = defaultMenuItems.map(defaultItem => {
         const existing = existingMenuItems.find(item => item.id === defaultItem.id);
@@ -531,7 +531,7 @@ export default function AdminLandingConfig() {
     const selectedSections = Object.entries(resetSections)
       .filter(([_, selected]) => selected)
       .map(([key, _]) => key);
-    
+
     if (selectedSections.length === 0) {
       if (typeof window !== 'undefined') {
         window.dispatchEvent(
@@ -546,10 +546,10 @@ export default function AdminLandingConfig() {
     try {
       setSaving(true);
       setShowResetModal(false);
-      
+
       // Tạo object chứa các giá trị mặc định cho các phần được chọn
       const resetData = {};
-      
+
       if (resetSections.general) {
         resetData.restaurant_name = defaultLandingConfig.restaurant_name;
         resetData.slogan = defaultLandingConfig.slogan;
@@ -623,24 +623,24 @@ export default function AdminLandingConfig() {
   const handleOpenFeatureModal = (feature = null) => {
     if (feature) {
       setEditingFeature(feature);
-      setFeatureForm({ 
+      setFeatureForm({
         ...feature,
         color: feature.color || 'from-green-500/20 to-emerald-600/10',
         borderColor: feature.borderColor || 'border-green-500/30'
       });
     } else {
       setEditingFeature(null);
-      const maxOrder = whyChooseUsData.features.length > 0 
+      const maxOrder = whyChooseUsData.features.length > 0
         ? Math.max(...whyChooseUsData.features.map(f => f.order || 0))
         : 0;
       const colorIndex = whyChooseUsData.features.length % FEATURE_COLORS.length;
-      setFeatureForm({ 
-        title: '', 
-        description: '', 
-        icon: 'CheckCircle2', 
+      setFeatureForm({
+        title: '',
+        description: '',
+        icon: 'CheckCircle2',
         color: FEATURE_COLORS[colorIndex].color,
         borderColor: FEATURE_COLORS[colorIndex].borderColor,
-        order: maxOrder + 1 
+        order: maxOrder + 1
       });
     }
     setShowFeatureModal(true);
@@ -652,7 +652,7 @@ export default function AdminLandingConfig() {
     setFeatureForm({ ...featureForm, icon: value });
     // Luôn cho phép nhập bất kỳ giá trị nào, suggestions chỉ là gợi ý
     if (value) {
-      const filtered = FEATURE_ICONS.filter(icon => 
+      const filtered = FEATURE_ICONS.filter(icon =>
         icon.toLowerCase().includes(value.toLowerCase())
       );
       setFeatureIconSuggestions(filtered);
@@ -689,13 +689,13 @@ export default function AdminLandingConfig() {
     setWhyChooseUsData({ ...whyChooseUsData, features: newFeatures });
     setShowFeatureModal(false);
     setEditingFeature(null);
-    setFeatureForm({ 
-      title: '', 
-      description: '', 
-      icon: 'CheckCircle2', 
+    setFeatureForm({
+      title: '',
+      description: '',
+      icon: 'CheckCircle2',
       color: 'from-green-500/20 to-emerald-600/10',
       borderColor: 'border-green-500/30',
-      order: 1 
+      order: 1
     });
   };
 
@@ -717,17 +717,17 @@ export default function AdminLandingConfig() {
   const handleOpenStatModal = (stat = null) => {
     if (stat) {
       setEditingStat(stat);
-      setStatForm({ 
+      setStatForm({
         ...stat,
         color: stat.color || 'from-blue-500/20 to-blue-600/10'
       });
     } else {
       setEditingStat(null);
-      setStatForm({ 
-        icon: 'Users', 
-        value: '', 
-        label: '', 
-        color: 'from-blue-500/20 to-blue-600/10' 
+      setStatForm({
+        icon: 'Users',
+        value: '',
+        label: '',
+        color: 'from-blue-500/20 to-blue-600/10'
       });
     }
     setShowStatModal(true);
@@ -737,7 +737,7 @@ export default function AdminLandingConfig() {
   const handleStatIconChange = (value) => {
     setStatForm({ ...statForm, icon: value });
     if (value) {
-      const filtered = STAT_ICONS.filter(icon => 
+      const filtered = STAT_ICONS.filter(icon =>
         icon.toLowerCase().includes(value.toLowerCase())
       );
       setStatIconSuggestions(filtered);
@@ -793,16 +793,16 @@ export default function AdminLandingConfig() {
   // Handler khi toggle auto_calculate_stats
   const handleToggleAutoCalculateStats = async (checked) => {
     let newStats = [...(whyChooseUsData.stats || [])];
-    
+
     if (checked) {
       // Khi bật auto_calculate_stats, đảm bảo có 2 stats đầu tiên (Users và Star)
       const hasUsers = newStats.some(s => s.icon === 'Users');
       const hasStar = newStats.some(s => s.icon === 'Star');
-      
+
       // Lấy giá trị từ reviewStats nếu có, nếu không thì fetch
       let usersValue = '0+';
       let starValue = '0/5';
-      
+
       // Fetch reviewStats nếu chưa có hoặc cần cập nhật
       if (!reviewStats) {
         try {
@@ -821,7 +821,7 @@ export default function AdminLandingConfig() {
         usersValue = `${reviewStats.totalReviews.toLocaleString('vi-VN')}+`;
         starValue = `${reviewStats.averageRating}/5`;
       }
-      
+
       // Tạo hoặc cập nhật stat Users
       if (!hasUsers) {
         newStats.unshift({
@@ -841,7 +841,7 @@ export default function AdminLandingConfig() {
           };
         }
       }
-      
+
       // Tạo hoặc cập nhật stat Star
       if (!hasStar) {
         // Tìm vị trí sau Users
@@ -873,20 +873,20 @@ export default function AdminLandingConfig() {
           };
         }
       }
-      
+
       // Đảm bảo Users và Star luôn ở đầu (sắp xếp lại)
       const usersStat = newStats.find(s => s.icon === 'Users');
       const starStat = newStats.find(s => s.icon === 'Star');
       const otherStats = newStats.filter(s => s.icon !== 'Users' && s.icon !== 'Star');
-      
+
       newStats = [];
       if (usersStat) newStats.push(usersStat);
       if (starStat) newStats.push(starStat);
       newStats.push(...otherStats);
     }
-    
-    setWhyChooseUsData({ 
-      ...whyChooseUsData, 
+
+    setWhyChooseUsData({
+      ...whyChooseUsData,
       auto_calculate_stats: checked,
       stats: newStats
     });
@@ -899,7 +899,7 @@ export default function AdminLandingConfig() {
       setSocialForm({ ...social });
     } else {
       setEditingSocial(null);
-      const maxOrder = testimonialsData.social_media.length > 0 
+      const maxOrder = testimonialsData.social_media.length > 0
         ? Math.max(...testimonialsData.social_media.map(s => s.order || 0))
         : 0;
       setSocialForm({ name: '', url: '', icon: 'FacebookIcon', description: '', color: 'text-blue-400', order: maxOrder + 1 });
@@ -913,7 +913,7 @@ export default function AdminLandingConfig() {
     setSocialForm({ ...socialForm, icon: value });
     // Luôn cho phép nhập bất kỳ giá trị nào, suggestions chỉ là gợi ý
     if (value) {
-      const filtered = SOCIAL_ICONS.filter(icon => 
+      const filtered = SOCIAL_ICONS.filter(icon =>
         icon.toLowerCase().includes(value.toLowerCase())
       );
       setSocialIconSuggestions(filtered);
@@ -966,7 +966,7 @@ export default function AdminLandingConfig() {
       setLinkForm({ ...link });
     } else {
       setEditingLink(null);
-      const maxOrder = footerData.links.length > 0 
+      const maxOrder = footerData.links.length > 0
         ? Math.max(...footerData.links.map(l => l.order || 0))
         : 0;
       setLinkForm({ text: '', url: '#', order: maxOrder + 1 });
@@ -1043,11 +1043,10 @@ export default function AdminLandingConfig() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-t-lg transition-colors cursor-pointer ${
-                    activeTab === tab.id
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-t-lg transition-colors cursor-pointer ${activeTab === tab.id
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                    }`}
                 >
                   <Icon className="w-4 h-4" />
                   {tab.label}
@@ -1140,6 +1139,84 @@ export default function AdminLandingConfig() {
                   {headerData.restaurant_name.length}/50 ký tự
                 </p>
               </div>
+
+              {/* Display Mode Selection */}
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">
+                  Chế độ hiển thị <span className="text-red-400">*</span>
+                </label>
+                <div className="flex gap-4 mb-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="display_mode"
+                      value="name"
+                      checked={headerData.display_mode === 'name' || !headerData.display_mode}
+                      onChange={(e) => setHeaderData({ ...headerData, display_mode: e.target.value })}
+                      className="w-4 h-4 cursor-pointer"
+                    />
+                    <span className="text-sm text-card-foreground">Hiển thị tên nhà hàng</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="display_mode"
+                      value="logo"
+                      checked={headerData.display_mode === 'logo'}
+                      onChange={(e) => setHeaderData({ ...headerData, display_mode: e.target.value })}
+                      className="w-4 h-4 cursor-pointer"
+                    />
+                    <span className="text-sm text-card-foreground">Hiển thị logo</span>
+                  </label>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Chọn hiển thị tên nhà hàng (text) hoặc logo (hình ảnh) trong header
+                </p>
+              </div>
+
+              {/* Logo URL - Only show when Logo mode is selected */}
+              {headerData.display_mode === 'logo' && (
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Logo URL <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={headerData.logo_url || ''}
+                    onChange={(e) => setHeaderData({ ...headerData, logo_url: e.target.value })}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="https://example.com/logo.png hoặc /logo.png"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Đường dẫn đến file logo (URL đầy đủ hoặc đường dẫn tương đối)
+                  </p>
+                  <div className="mt-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                    <p className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1">💡 Khuyến nghị kích thước logo:</p>
+                    <ul className="text-xs text-muted-foreground space-y-0.5 ml-4 list-disc">
+                      <li><strong>Chiều rộng:</strong> 120-200px (tối đa 250px)</li>
+                      <li><strong>Chiều cao:</strong> 40-60px (header cao 64-80px)</li>
+                      <li><strong>Tỷ lệ:</strong> Logo ngang hoặc vuông (tránh logo dọc)</li>
+                      <li><strong>Format:</strong> PNG với nền trong suốt (.png)</li>
+                      <li><strong>Dung lượng:</strong> Dưới 100KB để tải nhanh</li>
+                    </ul>
+                  </div>
+                  {headerData.logo_url && (
+                    <div className="mt-2 p-2 bg-muted rounded border border-border">
+                      <p className="text-xs text-muted-foreground mb-1">Xem trước logo:</p>
+                      <img
+                        src={headerData.logo_url}
+                        alt="Logo preview"
+                        className="h-12 object-contain"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextElementSibling.style.display = 'block';
+                        }}
+                      />
+                      <p className="text-xs text-red-400" style={{ display: 'none' }}>Không thể tải logo. Kiểm tra lại URL.</p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Menu Items Management */}
               <div>
@@ -1581,7 +1658,7 @@ export default function AdminLandingConfig() {
                     </label>
                   </div>
                 </div>
-                
+
                 {whyChooseUsData.auto_calculate_stats && reviewStats && (
                   <div className="mb-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
                     <p className="text-sm text-blue-400 font-medium mb-2">📊 Stats từ đánh giá:</p>
@@ -1606,16 +1683,15 @@ export default function AdminLandingConfig() {
                   {whyChooseUsData.stats?.map((stat, index) => {
                     const StatIcon = stat.icon ? (getLucideIcon(stat.icon) || TrendingUp) : TrendingUp;
                     // Kiểm tra nếu là 2 stats đầu tiên (Users và Star) và auto_calculate_stats = true thì không cho chỉnh sửa/xóa
-                    const isFixedStat = whyChooseUsData.auto_calculate_stats && 
-                      (stat.icon === 'Users' || stat.icon === 'Star') && 
+                    const isFixedStat = whyChooseUsData.auto_calculate_stats &&
+                      (stat.icon === 'Users' || stat.icon === 'Star') &&
                       index < 2;
-                    
+
                     return (
                       <div
                         key={index}
-                        className={`flex items-center justify-between p-4 border rounded-lg ${
-                          isFixedStat ? 'bg-muted/50 border-primary/30' : 'bg-muted border-border'
-                        }`}
+                        className={`flex items-center justify-between p-4 border rounded-lg ${isFixedStat ? 'bg-muted/50 border-primary/30' : 'bg-muted border-border'
+                          }`}
                       >
                         <div className="flex items-center gap-3 flex-1">
                           <div className="flex items-center justify-center w-10 h-10 bg-primary/10 rounded-lg text-primary">
@@ -1716,7 +1792,7 @@ export default function AdminLandingConfig() {
                     </label>
                   </div>
                 </div>
-                
+
                 {testimonialsData.auto_calculate_stats && reviewStats && (
                   <div className="mb-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
                     <p className="text-sm text-blue-400 font-medium mb-2">📊 Stats từ đánh giá:</p>
@@ -1927,7 +2003,7 @@ export default function AdminLandingConfig() {
               {/* Icons */}
               <div className="space-y-4 border-t border-b border-border pt-6 pb-6">
                 <h3 className="text-lg font-medium text-card-foreground">Icons (Favicon & Apple Icon)</h3>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-card-foreground mb-2">
                     Favicon URL <span className="text-muted-foreground font-normal">(Icon hiển thị trên tab browser)</span>
@@ -1978,11 +2054,11 @@ export default function AdminLandingConfig() {
                   </div>
                 </div>
               </div>
-              
+
               {/* Basic Meta Tags */}
               <div className="space-y-4">
                 <h3 className="text-lg font-medium text-card-foreground">Meta Tags Cơ Bản</h3>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-card-foreground mb-2">
                     Meta Title
@@ -2038,7 +2114,7 @@ export default function AdminLandingConfig() {
               {/* Open Graph */}
               <div className="space-y-4 border-t border-border pt-6">
                 <h3 className="text-lg font-medium text-card-foreground">Open Graph (Facebook, LinkedIn)</h3>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-card-foreground mb-2">
                     OG Title
@@ -2135,7 +2211,7 @@ export default function AdminLandingConfig() {
               {/* Twitter Card */}
               <div className="space-y-4 border-t border-border pt-6">
                 <h3 className="text-lg font-medium text-card-foreground">Twitter Card</h3>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-card-foreground mb-2">
                     Twitter Card Type <span className="text-muted-foreground font-normal">(Định dạng hiển thị khi chia sẻ trên Twitter/X)</span>
@@ -2216,7 +2292,7 @@ export default function AdminLandingConfig() {
               {/* Robots */}
               <div className="space-y-4 border-t border-border pt-6">
                 <h3 className="text-lg font-medium text-card-foreground">Search Engine Robots</h3>
-                
+
                 <div className="flex items-center gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -2458,7 +2534,7 @@ export default function AdminLandingConfig() {
 
       {/* Feature Modal */}
       {showFeatureModal && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -2520,7 +2596,7 @@ export default function AdminLandingConfig() {
                         onChange={(e) => handleFeatureIconChange(e.target.value)}
                         onFocus={() => {
                           if (featureForm.icon) {
-                            const filtered = FEATURE_ICONS.filter(icon => 
+                            const filtered = FEATURE_ICONS.filter(icon =>
                               icon.toLowerCase().includes(featureForm.icon.toLowerCase())
                             );
                             setFeatureIconSuggestions(filtered.length > 0 ? filtered : FEATURE_ICONS);
@@ -2626,21 +2702,20 @@ export default function AdminLandingConfig() {
                         key={idx}
                         type="button"
                         onClick={() => setFeatureForm({ ...featureForm, color: colorOption.color, borderColor: colorOption.borderColor })}
-                        className={`h-10 rounded border-2 ${
-                          featureForm.color === colorOption.color ? 'border-primary' : 'border-border'
-                        }`}
+                        className={`h-10 rounded border-2 ${featureForm.color === colorOption.color ? 'border-primary' : 'border-border'
+                          }`}
                         style={{
-                          background: `linear-gradient(to bottom right, ${colorOption.color.includes('green') ? 'rgba(34, 197, 94, 0.2)' : 
+                          background: `linear-gradient(to bottom right, ${colorOption.color.includes('green') ? 'rgba(34, 197, 94, 0.2)' :
                             colorOption.color.includes('orange') ? 'rgba(249, 115, 22, 0.2)' :
-                            colorOption.color.includes('blue') ? 'rgba(59, 130, 246, 0.2)' :
-                            colorOption.color.includes('purple') ? 'rgba(168, 85, 247, 0.2)' :
-                            colorOption.color.includes('pink') ? 'rgba(236, 72, 153, 0.2)' :
-                            'rgba(234, 179, 8, 0.2)'}, ${colorOption.color.includes('green') ? 'rgba(5, 150, 105, 0.1)' : 
-                            colorOption.color.includes('orange') ? 'rgba(217, 119, 6, 0.1)' :
-                            colorOption.color.includes('blue') ? 'rgba(37, 99, 235, 0.1)' :
-                            colorOption.color.includes('purple') ? 'rgba(124, 58, 237, 0.1)' :
-                            colorOption.color.includes('pink') ? 'rgba(219, 39, 119, 0.1)' :
-                            'rgba(217, 119, 6, 0.1)'})`
+                              colorOption.color.includes('blue') ? 'rgba(59, 130, 246, 0.2)' :
+                                colorOption.color.includes('purple') ? 'rgba(168, 85, 247, 0.2)' :
+                                  colorOption.color.includes('pink') ? 'rgba(236, 72, 153, 0.2)' :
+                                    'rgba(234, 179, 8, 0.2)'}, ${colorOption.color.includes('green') ? 'rgba(5, 150, 105, 0.1)' :
+                                      colorOption.color.includes('orange') ? 'rgba(217, 119, 6, 0.1)' :
+                                        colorOption.color.includes('blue') ? 'rgba(37, 99, 235, 0.1)' :
+                                          colorOption.color.includes('purple') ? 'rgba(124, 58, 237, 0.1)' :
+                                            colorOption.color.includes('pink') ? 'rgba(219, 39, 119, 0.1)' :
+                                              'rgba(217, 119, 6, 0.1)'})`
                         }}
                       />
                     ))}
@@ -2683,7 +2758,7 @@ export default function AdminLandingConfig() {
 
       {/* Stat Modal */}
       {showStatModal && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -2721,7 +2796,7 @@ export default function AdminLandingConfig() {
                         onChange={(e) => handleStatIconChange(e.target.value)}
                         onFocus={() => {
                           if (statForm.icon) {
-                            const filtered = STAT_ICONS.filter(icon => 
+                            const filtered = STAT_ICONS.filter(icon =>
                               icon.toLowerCase().includes(statForm.icon.toLowerCase())
                             );
                             setStatIconSuggestions(filtered.length > 0 ? filtered : STAT_ICONS);
@@ -2842,21 +2917,20 @@ export default function AdminLandingConfig() {
                         key={idx}
                         type="button"
                         onClick={() => setStatForm({ ...statForm, color: colorOption })}
-                        className={`h-10 rounded border-2 ${
-                          statForm.color === colorOption ? 'border-primary' : 'border-border'
-                        }`}
+                        className={`h-10 rounded border-2 ${statForm.color === colorOption ? 'border-primary' : 'border-border'
+                          }`}
                         style={{
-                          background: `linear-gradient(to bottom right, ${colorOption.includes('blue') ? 'rgba(59, 130, 246, 0.2)' : 
+                          background: `linear-gradient(to bottom right, ${colorOption.includes('blue') ? 'rgba(59, 130, 246, 0.2)' :
                             colorOption.includes('yellow') ? 'rgba(234, 179, 8, 0.2)' :
-                            colorOption.includes('green') ? 'rgba(34, 197, 94, 0.2)' :
-                            colorOption.includes('primary') ? 'rgba(59, 130, 246, 0.2)' :
-                            colorOption.includes('purple') ? 'rgba(168, 85, 247, 0.2)' :
-                            'rgba(236, 72, 153, 0.2)'}, ${colorOption.includes('blue') ? 'rgba(37, 99, 235, 0.1)' : 
-                            colorOption.includes('yellow') ? 'rgba(217, 119, 6, 0.1)' :
-                            colorOption.includes('green') ? 'rgba(5, 150, 105, 0.1)' :
-                            colorOption.includes('primary') ? 'rgba(37, 99, 235, 0.1)' :
-                            colorOption.includes('purple') ? 'rgba(124, 58, 237, 0.1)' :
-                            'rgba(219, 39, 119, 0.1)'})`
+                              colorOption.includes('green') ? 'rgba(34, 197, 94, 0.2)' :
+                                colorOption.includes('primary') ? 'rgba(59, 130, 246, 0.2)' :
+                                  colorOption.includes('purple') ? 'rgba(168, 85, 247, 0.2)' :
+                                    'rgba(236, 72, 153, 0.2)'}, ${colorOption.includes('blue') ? 'rgba(37, 99, 235, 0.1)' :
+                                      colorOption.includes('yellow') ? 'rgba(217, 119, 6, 0.1)' :
+                                        colorOption.includes('green') ? 'rgba(5, 150, 105, 0.1)' :
+                                          colorOption.includes('primary') ? 'rgba(37, 99, 235, 0.1)' :
+                                            colorOption.includes('purple') ? 'rgba(124, 58, 237, 0.1)' :
+                                              'rgba(219, 39, 119, 0.1)'})`
                         }}
                       />
                     ))}
@@ -2887,7 +2961,7 @@ export default function AdminLandingConfig() {
 
       {/* Social Modal */}
       {showSocialModal && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -2946,7 +3020,7 @@ export default function AdminLandingConfig() {
                         onChange={(e) => handleSocialIconChange(e.target.value)}
                         onFocus={() => {
                           if (socialForm.icon) {
-                            const filtered = SOCIAL_ICONS.filter(icon => 
+                            const filtered = SOCIAL_ICONS.filter(icon =>
                               icon.toLowerCase().includes(socialForm.icon.toLowerCase())
                             );
                             setSocialIconSuggestions(filtered.length > 0 ? filtered : SOCIAL_ICONS);
@@ -2970,13 +3044,13 @@ export default function AdminLandingConfig() {
                             if (icon === 'FacebookIcon') {
                               IconComponent = () => (
                                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                                 </svg>
                               );
                             } else if (icon === 'InstagramIcon') {
                               IconComponent = () => (
                                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
                                 </svg>
                               );
                             } else {
@@ -3010,7 +3084,7 @@ export default function AdminLandingConfig() {
                             return (
                               <div className="text-primary">
                                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                                 </svg>
                               </div>
                             );
@@ -3018,20 +3092,20 @@ export default function AdminLandingConfig() {
                             return (
                               <div className="text-primary">
                                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
                                 </svg>
                               </div>
                             );
-                            } else {
-                              const IconComponent = getLucideIcon(socialForm.icon);
-                              if (IconComponent) {
-                                return (
-                                  <div className="text-primary">
-                                    <IconComponent className="w-6 h-6" />
-                                  </div>
-                                );
-                              }
+                          } else {
+                            const IconComponent = getLucideIcon(socialForm.icon);
+                            if (IconComponent) {
+                              return (
+                                <div className="text-primary">
+                                  <IconComponent className="w-6 h-6" />
+                                </div>
+                              );
                             }
+                          }
                         } catch (e) {
                           console.error('Error rendering icon:', e);
                         }
@@ -3114,7 +3188,7 @@ export default function AdminLandingConfig() {
 
       {/* Link Modal */}
       {showLinkModal && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -3197,7 +3271,7 @@ export default function AdminLandingConfig() {
 
       {/* Delete Feature Confirmation Modal */}
       {showDeleteFeatureModal && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -3252,7 +3326,7 @@ export default function AdminLandingConfig() {
 
       {/* Delete Stat Confirmation Modal */}
       {showDeleteStatModal && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -3315,7 +3389,7 @@ export default function AdminLandingConfig() {
 
       {/* Reset Config Modal */}
       {showResetModal && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -3339,13 +3413,13 @@ export default function AdminLandingConfig() {
               <p className="text-sm text-muted-foreground">
                 Chọn các phần bạn muốn reset về giá trị mặc định. Các phần không được chọn sẽ giữ nguyên.
               </p>
-              
+
               <div className="space-y-3">
                 {TABS.filter(tab => tab.id !== 'general' || true).map((tab) => {
-                  const sectionKey = tab.id === 'whyChooseUs' ? 'whyChooseUs' : 
-                                   tab.id === 'general' ? 'general' : tab.id;
+                  const sectionKey = tab.id === 'whyChooseUs' ? 'whyChooseUs' :
+                    tab.id === 'general' ? 'general' : tab.id;
                   const sectionLabel = tab.id === 'whyChooseUs' ? 'Why Choose Us' : tab.label;
-                  
+
                   return (
                     <label
                       key={tab.id}
@@ -3369,7 +3443,7 @@ export default function AdminLandingConfig() {
                     </label>
                   );
                 })}
-                
+
                 {/* Spam section (không có trong TABS) */}
                 <label
                   className="flex items-center gap-3 p-3 bg-muted rounded-lg hover:bg-muted/80 cursor-pointer"

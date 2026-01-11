@@ -15,7 +15,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
   const pathname = usePathname()
   const router = useRouter()
   const isHomePage = pathname === '/'
-  
+
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [activeSection, setActiveSection] = useState("home")
@@ -35,7 +35,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
     { id: "about", label: "Giới thiệu", icon: BookOpen },
     { id: "contact", label: "Liên hệ", icon: Phone },
   ]
-  
+
   // Helper function to get icon from lucide-react
   const getIconComponent = (iconName, itemId) => {
     if (!iconName) {
@@ -47,13 +47,13 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
       }
       return iconMap[itemId] || Home
     }
-    
+
     // Try to get icon from lucide-react
     const iconNamePascal = iconName.charAt(0).toUpperCase() + iconName.slice(1)
     if (lucideIcons[iconNamePascal]) {
       return lucideIcons[iconNamePascal]
     }
-    
+
     // Fallback to default based on id
     const iconMap = {
       home: Home,
@@ -63,17 +63,17 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
     }
     return iconMap[itemId] || Home
   }
-  
+
   // Map config menu items to component format, filter out hidden items
-  const menuItems = configMenuItems.length > 0 
+  const menuItems = configMenuItems.length > 0
     ? configMenuItems
-        .filter(item => item.is_visible !== false) // Chỉ hiển thị items có is_visible !== false
-        .sort((a, b) => (a.order || 0) - (b.order || 0))
-        .map(item => ({
-          id: item.id,
-          label: item.label,
-          icon: getIconComponent(item.icon, item.id)
-        }))
+      .filter(item => item.is_visible !== false) // Chỉ hiển thị items có is_visible !== false
+      .sort((a, b) => (a.order || 0) - (b.order || 0))
+      .map(item => ({
+        id: item.id,
+        label: item.label,
+        icon: getIconComponent(item.icon, item.id)
+      }))
     : defaultMenuItems
 
   // Set active section based on pathname
@@ -112,7 +112,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
 
           // Lấy danh sách sections từ menuItems
           const sectionIds = menuItems.map(item => item.id)
-          
+
           // Tìm section nào đang ở gần nhất với header
           let activeSectionId = "home"
           let minDistance = Infinity
@@ -123,7 +123,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
               const rect = element.getBoundingClientRect()
               const elementTop = rect.top + window.scrollY
               const distance = Math.abs(elementTop - currentScrollY - headerHeight)
-              
+
               // Nếu section đang trong viewport và gần header nhất
               if (rect.top <= headerHeight + 100 && rect.bottom >= headerHeight) {
                 if (distance < minDistance) {
@@ -144,7 +144,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
               if (element) {
                 const rect = element.getBoundingClientRect()
                 const elementTop = rect.top + window.scrollY
-                
+
                 // Chỉ xét các section phía trên vị trí hiện tại
                 if (elementTop < currentScrollY + headerHeight) {
                   const distance = currentScrollY + headerHeight - elementTop
@@ -168,7 +168,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
 
     // Check initial active section
     handleScroll()
-    
+
     window.addEventListener("scroll", handleScroll, { passive: true })
     return () => window.removeEventListener("scroll", handleScroll)
   }, [configMenuItems.length, isHomePage]) // Chỉ re-run khi số lượng menu items thay đổi hoặc trang thay đổi
@@ -210,7 +210,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
     const handleClickOutside = (event) => {
       const isClickInsideButton = userButtonRef.current && userButtonRef.current.contains(event.target)
       const isClickInsideDropdown = dropdownRef.current && dropdownRef.current.contains(event.target)
-      
+
       if (!isClickInsideButton && !isClickInsideDropdown) {
         setIsUserMenuOpen(false)
       }
@@ -241,20 +241,20 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
       setIsMenuOpen(false)
       return
     }
-    
+
     if (sectionId === "contact") {
       router.push("/contact")
       setIsMenuOpen(false)
       return
     }
-    
+
     // Nếu không ở trang chủ, điều hướng về trang chủ với hash
     if (!isHomePage) {
       router.push(`/#${sectionId}`)
       setIsMenuOpen(false)
       return
     }
-    
+
     // Nếu ở trang chủ, scroll đến section
     const element = document.getElementById(sectionId)
     if (element) {
@@ -282,13 +282,13 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
   const handleLogout = () => {
     clearUser()
     setIsUserMenuOpen(false)
-    
+
     // Xóa thêm admin data nếu có (trường hợp user vừa là user vừa là admin)
     if (typeof window !== 'undefined') {
       localStorage.removeItem('admin_data')
       localStorage.removeItem('admin_logged_in')
     }
-    
+
     // Save logout message to show after reload
     localStorage.setItem('logout_success_message', 'Đăng xuất thành công!')
     // Reload page to update header
@@ -298,9 +298,8 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-background ${
-        isScrolled ? "bg-background/95 backdrop-blur-md shadow-lg shadow-black/10" : "bg-background"
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-background ${isScrolled ? "bg-background/95 backdrop-blur-md shadow-lg shadow-black/10" : "bg-background"
+        }`}
     >
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-visible">
         <div className="flex items-center justify-between h-16 sm:h-20 overflow-visible">
@@ -310,10 +309,33 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
             className="flex cursor-pointer items-center gap-2 text-xl sm:text-2xl md:text-3xl font-bold font-display text-primary hover:text-primary-light hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded-lg px-2 py-1 shrink-0"
             aria-label={`${restaurantName} - Về trang chủ`}
           >
-            <Utensils className="w-6 h-6 sm:w-8 sm:h-8 text-primary shrink-0" />
-            <span className="text-primary whitespace-nowrap linear-to-r from-primary to-primary-light">
-              {restaurantName}
-            </span>
+            {config?.header?.display_mode === 'logo' && config?.header?.logo_url ? (
+              <>
+                <img
+                  src={config.header.logo_url}
+                  alt={restaurantName}
+                  className="h-10 sm:h-12 md:h-14 object-contain"
+                  onError={(e) => {
+                    // Fallback to name if logo fails to load
+                    e.target.style.display = 'none';
+                    e.target.parentElement.querySelector('.logo-fallback').style.display = 'flex';
+                  }}
+                />
+                <div className="logo-fallback hidden items-center gap-2">
+                  <Utensils className="w-6 h-6 sm:w-8 sm:h-8 text-primary shrink-0" />
+                  <span className="text-primary whitespace-nowrap linear-to-r from-primary to-primary-light">
+                    {restaurantName}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <>
+                <Utensils className="w-6 h-6 sm:w-8 sm:h-8 text-primary shrink-0" />
+                <span className="text-primary whitespace-nowrap linear-to-r from-primary to-primary-light">
+                  {restaurantName}
+                </span>
+              </>
+            )}
           </button>
 
           {/* Desktop Navigation */}
@@ -324,11 +346,10 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
-                  className={`px-4 py-2.5 rounded-lg font-medium cursor-pointer transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background flex items-center gap-2 ${
-                    activeSection === item.id
-                      ? "text-primary bg-muted relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-linear-to-r after:from-primary after:to-primary-light"
-                      : "text-foreground hover:text-primary hover:bg-muted"
-                  }`}
+                  className={`px-4 py-2.5 rounded-lg font-medium cursor-pointer transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background flex items-center gap-2 ${activeSection === item.id
+                    ? "text-primary bg-muted relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-linear-to-r after:from-primary after:to-primary-light"
+                    : "text-foreground hover:text-primary hover:bg-muted"
+                    }`}
                   aria-current={activeSection === item.id ? "page" : undefined}
                 >
                   <IconComponent className="w-4 h-4" />
@@ -384,7 +405,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
 
                 {/* User Dropdown Menu */}
                 {isUserMenuOpen && (
-                  <div 
+                  <div
                     ref={dropdownRef}
                     className="fixed w-56 bg-card border border-border rounded-lg shadow-lg z-50"
                     style={{
@@ -399,7 +420,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
                           <p className="text-xs text-muted-foreground">{user.phone}</p>
                         )}
                       </div>
-                      
+
                       {onProfileClick && (
                         <button
                           onClick={() => {
@@ -412,7 +433,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
                           Thông tin tài khoản
                         </button>
                       )}
-                      
+
                       {onOrderHistoryClick && (
                         <button
                           onClick={() => {
@@ -425,7 +446,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
                           Lịch sử đơn hàng
                         </button>
                       )}
-                      
+
                       {/* Admin Panel Link - Only for admin/super_admin */}
                       {(user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'manager') && (
                         <a
@@ -437,7 +458,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
                           Admin Panel
                         </a>
                       )}
-                      
+
                       <div className="border-t border-border mt-2 pt-2">
                         <button
                           onClick={handleLogout}
@@ -481,104 +502,102 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
       {/* Mobile Menu */}
       <div
         id="mobile-menu"
-        className={`md:hidden cursor-pointer bg-card border-t border-border transition-all duration-300 ease-in-out overflow-hidden ${
-          isMenuOpen ? "opacity-100" : "max-h-0 opacity-0"
-        }`}
+        className={`md:hidden cursor-pointer bg-card border-t border-border transition-all duration-300 ease-in-out overflow-hidden ${isMenuOpen ? "opacity-100" : "max-h-0 opacity-0"
+          }`}
       >
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="py-4 space-y-2 cursor-pointer" aria-label="Mobile navigation">
-          {menuItems.map((item) => {
-            const IconComponent = item.icon
-            return (
-              <button
-                key={item.id}
-                onClick={() => scrollToSection(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium cursor-pointer transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background ${
-                  activeSection === item.id
+            {menuItems.map((item) => {
+              const IconComponent = item.icon
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => scrollToSection(item.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium cursor-pointer transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background ${activeSection === item.id
                     ? "text-primary bg-muted"
                     : "text-foreground hover:text-primary hover:bg-muted"
-                }`}
-                aria-current={activeSection === item.id ? "page" : undefined}
-              >
-                <IconComponent className="w-5 h-5" />
-                <span>{item.label}</span>
-              </button>
-            )
-          })}
-          
-          {/* Theme Toggle in Mobile Menu - Always visible */}
-          <div className="px-4 py-3 border-t border-border">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-foreground">Giao diện</span>
-              <ThemeToggle />
-            </div>
-          </div>
+                    }`}
+                  aria-current={activeSection === item.id ? "page" : undefined}
+                >
+                  <IconComponent className="w-5 h-5" />
+                  <span>{item.label}</span>
+                </button>
+              )
+            })}
 
-          {/* Mobile User Menu */}
-          {user ? (
-            <>
-              {onProfileClick && (
+            {/* Theme Toggle in Mobile Menu - Always visible */}
+            <div className="px-4 py-3 border-t border-border">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-foreground">Giao diện</span>
+                <ThemeToggle />
+              </div>
+            </div>
+
+            {/* Mobile User Menu */}
+            {user ? (
+              <>
+                {onProfileClick && (
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false)
+                      onProfileClick()
+                    }}
+                    className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-foreground hover:text-primary hover:bg-muted transition-all duration-300"
+                  >
+                    <UserCircle className="w-5 h-5" />
+                    <span>Thông tin tài khoản</span>
+                  </button>
+                )}
+                {onOrderHistoryClick && (
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false)
+                      onOrderHistoryClick()
+                    }}
+                    className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-foreground hover:text-primary hover:bg-muted transition-all duration-300"
+                  >
+                    <History className="w-5 h-5" />
+                    <span>Lịch sử đơn hàng</span>
+                  </button>
+                )}
+
+                {/* Admin Panel Link - Only for admin/super_admin */}
+                {(user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'manager') && (
+                  <a
+                    href="/admin/dashboard"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-info hover:text-info/80 hover:bg-muted transition-all duration-300"
+                  >
+                    <Shield className="w-5 h-5" />
+                    <span>Admin Panel</span>
+                  </a>
+                )}
+
+                <button
+                  onClick={() => {
+                    handleLogout()
+                    setIsMenuOpen(false)
+                  }}
+                  className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-destructive hover:text-destructive/80 hover:bg-muted transition-all duration-300"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span>Đăng xuất</span>
+                </button>
+              </>
+            ) : (
+              onLoginClick && (
                 <button
                   onClick={() => {
                     setIsMenuOpen(false)
-                    onProfileClick()
+                    onLoginClick()
                   }}
                   className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-foreground hover:text-primary hover:bg-muted transition-all duration-300"
                 >
-                  <UserCircle className="w-5 h-5" />
-                  <span>Thông tin tài khoản</span>
+                  <User className="w-5 h-5" />
+                  <span>Đăng nhập</span>
                 </button>
-              )}
-              {onOrderHistoryClick && (
-                <button
-                  onClick={() => {
-                    setIsMenuOpen(false)
-                    onOrderHistoryClick()
-                  }}
-                  className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-foreground hover:text-primary hover:bg-muted transition-all duration-300"
-                >
-                  <History className="w-5 h-5" />
-                  <span>Lịch sử đơn hàng</span>
-                </button>
-              )}
-              
-              {/* Admin Panel Link - Only for admin/super_admin */}
-              {(user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'manager') && (
-                <a
-                  href="/admin/dashboard"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-info hover:text-info/80 hover:bg-muted transition-all duration-300"
-                >
-                  <Shield className="w-5 h-5" />
-                  <span>Admin Panel</span>
-                </a>
-              )}
-              
-              <button
-                onClick={() => {
-                  handleLogout()
-                  setIsMenuOpen(false)
-                }}
-                className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-destructive hover:text-destructive/80 hover:bg-muted transition-all duration-300"
-              >
-                <LogOut className="w-5 h-5" />
-                <span>Đăng xuất</span>
-              </button>
-            </>
-          ) : (
-            onLoginClick && (
-              <button
-                onClick={() => {
-                  setIsMenuOpen(false)
-                  onLoginClick()
-                }}
-                className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-foreground hover:text-primary hover:bg-muted transition-all duration-300"
-              >
-                <User className="w-5 h-5" />
-                <span>Đăng nhập</span>
-              </button>
-            )
-          )}
+              )
+            )}
           </nav>
         </div>
       </div>

@@ -176,13 +176,7 @@ export default function ContactPage() {
     }, 1500)
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    )
-  }
+
 
   // Desconstruct config with defaults safe
   const hero = config?.hero || {}
@@ -296,10 +290,10 @@ export default function ContactPage() {
             <div className="absolute inset-0 bg-black/60"></div>
           </div>
         ) : (
-          <div className="absolute inset-0 bg-linear-to-br from-primary/10 via-background to-primary/5 -z-10"></div>
+          <div className="absolute inset-0 bg-linear-to-br from-primary/50 via-background to-primary/30"></div>
         )}
 
-        <div className={`max-w-7xl mx-auto text-center relative z-10 transition-all duration-1000 ${isHeroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
+        <div className={`max-w-6xl mx-auto text-center relative z-10 transition-all duration-1000 ${isHeroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
           <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-primary/10 rounded-full border border-primary/20 backdrop-blur-md hover:bg-primary/20 transition-colors">
             <span className="relative flex h-3 w-3">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
@@ -330,8 +324,8 @@ export default function ContactPage() {
               <Link
                 href={hero.cta_secondary.link || "/menu"}
                 className={`w-full sm:w-auto px-8 py-4 rounded-full font-bold text-lg border-2 transition-all duration-300 hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-2 ${hero.image
-                    ? 'border-white text-white hover:bg-white hover:text-primary'
-                    : 'border-border bg-card text-card-foreground hover:border-primary hover:text-primary'
+                  ? 'border-white text-white hover:bg-white hover:text-primary'
+                  : 'border-border bg-card text-card-foreground hover:border-primary hover:text-primary'
                   }`}
               >
                 {hero.cta_secondary.text}
@@ -346,8 +340,8 @@ export default function ContactPage() {
         ref={contactInfoRef}
         className={`py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-card/50 backdrop-blur-sm scroll-fade-in ${isContactInfoVisible ? "visible" : ""}`}
       >
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
             {contactInfoList.map((info, index) => {
               const Icon = info.icon
               return (
@@ -366,12 +360,12 @@ export default function ContactPage() {
                     {info.href ? (
                       <a
                         href={info.href}
-                        className="text-muted-foreground hover:text-primary transition-colors block mb-2"
+                        className="text-muted-foreground hover:text-primary transition-colors block mb-2 text-base font-medium wrap-break-word"
                       >
                         {info.value}
                       </a>
                     ) : (
-                      <p className="text-muted-foreground mb-2">{info.value}</p>
+                      <p className="text-muted-foreground mb-2 text-base font-medium wrap-break-word">{info.value}</p>
                     )}
                     <p className="text-xs text-muted-foreground/70">{info.description}</p>
                   </div>
@@ -383,8 +377,8 @@ export default function ContactPage() {
       </section>
 
       {/* Main Content Grid (Map + Form) */}
-      <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+      <section className="pb-16 md:pb-24 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
 
             {/* Map Section */}
@@ -457,7 +451,7 @@ export default function ContactPage() {
             {/* Contact Form Section */}
             <div
               ref={formRef}
-              className={`bg-card/30 backdrop-blur-md border border-border/50 rounded-2xl p-6 md:p-8 lg:p-10 shadow-xl scroll-slide-left ${isFormVisible ? "visible" : ""}`}
+              className={`bg-card/30 backdrop-blur-md border border-border/50 rounded-2xl p-5 md:p-6 lg:p-8 shadow-xl scroll-slide-left ${isFormVisible ? "visible" : ""}`}
             >
               <div className="inline-flex items-center gap-2 mb-3 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-full">
                 <MessageCircle className="w-4 h-4 text-primary" />
@@ -489,8 +483,8 @@ export default function ContactPage() {
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-foreground flex items-center gap-1">
                         {contactForm.fields?.name_label || 'Họ và tên'}
@@ -518,14 +512,14 @@ export default function ContactPage() {
                         value={formState.email}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all"
+                        className="w-full px-4 py-2.5 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all"
                         placeholder="Vui lòng nhập..."
                         aria-required="true"
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-foreground flex items-center gap-1">
                         {contactForm.fields?.phone_label || 'Số điện thoại'}
@@ -568,8 +562,8 @@ export default function ContactPage() {
                       value={formState.message}
                       onChange={handleChange}
                       required
-                      rows={5}
-                      className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all resize-none"
+                      rows={4}
+                      className="w-full px-4 py-2.5 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all resize-none"
                       placeholder="Vui lòng nhập..."
                       aria-required="true"
                     ></textarea>
@@ -610,7 +604,7 @@ export default function ContactPage() {
           <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
           <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="text-center mb-16">
               <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 bg-primary/10 border border-primary/20 rounded-full backdrop-blur-sm">
                 <Sparkles className="w-4 h-4 text-primary animate-pulse" />
@@ -684,50 +678,51 @@ export default function ContactPage() {
         <section className="py-20 md:py-32 relative overflow-hidden">
           <div className="absolute inset-0 z-0">
             {cta.image ? (
-              <img
-                src={cta.image}
-                alt="CTA Background"
-                className="w-full h-full object-cover"
-              />
+              <>
+                <img
+                  src={cta.image}
+                  alt="CTA Background"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/70"></div>
+              </>
             ) : (
-              <img
-                src="https://images.unsplash.com/photo-1559339352-11d035aa65de?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80"
-                alt="Restaurant Interior"
-                className="w-full h-full object-cover"
-              />
+              <div className="absolute inset-0 bg-linear-to-br from-primary/50 via-background to-primary/30"></div>
             )}
-            <div className="absolute inset-0 bg-black/70"></div>
           </div>
 
-        <div className="max-w-4xl mx-auto px-4 text-center relative z-10">
-          <h2 className="text-3xl md:text-5xl font-bold font-display text-white mb-6">
-            {cta.title || 'Sẵn Sàng Đặt Món Ngay?'}
-          </h2>
-          <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
-            {cta.description || 'Gọi điện hoặc đến thăm chúng tôi để trải nghiệm hương vị tuyệt vời'}
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-            {cta.button_primary && cta.button_primary.text && (
-              <a
-                href={cta.button_primary.link || "tel:+84969606095"}
-                className="w-full sm:w-auto px-8 py-4 bg-primary hover:bg-primary-dark text-primary-foreground rounded-full font-bold text-lg shadow-lg hover:shadow-primary/30 transition-transform active:scale-95 flex items-center justify-center gap-2"
-              >
-                <Phone className="w-5 h-5" />
-                {cta.button_primary.text}
-              </a>
-            )}
-            {cta.button_secondary && cta.button_secondary.text && (
-              <Link
-                href={cta.button_secondary.link || "/menu"}
-                className="w-full sm:w-auto px-8 py-4 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30 text-white rounded-full font-bold text-lg transition-transform active:scale-95 flex items-center justify-center gap-2"
-              >
-                <ArrowRight className="w-5 h-5" />
-                {cta.button_secondary.text}
-              </Link>
-            )}
+          <div className="max-w-4xl mx-auto px-4 text-center relative z-10">
+            <h2 className={`text-3xl md:text-5xl font-bold font-display p-2 mb-6 ${cta.image ? 'text-white' : 'bg-linear-to-r from-primary via-primary-light to-primary bg-clip-text text-transparent'}`}>
+              {cta.title || 'Sẵn Sàng Đặt Món Ngay?'}
+            </h2>
+            <p className={`text-xl mb-10 max-w-2xl mx-auto ${cta.image ? 'text-gray-300' : 'text-muted-foreground'}`}>
+              {cta.description || 'Gọi điện hoặc đến thăm chúng tôi để trải nghiệm hương vị tuyệt vời'}
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+              {cta.button_primary && cta.button_primary.text && (
+                <a
+                  href={cta.button_primary.link || "tel:+84969606095"}
+                  className="w-full sm:w-auto px-8 py-4 bg-primary hover:bg-primary-dark text-primary-foreground rounded-full font-bold text-lg shadow-lg hover:shadow-primary/30 transition-transform active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <Phone className="w-5 h-5" />
+                  {cta.button_primary.text}
+                </a>
+              )}
+              {cta.button_secondary && cta.button_secondary.text && (
+                <Link
+                  href={cta.button_secondary.link || "/menu"}
+                  className={`w-full sm:w-auto px-8 py-4 rounded-full font-bold text-lg transition-transform active:scale-95 flex items-center justify-center gap-2 ${cta.image
+                    ? 'bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30 text-white'
+                    : 'bg-background hover:bg-muted text-primary border-2 border-primary/20 hover:border-primary'
+                    }`}
+                >
+                  <ArrowRight className="w-5 h-5" />
+                  {cta.button_secondary.text}
+                </Link>
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
       )}
 
       <Footer />

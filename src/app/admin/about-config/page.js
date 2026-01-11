@@ -32,19 +32,19 @@ const isValidLucideIcon = (iconName) => {
       iconName + 'Icon',
       toPascalCase(iconName) + 'Icon',
     ];
-    
+
     const uniqueVariants = [...new Set(variants)];
-    
+
     let icon = null;
     for (const variant of uniqueVariants) {
       icon = lucideIcons[variant];
       if (icon) break;
     }
-    
+
     if (!icon) return false;
-    
+
     return icon && (
-      typeof icon === 'function' || 
+      typeof icon === 'function' ||
       (typeof icon === 'object' && icon.$$typeof) ||
       (typeof icon === 'object' && icon.default)
     );
@@ -63,17 +63,17 @@ const getLucideIcon = (iconName) => {
       iconName + 'Icon',
       toPascalCase(iconName) + 'Icon',
     ];
-    
+
     const uniqueVariants = [...new Set(variants)];
-    
+
     let icon = null;
     for (const variant of uniqueVariants) {
       icon = lucideIcons[variant];
       if (icon) break;
     }
-    
+
     if (!icon) return null;
-    
+
     if (typeof icon === 'object' && icon.default) {
       return icon.default;
     }
@@ -140,7 +140,7 @@ export default function AdminAboutConfig() {
   const [saving, setSaving] = useState(false);
   const [config, setConfig] = useState(null);
   const [toast, setToast] = useState({ message: '', isVisible: false });
-  
+
   // Check if stats are using whyChooseUs from landing config
   const isUsingLandingStats = landingConfig?.whyChooseUs?.stats && landingConfig.whyChooseUs.stats.length > 0;
 
@@ -370,7 +370,7 @@ export default function AdminAboutConfig() {
       cta: 'CTA',
       seo: 'SEO',
     };
-    
+
     if (resetSections.hero) {
       setHeroData(defaultAboutConfig.hero);
     }
@@ -393,12 +393,12 @@ export default function AdminAboutConfig() {
     if (resetSections.seo) {
       setSeoData(defaultAboutConfig.seo);
     }
-    
+
     const resetParts = Object.entries(resetSections)
       .filter(([_, checked]) => checked)
       .map(([key, _]) => sectionNames[key])
       .join(', ');
-    
+
     showToast(`Đã reset phần "${resetParts}" về giá trị mặc định`, 'success');
     setShowResetModal(false);
     setResetSections({
@@ -440,7 +440,7 @@ export default function AdminAboutConfig() {
   // Icon change handlers
   const handleFeatureIconChange = (value) => {
     setFeatureForm({ ...featureForm, icon: value });
-    const filtered = FEATURE_ICONS.filter(icon => 
+    const filtered = FEATURE_ICONS.filter(icon =>
       icon.toLowerCase().includes(value.toLowerCase())
     );
     setFeatureIconSuggestions(filtered.length > 0 ? filtered : FEATURE_ICONS);
@@ -449,7 +449,7 @@ export default function AdminAboutConfig() {
 
   const handleTeamIconChange = (value) => {
     setTeamMemberForm({ ...teamMemberForm, icon: value });
-    const filtered = TEAM_ICONS.filter(icon => 
+    const filtered = TEAM_ICONS.filter(icon =>
       icon.toLowerCase().includes(value.toLowerCase())
     );
     setTeamIconSuggestions(filtered.length > 0 ? filtered : TEAM_ICONS);
@@ -458,7 +458,7 @@ export default function AdminAboutConfig() {
 
   const handleMissionIconChange = (value) => {
     setMissionItemForm({ ...missionItemForm, icon: value });
-    const filtered = FEATURE_ICONS.filter(icon => 
+    const filtered = FEATURE_ICONS.filter(icon =>
       icon.toLowerCase().includes(value.toLowerCase())
     );
     setMissionIconSuggestions(filtered.length > 0 ? filtered : FEATURE_ICONS);
@@ -707,11 +707,10 @@ export default function AdminAboutConfig() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-t-lg transition-colors cursor-pointer ${
-                    activeTab === tab.id
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-t-lg transition-colors cursor-pointer ${activeTab === tab.id
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                    }`}
                 >
                   <Icon className="w-4 h-4" />
                   {tab.label}
@@ -1086,6 +1085,19 @@ export default function AdminAboutConfig() {
                   placeholder="Hãy đến thăm chúng tôi ngay hôm nay..."
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-card-foreground mb-2">Image URL (Background)</label>
+                <input
+                  type="text"
+                  value={ctaData.image || ''}
+                  onChange={(e) => setCtaData({ ...ctaData, image: e.target.value })}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground"
+                  placeholder="https://example.com/cta-bg.jpg hoặc /images/cta-bg.jpg"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Ảnh nền cho CTA section. Nếu để trống sẽ hiển thị gradient mặc định.
+                </p>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-card-foreground mb-2">Button Primary Text</label>
@@ -1371,7 +1383,7 @@ export default function AdminAboutConfig() {
                         onChange={(e) => handleFeatureIconChange(e.target.value)}
                         onFocus={() => {
                           if (featureForm.icon) {
-                            const filtered = FEATURE_ICONS.filter(icon => 
+                            const filtered = FEATURE_ICONS.filter(icon =>
                               icon.toLowerCase().includes(featureForm.icon.toLowerCase())
                             );
                             setFeatureIconSuggestions(filtered.length > 0 ? filtered : FEATURE_ICONS);
@@ -1462,21 +1474,20 @@ export default function AdminAboutConfig() {
                         key={idx}
                         type="button"
                         onClick={() => setFeatureForm({ ...featureForm, color: colorOption.color, borderColor: colorOption.borderColor })}
-                        className={`h-10 rounded border-2 cursor-pointer ${
-                          featureForm.color === colorOption.color ? 'border-primary' : 'border-border'
-                        }`}
+                        className={`h-10 rounded border-2 cursor-pointer ${featureForm.color === colorOption.color ? 'border-primary' : 'border-border'
+                          }`}
                         style={{
-                          background: `linear-gradient(to bottom right, ${colorOption.color.includes('green') ? 'rgba(34, 197, 94, 0.2)' : 
+                          background: `linear-gradient(to bottom right, ${colorOption.color.includes('green') ? 'rgba(34, 197, 94, 0.2)' :
                             colorOption.color.includes('orange') ? 'rgba(249, 115, 22, 0.2)' :
-                            colorOption.color.includes('blue') ? 'rgba(59, 130, 246, 0.2)' :
-                            colorOption.color.includes('purple') ? 'rgba(168, 85, 247, 0.2)' :
-                            colorOption.color.includes('pink') ? 'rgba(236, 72, 153, 0.2)' :
-                            'rgba(234, 179, 8, 0.2)'}, ${colorOption.color.includes('green') ? 'rgba(5, 150, 105, 0.1)' : 
-                            colorOption.color.includes('orange') ? 'rgba(217, 119, 6, 0.1)' :
-                            colorOption.color.includes('blue') ? 'rgba(37, 99, 235, 0.1)' :
-                            colorOption.color.includes('purple') ? 'rgba(124, 58, 237, 0.1)' :
-                            colorOption.color.includes('pink') ? 'rgba(219, 39, 119, 0.1)' :
-                            'rgba(217, 119, 6, 0.1)'})`
+                              colorOption.color.includes('blue') ? 'rgba(59, 130, 246, 0.2)' :
+                                colorOption.color.includes('purple') ? 'rgba(168, 85, 247, 0.2)' :
+                                  colorOption.color.includes('pink') ? 'rgba(236, 72, 153, 0.2)' :
+                                    'rgba(234, 179, 8, 0.2)'}, ${colorOption.color.includes('green') ? 'rgba(5, 150, 105, 0.1)' :
+                                      colorOption.color.includes('orange') ? 'rgba(217, 119, 6, 0.1)' :
+                                        colorOption.color.includes('blue') ? 'rgba(37, 99, 235, 0.1)' :
+                                          colorOption.color.includes('purple') ? 'rgba(124, 58, 237, 0.1)' :
+                                            colorOption.color.includes('pink') ? 'rgba(219, 39, 119, 0.1)' :
+                                              'rgba(217, 119, 6, 0.1)'})`
                         }}
                       />
                     ))}
@@ -1629,7 +1640,7 @@ export default function AdminAboutConfig() {
                         onChange={(e) => handleMissionIconChange(e.target.value)}
                         onFocus={() => {
                           if (missionItemForm.icon) {
-                            const filtered = FEATURE_ICONS.filter(icon => 
+                            const filtered = FEATURE_ICONS.filter(icon =>
                               icon.toLowerCase().includes(missionItemForm.icon.toLowerCase())
                             );
                             setMissionIconSuggestions(filtered.length > 0 ? filtered : FEATURE_ICONS);
@@ -1766,7 +1777,7 @@ export default function AdminAboutConfig() {
                         onChange={(e) => handleTeamIconChange(e.target.value)}
                         onFocus={() => {
                           if (teamMemberForm.icon) {
-                            const filtered = TEAM_ICONS.filter(icon => 
+                            const filtered = TEAM_ICONS.filter(icon =>
                               icon.toLowerCase().includes(teamMemberForm.icon.toLowerCase())
                             );
                             setTeamIconSuggestions(filtered.length > 0 ? filtered : TEAM_ICONS);
@@ -1887,7 +1898,7 @@ export default function AdminAboutConfig() {
 
       {/* Delete Feature Modal */}
       {showDeleteFeatureModal && featureToDelete !== null && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -1939,7 +1950,7 @@ export default function AdminAboutConfig() {
 
       {/* Delete Mission Item Modal */}
       {showDeleteMissionItemModal && missionItemToDelete !== null && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -1991,7 +2002,7 @@ export default function AdminAboutConfig() {
 
       {/* Delete Team Member Modal */}
       {showDeleteTeamMemberModal && teamMemberToDelete !== null && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -2043,7 +2054,7 @@ export default function AdminAboutConfig() {
 
       {/* Reset Modal */}
       {showResetModal && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -2067,7 +2078,7 @@ export default function AdminAboutConfig() {
               <p className="text-sm text-muted-foreground">
                 Chọn các phần bạn muốn reset về giá trị mặc định. Các phần không được chọn sẽ giữ nguyên.
               </p>
-              
+
               <div className="space-y-3">
                 {TABS.map((tab) => {
                   const sectionKey = tab.id;

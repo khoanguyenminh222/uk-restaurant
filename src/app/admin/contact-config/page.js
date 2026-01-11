@@ -320,11 +320,11 @@ export default function AdminContactConfig() {
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-6">
-                    <div className="flex items-center gap-3 mb-2">
-                        <Settings className="w-8 h-8 text-primary" />
-                        <h1 className="text-3xl font-bold text-foreground">Cấu hình Trang Liên Hệ</h1>
-                    </div>
-                    <p className="text-muted-foreground">Quản lý nội dung, hình ảnh và thông tin liên hệ</p>
+                            <div className="flex items-center gap-3 mb-2">
+                                <Settings className="w-8 h-8 text-primary" />
+                                <h1 className="text-3xl font-bold text-foreground">Cấu hình Trang Liên Hệ</h1>
+                            </div>
+                            <p className="text-muted-foreground">Quản lý nội dung, hình ảnh và thông tin liên hệ</p>
                 </div>
 
                 {/* Tabs */}
@@ -671,20 +671,20 @@ export default function AdminContactConfig() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 border border-border rounded-lg bg-card/50">
                                 <div>
-                                    <label className="block text-sm font-medium text-card-foreground mb-2">Badge (Nhãn)</label>
-                                    <input
-                                        value={formData.badge || 'Gửi Tin Nhắn'}
-                                        onChange={(e) => setFormData({ ...formData, badge: e.target.value })}
-                                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground"
-                                    />
-                                </div>
+                                        <label className="block text-sm font-medium text-card-foreground mb-2">Badge (Nhãn)</label>
+                                        <input
+                                            value={formData.badge || 'Gửi Tin Nhắn'}
+                                            onChange={(e) => setFormData({ ...formData, badge: e.target.value })}
+                                            className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground"
+                                        />
+                                    </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-card-foreground mb-2">Tiêu đề Form</label>
-                                    <input
-                                        value={formData.title}
-                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground font-bold"
-                                    />
+                                        <label className="block text-sm font-medium text-card-foreground mb-2">Tiêu đề Form</label>
+                                        <input
+                                            value={formData.title}
+                                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                            className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground font-bold"
+                                        />
                                 </div>
 
                                 <div className="md:col-span-2">
@@ -956,14 +956,14 @@ export default function AdminContactConfig() {
                                                 className="w-full h-full object-cover"
                                                 onError={(e) => e.target.src = 'https://via.placeholder.com/800x400?text=Invalid+Image+URL'}
                                             />
-                                        </div>
+                                </div>
                                     )}
                                 </div>
 
                                 <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border">
                                     <div className="space-y-2">
                                         <label className="block text-sm font-medium text-card-foreground mb-2">Nút Chính (Primary Button)</label>
-                                        <input
+                                    <input
                                             placeholder="Text (VD: Gọi Đặt Bàn)"
                                             value={ctaData.button_primary?.text || ''}
                                             onChange={(e) => setCtaData({ ...ctaData, button_primary: { ...ctaData.button_primary, text: e.target.value } })}
