@@ -572,7 +572,7 @@ export default function ContactPage() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full px-6 py-4 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg font-bold text-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+                    className="w-full px-6 py-4 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg font-bold text-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-primary/20 cursor-pointer"
                   >
                     {isSubmitting ? (
                       <>

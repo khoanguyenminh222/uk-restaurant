@@ -360,7 +360,7 @@ export default function AdminAboutConfig() {
     }
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     const sectionNames = {
       hero: 'Hero',
       mission: 'Mission',
@@ -371,45 +371,80 @@ export default function AdminAboutConfig() {
       seo: 'SEO',
     };
 
-    if (resetSections.hero) {
-      setHeroData(defaultAboutConfig.hero);
-    }
-    if (resetSections.mission) {
-      setMissionData(defaultAboutConfig.mission);
-    }
-    if (resetSections.values) {
-      setValuesData(defaultAboutConfig.values);
-      setFeatures(defaultAboutConfig.features);
-    }
-    if (resetSections.stats) {
-      setStats(defaultAboutConfig.stats);
-    }
-    if (resetSections.team) {
-      setTeamData(defaultAboutConfig.team);
-    }
-    if (resetSections.cta) {
-      setCtaData(defaultAboutConfig.cta);
-    }
-    if (resetSections.seo) {
-      setSeoData(defaultAboutConfig.seo);
+    // Kiểm tra xem có phần nào được chọn không
+    const selectedSections = Object.entries(resetSections)
+      .filter(([_, selected]) => selected)
+      .map(([key, _]) => key);
+
+    if (selectedSections.length === 0) {
+      showToast('Vui lòng chọn ít nhất một phần để reset', 'error');
+      return;
     }
 
-    const resetParts = Object.entries(resetSections)
-      .filter(([_, checked]) => checked)
-      .map(([key, _]) => sectionNames[key])
-      .join(', ');
+    try {
+      setSaving(true);
+      setShowResetModal(false);
 
-    showToast(`Đã reset phần "${resetParts}" về giá trị mặc định`, 'success');
-    setShowResetModal(false);
-    setResetSections({
-      hero: false,
-      mission: false,
-      values: false,
-      stats: false,
-      team: false,
-      cta: false,
-      seo: false,
-    });
+      // Tạo object chứa các giá trị mặc định cho các phần được chọn
+      const resetData = {};
+
+      if (resetSections.hero) {
+        resetData.hero = defaultAboutConfig.hero;
+      }
+      if (resetSections.mission) {
+        resetData.mission = defaultAboutConfig.mission;
+      }
+      if (resetSections.values) {
+        resetData.values = defaultAboutConfig.values;
+        resetData.features = defaultAboutConfig.features;
+      }
+      if (resetSections.stats) {
+        resetData.stats = defaultAboutConfig.stats;
+      }
+      if (resetSections.team) {
+        resetData.team = defaultAboutConfig.team;
+      }
+      if (resetSections.cta) {
+        resetData.cta = defaultAboutConfig.cta;
+      }
+      if (resetSections.seo) {
+        resetData.seo = defaultAboutConfig.seo;
+      }
+
+      // Gửi request reset
+      const res = await fetch('/api/config/about', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(resetData),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        const resetParts = Object.entries(resetSections)
+          .filter(([_, checked]) => checked)
+          .map(([key, _]) => sectionNames[key])
+          .join(', ');
+
+        showToast(`Đã reset phần "${resetParts}" về giá trị mặc định!`, 'success');
+        fetchConfig(); // Reload dữ liệu từ database
+      } else {
+        showToast(data.error || 'Lỗi khi reset', 'error');
+      }
+    } catch (error) {
+      console.error('Error resetting config:', error);
+      showToast('Lỗi khi reset', 'error');
+    } finally {
+      setSaving(false);
+      setResetSections({
+        hero: false,
+        mission: false,
+        values: false,
+        stats: false,
+        team: false,
+        cta: false,
+        seo: false,
+      });
+    }
   };
 
   // Click outside handler for modals

@@ -188,7 +188,7 @@ export default function AdminContactConfig() {
         }
     };
 
-    const handleReset = () => {
+    const handleReset = async () => {
         const sectionNames = {
             hero: 'Hero',
             info: 'Thông tin LH',
@@ -199,50 +199,85 @@ export default function AdminContactConfig() {
             cta: 'CTA',
             seo: 'SEO',
         };
-        
-        if (resetSections.hero) {
-            setHeroData(defaultContactConfig.hero);
+
+        // Kiểm tra xem có phần nào được chọn không
+        const selectedSections = Object.entries(resetSections)
+            .filter(([_, selected]) => selected)
+            .map(([key, _]) => key);
+
+        if (selectedSections.length === 0) {
+            showToast('Vui lòng chọn ít nhất một phần để reset', 'error');
+            return;
         }
-        if (resetSections.info) {
-            setInfoData(defaultContactConfig.info);
+
+        try {
+            setSaving(true);
+            setShowResetModal(false);
+
+            // Tạo object chứa các giá trị mặc định cho các phần được chọn
+            const resetData = {};
+
+            if (resetSections.hero) {
+                resetData.hero = defaultContactConfig.hero;
+            }
+            if (resetSections.info) {
+                resetData.info = defaultContactConfig.info;
+            }
+            if (resetSections.social) {
+                resetData.social_media = defaultContactConfig.social_media || [];
+                resetData.social_section = defaultContactConfig.social_section || {};
+            }
+            if (resetSections.form) {
+                resetData.contact_form = defaultContactConfig.contact_form;
+            }
+            if (resetSections.map) {
+                resetData.section_map = defaultContactConfig.section_map || {};
+            }
+            if (resetSections.stats) {
+                resetData.trustStats = defaultContactConfig.trustStats || {};
+            }
+            if (resetSections.cta) {
+                resetData.cta = defaultContactConfig.cta;
+            }
+            if (resetSections.seo) {
+                resetData.seo = defaultContactConfig.seo;
+            }
+
+            // Gửi request reset
+            const res = await fetch('/api/config/contact', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(resetData),
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                const resetParts = Object.entries(resetSections)
+                    .filter(([_, checked]) => checked)
+                    .map(([key, _]) => sectionNames[key])
+                    .join(', ');
+
+                showToast(`Đã reset phần "${resetParts}" về giá trị mặc định!`, 'success');
+                fetchConfig(); // Reload dữ liệu từ database
+            } else {
+                showToast(data.error || 'Lỗi khi reset', 'error');
+            }
+        } catch (error) {
+            console.error('Error resetting config:', error);
+            showToast('Lỗi khi reset', 'error');
+        } finally {
+            setSaving(false);
+            setResetSections({
+                hero: false,
+                info: false,
+                social: false,
+                form: false,
+                map: false,
+                stats: false,
+                cta: false,
+                seo: false,
+            });
         }
-        if (resetSections.social) {
-            setSocialMedia(defaultContactConfig.social_media || []);
-            setSocialSection(defaultContactConfig.social_section || {});
-        }
-        if (resetSections.form) {
-            setFormData(defaultContactConfig.contact_form);
-        }
-        if (resetSections.map) {
-            setSectionMap(defaultContactConfig.section_map || {});
-        }
-        if (resetSections.stats) {
-            setTrustStats(defaultContactConfig.trustStats || {});
-        }
-        if (resetSections.cta) {
-            setCtaData(defaultContactConfig.cta);
-        }
-        if (resetSections.seo) {
-            setSeoData(defaultContactConfig.seo);
-        }
-        
-        const resetParts = Object.entries(resetSections)
-            .filter(([_, checked]) => checked)
-            .map(([key, _]) => sectionNames[key])
-            .join(', ');
-        
-        showToast(`Đã reset phần "${resetParts}" về giá trị mặc định`, 'success');
-        setShowResetModal(false);
-        setResetSections({
-            hero: false,
-            info: false,
-            social: false,
-            form: false,
-            map: false,
-            stats: false,
-            cta: false,
-            seo: false,
-        });
     };
 
     // Social Media Handlers

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRoleCheck } from '@/hooks/useRoleCheck';
 import Toast from '@/components/Toast/Toast';
-import { Settings, Save, Loader2, RotateCcw, Mail, MessageSquare } from 'lucide-react';
+import { Settings, Save, Loader2, RotateCcw, Mail, MessageSquare, X } from 'lucide-react';
 
 const TABS = [
   { id: 'email', label: 'Email', icon: Mail },
@@ -23,6 +23,13 @@ export default function AdminNotificationConfig() {
 
   // Test Telegram state
   const [sendingTelegramTest, setSendingTelegramTest] = useState(false);
+
+  // Reset Modal state
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetSections, setResetSections] = useState({
+    email: false,
+    telegram: false,
+  });
 
   // Email configuration state
   const [emailData, setEmailData] = useState({
@@ -219,23 +226,89 @@ export default function AdminNotificationConfig() {
   };
 
   const handleReset = async () => {
-    if (!confirm('Bạn có chắc chắn muốn reset về cấu hình mặc định?')) return;
-    
-    try {
-      setSaving(true);
+    const sectionNames = {
+      email: 'Email',
+      telegram: 'Telegram',
+    };
 
-      // Reset to default values (from env)
-      setEmailData({
-        sender_email: process.env.NEXT_PUBLIC_DEFAULT_EMAIL || '',
-        sender_password: '',
-      });
+    // Kiểm tra xem có phần nào được chọn không
+    const selectedSections = Object.entries(resetSections)
+      .filter(([_, selected]) => selected)
+      .map(([key, _]) => key);
 
+    if (selectedSections.length === 0) {
       if (typeof window !== 'undefined') {
         window.dispatchEvent(
           new CustomEvent('showToast', {
-            detail: { message: 'Đã reset về cấu hình mặc định. Nhấn "Lưu cấu hình" để áp dụng.', type: 'success' },
+            detail: { message: 'Vui lòng chọn ít nhất một phần để reset', type: 'error' },
           })
         );
+      }
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setShowResetModal(false);
+
+      // Tạo object chứa các giá trị mặc định cho các phần được chọn
+      const resetData = {};
+
+      // Reset Email nếu được chọn
+      if (resetSections.email) {
+        resetData.email_config = {
+          sender_email: process.env.NEXT_PUBLIC_DEFAULT_EMAIL || '',
+          sender_password: '',
+          email_notifications: {
+            confirmed: true,
+            preparing: false,
+            ready: false,
+            delivered: true,
+            completed: false,
+            cancelled: true,
+          },
+        };
+      }
+
+      // Reset Telegram nếu được chọn
+      if (resetSections.telegram) {
+        resetData.telegram_config = {
+          enabled: true,
+          bot_token: '',
+          chat_id: '',
+        };
+      }
+
+      // Gửi request reset
+      const res = await fetch('/api/config/landing', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(resetData),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        const resetParts = Object.entries(resetSections)
+          .filter(([_, checked]) => checked)
+          .map(([key, _]) => sectionNames[key])
+          .join(', ');
+
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: `Đã reset phần "${resetParts}" về giá trị mặc định!`, type: 'success' },
+            })
+          );
+        }
+        fetchConfig(); // Reload dữ liệu từ database
+      } else {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('showToast', {
+              detail: { message: data.error || 'Lỗi khi reset', type: 'error' },
+            })
+          );
+        }
       }
     } catch (err) {
       console.error('Error resetting config:', err);
@@ -248,6 +321,10 @@ export default function AdminNotificationConfig() {
       }
     } finally {
       setSaving(false);
+      setResetSections({
+        email: false,
+        telegram: false,
+      });
     }
   };
 
@@ -318,8 +395,6 @@ export default function AdminNotificationConfig() {
   const handleSendTestEmail = async () => {
     try {
       setSendingTest(true);
-      setTestError('');
-      setTestSuccess('');
 
       // Validate test email
       if (!testEmail || !testEmail.includes('@')) {
@@ -686,7 +761,7 @@ export default function AdminNotificationConfig() {
         {/* Action Buttons */}
         <div className="flex items-center justify-between">
           <button
-            onClick={handleReset}
+            onClick={() => setShowResetModal(true)}
             disabled={saving}
             className="flex cursor-pointer items-center gap-2 px-6 py-3 bg-muted text-foreground rounded-lg hover:bg-muted/80 disabled:opacity-50"
           >
@@ -712,6 +787,84 @@ export default function AdminNotificationConfig() {
           </button>
         </div>
       </div>
+
+      {/* Reset Modal */}
+      {showResetModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="bg-card border border-border rounded-xl p-6 w-full max-w-md shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-card-foreground">Reset về mặc định</h3>
+              <button
+                onClick={() => setShowResetModal(false)}
+                className="text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Chọn các phần bạn muốn reset về giá trị mặc định. Các phần không được chọn sẽ giữ nguyên.
+              </p>
+              
+              <div className="space-y-3">
+                {TABS.map((tab) => {
+                  const sectionKey = tab.id;
+                  return (
+                    <label
+                      key={tab.id}
+                      className="flex items-center gap-3 p-3 bg-muted rounded-lg hover:bg-muted/80 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={resetSections[sectionKey] || false}
+                        onChange={(e) => {
+                          setResetSections({
+                            ...resetSections,
+                            [sectionKey]: e.target.checked
+                          });
+                        }}
+                        className="w-4 h-4 rounded border-border cursor-pointer"
+                      />
+                      <div className="flex items-center gap-2 flex-1">
+                        <tab.icon className="w-4 h-4 text-primary" />
+                        <span className="text-card-foreground font-medium">{tab.label}</span>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+
+              <div className="pt-4 border-t border-border">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowResetModal(false)}
+                    className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 cursor-pointer"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={handleReset}
+                    disabled={saving || Object.values(resetSections).every(v => !v)}
+                    className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Đang reset...</span>
+                      </>
+                    ) : (
+                      <>
+                        <RotateCcw className="w-4 h-4" />
+                        <span>Reset</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Toast
         message={toast.message}
