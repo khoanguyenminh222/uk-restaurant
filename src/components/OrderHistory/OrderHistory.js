@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { X, Package, Calendar, DollarSign, Filter, Loader2, Eye, XCircle, Clock, CheckCircle, Mail, History, Edit2, CheckCircle2, Truck } from "lucide-react"
+import { X, Package, Calendar, Banknote, Filter, Loader2, Eye, XCircle, Clock, CheckCircle, Mail, History, Edit2, CheckCircle2, Truck } from "lucide-react"
 import { getUser } from "@/utils/user"
 import { formatCurrency } from "@/utils/helpers"
 
@@ -162,7 +162,7 @@ export default function OrderHistory({ isOpen, onClose }) {
       // Fetch full order details to get status_history and change_history
       const response = await fetch(`/api/orders/${order.order_id}`)
       const data = await response.json()
-      
+
       if (data.success) {
         setSelectedOrder(data.data)
         setShowDetailModal(true)
@@ -201,8 +201,8 @@ export default function OrderHistory({ isOpen, onClose }) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
-          status: "cancelled", 
+        body: JSON.stringify({
+          status: "cancelled",
           changed_by: "customer",
           cancel_reason: cancelReason.trim() || '',
         }),
@@ -220,7 +220,7 @@ export default function OrderHistory({ isOpen, onClose }) {
           )
         )
         setSelectedOrder(prev => ({ ...prev, status: "cancelled" }))
-        
+
         // Show success message
         window.dispatchEvent(
           new CustomEvent("showToast", {
@@ -283,7 +283,7 @@ export default function OrderHistory({ isOpen, onClose }) {
                 <Package className="w-5 h-5 text-primary" />
                 Danh sách đơn hàng
               </h3>
-              
+
               {/* Status Filter */}
               <div className="flex items-center gap-2">
                 <Filter className="w-4 h-4 text-muted-foreground" />
@@ -343,7 +343,7 @@ export default function OrderHistory({ isOpen, onClose }) {
                             {formatDate(order.created_at)}
                           </span>
                           <span className="flex items-center gap-1">
-                            <DollarSign className="w-4 h-4" />
+                            <Banknote className="w-4 h-4" />
                             {formatCurrency(order.total_price)}
                           </span>
                         </div>
@@ -389,8 +389,8 @@ export default function OrderHistory({ isOpen, onClose }) {
 
       {/* Detail Modal */}
       {showDetailModal && selectedOrder && (
-        <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" 
+        <div
+          className="fixed inset-0 bg-black/10 backdrop-blur-xs flex items-center justify-center p-4"
           style={{ zIndex: 60 }}
           onClick={(e) => {
             // Close detail modal when clicking on backdrop
@@ -400,7 +400,7 @@ export default function OrderHistory({ isOpen, onClose }) {
             }
           }}
         >
-          <div 
+          <div
             ref={detailModalRef}
             className="bg-card rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto relative border border-border"
             onClick={(e) => e.stopPropagation()}
@@ -562,8 +562,8 @@ export default function OrderHistory({ isOpen, onClose }) {
 
       {/* Cancel Confirmation Modal */}
       {showCancelModal && (
-        <div 
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-70 p-4"
+        <div
+          className="fixed inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-70 p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowCancelModal(false)
@@ -571,7 +571,7 @@ export default function OrderHistory({ isOpen, onClose }) {
             }
           }}
         >
-          <div 
+          <div
             className="bg-card rounded-lg max-w-md w-full p-6 border border-border"
             onClick={(e) => e.stopPropagation()}
           >
@@ -634,12 +634,12 @@ export default function OrderHistory({ isOpen, onClose }) {
 
       {/* Status History Modal */}
       {showHistoryModal && selectedOrder && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center p-4"
           style={{ zIndex: 70 }}
           onClick={() => setShowHistoryModal(false)}
         >
-          <div 
+          <div
             className="bg-card rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 border border-border"
             onClick={(e) => e.stopPropagation()}
           >
@@ -679,15 +679,14 @@ export default function OrderHistory({ isOpen, onClose }) {
                           const changedByDetail = changeEntry.changed_by_detail;
                           const isUserChange = changedByDetail?.type === 'user' && changedByDetail?.user_id === currentUserId;
                           const isAdminOrSystem = changedByDetail?.type === 'admin' || changedByDetail?.type === 'system';
-                          
+
                           return (
                             <div key={index} className="relative border-l-2 border-border pl-4 pb-4">
                               <div className="flex items-start gap-3">
-                                <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center border-2 ${
-                                  isLast 
-                                    ? 'bg-primary border-primary text-primary-foreground' 
-                                    : 'bg-muted border-border text-muted-foreground'
-                                }`}>
+                                <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center border-2 ${isLast
+                                  ? 'bg-primary border-primary text-primary-foreground'
+                                  : 'bg-muted border-border text-muted-foreground'
+                                  }`}>
                                   <Edit2 className="w-3 h-3" />
                                 </div>
                                 <div className="flex-1">
@@ -705,7 +704,7 @@ export default function OrderHistory({ isOpen, onClose }) {
                                       )}
                                     </span>
                                   </div>
-                                  
+
                                   {/* Display changes */}
                                   {changeEntry.changes && changeEntry.changes.length > 0 && (
                                     <div className="space-y-2 mt-2">
@@ -722,20 +721,19 @@ export default function OrderHistory({ isOpen, onClose }) {
                                           };
                                           return labels[field] || field;
                                         };
-                                        
+
                                         const field = change.field;
                                         const oldValue = change.old_value;
                                         const newValue = change.new_value;
-                                        
+
                                         const formatDisplayValue = (value, fieldName) => {
                                           if (value === null || value === undefined || value === '') return '(trống)';
                                           if (fieldName === 'total_price') return formatCurrency(parseFloat(value) || 0);
                                           if (fieldName === 'status') {
                                             const StatusIcon = STATUS_CONFIG[value]?.icon || Clock;
                                             return (
-                                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full border ${
-                                                STATUS_CONFIG[value]?.color || 'bg-gray-500/20 text-gray-600 border-gray-500/50'
-                                              }`}>
+                                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full border ${STATUS_CONFIG[value]?.color || 'bg-gray-500/20 text-gray-600 border-gray-500/50'
+                                                }`}>
                                                 <StatusIcon className="w-3 h-3" />
                                                 {STATUS_CONFIG[value]?.label || value}
                                               </span>
@@ -753,7 +751,7 @@ export default function OrderHistory({ isOpen, onClose }) {
                                           }
                                           return String(value);
                                         };
-                                        
+
                                         return (
                                           <div key={changeIndex} className="bg-muted rounded-lg p-3 border border-border">
                                             <p className="text-sm font-medium text-card-foreground mb-2">
@@ -815,22 +813,20 @@ export default function OrderHistory({ isOpen, onClose }) {
                             const changedByDetail = history.changed_by_detail;
                             const isUserChange = changedByDetail?.type === 'user' && changedByDetail?.user_id === currentUserId;
                             const isAdminOrSystem = changedByDetail?.type === 'admin' || changedByDetail?.type === 'system';
-                            
+
                             return (
                               <div key={index} className="relative border-l-2 border-border pl-4 pb-4">
                                 <div className="flex items-start gap-3">
-                                  <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center border-2 ${
-                                    isLast 
-                                      ? 'bg-primary border-primary text-primary-foreground' 
-                                      : 'bg-muted border-border text-muted-foreground'
-                                  }`}>
+                                  <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center border-2 ${isLast
+                                    ? 'bg-primary border-primary text-primary-foreground'
+                                    : 'bg-muted border-border text-muted-foreground'
+                                    }`}>
                                     <StatusIcon className="w-3 h-3" />
                                   </div>
                                   <div className="flex-1">
                                     <div className="flex items-center justify-between mb-1">
-                                      <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full border ${
-                                        STATUS_CONFIG[history.status]?.color || 'bg-gray-500/20 text-gray-600 border-gray-500/50'
-                                      }`}>
+                                      <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full border ${STATUS_CONFIG[history.status]?.color || 'bg-gray-500/20 text-gray-600 border-gray-500/50'
+                                        }`}>
                                         <StatusIcon className="w-3 h-3" />
                                         {STATUS_CONFIG[history.status]?.label || history.status}
                                       </span>

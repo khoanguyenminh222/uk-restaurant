@@ -10,8 +10,7 @@ import ThemeToggle from "@/components/ThemeToggle/ThemeToggle"
 import { useLandingConfig } from "@/hooks/useLandingConfig"
 
 export default function Header({ onCartClick, onLoginClick, onProfileClick, onOrderHistoryClick }) {
-  const { config } = useLandingConfig()
-  const restaurantName = config?.header?.restaurant_name || 'UK Restaurant'
+  const { config, loading } = useLandingConfig()
   const pathname = usePathname()
   const router = useRouter()
   const isHomePage = pathname === '/'
@@ -27,7 +26,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
   const userButtonRef = useRef(null)
   const dropdownRef = useRef(null)
 
-  // Get menu items from config or use defaults (moved up để dùng trong useEffect)
+  // Get menu items from config or use defaults
   const configMenuItems = config?.header?.menu_items || []
   const defaultMenuItems = [
     { id: "home", label: "Trang chủ", icon: Home },
@@ -171,7 +170,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
 
     window.addEventListener("scroll", handleScroll, { passive: true })
     return () => window.removeEventListener("scroll", handleScroll)
-  }, [configMenuItems.length, isHomePage]) // Chỉ re-run khi số lượng menu items thay đổi hoặc trang thay đổi
+  }, [menuItems.length, isHomePage]) // Chỉ re-run khi số lượng menu items thay đổi hoặc trang thay đổi
 
   // Update cart count
   useEffect(() => {
@@ -233,6 +232,32 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
       document.body.style.overflow = "unset"
     }
   }, [isMenuOpen])
+
+  if (loading) {
+    return (
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border/50">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 sm:h-20">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 bg-muted animate-pulse rounded-lg"></div>
+              <div className="w-32 h-6 bg-muted animate-pulse rounded-lg"></div>
+            </div>
+            <div className="hidden md:flex gap-8">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="w-20 h-4 bg-muted animate-pulse rounded-lg"></div>
+              ))}
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-muted animate-pulse rounded-full"></div>
+              <div className="w-10 h-10 bg-muted animate-pulse rounded-full"></div>
+            </div>
+          </div>
+        </div>
+      </header>
+    )
+  }
+
+  const restaurantName = config?.header?.restaurant_name || 'UK Restaurant'
 
   const scrollToSection = (sectionId) => {
     // Nếu là "about" hoặc "contact", điều hướng đến trang riêng

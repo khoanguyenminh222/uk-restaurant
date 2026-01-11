@@ -1313,11 +1313,11 @@ export default function AdminLandingConfig() {
                               className="w-4 h-4 rounded border-border cursor-pointer"
                             />
                             <span className="text-sm text-card-foreground">
-                              Hiển thị trên menu
+                              Hiển thị mục này (Trang chủ & Menu)
                             </span>
                           </label>
                           <p className="text-xs text-muted-foreground mt-1 ml-6">
-                            Bỏ chọn để ẩn menu item này trên client
+                            Bỏ chọn để ẩn mục này trên cả menu và trang chủ
                           </p>
                         </div>
                         <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">

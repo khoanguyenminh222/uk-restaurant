@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import Header from "@/components/Header/Header"
@@ -42,6 +43,17 @@ export default function AboutPage() {
   const [statsRef, isStatsVisible] = useScrollAnimation({ threshold: 0.3 })
   const [teamRef, isTeamVisible] = useScrollAnimation({ threshold: 0.2 })
   const [ctaRef, isCtaVisible] = useScrollAnimation({ threshold: 0.3 })
+  const router = useRouter()
+
+  // Kiểm tra hiển thị trang
+  useEffect(() => {
+    if (landingConfig && landingConfig.header && landingConfig.header.menu_items) {
+      const aboutItem = landingConfig.header.menu_items.find(item => item.id === 'about');
+      if (aboutItem && aboutItem.is_visible === false) {
+        router.push('/');
+      }
+    }
+  }, [landingConfig, router]);
 
   // Lấy data từ config hoặc dùng default
   const hero = config?.hero || {}

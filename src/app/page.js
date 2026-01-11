@@ -15,8 +15,10 @@ import OrderForm from "@/components/OrderForm/OrderForm"
 import UserProfile from "@/components/UserProfile/UserProfile"
 import OrderHistory from "@/components/OrderHistory/OrderHistory"
 import ReviewForm from "@/components/ReviewForm/ReviewForm"
+import { useLandingConfig } from "@/hooks/useLandingConfig"
 
 export default function Home() {
+  const { config } = useLandingConfig()
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isAuthOpen, setIsAuthOpen] = useState(false)
   const [isOrderFormOpen, setIsOrderFormOpen] = useState(false)
@@ -29,11 +31,21 @@ export default function Home() {
   const cartIconRef = useRef(null)
   const [flyingItem, setFlyingItem] = useState(null)
 
+  // Hàm helper để kiểm tra xem một section có được hiển thị không
+  const isSectionVisible = (sectionId) => {
+    // Nếu chưa load xong config, mặc định hiển thị
+    if (!config || !config.header || !config.header.menu_items) return true;
+
+    const menuItem = config.header.menu_items.find(item => item.id === sectionId);
+    // Nếu không tìm thấy hoặc is_visible không phải false thì hiển thị
+    return menuItem ? menuItem.is_visible !== false : true;
+  };
+
   // Check for login/logout success messages
   useEffect(() => {
     const loginMessage = localStorage.getItem('login_success_message')
     const logoutMessage = localStorage.getItem('logout_success_message')
-    
+
     if (loginMessage) {
       setToast({ message: loginMessage, isVisible: true, type: 'success' })
       localStorage.removeItem('login_success_message')
@@ -138,14 +150,14 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header 
-        onCartClick={handleCartClick} 
+      <Header
+        onCartClick={handleCartClick}
         onLoginClick={handleLoginClick}
         onProfileClick={handleProfileClick}
         onOrderHistoryClick={handleOrderHistoryClick}
       />
       <main>
-        <Hero />
+        {isSectionVisible("home") && <Hero />}
         {/* Scroll Indicator */}
         {/* <div className="relative flex justify-center py-8 bg-background">
           <div className="animate-bounce">
@@ -154,9 +166,13 @@ export default function Home() {
             </div>
           </div>
         </div> */}
-        <Menu onAddToCart={handleAddToCart} onOrderClick={handleOrderNow} />
-        <WhyChooseUs />
-        <Testimonials onReviewFormClick={() => setIsReviewFormOpen(true)} />
+        {isSectionVisible("menu") && (
+          <Menu onAddToCart={handleAddToCart} onOrderClick={handleOrderNow} />
+        )}
+        {isSectionVisible("why-choose-us") && <WhyChooseUs />}
+        {isSectionVisible("testimonials") && (
+          <Testimonials onReviewFormClick={() => setIsReviewFormOpen(true)} />
+        )}
       </main>
       <Footer />
       <ScrollToTop />
@@ -190,7 +206,7 @@ export default function Home() {
         onClose={handleCloseToast}
         type={toast.type || "success"}
       />
-      
+
       {/* Flying Item Animation */}
       {flyingItem && (
         <div

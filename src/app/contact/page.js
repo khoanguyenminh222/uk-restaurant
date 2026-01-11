@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   MapPin, Phone, Mail, Clock, Send, Globe, Star,
   MessageCircle, Facebook, Instagram, Twitter, Youtube,
@@ -122,6 +123,17 @@ export default function ContactPage() {
   const [formRef, isFormVisible] = useScrollAnimation()
   const [mapRef, isMapVisible] = useScrollAnimation()
   const [statsRef, isStatsVisible] = useScrollAnimation()
+  const router = useRouter()
+
+  // Kiểm tra hiển thị trang
+  useEffect(() => {
+    if (landingConfig && landingConfig.header && landingConfig.header.menu_items) {
+      const contactItem = landingConfig.header.menu_items.find(item => item.id === 'contact');
+      if (contactItem && contactItem.is_visible === false) {
+        router.push('/');
+      }
+    }
+  }, [landingConfig, router]);
 
   // Form State
   const [formState, setFormState] = useState({
