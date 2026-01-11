@@ -146,12 +146,12 @@ export async function removeFromBlacklist(email) {
   const { getSpamConfig } = await import('./restaurantConfig');
   const spamConfig = await getSpamConfig();
   const ORDER_RATE_LIMIT_TTL = spamConfig.order_rate_limit_ttl || parseInt(process.env.SPAM_ORDER_RATE_LIMIT_TTL || '1800');
-  
+
   // Xóa tất cả các cache keys liên quan đến email này
   // Cache key format: `order_count:${email}:${TTL}s`
   const rateLimitKey = `order_count:${normalizedEmail}:${ORDER_RATE_LIMIT_TTL}s`;
   cache.delete(rateLimitKey);
-  
-  console.log(`[Remove Blacklist] ✅ Đã xóa blacklist và reset cache rate limit cho email: ${normalizedEmail}`);
+
+  //console.log(`[Remove Blacklist] ✅ Đã xóa blacklist và reset cache rate limit cho email: ${normalizedEmail}`);
 }
 

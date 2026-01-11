@@ -77,12 +77,12 @@ export async function sendVerificationCode(email) {
     attempts: 0,
   };
   cache.set(verificationKey, verificationData, VERIFICATION_CODE_TTL);
-  console.log(`[Send Verification Code] ✅ Saved code for email: ${normalizedEmail}, key: ${verificationKey}, expiresAt: ${new Date(expiresAt).toISOString()}, TTL: ${VERIFICATION_CODE_TTL}s`);
-  
+  //console.log(`[Send Verification Code] ✅ Saved code for email: ${normalizedEmail}, key: ${verificationKey}, expiresAt: ${new Date(expiresAt).toISOString()}, TTL: ${VERIFICATION_CODE_TTL}s`);
+
   // Verify that it was saved correctly
   const savedData = cache.get(verificationKey);
   if (savedData) {
-    console.log(`[Send Verification Code] ✅ Verified cache save - code: ${savedData.code}, expiresAt: ${new Date(savedData.expiresAt).toISOString()}`);
+    //console.log(`[Send Verification Code] ✅ Verified cache save - code: ${savedData.code}, expiresAt: ${new Date(savedData.expiresAt).toISOString()}`);
   } else {
     console.error(`[Send Verification Code] ❌ Cache save failed - data not found immediately after save!`);
   }
@@ -132,21 +132,21 @@ export async function verifyEmailCode(email, code) {
   const verificationKey = `email_verification:${normalizedEmail}`;
   const verificationData = cache.get(verificationKey);
 
-  console.log(`[Verify Email] Key: ${verificationKey}, Email normalized: ${normalizedEmail}, Data:`, verificationData ? 'exists' : 'not found');
-  
+  //console.log(`[Verify Email] Key: ${verificationKey}, Email normalized: ${normalizedEmail}, Data:`, verificationData ? 'exists' : 'not found');
+
   // Debug: Check all cache keys that start with email_verification
   if (!verificationData) {
     try {
       const allKeys = cache.getAllKeys ? cache.getAllKeys() : [];
       const verificationKeys = allKeys.filter(key => key.startsWith('email_verification:'));
-      console.log(`[Verify Email] 🔍 All verification keys in cache (${verificationKeys.length}):`, verificationKeys);
+      //console.log(`[Verify Email] 🔍 All verification keys in cache (${verificationKeys.length}):`, verificationKeys);
       if (verificationKeys.length > 0) {
         verificationKeys.forEach(key => {
           const data = cache.get(key);
-          console.log(`[Verify Email] 🔍 Key: ${key}, Data:`, data ? { code: data.code, expiresAt: new Date(data.expiresAt).toISOString() } : 'not found');
+          //console.log(`[Verify Email] 🔍 Key: ${key}, Data:`, data ? { code: data.code, expiresAt: new Date(data.expiresAt).toISOString() } : 'not found');
         });
       } else {
-        console.log(`[Verify Email] 🔍 No verification keys found in cache. Total cache keys: ${allKeys.length}`);
+        //console.log(`[Verify Email] 🔍 No verification keys found in cache. Total cache keys: ${allKeys.length}`);
       }
     } catch (err) {
       console.error(`[Verify Email] 🔍 Error checking cache keys:`, err);
@@ -154,7 +154,7 @@ export async function verifyEmailCode(email, code) {
   }
 
   if (!verificationData) {
-    console.log(`[Verify Email] ❌ Verification data not found for email: ${normalizedEmail}`);
+    //console.log(`[Verify Email] ❌ Verification data not found for email: ${normalizedEmail}`);
     return {
       success: false,
       error: 'Mã xác thực không tồn tại hoặc đã hết hạn. Vui lòng gửi lại mã.',
@@ -163,7 +163,7 @@ export async function verifyEmailCode(email, code) {
 
   // Check if code expired (check expiresAt in the data object)
   if (verificationData.expiresAt && verificationData.expiresAt < Date.now()) {
-    console.log(`[Verify Email] ❌ Code expired for email: ${normalizedEmail}, expiresAt: ${new Date(verificationData.expiresAt).toISOString()}`);
+    //console.log(`[Verify Email] ❌ Code expired for email: ${normalizedEmail}, expiresAt: ${new Date(verificationData.expiresAt).toISOString()}`);
     cache.delete(verificationKey);
     return {
       success: false,
@@ -173,7 +173,7 @@ export async function verifyEmailCode(email, code) {
 
   // Check attempts
   if (verificationData.attempts >= MAX_VERIFY_ATTEMPTS) {
-    console.log(`[Verify Email] ❌ Too many attempts for email: ${normalizedEmail}, attempts: ${verificationData.attempts}`);
+    //console.log(`[Verify Email] ❌ Too many attempts for email: ${normalizedEmail}, attempts: ${verificationData.attempts}`);
     cache.delete(verificationKey);
     return {
       success: false,
@@ -182,7 +182,7 @@ export async function verifyEmailCode(email, code) {
   }
 
   // Verify code
-  console.log(`[Verify Email] Comparing codes - Expected: ${verificationData.code}, Received: ${code}`);
+  //console.log(`[Verify Email] Comparing codes - Expected: ${verificationData.code}, Received: ${code}`);
   if (verificationData.code !== code) {
     // Increment attempts
     const updatedData = {
@@ -190,13 +190,13 @@ export async function verifyEmailCode(email, code) {
       attempts: (verificationData.attempts || 0) + 1,
     };
     // Calculate remaining TTL based on expiresAt
-    const remainingTTL = verificationData.expiresAt 
+    const remainingTTL = verificationData.expiresAt
       ? Math.max(0, Math.floor((verificationData.expiresAt - Date.now()) / 1000))
       : VERIFICATION_CODE_TTL;
     cache.set(verificationKey, updatedData, remainingTTL);
 
     const remainingAttempts = MAX_VERIFY_ATTEMPTS - updatedData.attempts;
-    console.log(`[Verify Email] ❌ Code mismatch for email: ${normalizedEmail}, attempts: ${updatedData.attempts}, remaining: ${remainingAttempts}`);
+    //console.log(`[Verify Email] ❌ Code mismatch for email: ${normalizedEmail}, attempts: ${updatedData.attempts}, remaining: ${remainingAttempts}`);
     return {
       success: false,
       error: `Mã xác thực không đúng. Còn ${remainingAttempts} lần thử.`,

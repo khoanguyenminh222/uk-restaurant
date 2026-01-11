@@ -70,11 +70,11 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
         const verifiedEmails = JSON.parse(localStorage.getItem('verified_emails') || '{}')
         const emailKey = formData.customer_email.trim().toLowerCase()
         const verifiedInfo = verifiedEmails[emailKey]
-        
+
         if (verifiedInfo && verifiedInfo.expiresAt) {
           const expiresAt = new Date(verifiedInfo.expiresAt)
           const now = new Date()
-          
+
           if (now >= expiresAt) {
             // Đã hết hạn, reset verification state
             setEmailVerification({
@@ -114,11 +114,11 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
       const verifiedEmails = JSON.parse(localStorage.getItem('verified_emails') || '{}')
       const emailKey = formData.customer_email.trim().toLowerCase()
       const verifiedInfo = verifiedEmails[emailKey]
-      
+
       if (verifiedInfo && verifiedInfo.expiresAt) {
         const expiresAt = new Date(verifiedInfo.expiresAt)
         const now = new Date()
-        
+
         if (now >= expiresAt) {
           // Đã hết hạn, reset verification state
           setEmailVerification({
@@ -144,7 +144,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
       // Reset success state when opening modal
       setSuccessOrder(null)
       setError("")
-      
+
       if (items === null) {
         // Load from cart
         const { getCart } = require("@/utils/cart")
@@ -167,7 +167,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
 
       // Auto-fill form
       autoFillForm()
-      
+
       // Check verification expiry khi mở modal
       checkVerificationExpiry()
     }
@@ -176,7 +176,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
   // Auto-fill form from user or localStorage
   const autoFillForm = async () => {
     const user = getUser()
-    
+
     if (user) {
       // Fill from logged-in user
       const email = user.email || ""
@@ -187,18 +187,18 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
         customer_address: user.address || "",
         notes: "",
       })
-      
+
       // Tự động xác thực email cho user/admin đã login
       if (email && typeof window !== "undefined") {
         // Kiểm tra xem user có phải admin/manager/super_admin không
         const isAdmin = user.role && ['admin', 'manager', 'super_admin'].includes(user.role)
-        
+
         // Nếu là user thường hoặc admin đã login, tự động mark as verified
         // Lưu vào localStorage với thời gian hết hạn dài (30 ngày cho user đã login)
         const verifiedEmails = JSON.parse(localStorage.getItem('verified_emails') || '{}')
         const emailKey = email.toLowerCase().trim()
         const expiresAt = new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)) // 30 ngày
-        
+
         verifiedEmails[emailKey] = {
           verified: true,
           verifiedAt: new Date().toISOString(),
@@ -206,15 +206,15 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
           autoVerified: true, // Đánh dấu là tự động verify (không cần code)
         }
         localStorage.setItem('verified_emails', JSON.stringify(verifiedEmails))
-        
+
         // Mark as verified trong state
-        setEmailVerification(prev => ({ 
-          ...prev, 
-          verified: true, 
+        setEmailVerification(prev => ({
+          ...prev,
+          verified: true,
           step: 'verified',
           error: ""
         }))
-        
+
         console.log(`[Email Verification] ✅ Tự động xác thực email cho user đã login: ${emailKey}${isAdmin ? ` (${user.role})` : ''}`)
       }
     } else {
@@ -229,24 +229,24 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
           customer_address: customerInfo.customer_address || "",
           notes: "",
         })
-        
+
         // Kiểm tra xem email có đã verified trong localStorage không
         if (email && typeof window !== "undefined") {
           const verifiedEmails = JSON.parse(localStorage.getItem('verified_emails') || '{}')
           const emailKey = email.toLowerCase().trim()
           const verifiedInfo = verifiedEmails[emailKey]
-          
+
           if (verifiedInfo && verifiedInfo.verified) {
             // Kiểm tra xem có hết hạn không (theo VERIFIED_SESSION_TTL)
             const expiresAt = new Date(verifiedInfo.expiresAt)
             const now = new Date()
-            
+
             if (now < expiresAt) {
               // Email vẫn còn hiệu lực, mark as verified
-              setEmailVerification(prev => ({ 
-                ...prev, 
-                verified: true, 
-                step: 'verified' 
+              setEmailVerification(prev => ({
+                ...prev,
+                verified: true,
+                step: 'verified'
               }))
             } else {
               // Đã hết hạn, xóa khỏi localStorage
@@ -325,7 +325,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
       if (data.success) {
         // Update success order status
         setSuccessOrder({ ...successOrder, status: 'cancelled' })
-        
+
         // Show success message
         if (typeof window !== "undefined") {
           window.dispatchEvent(
@@ -406,7 +406,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
   // Validate form
   const validateForm = () => {
     const newErrors = {}
-    
+
     if (!formData.customer_name.trim()) {
       newErrors.customer_name = "Tên người đặt là bắt buộc"
     } else if (formData.customer_name.trim().length < 2) {
@@ -427,7 +427,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
       // Kiểm tra xem user có đang login không
       const user = getUser()
       const isLoggedIn = user && user.user_id
-      
+
       // Nếu user đã login, không cần verify email (API sẽ tự động skip)
       // Nếu user chưa login, cần verify email
       if (!isLoggedIn && !emailVerification.verified) {
@@ -483,10 +483,10 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
           )
         }
       } else {
-        setEmailVerification(prev => ({ 
-          ...prev, 
-          sendingCode: false, 
-          error: data.error || "Không thể gửi mã xác thực" 
+        setEmailVerification(prev => ({
+          ...prev,
+          sendingCode: false,
+          error: data.error || "Không thể gửi mã xác thực"
         }))
         if (data.error_code === 'BLACKLISTED') {
           setErrors(prev => ({ ...prev, customer_email: data.error }))
@@ -494,10 +494,10 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
       }
     } catch (err) {
       console.error("Error sending verification code:", err)
-      setEmailVerification(prev => ({ 
-        ...prev, 
-        sendingCode: false, 
-        error: "Lỗi kết nối. Vui lòng thử lại sau." 
+      setEmailVerification(prev => ({
+        ...prev,
+        sendingCode: false,
+        error: "Lỗi kết nối. Vui lòng thử lại sau."
       }))
     }
   }
@@ -517,7 +517,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           email: formData.customer_email.trim(),
           code: emailVerification.code.trim()
         }),
@@ -526,14 +526,14 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
       const data = await response.json()
 
       if (data.success) {
-        setEmailVerification(prev => ({ 
-          ...prev, 
-          verified: true, 
-          step: 'verified', 
+        setEmailVerification(prev => ({
+          ...prev,
+          verified: true,
+          step: 'verified',
           verifyingCode: false,
           error: ""
         }))
-        
+
         // Lưu email đã verified vào localStorage để dùng cho lần sau
         if (typeof window !== "undefined") {
           const verifiedEmails = JSON.parse(localStorage.getItem('verified_emails') || '{}')
@@ -543,7 +543,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
             expiresAt: new Date(Date.now() + verifiedSessionTTL).toISOString()
           }
           localStorage.setItem('verified_emails', JSON.stringify(verifiedEmails))
-          
+
           window.dispatchEvent(
             new CustomEvent("showToast", {
               detail: {
@@ -554,18 +554,18 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
           )
         }
       } else {
-        setEmailVerification(prev => ({ 
-          ...prev, 
-          verifyingCode: false, 
-          error: data.error || "Mã xác thực không đúng" 
+        setEmailVerification(prev => ({
+          ...prev,
+          verifyingCode: false,
+          error: data.error || "Mã xác thực không đúng"
         }))
       }
     } catch (err) {
       console.error("Error verifying email:", err)
-      setEmailVerification(prev => ({ 
-        ...prev, 
-        verifyingCode: false, 
-        error: "Lỗi kết nối. Vui lòng thử lại sau." 
+      setEmailVerification(prev => ({
+        ...prev,
+        verifyingCode: false,
+        error: "Lỗi kết nối. Vui lòng thử lại sau."
       }))
     }
   }
@@ -630,7 +630,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
           customer_email: formData.customer_email.trim().toLowerCase(),
           customer_address: formData.customer_address.trim(),
         })
-        
+
         // Lưu email đã verified vào localStorage (nếu đã verified)
         if (emailVerification.verified && formData.customer_email && typeof window !== "undefined") {
           const verifiedEmails = JSON.parse(localStorage.getItem('verified_emails') || '{}')
@@ -683,232 +683,232 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
   // Success Screen
   if (successOrder) {
     const trackOrderUrl = getTrackOrderUrl()
-    
+
     return (
       <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4">
-        <div
-          ref={modalRef}
-          className="relative w-full max-w-2xl bg-card rounded-xl shadow-2xl border border-border overflow-hidden animate-fade-in-up max-h-[95vh] overflow-y-auto"
-        >
-          {/* Close Button */}
-          <button
-            onClick={handleCloseSuccess}
-            className="absolute top-2 right-2 sm:top-4 sm:right-4 p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors z-10 cursor-pointer"
-            aria-label="Đóng"
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4">
+          <div
+            ref={modalRef}
+            className="relative w-full max-w-2xl bg-card rounded-xl shadow-2xl border border-border overflow-hidden animate-fade-in-up max-h-[95vh] overflow-y-auto"
           >
-            <X className="w-4 h-4 sm:w-5 sm:h-5" />
-          </button>
+            {/* Close Button */}
+            <button
+              onClick={handleCloseSuccess}
+              className="absolute top-2 right-2 sm:top-4 sm:right-4 p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors z-10 cursor-pointer"
+              aria-label="Đóng"
+            >
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
 
-          {/* Success Content */}
-          <div className="p-4 sm:p-6 md:p-8 text-center">
-            {/* Success Icon */}
-            <div className="flex justify-center mb-4 sm:mb-6">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-primary/20 rounded-full flex items-center justify-center">
-                <CheckCircle className="w-10 h-10 sm:w-12 sm:h-12 text-primary" />
+            {/* Success Content */}
+            <div className="p-4 sm:p-6 md:p-8 text-center">
+              {/* Success Icon */}
+              <div className="flex justify-center mb-4 sm:mb-6">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-primary/20 rounded-full flex items-center justify-center">
+                  <CheckCircle className="w-10 h-10 sm:w-12 sm:h-12 text-primary" />
+                </div>
               </div>
-            </div>
 
-            {/* Success Title */}
-            <h2 className="text-xl sm:text-2xl font-bold text-card-foreground mb-2">Đặt hàng thành công!</h2>
-            <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 px-2">
-              Đơn hàng của bạn đã được tiếp nhận và đang được xử lý.
-            </p>
+              {/* Success Title */}
+              <h2 className="text-xl sm:text-2xl font-bold text-card-foreground mb-2">Đặt hàng thành công!</h2>
+              <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 px-2">
+                Đơn hàng của bạn đã được tiếp nhận và đang được xử lý.
+              </p>
 
-            {/* Order ID */}
-            <div className="bg-muted rounded-lg p-4 sm:p-6 mb-4 sm:mb-6 border border-border">
-              <p className="text-xs sm:text-sm text-muted-foreground mb-2">Mã đơn hàng của bạn</p>
-              <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
-                <p className="text-lg sm:text-xl md:text-2xl font-mono font-bold text-primary break-all">
-                  {successOrder.order_id}
-                </p>
-                <button
-                  onClick={() => copyToClipboard(successOrder.order_id)}
-                  className="p-1.5 sm:p-2 text-muted-foreground hover:text-primary hover:bg-muted rounded-lg transition-colors cursor-pointer shrink-0"
-                  title="Sao chép mã đơn hàng"
-                >
-                  <Copy className="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
+              {/* Order ID */}
+              <div className="bg-muted rounded-lg p-4 sm:p-6 mb-4 sm:mb-6 border border-border">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-2">Mã đơn hàng của bạn</p>
+                <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
+                  <p className="text-lg sm:text-xl md:text-2xl font-mono font-bold text-primary break-all">
+                    {successOrder.order_id}
+                  </p>
+                  <button
+                    onClick={() => copyToClipboard(successOrder.order_id)}
+                    className="p-1.5 sm:p-2 text-muted-foreground hover:text-primary hover:bg-muted rounded-lg transition-colors cursor-pointer shrink-0"
+                    title="Sao chép mã đơn hàng"
+                  >
+                    <Copy className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {/* Track Order Link */}
-            <div className="bg-muted rounded-lg p-4 sm:p-6 mb-4 sm:mb-6 border border-border">
-              <p className="text-xs sm:text-sm text-muted-foreground mb-3">Theo dõi đơn hàng</p>
-              <div className="flex items-start sm:items-center justify-center gap-2 sm:gap-3 mb-4 flex-wrap">
+              {/* Track Order Link */}
+              <div className="bg-muted rounded-lg p-4 sm:p-6 mb-4 sm:mb-6 border border-border">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-3">Theo dõi đơn hàng</p>
+                <div className="flex items-start sm:items-center justify-center gap-2 sm:gap-3 mb-4 flex-wrap">
+                  <a
+                    href={trackOrderUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:text-primary-light font-medium break-all text-xs sm:text-sm flex-1 min-w-0"
+                  >
+                    {trackOrderUrl}
+                  </a>
+                  <button
+                    onClick={() => copyToClipboard(trackOrderUrl)}
+                    className="p-1.5 sm:p-2 text-muted-foreground hover:text-primary hover:bg-muted rounded-lg transition-colors shrink-0 cursor-pointer"
+                    title="Sao chép link"
+                  >
+                    <Copy className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+                </div>
                 <a
                   href={trackOrderUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-primary hover:text-primary-light font-medium break-all text-xs sm:text-sm flex-1 min-w-0"
+                  className="inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors text-sm sm:text-base w-full sm:w-auto"
                 >
-                  {trackOrderUrl}
+                  <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="whitespace-nowrap">Mở trang theo dõi đơn hàng</span>
                 </a>
-                <button
-                  onClick={() => copyToClipboard(trackOrderUrl)}
-                  className="p-1.5 sm:p-2 text-muted-foreground hover:text-primary hover:bg-muted rounded-lg transition-colors shrink-0 cursor-pointer"
-                  title="Sao chép link"
+              </div>
+
+              {/* Order History Link */}
+              <div className="bg-muted rounded-lg p-4 sm:p-6 mb-4 sm:mb-6 border border-border">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-3">Xem lịch sử đơn hàng</p>
+                <a
+                  href={getOrderHistoryUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-primary/10 hover:bg-primary/20 text-primary font-semibold rounded-lg transition-colors text-sm sm:text-base w-full sm:w-auto"
                 >
-                  <Copy className="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
+                  <History className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="whitespace-nowrap">Xem lịch sử đơn hàng</span>
+                </a>
               </div>
-              <a
-                href={trackOrderUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors text-sm sm:text-base w-full sm:w-auto"
+
+              {/* Cancel Order Button (only if status is pending) */}
+              {successOrder.status === 'pending' && (
+                <div className="mb-4 sm:mb-6 cursor-pointer">
+                  <button
+                    onClick={handleCancelClick}
+                    disabled={cancelling}
+                    className="w-full py-2.5 sm:py-3 bg-destructive/10 hover:bg-destructive/20 text-destructive font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-base"
+                  >
+                    {cancelling ? (
+                      <>
+                        <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                        <span>Đang hủy...</span>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span>Hủy đơn hàng</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {/* Status Badge */}
+              {successOrder.status === 'cancelled' && (
+                <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-destructive/10 border border-destructive/50 rounded-lg">
+                  <p className="text-destructive font-medium text-sm sm:text-base">Đơn hàng đã được hủy</p>
+                </div>
+              )}
+
+              {/* Info */}
+              <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 px-2">
+                Chúng tôi đã gửi thông tin đơn hàng đến email của bạn (nếu bạn đã đăng nhập).
+                <br className="hidden sm:block" />
+                <span className="block sm:inline"> Bạn có thể sử dụng mã đơn hàng hoặc link trên để theo dõi trạng thái đơn hàng.</span>
+              </p>
+
+              {/* Close Button */}
+              <button
+                onClick={handleCloseSuccess}
+                className="w-full py-2.5 sm:py-3 bg-muted hover:bg-muted/80 text-card-foreground font-semibold rounded-lg transition-colors cursor-pointer text-sm sm:text-base"
               >
-                <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="whitespace-nowrap">Mở trang theo dõi đơn hàng</span>
-              </a>
+                Đóng
+              </button>
             </div>
-
-            {/* Order History Link */}
-            <div className="bg-muted rounded-lg p-4 sm:p-6 mb-4 sm:mb-6 border border-border">
-              <p className="text-xs sm:text-sm text-muted-foreground mb-3">Xem lịch sử đơn hàng</p>
-              <a
-                href={getOrderHistoryUrl()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-primary/10 hover:bg-primary/20 text-primary font-semibold rounded-lg transition-colors text-sm sm:text-base w-full sm:w-auto"
-              >
-                <History className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="whitespace-nowrap">Xem lịch sử đơn hàng</span>
-              </a>
-            </div>
-
-            {/* Cancel Order Button (only if status is pending) */}
-            {successOrder.status === 'pending' && (
-              <div className="mb-4 sm:mb-6 cursor-pointer">
-                <button
-                  onClick={handleCancelClick}
-                  disabled={cancelling}
-                  className="w-full py-2.5 sm:py-3 bg-destructive/10 hover:bg-destructive/20 text-destructive font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-base" 
-                >
-                  {cancelling ? (
-                    <>
-                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-                      <span>Đang hủy...</span>
-                    </>
-                  ) : (
-                    <>
-                      <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                      <span>Hủy đơn hàng</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
-
-            {/* Status Badge */}
-            {successOrder.status === 'cancelled' && (
-              <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-destructive/10 border border-destructive/50 rounded-lg">
-                <p className="text-destructive font-medium text-sm sm:text-base">Đơn hàng đã được hủy</p>
-              </div>
-            )}
-
-            {/* Info */}
-            <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 px-2">
-              Chúng tôi đã gửi thông tin đơn hàng đến email của bạn (nếu bạn đã đăng nhập).
-              <br className="hidden sm:block" />
-              <span className="block sm:inline"> Bạn có thể sử dụng mã đơn hàng hoặc link trên để theo dõi trạng thái đơn hàng.</span>
-            </p>
-
-            {/* Close Button */}
-            <button
-              onClick={handleCloseSuccess}
-              className="w-full py-2.5 sm:py-3 bg-muted hover:bg-muted/80 text-card-foreground font-semibold rounded-lg transition-colors cursor-pointer text-sm sm:text-base"
-            >
-              Đóng
-            </button>
           </div>
         </div>
-      </div>
-      
-      {/* Cancel Confirmation Modal - Hiển thị phía trên success screen */}
-      {showCancelConfirm && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/70 backdrop-blur-sm p-2 sm:p-4">
-        <div
-          ref={modalRef}
-          className="relative w-full max-w-md bg-card rounded-xl shadow-2xl border border-border overflow-hidden animate-fade-in-up"
-        >
-          {/* Close Button */}
-          <button
-            onClick={handleCancelCancel}
-            className="absolute top-2 right-2 sm:top-4 sm:right-4 p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors z-10 cursor-pointer"
-            aria-label="Đóng"
-          >
-            <X className="w-4 h-4 sm:w-5 sm:h-5" />
-          </button>
 
-          {/* Modal Content */}
-          <div className="p-4 sm:p-6 text-center">
-            {/* Warning Icon */}
-            <div className="flex justify-center mb-4 sm:mb-6">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-destructive/20 rounded-full flex items-center justify-center">
-                <XCircle className="w-10 h-10 sm:w-12 sm:h-12 text-destructive" />
-              </div>
-            </div>
-
-            {/* Title */}
-            <h2 className="text-xl sm:text-2xl font-bold text-card-foreground mb-2">
-              Xác nhận hủy đơn hàng
-            </h2>
-            <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
-              Bạn có chắc chắn muốn hủy đơn hàng <span className="font-semibold text-card-foreground">{successOrder?.order_id}</span>?
-            </p>
-            <p className="text-xs sm:text-sm text-muted-foreground mb-4">
-              Hành động này không thể hoàn tác.
-            </p>
-
-            {/* Cancel Reason Input */}
-            <div className="mb-4 sm:mb-6 text-left">
-              <label className="block text-sm font-medium text-card-foreground mb-2">
-                Lý do hủy đơn hàng <span className="text-muted-foreground text-xs">(Tùy chọn)</span>
-              </label>
-              <textarea
-                value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
-                placeholder="Nhập lý do hủy đơn hàng (nếu có)..."
-                rows={3}
-                className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none text-sm"
-                maxLength={500}
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                {cancelReason.length}/500 ký tự
-              </p>
-            </div>
-
-            {/* Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-3">
+        {/* Cancel Confirmation Modal - Hiển thị phía trên success screen */}
+        {showCancelConfirm && (
+          <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/70 backdrop-blur-sm p-2 sm:p-4">
+            <div
+              ref={modalRef}
+              className="relative w-full max-w-md bg-card rounded-xl shadow-2xl border border-border overflow-hidden animate-fade-in-up"
+            >
+              {/* Close Button */}
               <button
                 onClick={handleCancelCancel}
-                className="flex-1 py-2.5 sm:py-3 bg-muted hover:bg-muted/80 text-card-foreground font-semibold rounded-lg transition-colors cursor-pointer text-sm sm:text-base"
+                className="absolute top-2 right-2 sm:top-4 sm:right-4 p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors z-10 cursor-pointer"
+                aria-label="Đóng"
               >
-                Không, giữ lại
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
-              <button
-                onClick={handleConfirmCancel}
-                disabled={cancelling}
-                className="flex-1 py-2.5 sm:py-3 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-base"
-              >
-                {cancelling ? (
-                  <>
-                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-                    <span>Đang hủy...</span>
-                  </>
-                ) : (
-                  <>
-                    <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>Có, hủy đơn hàng</span>
-                  </>
-                )}
-              </button>
+
+              {/* Modal Content */}
+              <div className="p-4 sm:p-6 text-center">
+                {/* Warning Icon */}
+                <div className="flex justify-center mb-4 sm:mb-6">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-destructive/20 rounded-full flex items-center justify-center">
+                    <XCircle className="w-10 h-10 sm:w-12 sm:h-12 text-destructive" />
+                  </div>
+                </div>
+
+                {/* Title */}
+                <h2 className="text-xl sm:text-2xl font-bold text-card-foreground mb-2">
+                  Xác nhận hủy đơn hàng
+                </h2>
+                <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
+                  Bạn có chắc chắn muốn hủy đơn hàng <span className="font-semibold text-card-foreground">{successOrder?.order_id}</span>?
+                </p>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-4">
+                  Hành động này không thể hoàn tác.
+                </p>
+
+                {/* Cancel Reason Input */}
+                <div className="mb-4 sm:mb-6 text-left">
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Lý do hủy đơn hàng <span className="text-muted-foreground text-xs">(Tùy chọn)</span>
+                  </label>
+                  <textarea
+                    value={cancelReason}
+                    onChange={(e) => setCancelReason(e.target.value)}
+                    placeholder="Nhập lý do hủy đơn hàng (nếu có)..."
+                    rows={3}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none text-sm"
+                    maxLength={500}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {cancelReason.length}/500 ký tự
+                  </p>
+                </div>
+
+                {/* Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-3">
+                  <button
+                    onClick={handleCancelCancel}
+                    className="flex-1 py-2.5 sm:py-3 bg-muted hover:bg-muted/80 text-card-foreground font-semibold rounded-lg transition-colors cursor-pointer text-sm sm:text-base"
+                  >
+                    Không, giữ lại
+                  </button>
+                  <button
+                    onClick={handleConfirmCancel}
+                    disabled={cancelling}
+                    className="flex-1 py-2.5 sm:py-3 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-base"
+                  >
+                    {cancelling ? (
+                      <>
+                        <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                        <span>Đang hủy...</span>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span>Có, hủy đơn hàng</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-      )}
+        )}
       </>
     )
   }
@@ -942,7 +942,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
           {/* Order Summary */}
           <div className="mb-6 bg-muted rounded-lg p-4 border border-border">
             <h3 className="text-sm font-semibold text-card-foreground mb-3">Đơn hàng của bạn</h3>
-            
+
             {/* Items List */}
             <div className="space-y-3 mb-4">
               {orderItems.map((item, index) => (
@@ -1002,9 +1002,8 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                   value={formData.customer_name || ""}
                   onChange={handleChange}
                   placeholder="Nguyễn Văn A"
-                  className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
-                    errors.customer_name ? "border-destructive" : "border-border"
-                  }`}
+                  className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${errors.customer_name ? "border-destructive" : "border-border"
+                    }`}
                 />
               </div>
               {errors.customer_name && (
@@ -1026,9 +1025,8 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                   value={formData.customer_phone || ""}
                   onChange={handleChange}
                   placeholder="0901234567"
-                  className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
-                    errors.customer_phone ? "border-destructive" : "border-border"
-                  }`}
+                  className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${errors.customer_phone ? "border-destructive" : "border-border"
+                    }`}
                 />
               </div>
               {errors.customer_phone && (
@@ -1061,7 +1059,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                           const user = getUser()
                           const isLoggedIn = user && user.user_id
                           const newEmail = e.target.value.trim().toLowerCase()
-                          
+
                           // Nếu user đã login và email mới khớp với email của user, tự động verify lại
                           if (isLoggedIn && user.email && newEmail === user.email.toLowerCase()) {
                             // Tự động verify lại cho user đã login
@@ -1069,7 +1067,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                               const verifiedEmails = JSON.parse(localStorage.getItem('verified_emails') || '{}')
                               const emailKey = newEmail
                               const expiresAt = new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)) // 30 ngày
-                              
+
                               verifiedEmails[emailKey] = {
                                 verified: true,
                                 verifiedAt: new Date().toISOString(),
@@ -1077,7 +1075,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                                 autoVerified: true,
                               }
                               localStorage.setItem('verified_emails', JSON.stringify(verifiedEmails))
-                              
+
                               setEmailVerification({
                                 step: 'verified',
                                 code: "",
@@ -1110,9 +1108,8 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                         }
                       }}
                       placeholder="example@email.com"
-                      className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
-                        errors.customer_email ? "border-destructive" : emailVerification.verified ? "border-green-500" : "border-border"
-                      } ${emailVerification.verified ? "bg-green-500/10" : ""}`}
+                      className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${errors.customer_email ? "border-destructive" : emailVerification.verified ? "border-green-500" : "border-border"
+                        } ${emailVerification.verified ? "bg-green-500/10" : ""}`}
                     />
                   </div>
                   {emailVerification.verified ? (
@@ -1231,9 +1228,8 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                   value={formData.customer_address || ""}
                   onChange={handleChange}
                   placeholder="123 Đường ABC, Quận XYZ"
-                  className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
-                    errors.customer_address ? "border-destructive" : "border-border"
-                  }`}
+                  className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${errors.customer_address ? "border-destructive" : "border-border"
+                    }`}
                 />
               </div>
               {errors.customer_address && (

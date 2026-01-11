@@ -22,13 +22,13 @@ export default function Hero() {
       try {
         const response = await fetch("/api/banners?is_active=true")
         const data = await response.json()
-        console.log("Banners API response:", data)
+        //console.log("Banners API response:", data)
         if (data.success) {
           if (data.data && data.data.length > 0) {
-            console.log("Setting banners:", data.data)
+            //console.log("Setting banners:", data.data)
             setHeroImages(data.data)
           } else {
-            console.log("No banners found, using fallback")
+            //console.log("No banners found, using fallback")
           }
         } else {
           console.error("Banners API error:", data.error)
@@ -121,7 +121,7 @@ export default function Hero() {
                     e.target.style.display = 'none'
                   }}
                   onLoad={() => {
-                    console.log("Banner image loaded:", banner.image)
+                    //console.log("Banner image loaded:", banner.image)
                   }}
                 />
               ) : (

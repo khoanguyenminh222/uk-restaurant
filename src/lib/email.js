@@ -13,22 +13,22 @@ import { getRestaurantName, getSlogan, getEmailConfig } from '@/lib/restaurantCo
 async function createTransporter() {
   // Lấy email config từ database
   const emailConfig = await getEmailConfig();
-  
+
   // Ưu tiên database, fallback về env nếu database không có giá trị
   const senderEmail = emailConfig?.sender_email || process.env.EMAIL_USER;
   const senderPassword = emailConfig?.sender_password || process.env.EMAIL_PASSWORD;
-  
+
   if (!senderEmail || !senderPassword) {
     const missingFields = [];
     if (!senderEmail) missingFields.push('sender_email');
     if (!senderPassword) missingFields.push('sender_password');
-    
+
     throw new Error(
       `Email configuration is missing: ${missingFields.join(', ')}. ` +
       `Please configure email settings in Admin > Notification Config or set environment variables (EMAIL_USER, EMAIL_PASSWORD).`
     );
   }
-  
+
   const transporter = nodemailer.createTransport({
     service: process.env.EMAIL_SERVICE || 'gmail',
     auth: {
@@ -106,7 +106,7 @@ export async function sendVerificationEmail(email, code, name = null, expiresInM
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('Verification email sent:', info.messageId);
+    //console.log('Verification email sent:', info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('Error sending verification email:', error);
@@ -184,7 +184,7 @@ export async function sendResetPasswordEmail(email, name, resetToken, expiresInM
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('Reset password email sent:', info.messageId);
+    //console.log('Reset password email sent:', info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('Error sending reset password email:', error);
@@ -204,7 +204,7 @@ export async function sendOrderConfirmationEmail(email, name, orderId, trackOrde
     // Format order items
     let itemsHtml = '';
     let itemsText = '';
-    
+
     if (orderData.items && Array.isArray(orderData.items) && orderData.items.length > 0) {
       itemsHtml = orderData.items.map(item => `
         <tr>
@@ -214,21 +214,21 @@ export async function sendOrderConfirmationEmail(email, name, orderId, trackOrde
           <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: right;">${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price * item.quantity)}</td>
         </tr>
       `).join('');
-      
-      itemsText = orderData.items.map(item => 
+
+      itemsText = orderData.items.map(item =>
         `- ${item.name} (x${item.quantity}): ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price * item.quantity)}`
       ).join('\n');
     }
 
     const totalPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(orderData.total_price || 0);
-    const orderDate = orderData.created_at 
+    const orderDate = orderData.created_at
       ? new Date(orderData.created_at).toLocaleString('vi-VN', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-        })
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
       : new Date().toLocaleString('vi-VN');
 
     const mailOptions = {
@@ -341,7 +341,7 @@ export async function sendOrderConfirmationEmail(email, name, orderId, trackOrde
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('Order confirmation email sent:', info.messageId);
+    //console.log('Order confirmation email sent:', info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('Error sending order confirmation email:', error);
@@ -428,7 +428,7 @@ export async function sendTestEmail(email) {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('Test email sent:', info.messageId);
+    //console.log('Test email sent:', info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('Error sending test email:', error);
@@ -444,22 +444,22 @@ export async function sendTestEmail(email) {
 function formatOrderItemsForEmail(items) {
   let itemsHtml = '';
   let itemsText = '';
-  
+
   if (!items) {
     return { html: '<p style="color: #6b7280;">Không có sản phẩm nào.</p>', text: 'Không có sản phẩm nào.' };
   }
-  
+
   let itemsArray = [];
   if (Array.isArray(items)) {
     itemsArray = items;
   } else if (typeof items === 'object' && items.name) {
     itemsArray = [items];
   }
-  
+
   if (itemsArray.length === 0) {
     return { html: '<p style="color: #6b7280;">Không có sản phẩm nào.</p>', text: 'Không có sản phẩm nào.' };
   }
-  
+
   itemsHtml = itemsArray.map(item => {
     const quantity = item.quantity || 1;
     const price = item.price || 0;
@@ -473,14 +473,14 @@ function formatOrderItemsForEmail(items) {
       </tr>
     `;
   }).join('');
-  
+
   itemsText = itemsArray.map(item => {
     const quantity = item.quantity || 1;
     const price = item.price || 0;
     const totalItemPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price * quantity);
     return `- ${item.name} (x${quantity}): ${totalItemPrice}`;
   }).join('\n');
-  
+
   return { html: itemsHtml, text: itemsText };
 }
 
@@ -556,7 +556,7 @@ function getStatusEmailContent(status, orderId, restaurantName) {
     baseUrl && config?.iconName
       ? `${baseUrl}/email-status/${config.iconName}.png`
       : '';
-  
+
   if (!config) {
     return {
       subject: `Cập nhật đơn hàng #${orderId} - ${restaurantName}`,
@@ -568,7 +568,7 @@ function getStatusEmailContent(status, orderId, restaurantName) {
       label: 'Cập nhật đơn hàng',
     };
   }
-  
+
   const statusMessages = {
     confirmed: {
       subject: `Đơn hàng #${orderId} đã được xác nhận - ${restaurantName}`,
@@ -606,9 +606,9 @@ function getStatusEmailContent(status, orderId, restaurantName) {
       message: 'Đơn hàng của bạn đã được tiếp nhận và đang chờ xử lý.',
     },
   };
-  
+
   const message = statusMessages[status] || statusMessages.pending;
-  
+
   return {
     ...message,
     color: config.color,
@@ -629,29 +629,29 @@ export async function sendOrderStatusEmail(order, newStatus, previousStatus = nu
   try {
     // Lấy email config một lần
     const emailConfig = await getEmailConfig();
-    
+
     // Kiểm tra xem có được phép gửi email cho status này không
     const emailNotifications = emailConfig.email_notifications || {};
-    
+
     // Mặc định chỉ gửi cho confirmed, cancelled, delivered nếu không có config
     const defaultEnabled = {
       confirmed: true,
       cancelled: true,
       delivered: true,
     };
-    
-    const isEnabled = emailNotifications[newStatus] !== undefined 
-      ? emailNotifications[newStatus] 
+
+    const isEnabled = emailNotifications[newStatus] !== undefined
+      ? emailNotifications[newStatus]
       : (defaultEnabled[newStatus] || false);
-    
+
     if (!isEnabled) {
-      console.log(`[Email] Email notification for status "${newStatus}" is disabled. Skipping.`);
+      //console.log(`[Email] Email notification for status "${newStatus}" is disabled. Skipping.`);
       return { success: true, message: `Email notification for ${newStatus} is disabled` };
     }
-    
+
     // Lấy email từ order hoặc từ user collection
     let customerEmail = order.customer_email;
-    
+
     // Nếu không có email trong order, thử lấy từ user collection
     if (!customerEmail && order.user_id) {
       try {
@@ -659,7 +659,7 @@ export async function sendOrderStatusEmail(order, newStatus, previousStatus = nu
         const { getDatabaseName } = await import('@/lib/mongodb');
         const client = await clientPromise;
         const db = client.db(getDatabaseName());
-        
+
         const user = await db.collection('users').findOne({ user_id: order.user_id });
         if (user && user.email) {
           customerEmail = user.email;
@@ -669,31 +669,31 @@ export async function sendOrderStatusEmail(order, newStatus, previousStatus = nu
         // Continue without email
       }
     }
-    
+
     // Chỉ gửi email nếu có email của khách hàng
     if (!customerEmail) {
-      console.log('[Email] No customer email, skipping status email');
+      //console.log('[Email] No customer email, skipping status email');
       return { success: true, message: 'No customer email' };
     }
-    
+
     // Không gửi email nếu status không thay đổi
     if (previousStatus && previousStatus === newStatus) {
-      console.log('[Email] Status unchanged, skipping email');
+      //console.log('[Email] Status unchanged, skipping email');
       return { success: true, message: 'Status unchanged' };
     }
-    
+
     const transporter = await createTransporter();
     const restaurantName = await getRestaurantName();
     const slogan = await getSlogan();
-    
+
     const orderId = order.order_id || 'N/A';
     const customerName = order.customer_name || 'Khách hàng';
     const statusContent = getStatusEmailContent(newStatus, orderId, restaurantName);
-    
+
     // Format order items
     const { html: itemsHtml, text: itemsText } = formatOrderItemsForEmail(order.items || order);
     const totalPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.total_price || 0);
-    
+
     // Format thời gian
     const updateDate = new Date().toLocaleString('vi-VN', {
       year: 'numeric',
@@ -702,14 +702,14 @@ export async function sendOrderStatusEmail(order, newStatus, previousStatus = nu
       hour: '2-digit',
       minute: '2-digit',
     });
-    
+
     // Track order URL
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     const trackOrderUrl = `${baseUrl}/track-order?order_id=${orderId}`;
-    
+
     // Lý do hủy (nếu có)
     const cancelReason = newStatus === 'cancelled' ? (order.admin_notes || order.notes || '') : '';
-    
+
     const mailOptions = {
       from: `"${restaurantName}" <${emailConfig.sender_email}>`,
       to: customerEmail,
@@ -723,11 +723,10 @@ export async function sendOrderStatusEmail(order, newStatus, previousStatus = nu
           <div style="background-color: white; padding: 30px; border-radius: 0 0 8px 8px;">
             <div style="text-align: center; margin-bottom: 30px;">
               <div style="display: inline-block; background-color: ${statusContent.bgColor}; padding: 16px; border-radius: 50%; margin-bottom: 16px;">
-                ${
-                  statusContent.iconUrl
-                    ? `<img src="${statusContent.iconUrl}" alt="${statusContent.label}" width="48" height="48" style="display:block; margin:0 auto;" />`
-                    : `<span style="display:inline-flex; align-items:center; justify-content:center; width:48px; height:48px; color:${statusContent.color}; font-size:24px; font-weight:bold;">${(statusContent.label || '✓').charAt(0)}</span>`
-                }
+                ${statusContent.iconUrl
+          ? `<img src="${statusContent.iconUrl}" alt="${statusContent.label}" width="48" height="48" style="display:block; margin:0 auto;" />`
+          : `<span style="display:inline-flex; align-items:center; justify-content:center; width:48px; height:48px; color:${statusContent.color}; font-size:24px; font-weight:bold;">${(statusContent.label || '✓').charAt(0)}</span>`
+        }
               </div>
               <h2 style="color: ${statusContent.color}; margin-top: 0; font-size: 24px; font-weight: bold;">${statusContent.title}</h2>
               <p style="color: #6b7280; margin-top: 8px; font-size: 14px;">${statusContent.label}</p>
@@ -847,9 +846,9 @@ export async function sendOrderStatusEmail(order, newStatus, previousStatus = nu
         Đội ngũ ${restaurantName}
       `,
     };
-    
+
     const info = await transporter.sendMail(mailOptions);
-    console.log(`[Email] Order status email sent (${newStatus}):`, info.messageId);
+    //console.log(`[Email] Order status email sent (${newStatus}):`, info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('[Email] Error sending order status email:', error);
