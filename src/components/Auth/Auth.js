@@ -46,9 +46,12 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
   const [loginErrors, setLoginErrors] = useState({})
   const [registerErrors, setRegisterErrors] = useState({})
 
-  // Close modal when clicking outside
+  // Handle click outside to close modals and scroll lock
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // Don't close if an operation is active
+      if (loading) return;
+
       if (modalRef.current && !modalRef.current.contains(event.target)) {
         onClose()
       }
@@ -57,13 +60,15 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside)
       document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = "unset"
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
       document.body.style.overflow = "unset"
     }
-  }, [isOpen, onClose])
+  }, [isOpen, onClose, loading])
 
   // Reset form when switching tabs
   useEffect(() => {
@@ -238,7 +243,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
           setActiveTab("verify")
           setResendCooldown(60) // Cooldown 60 giây
           setError("")
-          
+
           // Auto resend verification email
           try {
             const resendResponse = await fetch("/api/auth/resend-verification", {
@@ -308,7 +313,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
           name: registerForm.name.trim(),
           password: registerForm.password, // Lưu tạm để auto login sau khi verify
         })
-        
+
         // Chuyển sang màn hình verification
         setActiveTab("verify")
         setError("")
@@ -346,12 +351,12 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
   const handleVerificationCodePaste = (e) => {
     e.preventDefault()
     const pastedData = e.clipboardData.getData("text").trim()
-    
+
     // Only accept 6 digits
     if (/^\d{6}$/.test(pastedData)) {
       const digits = pastedData.split("")
       setVerificationCode(digits)
-      
+
       // Focus last input
       const lastInput = document.getElementById(`verification-code-5`)
       if (lastInput) lastInput.focus()
@@ -367,7 +372,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
 
     setLoading(true)
     setError("")
-    
+
     try {
       const response = await fetch("/api/auth/resend-verification", {
         method: "POST",
@@ -614,56 +619,77 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300">
       <div
         ref={modalRef}
-        className="relative w-full max-w-md bg-card rounded-xl shadow-2xl border border-border overflow-hidden animate-fade-in-up"
+        className="relative w-full max-w-md bg-card rounded-xl shadow-2xl border border-border overflow-hidden animate-in fade-in zoom-in duration-200"
       >
-        {/* Tabs - Chỉ hiển thị khi không ở verification screen và forgot-password */}
-        {activeTab !== "verify" && activeTab !== "forgot-password" && (
-          <div className="flex border-b border-border">
-            <button
-              onClick={() => {
-                setActiveTab("login")
-                setError("")
-                setLoginErrors({})
-              }}
-              className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${
-                activeTab === "login"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-card-foreground hover:bg-muted"
-              }`}
-            >
-              Đăng nhập
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab("register")
-                setError("")
-                setRegisterErrors({})
-              }}
-              className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${
-                activeTab === "register"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-card-foreground hover:bg-muted"
-              }`}
-            >
-              Đăng ký
-            </button>
-          </div>
-        )}
+        <div className="flex border-b border-border items-center">
+          <button
+            onClick={() => {
+              setActiveTab("login")
+              setError("")
+              setLoginErrors({})
+            }}
+            disabled={loading}
+            className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${activeTab === "login"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-card-foreground hover:bg-muted"
+              } cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            Đăng nhập
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab("register")
+              setError("")
+              setRegisterErrors({})
+            }}
+            disabled={loading}
+            className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${activeTab === "register"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-card-foreground hover:bg-muted"
+              } cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            Đăng ký
+          </button>
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="p-2 mr-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Đóng"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
         {/* Verification Header */}
         {activeTab === "verify" && (
-          <div className="border-b border-border bg-primary/10 py-4 px-6">
-            <h3 className="text-lg font-semibold text-card-foreground text-center">Xác thực email</h3>
+          <div className="border-b border-border bg-primary/10 py-4 px-6 flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-card-foreground flex-1 text-center ml-8">Xác thực email</h3>
+            <button
+              onClick={onClose}
+              disabled={loading}
+              className="p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Đóng"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
         )}
 
         {/* Forgot Password Header */}
         {activeTab === "forgot-password" && (
-          <div className="border-b border-border bg-primary/10 py-4 px-6">
-            <h3 className="text-lg font-semibold text-card-foreground text-center">Quên mật khẩu</h3>
+          <div className="border-b border-border bg-primary/10 py-4 px-6 flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-card-foreground flex-1 text-center ml-8">Quên mật khẩu</h3>
+            <button
+              onClick={onClose}
+              disabled={loading}
+              className="p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Đóng"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
         )}
 
@@ -700,9 +726,8 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                     value={loginForm.phone}
                     onChange={handleLoginChange}
                     placeholder="0901234567"
-                    className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
-                      loginErrors.phone ? "border-destructive" : "border-border"
-                    }`}
+                    className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${loginErrors.phone ? "border-destructive" : "border-border"
+                      }`}
                   />
                 </div>
                 {loginErrors.phone && (
@@ -724,14 +749,13 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                     value={loginForm.password}
                     onChange={handleLoginChange}
                     placeholder="Nhập mật khẩu"
-                    className={`w-full pl-10 pr-12 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
-                      loginErrors.password ? "border-destructive" : "border-border"
-                    }`}
+                    className={`w-full pl-10 pr-12 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${loginErrors.password ? "border-destructive" : "border-border"
+                      }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-card-foreground transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-card-foreground transition-colors cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -754,7 +778,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                 </label>
                 <button
                   type="button"
-                  className="text-sm text-primary hover:text-primary-dark transition-colors"
+                  className="text-sm text-primary hover:text-primary-dark transition-colors cursor-pointer"
                   onClick={() => {
                     setActiveTab("forgot-password")
                     setError("")
@@ -769,7 +793,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {loading ? "Đang đăng nhập..." : "Đăng nhập"}
               </button>
@@ -780,7 +804,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                 <button
                   type="button"
                   onClick={() => setActiveTab("register")}
-                  className="text-primary hover:text-primary-dark font-medium transition-colors"
+                  className="text-primary hover:text-primary-dark font-medium transition-colors cursor-pointer"
                 >
                   Đăng ký ngay
                 </button>
@@ -805,9 +829,8 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                     value={registerForm.phone}
                     onChange={handleRegisterChange}
                     placeholder="0901234567"
-                    className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
-                      registerErrors.phone ? "border-destructive" : "border-border"
-                    }`}
+                    className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${registerErrors.phone ? "border-destructive" : "border-border"
+                      }`}
                   />
                 </div>
                 {registerErrors.phone && (
@@ -829,9 +852,8 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                     value={registerForm.name}
                     onChange={handleRegisterChange}
                     placeholder="Nguyễn Văn A"
-                    className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
-                      registerErrors.name ? "border-destructive" : "border-border"
-                    }`}
+                    className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${registerErrors.name ? "border-destructive" : "border-border"
+                      }`}
                   />
                 </div>
                 {registerErrors.name && (
@@ -853,9 +875,8 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                     value={registerForm.email}
                     onChange={handleRegisterChange}
                     placeholder="example@email.com"
-                    className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
-                      registerErrors.email ? "border-destructive" : "border-border"
-                    }`}
+                    className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${registerErrors.email ? "border-destructive" : "border-border"
+                      }`}
                   />
                 </div>
                 {registerErrors.email && (
@@ -877,14 +898,13 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                     value={registerForm.password}
                     onChange={handleRegisterChange}
                     placeholder="Ít nhất 6 ký tự"
-                    className={`w-full pl-10 pr-12 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
-                      registerErrors.password ? "border-destructive" : "border-border"
-                    }`}
+                    className={`w-full pl-10 pr-12 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${registerErrors.password ? "border-destructive" : "border-border"
+                      }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-card-foreground transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-card-foreground transition-colors cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -908,14 +928,13 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                     value={registerForm.confirmPassword}
                     onChange={handleRegisterChange}
                     placeholder="Nhập lại mật khẩu"
-                    className={`w-full pl-10 pr-12 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
-                      registerErrors.confirmPassword ? "border-destructive" : "border-border"
-                    }`}
+                    className={`w-full pl-10 pr-12 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${registerErrors.confirmPassword ? "border-destructive" : "border-border"
+                      }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-card-foreground transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-card-foreground transition-colors cursor-pointer"
                   >
                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -953,7 +972,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {loading ? "Đang đăng ký..." : "Đăng ký"}
               </button>
@@ -964,7 +983,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                 <button
                   type="button"
                   onClick={() => setActiveTab("login")}
-                  className="text-primary hover:text-primary-dark font-medium transition-colors"
+                  className="text-primary hover:text-primary-dark font-medium transition-colors cursor-pointer"
                 >
                   Đăng nhập
                 </button>
@@ -997,9 +1016,8 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                     value={forgotPasswordForm.phone}
                     onChange={handleForgotPasswordChange}
                     placeholder="0901234567"
-                    className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
-                      forgotPasswordErrors.phone ? "border-destructive" : "border-border"
-                    }`}
+                    className={`w-full pl-10 pr-4 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${forgotPasswordErrors.phone ? "border-destructive" : "border-border"
+                      }`}
                   />
                 </div>
                 {forgotPasswordErrors.phone && (
@@ -1016,7 +1034,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {loading ? "Đang gửi..." : "Gửi email đặt lại mật khẩu"}
               </button>
@@ -1033,7 +1051,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                     setForgotPasswordForm({ phone: "" })
                     setForgotPasswordErrors({})
                   }}
-                  className="text-primary hover:text-primary-dark font-medium transition-colors"
+                  className="text-primary hover:text-primary-dark font-medium transition-colors cursor-pointer"
                 >
                   Đăng nhập
                 </button>
@@ -1054,13 +1072,13 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                 <p className="text-muted-foreground text-xs mt-2">
                   Vui lòng nhập mã 6 số để hoàn tất đăng ký
                 </p>
-                
+
                 {/* Change Email Button */}
                 {!showChangeEmail && (
                   <button
                     type="button"
                     onClick={() => setShowChangeEmail(true)}
-                    className="mt-3 text-sm text-info hover:text-info/80 font-medium transition-colors"
+                    className="mt-3 text-sm text-info hover:text-info/80 font-medium transition-colors cursor-pointer"
                   >
                     Đổi email khác
                   </button>
@@ -1086,9 +1104,8 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                           setEmailError("")
                         }}
                         placeholder="email@example.com"
-                        className={`w-full pl-10 pr-4 py-2 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring ${
-                          emailError ? "border-destructive" : "border-border"
-                        }`}
+                        className={`w-full pl-10 pr-4 py-2 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring ${emailError ? "border-destructive" : "border-border"
+                          }`}
                       />
                     </div>
                     {emailError && (
@@ -1100,7 +1117,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                       type="button"
                       onClick={handleChangeEmail}
                       disabled={loading}
-                      className="flex-1 py-2 bg-info hover:bg-info/80 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 py-2 bg-info hover:bg-info/80 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                       {loading ? "Đang xử lý..." : "Xác nhận"}
                     </button>
@@ -1112,7 +1129,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                         setEmailError("")
                       }}
                       disabled={loading}
-                      className="flex-1 py-2 bg-muted hover:bg-muted/80 text-card-foreground text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 py-2 bg-muted hover:bg-muted/80 text-card-foreground text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                       Hủy
                     </button>
@@ -1150,7 +1167,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                   type="button"
                   onClick={handleResendVerification}
                   disabled={resendCooldown > 0 || loading}
-                  className="text-primary hover:text-primary-dark text-sm font-medium transition-colors disabled:text-muted-foreground disabled:cursor-not-allowed"
+                  className="text-primary hover:text-primary-dark text-sm font-medium transition-colors disabled:text-muted-foreground disabled:cursor-not-allowed cursor-pointer"
                 >
                   {resendCooldown > 0
                     ? `Gửi lại sau ${resendCooldown}s`
@@ -1162,7 +1179,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
               <button
                 type="submit"
                 disabled={loading || verificationCode.join("").length !== 6}
-                className="w-full py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {loading ? "Đang xác thực..." : "Xác thực"}
               </button>
@@ -1176,7 +1193,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                   setVerificationCode(["", "", "", "", "", ""])
                   setError("")
                 }}
-                className="w-full py-2 text-muted-foreground hover:text-card-foreground text-sm transition-colors"
+                className="w-full py-2 text-muted-foreground hover:text-card-foreground text-sm transition-colors cursor-pointer"
               >
                 ← Thay đổi thông tin
               </button>

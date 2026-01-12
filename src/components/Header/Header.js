@@ -260,15 +260,15 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
   const restaurantName = config?.header?.restaurant_name || 'UK Restaurant'
 
   const scrollToSection = (sectionId) => {
-    // Nếu là "about" hoặc "contact", điều hướng đến trang riêng
+    // Nếu là "about" hoặc "contact", mở trong tab mới
     if (sectionId === "about") {
-      router.push("/about")
+      window.open("/about", "_blank")
       setIsMenuOpen(false)
       return
     }
 
     if (sectionId === "contact") {
-      router.push("/contact")
+      window.open("/contact", "_blank")
       setIsMenuOpen(false)
       return
     }

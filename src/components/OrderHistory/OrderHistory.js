@@ -33,6 +33,8 @@ export default function OrderHistory({ isOpen, onClose }) {
   const [cancelReason, setCancelReason] = useState('')
   const [showHistoryModal, setShowHistoryModal] = useState(false)
   const detailModalRef = useRef(null)
+  const cancelModalRef = useRef(null)
+  const historyModalRef = useRef(null)
 
   // Load user info and orders
   useEffect(() => {
@@ -80,33 +82,55 @@ export default function OrderHistory({ isOpen, onClose }) {
     }
   }
 
-  // Close modal when clicking outside
+  // Handle click outside to close modals and scroll lock
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Don't close main modal if detail modal is open
-      if (showDetailModal) {
-        return
-      }
-      // Don't close if clicking inside main modal
-      if (modalRef.current && modalRef.current.contains(event.target)) {
-        return
-      }
-      // Close main modal only if clicking outside and detail modal is not open
-      if (modalRef.current && !modalRef.current.contains(event.target)) {
-        onClose()
-      }
-    }
+      // Don't close if an operation is active
+      if (ordersLoading || cancelling) return;
 
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside)
-      document.body.style.overflow = "hidden"
+      // Handle main modal click outside
+      if (isOpen && !showDetailModal && !showCancelModal && !showHistoryModal) {
+        if (modalRef.current && !modalRef.current.contains(event.target)) {
+          onClose();
+        }
+      }
+
+      // Handle detail modal click outside
+      if (showDetailModal && !showCancelModal && !showHistoryModal) {
+        if (detailModalRef.current && !detailModalRef.current.contains(event.target)) {
+          setShowDetailModal(false);
+          setSelectedOrder(null);
+        }
+      }
+
+      // Handle cancel modal click outside
+      if (showCancelModal) {
+        if (cancelModalRef.current && !cancelModalRef.current.contains(event.target)) {
+          setShowCancelModal(false);
+          setCancelReason('');
+        }
+      }
+
+      // Handle history modal click outside
+      if (showHistoryModal) {
+        if (historyModalRef.current && !historyModalRef.current.contains(event.target)) {
+          setShowHistoryModal(false);
+        }
+      }
+    };
+
+    if (isOpen || showDetailModal || showCancelModal || showHistoryModal) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
     }
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-      document.body.style.overflow = "unset"
-    }
-  }, [isOpen, onClose, showDetailModal])
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen, onClose, showDetailModal, showCancelModal, showHistoryModal, ordersLoading, cancelling]);
 
   // Format date
   const formatDate = (dateString) => {
@@ -245,15 +269,16 @@ export default function OrderHistory({ isOpen, onClose }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300">
       <div
         ref={modalRef}
-        className="relative w-full max-w-4xl bg-card rounded-xl shadow-2xl border border-border overflow-hidden animate-fade-in-up max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-4xl bg-card rounded-xl shadow-2xl border border-border overflow-hidden animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto"
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors z-10 cursor-pointer"
+          disabled={ordersLoading || cancelling}
+          className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors z-10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           aria-label="Đóng"
         >
           <X className="w-5 h-5" />
@@ -390,20 +415,12 @@ export default function OrderHistory({ isOpen, onClose }) {
       {/* Detail Modal */}
       {showDetailModal && selectedOrder && (
         <div
-          className="fixed inset-0 bg-black/10 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300"
           style={{ zIndex: 60 }}
-          onClick={(e) => {
-            // Close detail modal when clicking on backdrop
-            if (e.target === e.currentTarget) {
-              setShowDetailModal(false)
-              setSelectedOrder(null)
-            }
-          }}
         >
           <div
             ref={detailModalRef}
-            className="bg-card rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto relative border border-border"
-            onClick={(e) => e.stopPropagation()}
+            className="relative bg-card rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-border animate-in fade-in zoom-in duration-200"
           >
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
@@ -426,7 +443,8 @@ export default function OrderHistory({ isOpen, onClose }) {
                       setShowDetailModal(false)
                       setSelectedOrder(null)
                     }}
-                    className="p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
+                    disabled={cancelling}
+                    className="p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     aria-label="Đóng"
                   >
                     <X className="w-5 h-5" />
@@ -525,7 +543,7 @@ export default function OrderHistory({ isOpen, onClose }) {
 
                 {/* Cancel Button (only if status is pending) */}
                 {selectedOrder.status === 'pending' && (
-                  <div className="border-t border-border pt-4 cursor-pointer">
+                  <div className="border-t border-border pt-4">
                     <button
                       onClick={handleCancelClick}
                       disabled={cancelling}
@@ -563,17 +581,11 @@ export default function OrderHistory({ isOpen, onClose }) {
       {/* Cancel Confirmation Modal */}
       {showCancelModal && (
         <div
-          className="fixed inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-70 p-4"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowCancelModal(false)
-              setCancelReason('')
-            }
-          }}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70] p-4 transition-all duration-300"
         >
           <div
-            className="bg-card rounded-lg max-w-md w-full p-6 border border-border"
-            onClick={(e) => e.stopPropagation()}
+            ref={cancelModalRef}
+            className="relative bg-card rounded-xl shadow-2xl max-w-md w-full p-6 border border-border animate-in fade-in zoom-in duration-200"
           >
             <h2 className="text-xl font-bold text-card-foreground mb-4">Xác nhận hủy đơn hàng</h2>
             <p className="text-sm text-muted-foreground mb-4">
@@ -606,7 +618,8 @@ export default function OrderHistory({ isOpen, onClose }) {
                   setShowCancelModal(false)
                   setCancelReason('')
                 }}
-                className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium cursor-pointer"
+                disabled={cancelling}
+                className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Không, giữ lại
               </button>
@@ -635,13 +648,12 @@ export default function OrderHistory({ isOpen, onClose }) {
       {/* Status History Modal */}
       {showHistoryModal && selectedOrder && (
         <div
-          className="fixed inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300"
           style={{ zIndex: 70 }}
-          onClick={() => setShowHistoryModal(false)}
         >
           <div
-            className="bg-card rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 border border-border"
-            onClick={(e) => e.stopPropagation()}
+            ref={historyModalRef}
+            className="relative bg-card rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 border border-border animate-in fade-in zoom-in duration-200"
           >
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">

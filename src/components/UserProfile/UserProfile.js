@@ -37,9 +37,12 @@ export default function UserProfile({ isOpen, onClose }) {
     }
   }, [isOpen, onClose])
 
-  // Close modal when clicking outside
+  // Handle click outside to close modals and scroll lock
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // Don't close if an operation is active
+      if (loading) return;
+
       if (modalRef.current && !modalRef.current.contains(event.target)) {
         onClose()
       }
@@ -48,13 +51,15 @@ export default function UserProfile({ isOpen, onClose }) {
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside)
       document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = "unset"
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
       document.body.style.overflow = "unset"
     }
-  }, [isOpen, onClose])
+  }, [isOpen, onClose, loading])
 
   // Handle edit form change
   const handleEditChange = (e) => {
@@ -148,12 +153,12 @@ export default function UserProfile({ isOpen, onClose }) {
         address: editForm.address.trim(),
         email: editForm.email.trim().toLowerCase(),
       }
-      
+
       saveUser(updatedUser)
       setUser(updatedUser)
       setIsEditing(false)
       setSuccess("Đã cập nhật thông tin thành công")
-      
+
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(""), 3000)
     } catch (err) {
@@ -168,15 +173,16 @@ export default function UserProfile({ isOpen, onClose }) {
   if (!isOpen || !user) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300">
       <div
         ref={modalRef}
-        className="relative w-full max-w-4xl bg-card rounded-xl shadow-2xl border border-border overflow-hidden animate-fade-in-up max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-4xl bg-card rounded-xl shadow-2xl border border-border overflow-hidden animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto"
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors z-10"
+          disabled={loading}
+          className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors z-10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           aria-label="Đóng"
         >
           <X className="w-5 h-5" />
@@ -211,7 +217,7 @@ export default function UserProfile({ isOpen, onClose }) {
               {!isEditing ? (
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg text-sm font-medium transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg text-sm font-medium transition-colors cursor-pointer"
                 >
                   <Edit2 className="w-4 h-4" />
                   Sửa thông tin
@@ -221,7 +227,7 @@ export default function UserProfile({ isOpen, onClose }) {
                   <button
                     onClick={handleSaveProfile}
                     disabled={loading}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                    className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg text-sm font-medium transition-colors disabled:opacity-50 cursor-pointer"
                   >
                     {loading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -240,7 +246,7 @@ export default function UserProfile({ isOpen, onClose }) {
                       })
                       setError("")
                     }}
-                    className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg text-sm font-medium transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg text-sm font-medium transition-colors cursor-pointer"
                   >
                     <XIcon className="w-4 h-4" />
                     Hủy
