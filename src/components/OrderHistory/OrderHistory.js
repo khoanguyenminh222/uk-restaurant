@@ -65,8 +65,13 @@ export default function OrderHistory({ isOpen, onClose }) {
 
     setOrdersLoading(true)
     setError("")
+    const userToken = localStorage.getItem('user_token')
     try {
-      const response = await fetch(`/api/orders?user_id=${userId}`)
+      const response = await fetch(`/api/orders?user_id=${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${userToken}`,
+        }
+      })
       const data = await response.json()
 
       if (data.success) {
@@ -182,9 +187,14 @@ export default function OrderHistory({ isOpen, onClose }) {
 
   // Handle view detail
   const handleViewDetail = async (order) => {
+    const userToken = localStorage.getItem('user_token')
     try {
       // Fetch full order details to get status_history and change_history
-      const response = await fetch(`/api/orders/${order.order_id}`)
+      const response = await fetch(`/api/orders/${order.order_id}`, {
+        headers: {
+          'Authorization': `Bearer ${userToken}`,
+        }
+      })
       const data = await response.json()
 
       if (data.success) {
@@ -219,11 +229,13 @@ export default function OrderHistory({ isOpen, onClose }) {
 
     setShowCancelModal(false)
     setCancelling(true)
+    const userToken = localStorage.getItem('user_token')
     try {
       const response = await fetch(`/api/orders/${selectedOrder.order_id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${userToken}`,
         },
         body: JSON.stringify({
           status: "cancelled",

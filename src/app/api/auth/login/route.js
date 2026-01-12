@@ -21,7 +21,7 @@ export async function POST(request) {
     }
 
     // Find user by phone (exclude soft-deleted users)
-    const user = await db.collection('users').findOne({ 
+    const user = await db.collection('users').findOne({
       phone: body.phone,
       is_deleted: { $ne: true }
     });
@@ -54,8 +54,8 @@ export async function POST(request) {
       // Return user info (without password) for verification screen
       const { password, verification_code, verification_code_expires, ...userWithoutPassword } = user;
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Vui lòng xác thực email trước khi đăng nhập. Kiểm tra email của bạn để lấy mã xác thực.',
           email_not_verified: true,
           email: user.email,
@@ -71,6 +71,14 @@ export async function POST(request) {
       { $set: { last_login: new Date() } }
     );
 
+    // Generate JWT token
+    const { signJWT } = await import('@/lib/auth');
+    const token = await signJWT({
+      user_id: user.user_id,
+      phone: user.phone,
+      role: user.role || 'user'
+    });
+
     // Return user without password
     const { password, verification_code, verification_code_expires, ...userWithoutPassword } = user;
 
@@ -81,6 +89,7 @@ export async function POST(request) {
           ...userWithoutPassword,
           role: user.role || 'user', // Include role in response
         },
+        token: token,
         email_verified: user.email_verified || false,
       },
       { status: 200 }

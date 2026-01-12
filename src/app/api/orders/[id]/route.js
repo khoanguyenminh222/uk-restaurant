@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { sendCancelledOrderNotification } from '@/lib/telegram';
-import { getAdminFromToken } from '@/lib/auth';
+import { getAdminFromToken, getUserFromToken } from '@/lib/auth';
 import { sendOrderStatusEmail } from '@/lib/email';
 
 /**
@@ -38,16 +38,16 @@ export async function GET(request, { params }) {
 
 /**
  * PUT /api/orders/:id
- * Cập nhật đơn hàng (admin only - update status và thông tin)
+ * Cập nhật đơn hàng (admin or owner only)
  */
 export async function PUT(request, { params }) {
   try {
     const { id } = await params;
     const body = await request.json();
 
-    // Check admin authentication
-    const adminInfo = await getAdminFromToken(request);
-    if (!adminInfo) {
+    // Check authentication (allow both admin and regular user)
+    const requester = await getUserFromToken(request);
+    if (!requester) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
@@ -64,6 +64,33 @@ export async function PUT(request, { params }) {
         { success: false, error: 'Không tìm thấy đơn hàng' },
         { status: 404 }
       );
+    }
+
+    // Permission check: admin or the order owner
+    const isAdmin = ['admin', 'super_admin', 'manager'].includes(requester.role);
+    const isOwner = order.user_id === requester.user_id;
+
+    if (!isAdmin && !isOwner) {
+      return NextResponse.json(
+        { success: false, error: 'Bạn không có quyền cập nhật đơn hàng này' },
+        { status: 403 }
+      );
+    }
+
+    // If regular user, only allow cancelling pending orders
+    if (!isAdmin && isOwner) {
+      if (body.status !== 'cancelled') {
+        return NextResponse.json(
+          { success: false, error: 'Bạn chỉ có quyền hủy đơn hàng' },
+          { status: 403 }
+        );
+      }
+      if (order.status !== 'pending') {
+        return NextResponse.json(
+          { success: false, error: 'Chỉ có thể hủy đơn hàng đang chờ xử lý' },
+          { status: 400 }
+        );
+      }
     }
 
     // Validate status transition
@@ -183,35 +210,25 @@ export async function PUT(request, { params }) {
 
       // Prepare changed_by_detail
       let changedByDetail = null;
-      if (adminInfo) {
+      if (isAdmin) {
         // Admin/Manager/Super Admin
         changedByDetail = {
           type: 'admin',
-          user_id: adminInfo.user_id || adminInfo._id?.toString() || '',
-          name: adminInfo.name || '',
-          phone: adminInfo.phone || '',
-          email: adminInfo.email || '',
-          role: adminInfo.role || 'admin',
+          user_id: requester.user_id || requester._id?.toString() || '',
+          name: requester.name || '',
+          phone: requester.phone || '',
+          email: requester.email || '',
+          role: requester.role || 'admin',
         };
-      } else if (body.user_id) {
-        // User (nếu có user_id trong body)
-        try {
-          const user = await db.collection('users').findOne({
-            user_id: body.user_id,
-            role: { $ne: 'admin' } // Không phải admin
-          });
-          if (user) {
-            changedByDetail = {
-              type: 'user',
-              user_id: user.user_id || user._id?.toString() || '',
-              name: user.name || '',
-              phone: user.phone || '',
-              email: user.email || '',
-            };
-          }
-        } catch (userError) {
-          console.error('Error fetching user info:', userError);
-        }
+      } else if (isOwner) {
+        // User (the owner themselves)
+        changedByDetail = {
+          type: 'user',
+          user_id: requester.user_id || requester._id?.toString() || '',
+          name: requester.name || '',
+          phone: requester.phone || '',
+          email: requester.email || '',
+        };
       }
 
       // Fallback to system if no detail
@@ -224,7 +241,7 @@ export async function PUT(request, { params }) {
       updateData.status_history.push({
         status: body.status,
         changed_at: new Date(),
-        changed_by: body.changed_by || (adminInfo ? 'admin' : 'system'),
+        changed_by: body.changed_by || (isAdmin ? 'admin' : (isOwner ? 'user' : 'system')),
         changed_by_detail: changedByDetail,
       });
     }
@@ -273,38 +290,28 @@ export async function PUT(request, { params }) {
     if (changes.length > 0) {
       // Prepare changed_by_detail
       let changedByDetail = null;
-      if (adminInfo) {
+      if (isAdmin) {
         changedByDetail = {
           type: 'admin',
-          user_id: adminInfo.user_id || adminInfo._id?.toString() || '',
-          name: adminInfo.name || '',
-          phone: adminInfo.phone || '',
-          email: adminInfo.email || '',
-          role: adminInfo.role || 'admin',
+          user_id: requester.user_id || requester._id?.toString() || '',
+          name: requester.name || '',
+          phone: requester.phone || '',
+          email: requester.email || '',
+          role: requester.role || 'admin',
         };
-      } else if (body.user_id) {
-        try {
-          const user = await db.collection('users').findOne({
-            user_id: body.user_id,
-            role: { $ne: 'admin' }
-          });
-          if (user) {
-            changedByDetail = {
-              type: 'user',
-              user_id: user.user_id || user._id?.toString() || '',
-              name: user.name || '',
-              phone: user.phone || '',
-              email: user.email || '',
-            };
-          }
-        } catch (userError) {
-          console.error('Error fetching user info:', userError);
-        }
+      } else if (isOwner) {
+        changedByDetail = {
+          type: 'user',
+          user_id: requester.user_id || requester._id?.toString() || '',
+          name: requester.name || '',
+          phone: requester.phone || '',
+          email: requester.email || '',
+        };
       }
 
       if (!changedByDetail) {
         changedByDetail = {
-          type: body.changed_by || (adminInfo ? 'admin' : 'system'),
+          type: body.changed_by || (isAdmin ? 'admin' : (isOwner ? 'user' : 'system')),
         };
       }
 
@@ -318,7 +325,7 @@ export async function PUT(request, { params }) {
       // Add new change entry
       updateData.change_history.push({
         changed_at: new Date(),
-        changed_by: body.changed_by || (adminInfo ? 'admin' : 'system'),
+        changed_by: body.changed_by || (isAdmin ? 'admin' : (isOwner ? 'user' : 'system')),
         changed_by_detail: changedByDetail,
         changes: changes,
       });
@@ -351,15 +358,17 @@ export async function PUT(request, { params }) {
     // Send Telegram notification if order is cancelled (fire and forget)
     if (body.status === 'cancelled') {
       try {
-        let cancelledBy = body.changed_by || 'admin';
+        let cancelledBy = body.changed_by || (isAdmin ? 'admin' : (isOwner ? 'user' : 'system'));
 
         // Nếu là admin/manager/super_admin và có thông tin admin, sử dụng tên admin
-        if ((cancelledBy === 'admin' || cancelledBy === 'manager' || cancelledBy === 'super_admin') && adminInfo) {
-          cancelledBy = adminInfo.name || adminInfo.phone || cancelledBy;
+        if (isAdmin && requester) {
+          cancelledBy = requester.name || requester.phone || cancelledBy;
+        } else if (isOwner && requester) {
+          cancelledBy = requester.name || requester.phone || cancelledBy;
         }
 
         const reason = body.cancel_reason || body.admin_notes || body.notes || updatedOrder.cancel_reason || '';
-        await sendCancelledOrderNotification(updatedOrder, cancelledBy, reason, adminInfo);
+        await sendCancelledOrderNotification(updatedOrder, cancelledBy, reason, isAdmin ? requester : null);
       } catch (telegramError) {
         console.error('Error sending Telegram notification for cancelled order:', telegramError);
         // Continue even if Telegram fails

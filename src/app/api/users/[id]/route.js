@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
-import { getAdminFromToken } from '@/lib/auth';
+import { getAdminFromToken, getUserFromToken } from '@/lib/auth';
 import { ObjectId } from 'mongodb';
 
 /**
@@ -16,20 +16,32 @@ function toObjectId(id) {
 
 /**
  * GET /api/users/:id
- * Lấy thông tin chi tiết user (admin only)
+ * Lấy thông tin chi tiết user (admin or owner only)
  */
 export async function GET(request, { params }) {
   try {
-    // Check admin authentication
-    const admin = await getAdminFromToken(request);
-    if (!admin) {
+    const { id } = await params;
+
+    // Check authentication (allow both admin and regular user)
+    const requester = await getUserFromToken(request);
+    if (!requester) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
-    const { id } = await params;
+    // Permission check: admin or the user themselves
+    const isAdmin = ['admin', 'super_admin', 'manager'].includes(requester.role);
+    const isOwner = requester.user_id === id;
+
+    if (!isAdmin && !isOwner) {
+      return NextResponse.json(
+        { success: false, error: 'Bạn không có quyền xem thông tin này' },
+        { status: 403 }
+      );
+    }
+
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
 
@@ -85,21 +97,33 @@ export async function GET(request, { params }) {
 
 /**
  * PUT /api/users/:id
- * Cập nhật thông tin user (admin only)
+ * Cập nhật thông tin user (admin or owner only)
  */
 export async function PUT(request, { params }) {
   try {
-    // Check admin authentication
-    const adminInfo = await getAdminFromToken(request);
-    if (!adminInfo) {
+    const { id } = await params;
+    const body = await request.json();
+
+    // Check authentication (allow both admin and regular user)
+    const requester = await getUserFromToken(request);
+    if (!requester) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
-    const { id } = await params;
-    const body = await request.json();
+    // Permission check: admin or the user themselves
+    const isAdmin = ['admin', 'super_admin', 'manager'].includes(requester.role);
+    const isOwner = requester.user_id === id;
+
+    if (!isAdmin && !isOwner) {
+      return NextResponse.json(
+        { success: false, error: 'Bạn không có quyền cập nhật thông tin này' },
+        { status: 403 }
+      );
+    }
+
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
 

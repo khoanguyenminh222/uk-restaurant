@@ -217,6 +217,11 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
         }
         saveUser(userData)
 
+        // Save token for user API calls
+        if (data.token) {
+          localStorage.setItem('user_token', data.token)
+        }
+
         // If user is admin or super_admin, also save to admin_data
         if (data.data.role === 'admin' || data.data.role === 'super_admin') {
           localStorage.setItem('admin_data', JSON.stringify(data.data))
@@ -587,6 +592,11 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
             }
             saveUser(userData)
 
+            // Save token for user API calls
+            if (loginData.token) {
+              localStorage.setItem('user_token', loginData.token)
+            }
+
             // If user is admin or super_admin, also save to admin_data
             if (loginData.data.role === 'admin' || loginData.data.role === 'super_admin') {
               localStorage.setItem('admin_data', JSON.stringify(loginData.data))
@@ -653,14 +663,14 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
           >
             Đăng ký
           </button>
-          <button
+          {/* <button
             onClick={onClose}
             disabled={loading}
             className="p-2 mr-2 text-muted-foreground hover:text-card-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Đóng"
           >
             <X className="w-5 h-5" />
-          </button>
+          </button> */}
         </div>
 
         {/* Verification Header */}
@@ -768,13 +778,13 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
               {/* Remember Me & Forgot Password */}
               <div className="flex items-center justify-between">
                 <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
-                  <input
+                  {/* <input
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
                     className="w-4 h-4 rounded border-border bg-input text-primary focus:ring-ring"
                   />
-                  <span>Nhớ mật khẩu</span>
+                  <span>Nhớ mật khẩu</span> */}
                 </label>
                 <button
                   type="button"

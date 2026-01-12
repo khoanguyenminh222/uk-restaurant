@@ -307,11 +307,13 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
 
     setShowCancelConfirm(false)
     setCancelling(true)
+    const userToken = localStorage.getItem('user_token')
     try {
       const response = await fetch(`/api/orders/${successOrder.order_id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${userToken}`,
         },
         body: JSON.stringify({
           status: 'cancelled',
