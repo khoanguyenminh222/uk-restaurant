@@ -2,7 +2,7 @@ import { SignJWT, jwtVerify } from 'jose';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'admin-super-secret-key-12345-@#$!^&'
+  process.env.JWT_SECRET || 'admin-super-secret-key-12345'
 );
 
 /**

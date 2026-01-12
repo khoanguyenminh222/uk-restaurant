@@ -129,7 +129,7 @@ export async function POST(request) {
       );
 
       if (!emailResult.success) {
-        throw new Error(emailResult.error || 'Lỗi hệ thống khi gửi email xác thực. Vui lòng thử lại sau.');
+        throw new Error('Lỗi hệ thống email: Sai cấu hình (Tên đăng nhập hoặc Mật khẩu ứng dụng không đúng). Vui lòng liên hệ Admin.');
       }
     } catch (err) {
       console.error('Error sending verification email:', err);

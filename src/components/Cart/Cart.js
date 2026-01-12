@@ -190,7 +190,7 @@ export default function Cart({ isOpen, onClose }) {
             <div className="flex flex-col items-center justify-center h-full text-center py-12">
               <ShoppingBag className="w-20 h-20 text-muted-foreground mb-4" />
               <p className="text-muted-foreground text-lg mb-2">Giỏ hàng trống</p>
-              <p className="text-muted-foreground text-sm">Thêm săn phẩm vào giỏ hàng để bắt đầu đặt hàng</p>
+              <p className="text-muted-foreground text-sm">Thêm sản phẩm vào giỏ hàng để bắt đầu đặt hàng</p>
             </div>
           ) : (
             <div className="space-y-4">

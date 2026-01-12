@@ -138,6 +138,8 @@ export const defaultContactConfig = {
     twitter_image: '/og-image.jpg',
     robots_index: true,
     robots_follow: true,
+    icon_favicon: '/favicon.ico',
+    icon_apple: '/apple-icon.png',
   },
 };
 

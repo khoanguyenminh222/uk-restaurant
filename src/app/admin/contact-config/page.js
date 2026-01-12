@@ -1117,117 +1117,317 @@ export default function AdminContactConfig() {
                     {/* SEO Tab */}
                     {activeTab === 'seo' && (
                         <div className="space-y-6 animate-in fade-in duration-300">
-                            <h2 className="text-xl font-bold text-card-foreground mb-6">Cấu hình SEO</h2>
+                            <h2 className="text-xl font-semibold text-card-foreground mb-4">Cấu hình SEO</h2>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-4">
-                                    <h3 className="font-semibold text-lg border-b pb-2">Basic Meta</h3>
-                                    <div>
-                                        <label className="block text-sm font-medium text-card-foreground mb-1">Meta Title</label>
-                                        <p className="text-xs text-muted-foreground mb-1">Tiêu đề hiển thị trên tab trình duyệt và kết quả Google.</p>
-                                        <input
-                                            value={seoData.meta_title || ''}
-                                            onChange={(e) => setSeoData({ ...seoData, meta_title: e.target.value })}
-                                            className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-card-foreground mb-1">Meta Description</label>
-                                        <p className="text-xs text-muted-foreground mb-1">Mô tả ngắn gọn nội dung trang, xuất hiện dưới tiêu đề trên Google.</p>
-                                        <textarea
-                                            rows={3}
-                                            value={seoData.meta_description || ''}
-                                            onChange={(e) => setSeoData({ ...seoData, meta_description: e.target.value })}
-                                            className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-card-foreground mb-1">Meta Keywords</label>
-                                        <p className="text-xs text-muted-foreground mb-1">Các từ khóa liên quan, phân cách bằng dấu phẩy.</p>
-                                        <input
-                                            value={seoData.meta_keywords || ''}
-                                            onChange={(e) => setSeoData({ ...seoData, meta_keywords: e.target.value })}
-                                            className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground"
-                                            placeholder="keyword1, keyword2..."
-                                        />
+                            {/* Icons */}
+                            <div className="space-y-4 border-t border-b border-border pt-6 pb-6">
+                                <h3 className="text-lg font-medium text-card-foreground">Icons (Favicon & Apple Icon)</h3>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                                        Favicon URL <span className="text-muted-foreground font-normal">(Icon hiển thị trên tab browser)</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={seoData.icon_favicon || ''}
+                                        onChange={(e) => setSeoData({ ...seoData, icon_favicon: e.target.value })}
+                                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                        placeholder="/favicon.ico"
+                                    />
+                                    <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-border">
+                                        <p className="text-xs text-muted-foreground mb-2">
+                                            <strong>Hướng dẫn:</strong>
+                                        </p>
+                                        <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                                            <li>Đường dẫn tương đối: <code className="bg-background px-1 rounded">/favicon.ico</code> (file trong thư mục <code className="bg-background px-1 rounded">public</code>)</li>
+                                            <li>URL đầy đủ: <code className="bg-background px-1 rounded">https://example.com/favicon.ico</code></li>
+                                            <li>Kích thước khuyến nghị: <strong>32x32px</strong> hoặc <strong>16x16px</strong></li>
+                                            <li>Định dạng: ICO, PNG, hoặc SVG</li>
+                                        </ul>
                                     </div>
                                 </div>
 
-                                <div className="space-y-4">
-                                    <h3 className="font-semibold text-lg border-b pb-2">Open Graph (Facebook/Zalo)</h3>
-                                    <div>
-                                        <label className="block text-sm font-medium text-card-foreground mb-1">OG Title</label>
-                                        <p className="text-xs text-muted-foreground mb-1">Tiêu đề khi chia sẻ link lên Facebook/Zalo (thường giống Meta Title).</p>
-                                        <input
-                                            value={seoData.og_title || ''}
-                                            onChange={(e) => setSeoData({ ...seoData, og_title: e.target.value })}
-                                            className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground"
-                                        />
+                                <div>
+                                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                                        Apple Touch Icon URL <span className="text-muted-foreground font-normal">(Icon hiển thị khi thêm vào home screen trên iOS)</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={seoData.icon_apple || ''}
+                                        onChange={(e) => setSeoData({ ...seoData, icon_apple: e.target.value })}
+                                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                        placeholder="/apple-icon.png"
+                                    />
+                                    <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-border">
+                                        <p className="text-xs text-muted-foreground mb-2">
+                                            <strong>Hướng dẫn:</strong>
+                                        </p>
+                                        <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                                            <li>Đường dẫn tương đối: <code className="bg-background px-1 rounded">/apple-icon.png</code> (file trong thư mục <code className="bg-background px-1 rounded">public</code>)</li>
+                                            <li>URL đầy đủ: <code className="bg-background px-1 rounded">https://example.com/apple-icon.png</code></li>
+                                            <li>Kích thước khuyến nghị: <strong>180x180px</strong> (cho iPhone)</li>
+                                            <li>Định dạng: PNG (không trong suốt)</li>
+                                        </ul>
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-card-foreground mb-1">OG Description</label>
-                                        <p className="text-xs text-muted-foreground mb-1">Mô tả khi chia sẻ link lên MXH.</p>
-                                        <textarea
-                                            rows={2}
-                                            value={seoData.og_description || ''}
-                                            onChange={(e) => setSeoData({ ...seoData, og_description: e.target.value })}
-                                            className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-card-foreground mb-1">OG Image URL</label>
-                                        <p className="text-xs text-muted-foreground mb-1">Link ảnh thumbnail khi chia sẻ (khuyên dùng tỉ lệ 1200x630).</p>
-                                        <input
-                                            value={seoData.og_image || ''}
-                                            onChange={(e) => setSeoData({ ...seoData, og_image: e.target.value })}
-                                            className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground"
-                                        />
+                                </div>
+                            </div>
+
+                            {/* Basic Meta Tags */}
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-medium text-card-foreground">Meta Tags Cơ Bản</h3>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                                        Meta Title
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={seoData.meta_title || ''}
+                                        onChange={(e) => setSeoData({ ...seoData, meta_title: e.target.value })}
+                                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                        placeholder="Liên Hệ - Nhà Hàng UK Restaurant"
+                                        maxLength={100}
+                                    />
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        {(seoData.meta_title || '').length}/100 ký tự. Tiêu đề hiển thị trên tab trình duyệt và kết quả tìm kiếm Google.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                                        Meta Description
+                                    </label>
+                                    <textarea
+                                        value={seoData.meta_description || ''}
+                                        onChange={(e) => setSeoData({ ...seoData, meta_description: e.target.value })}
+                                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                        rows={3}
+                                        placeholder="Mô tả ngắn gọn về trang Contact (150-160 ký tự là lý tưởng)"
+                                        maxLength={200}
+                                    />
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        {(seoData.meta_description || '').length}/200 ký tự
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                                        Meta Keywords
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={seoData.meta_keywords || ''}
+                                        onChange={(e) => setSeoData({ ...seoData, meta_keywords: e.target.value })}
+                                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                        placeholder="liên hệ, đặt bàn, nhà hàng uk, restaurant"
+                                        maxLength={500}
+                                    />
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        {(seoData.meta_keywords || '').length}/500 ký tự. Phân cách bằng dấu phẩy
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Open Graph */}
+                            <div className="space-y-4 border-t border-border pt-6">
+                                <h3 className="text-lg font-medium text-card-foreground">Open Graph (Facebook, LinkedIn)</h3>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                                        OG Title
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={seoData.og_title || ''}
+                                        onChange={(e) => setSeoData({ ...seoData, og_title: e.target.value })}
+                                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                        placeholder="Để trống sẽ dùng Meta Title"
+                                        maxLength={100}
+                                    />
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        {(seoData.og_title || '').length}/100 ký tự
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                                        OG Description
+                                    </label>
+                                    <textarea
+                                        value={seoData.og_description || ''}
+                                        onChange={(e) => setSeoData({ ...seoData, og_description: e.target.value })}
+                                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                        rows={3}
+                                        placeholder="Để trống sẽ dùng Meta Description"
+                                        maxLength={200}
+                                    />
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        {(seoData.og_description || '').length}/200 ký tự
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                                        OG Image URL <span className="text-muted-foreground font-normal">(Hình ảnh hiển thị khi chia sẻ trên Facebook, LinkedIn...)</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={seoData.og_image || ''}
+                                        onChange={(e) => setSeoData({ ...seoData, og_image: e.target.value })}
+                                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                        placeholder="/og-image.jpg"
+                                    />
+                                    <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-border">
+                                        <p className="text-xs text-muted-foreground mb-2">
+                                            <strong>Hướng dẫn:</strong>
+                                        </p>
+                                        <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                                            <li>Đường dẫn tương đối: <code className="bg-background px-1 rounded">/og-image.jpg</code> (file trong thư mục <code className="bg-background px-1 rounded">public</code>)</li>
+                                            <li>URL đầy đủ: <code className="bg-background px-1 rounded">https://example.com/image.jpg</code></li>
+                                            <li>Kích thước khuyến nghị: <strong>1200x630px</strong> (tỷ lệ 1.91:1)</li>
+                                            <li>Định dạng: JPG, PNG, hoặc WebP</li>
+                                        </ul>
                                     </div>
                                 </div>
 
-                                <div className="space-y-4">
-                                    <h3 className="font-semibold text-lg border-b pb-2">Twitter Card</h3>
+                                <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-card-foreground mb-1">Twitter Title</label>
-                                        <input
-                                            value={seoData.twitter_title || ''}
-                                            onChange={(e) => setSeoData({ ...seoData, twitter_title: e.target.value })}
-                                            className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-card-foreground mb-1">Twitter Description</label>
-                                        <textarea
-                                            rows={2}
-                                            value={seoData.twitter_description || ''}
-                                            onChange={(e) => setSeoData({ ...seoData, twitter_description: e.target.value })}
-                                            className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <h3 className="font-semibold text-lg border-b pb-2">Robots</h3>
-                                    <div className="flex gap-4">
-                                        <label className="flex items-center gap-2 cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={seoData.robots_index ?? true}
-                                                onChange={(e) => setSeoData({ ...seoData, robots_index: e.target.checked })}
-                                                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
-                                            />
-                                            <span>Index (Cho phép Google tìm thấy trang)</span>
+                                        <label className="block text-sm font-medium text-card-foreground mb-2">
+                                            OG Type <span className="text-muted-foreground font-normal text-xs">(Loại nội dung)</span>
                                         </label>
-                                        <label className="flex items-center gap-2 cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={seoData.robots_follow ?? true}
-                                                onChange={(e) => setSeoData({ ...seoData, robots_follow: e.target.checked })}
-                                                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
-                                            />
-                                            <span>Follow (Cho phép Google đi theo các link)</span>
-                                        </label>
+                                        <select
+                                            value={seoData.og_type || 'website'}
+                                            onChange={(e) => setSeoData({ ...seoData, og_type: e.target.value })}
+                                            className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                        >
+                                            <option value="website">Website - Trang web thông thường (Khuyến nghị)</option>
+                                            <option value="article">Article - Bài viết/Blog</option>
+                                            <option value="product">Product - Sản phẩm</option>
+                                        </select>
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            Chọn "Website" cho trang Contact
+                                        </p>
                                     </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-card-foreground mb-2">
+                                            OG Locale
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={seoData.og_locale || 'vi_VN'}
+                                            onChange={(e) => setSeoData({ ...seoData, og_locale: e.target.value })}
+                                            className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                            placeholder="vi_VN"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Twitter Card */}
+                            <div className="space-y-4 border-t border-border pt-6">
+                                <h3 className="text-lg font-medium text-card-foreground">Twitter Card</h3>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                                        Twitter Card Type <span className="text-muted-foreground font-normal">(Định dạng hiển thị khi chia sẻ trên Twitter/X)</span>
+                                    </label>
+                                    <select
+                                        value={seoData.twitter_card || 'summary_large_image'}
+                                        onChange={(e) => setSeoData({ ...seoData, twitter_card: e.target.value })}
+                                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                    >
+                                        <option value="summary">Summary - Hiển thị nhỏ (120x120px)</option>
+                                        <option value="summary_large_image">Summary Large Image - Hiển thị lớn (1200x628px) - Khuyến nghị</option>
+                                    </select>
+                                    <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-border">
+                                        <p className="text-xs text-muted-foreground mb-2">
+                                            <strong>Giải thích:</strong>
+                                        </p>
+                                        <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                                            <li><strong>Summary:</strong> Hiển thị hình ảnh nhỏ (120x120px) bên cạnh nội dung</li>
+                                            <li><strong>Summary Large Image:</strong> Hiển thị hình ảnh lớn (1200x628px) phía trên nội dung - <strong>Khuyến nghị dùng</strong></li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                                        Twitter Title
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={seoData.twitter_title || ''}
+                                        onChange={(e) => setSeoData({ ...seoData, twitter_title: e.target.value })}
+                                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                        placeholder="Để trống sẽ dùng OG Title"
+                                        maxLength={100}
+                                    />
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        {(seoData.twitter_title || '').length}/100 ký tự
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                                        Twitter Description
+                                    </label>
+                                    <textarea
+                                        value={seoData.twitter_description || ''}
+                                        onChange={(e) => setSeoData({ ...seoData, twitter_description: e.target.value })}
+                                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                        rows={3}
+                                        placeholder="Để trống sẽ dùng OG Description"
+                                        maxLength={200}
+                                    />
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        {(seoData.twitter_description || '').length}/200 ký tự
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                                        Twitter Image URL <span className="text-muted-foreground font-normal">(Tùy chọn - để trống sẽ dùng OG Image)</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={seoData.twitter_image || ''}
+                                        onChange={(e) => setSeoData({ ...seoData, twitter_image: e.target.value })}
+                                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                        placeholder="Để trống sẽ dùng OG Image"
+                                    />
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        Đường dẫn tương đối (bắt đầu với /) hoặc URL đầy đủ. Nếu để trống, Twitter sẽ tự động dùng hình ảnh từ OG Image.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Robots */}
+                            <div className="space-y-4 border-t border-border pt-6">
+                                <h3 className="text-lg font-medium text-card-foreground">Search Engine Robots</h3>
+
+                                <div className="flex items-center gap-4">
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={seoData.robots_index !== false}
+                                            onChange={(e) => setSeoData({ ...seoData, robots_index: e.target.checked })}
+                                            className="w-4 h-4 text-primary bg-input border-border rounded focus:ring-primary"
+                                        />
+                                        <span className="text-sm text-card-foreground">Cho phép index (robots: index)</span>
+                                    </label>
+                                </div>
+
+                                <div className="flex items-center gap-4">
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={seoData.robots_follow !== false}
+                                            onChange={(e) => setSeoData({ ...seoData, robots_follow: e.target.checked })}
+                                            className="w-4 h-4 text-primary bg-input border-border rounded focus:ring-primary"
+                                        />
+                                        <span className="text-sm text-card-foreground">Cho phép follow links (robots: follow)</span>
+                                    </label>
                                 </div>
                             </div>
                         </div>
