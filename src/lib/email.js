@@ -110,7 +110,7 @@ export async function sendVerificationEmail(email, code, name = null, expiresInM
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('Error sending verification email:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error.message, originalError: error };
   }
 }
 

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { X, User, Phone, MapPin, FileText, ShoppingBag, Loader2, CheckCircle, Copy, ExternalLink, History, XCircle, Mail, ShieldCheck } from "lucide-react"
 import { getUser } from "@/utils/user"
+import { userFetch } from "@/lib/userAuth"
 import { getCustomerInfo, saveCustomerInfo } from "@/utils/customer"
 import { clearCart, getCartTotal } from "@/utils/cart"
 import { formatCurrency } from "@/utils/helpers"
@@ -307,20 +308,44 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
 
     setShowCancelConfirm(false)
     setCancelling(true)
-    const userToken = localStorage.getItem('user_token')
     try {
-      const response = await fetch(`/api/orders/${successOrder.order_id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userToken}`,
-        },
-        body: JSON.stringify({
-          status: 'cancelled',
-          changed_by: 'customer',
-          cancel_reason: cancelReason.trim() || '',
-        }),
-      })
+      // Check if user is logged in
+      const user = getUser();
+      const isLoggedIn = user && user.user_id;
+
+      let response;
+      if (isLoggedIn) {
+        // Use authenticated userFetch for logged in users
+        response = await userFetch(`/api/orders/${successOrder.order_id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            status: 'cancelled',
+            changed_by: 'user', // will be overridden by backend based on token
+            cancel_reason: cancelReason.trim() || '',
+          }),
+        })
+      } else {
+        // Use regular fetch for guests, but provide verification info
+        // We use the info from successOrder to verify ownership
+        response = await fetch(`/api/orders/${successOrder.order_id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            status: 'cancelled',
+            changed_by: 'customer',
+            cancel_reason: cancelReason.trim() || '',
+            // Security verification for guest orders
+            customer_email: successOrder.customer_email || formData.customer_email,
+            customer_phone: successOrder.customer_phone || formData.customer_phone,
+            customer_name: successOrder.customer_name || formData.customer_name,
+          }),
+        })
+      }
 
       const data = await response.json()
 
@@ -554,6 +579,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
               },
             })
           )
+          setErrors({ ...errors, customer_email: "" })
         }
       } else {
         setEmailVerification(prev => ({
@@ -1143,7 +1169,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                       type="button"
                       onClick={handleSendVerificationCode}
                       disabled={emailVerification.sendingCode || !formData.customer_email || !formData.customer_email.trim() || !validateEmail(formData.customer_email)}
-                      className="px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap flex items-center gap-2"
+                      className="px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap flex items-center gap-2 cursor-pointer"
                     >
                       {emailVerification.sendingCode ? (
                         <>
@@ -1185,7 +1211,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                         type="button"
                         onClick={handleVerifyEmailCode}
                         disabled={emailVerification.verifyingCode || emailVerification.code.length !== 6}
-                        className="px-4 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-4 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                       >
                         {emailVerification.verifyingCode ? (
                           <Loader2 className="w-4 h-4 animate-spin" />

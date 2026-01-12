@@ -34,6 +34,13 @@ export async function POST(request) {
         { status: 200 }
       );
     }
+    // Check if user has an email
+    if (!user.email) {
+      return NextResponse.json(
+        { success: false, error: 'Số điện thoại này không có email liên kết. Vui lòng liên hệ hỗ trợ để được trợ giúp.' },
+        { status: 400 }
+      );
+    }
 
     // Check if email is verified
     if (!user.email_verified) {

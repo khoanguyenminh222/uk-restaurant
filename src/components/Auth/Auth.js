@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { X, Eye, EyeOff, Mail, Phone, User, MapPin, Lock } from "lucide-react"
 import { saveUser } from "@/utils/user"
+import { saveAdminSession } from "@/lib/adminAuth"
 
 export default function Auth({ isOpen, onClose, initialTab = "login" }) {
   const [activeTab, setActiveTab] = useState(initialTab) // "login" or "register" or "verify" or "forgot-password"
@@ -222,10 +223,9 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
           localStorage.setItem('user_token', data.token)
         }
 
-        // If user is admin or super_admin, also save to admin_data
-        if (data.data.role === 'admin' || data.data.role === 'super_admin') {
-          localStorage.setItem('admin_data', JSON.stringify(data.data))
-          localStorage.setItem('admin_logged_in', 'true')
+        // If user is admin or super_admin or manager, also save to admin_data
+        if (['admin', 'super_admin', 'manager'].includes(data.data.role)) {
+          saveAdminSession(data.data, data.token)
         }
 
         // Save success message to show after reload
@@ -597,10 +597,9 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
               localStorage.setItem('user_token', loginData.token)
             }
 
-            // If user is admin or super_admin, also save to admin_data
-            if (loginData.data.role === 'admin' || loginData.data.role === 'super_admin') {
-              localStorage.setItem('admin_data', JSON.stringify(loginData.data))
-              localStorage.setItem('admin_logged_in', 'true')
+            // If user is admin or super_admin or manager, also save to admin_data
+            if (['admin', 'super_admin', 'manager'].includes(loginData.data.role)) {
+              saveAdminSession(loginData.data, loginData.token)
             }
 
             // Close modal

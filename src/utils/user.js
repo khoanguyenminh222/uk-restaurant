@@ -5,6 +5,7 @@
 
 import { getStorageKey, STORAGE_KEYS } from './storage';
 import { clearCustomerInfo } from './customer';
+import { clearAdminSession } from '@/lib/adminAuth';
 
 const USER_STORAGE_KEY = getStorageKey(STORAGE_KEYS.USER);
 
@@ -13,7 +14,7 @@ const USER_STORAGE_KEY = getStorageKey(STORAGE_KEYS.USER);
  */
 export function getUser() {
   if (typeof window === 'undefined') return null;
-  
+
   try {
     const user = localStorage.getItem(USER_STORAGE_KEY);
     return user ? JSON.parse(user) : null;
@@ -28,7 +29,7 @@ export function getUser() {
  */
 export function saveUser(user) {
   if (typeof window === 'undefined') return;
-  
+
   try {
     if (user) {
       localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
@@ -48,7 +49,7 @@ export function saveUser(user) {
  */
 export function clearUser() {
   saveUser(null);
-  
+
   // Xóa customer info
   if (typeof window !== 'undefined') {
     try {
@@ -56,14 +57,18 @@ export function clearUser() {
     } catch (error) {
       console.error('Error clearing customer info:', error);
     }
-    
+
     // Xóa verified emails
     try {
       localStorage.removeItem('verified_emails');
+      localStorage.removeItem('user_token'); // Ensure token is removed
     } catch (error) {
-      console.error('Error clearing verified emails:', error);
+      console.error('Error clearing verified emails/token:', error);
     }
   }
+
+  // Clear admin session as well
+  clearAdminSession();
 }
 
 /**

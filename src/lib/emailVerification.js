@@ -91,12 +91,29 @@ export async function sendVerificationCode(email) {
   // Convert TTL từ giây sang phút (làm tròn lên)
   const expiresInMinutes = Math.ceil(VERIFICATION_CODE_TTL / 60);
   try {
-    await sendEmail(normalizedEmail, code, null, expiresInMinutes);
+    const emailResult = await sendEmail(normalizedEmail, code, null, expiresInMinutes);
+    if (!emailResult.success) {
+      console.error('Failed to send verification email:', emailResult.error);
+
+      // Check for specific errors
+      if (emailResult.error && (emailResult.error.includes('535') || emailResult.error.includes('Username and Password not accepted'))) {
+        return {
+          success: false,
+          error: 'Lỗi hệ thống email: Sai cấu hình (Tên đăng nhập hoặc Mật khẩu ứng dụng không đúng). Vui lòng liên hệ Admin.',
+          error_code: 'EMAIL_AUTH_FAILED'
+        };
+      }
+
+      return {
+        success: false,
+        error: 'Không thể gửi email. Vui lòng thử lại sau hoặc liên hệ Admin.',
+      };
+    }
   } catch (error) {
-    console.error('Error sending verification email:', error);
+    console.error('Error in sendVerificationCode:', error);
     return {
       success: false,
-      error: 'Không thể gửi email. Vui lòng thử lại sau.',
+      error: 'Lỗi hệ thống. Vui lòng thử lại sau.',
     };
   }
 

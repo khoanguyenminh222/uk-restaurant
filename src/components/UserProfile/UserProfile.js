@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { X, User, Phone, MapPin, Mail, Edit2, Save, X as XIcon, Loader2 } from "lucide-react"
 import { getUser, saveUser } from "@/utils/user"
+import { userFetch } from "@/lib/userAuth"
 
 export default function UserProfile({ isOpen, onClose }) {
   const [loading, setLoading] = useState(false)
@@ -121,12 +122,10 @@ export default function UserProfile({ isOpen, onClose }) {
         email: editForm.email.trim(),
       }
 
-      const userToken = localStorage.getItem('user_token')
-      const response = await fetch(`/api/users/${user.user_id}`, {
+      const response = await userFetch(`/api/users/${user.user_id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userToken}`,
         },
         body: JSON.stringify(updateData),
       })

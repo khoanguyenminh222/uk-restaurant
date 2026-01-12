@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { X, Package, Calendar, Banknote, Filter, Loader2, Eye, XCircle, Clock, CheckCircle, Mail, History, Edit2, CheckCircle2, Truck } from "lucide-react"
 import { getUser } from "@/utils/user"
+import { userFetch } from "@/lib/userAuth"
 import { formatCurrency } from "@/utils/helpers"
 
 const STATUS_CONFIG = {
@@ -65,13 +66,8 @@ export default function OrderHistory({ isOpen, onClose }) {
 
     setOrdersLoading(true)
     setError("")
-    const userToken = localStorage.getItem('user_token')
     try {
-      const response = await fetch(`/api/orders?user_id=${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${userToken}`,
-        }
-      })
+      const response = await fetch(`/api/orders?user_id=${userId}`)
       const data = await response.json()
 
       if (data.success) {
@@ -187,14 +183,9 @@ export default function OrderHistory({ isOpen, onClose }) {
 
   // Handle view detail
   const handleViewDetail = async (order) => {
-    const userToken = localStorage.getItem('user_token')
     try {
       // Fetch full order details to get status_history and change_history
-      const response = await fetch(`/api/orders/${order.order_id}`, {
-        headers: {
-          'Authorization': `Bearer ${userToken}`,
-        }
-      })
+      const response = await userFetch(`/api/orders/${order.order_id}`)
       const data = await response.json()
 
       if (data.success) {
@@ -229,13 +220,11 @@ export default function OrderHistory({ isOpen, onClose }) {
 
     setShowCancelModal(false)
     setCancelling(true)
-    const userToken = localStorage.getItem('user_token')
     try {
-      const response = await fetch(`/api/orders/${selectedOrder.order_id}`, {
+      const response = await userFetch(`/api/orders/${selectedOrder.order_id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${userToken}`,
         },
         body: JSON.stringify({
           status: "cancelled",

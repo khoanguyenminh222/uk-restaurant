@@ -47,11 +47,12 @@ export async function PUT(request, { params }) {
 
     // Check authentication (allow both admin and regular user)
     const requester = await getUserFromToken(request);
+
+    // Guest cancellation logic: requester might be null
+    let isGuest = false;
     if (!requester) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
+      isGuest = true;
+      // For guests, we don't return 401 immediately. We check if they are trying to cancel their own order.
     }
 
     const client = await clientPromise;
@@ -66,9 +67,35 @@ export async function PUT(request, { params }) {
       );
     }
 
-    // Permission check: admin or the order owner
-    const isAdmin = ['admin', 'super_admin', 'manager'].includes(requester.role);
-    const isOwner = order.user_id === requester.user_id;
+    // Permission check
+    let isAdmin = false;
+    let isOwner = false;
+
+    if (requester) {
+      isAdmin = ['admin', 'super_admin', 'manager'].includes(requester.role);
+      isOwner = order.user_id === requester.user_id;
+    } else {
+      // Guest permission check
+      // Guest can only access if the order is a guest order (no user_id)
+      // AND they provide matching email OR phone
+      if (!order.user_id) {
+        const providedEmail = body.customer_email;
+        const providedPhone = body.customer_phone;
+
+        // Check exact match for security
+        // Note: In a real world scenario, you might want more secure verification (like OTP)
+        // But for this requirement "khách họ không đăng nhập, họ vẫn tạo đơn, hủy đơn được", 
+        // strictly matching the contact info used to create the order is a reasonable step.
+        const emailMatch = providedEmail && order.customer_email &&
+          providedEmail.toLowerCase().trim() === order.customer_email.toLowerCase().trim();
+        const phoneMatch = providedPhone && order.customer_phone &&
+          providedPhone.replace(/\s+/g, "") === order.customer_phone.replace(/\s+/g, "");
+
+        if (emailMatch || phoneMatch) {
+          isOwner = true; // Treat as owner for this specific request
+        }
+      }
+    }
 
     if (!isAdmin && !isOwner) {
       return NextResponse.json(
@@ -77,7 +104,7 @@ export async function PUT(request, { params }) {
       );
     }
 
-    // If regular user, only allow cancelling pending orders
+    // If regular user or guest, only allow cancelling pending orders
     if (!isAdmin && isOwner) {
       if (body.status !== 'cancelled') {
         return NextResponse.json(
@@ -221,14 +248,24 @@ export async function PUT(request, { params }) {
           role: requester.role || 'admin',
         };
       } else if (isOwner) {
-        // User (the owner themselves)
-        changedByDetail = {
-          type: 'user',
-          user_id: requester.user_id || requester._id?.toString() || '',
-          name: requester.name || '',
-          phone: requester.phone || '',
-          email: requester.email || '',
-        };
+        if (requester) {
+          // Logged in User
+          changedByDetail = {
+            type: 'user',
+            user_id: requester.user_id || requester._id?.toString() || '',
+            name: requester.name || '',
+            phone: requester.phone || '',
+            email: requester.email || '',
+          };
+        } else {
+          // Guest User
+          changedByDetail = {
+            type: 'customer', // Use 'customer' for guests to distinguish from registered 'user'
+            name: order.customer_name || body.customer_name || 'Guest',
+            phone: order.customer_phone || body.customer_phone || '',
+            email: order.customer_email || body.customer_email || '',
+          };
+        }
       }
 
       // Fallback to system if no detail
@@ -241,7 +278,7 @@ export async function PUT(request, { params }) {
       updateData.status_history.push({
         status: body.status,
         changed_at: new Date(),
-        changed_by: body.changed_by || (isAdmin ? 'admin' : (isOwner ? 'user' : 'system')),
+        changed_by: body.changed_by || (isAdmin ? 'admin' : (isOwner ? (requester ? 'user' : 'customer') : 'system')),
         changed_by_detail: changedByDetail,
       });
     }
@@ -300,13 +337,22 @@ export async function PUT(request, { params }) {
           role: requester.role || 'admin',
         };
       } else if (isOwner) {
-        changedByDetail = {
-          type: 'user',
-          user_id: requester.user_id || requester._id?.toString() || '',
-          name: requester.name || '',
-          phone: requester.phone || '',
-          email: requester.email || '',
-        };
+        if (requester) {
+          changedByDetail = {
+            type: 'user',
+            user_id: requester.user_id || requester._id?.toString() || '',
+            name: requester.name || '',
+            phone: requester.phone || '',
+            email: requester.email || '',
+          };
+        } else {
+          changedByDetail = {
+            type: 'customer',
+            name: order.customer_name || body.customer_name || 'Guest',
+            phone: order.customer_phone || body.customer_phone || '',
+            email: order.customer_email || body.customer_email || '',
+          };
+        }
       }
 
       if (!changedByDetail) {
@@ -325,7 +371,7 @@ export async function PUT(request, { params }) {
       // Add new change entry
       updateData.change_history.push({
         changed_at: new Date(),
-        changed_by: body.changed_by || (isAdmin ? 'admin' : (isOwner ? 'user' : 'system')),
+        changed_by: body.changed_by || (isAdmin ? 'admin' : (isOwner ? (requester ? 'user' : 'customer') : 'system')),
         changed_by_detail: changedByDetail,
         changes: changes,
       });
@@ -358,13 +404,19 @@ export async function PUT(request, { params }) {
     // Send Telegram notification if order is cancelled (fire and forget)
     if (body.status === 'cancelled') {
       try {
-        let cancelledBy = body.changed_by || (isAdmin ? 'admin' : (isOwner ? 'user' : 'system'));
+        let cancelledBy = body.changed_by || (isAdmin ? 'admin' : (isOwner ? (requester ? 'user' : 'customer') : 'system'));
 
         // Nếu là admin/manager/super_admin và có thông tin admin, sử dụng tên admin
         if (isAdmin && requester) {
           cancelledBy = requester.name || requester.phone || cancelledBy;
-        } else if (isOwner && requester) {
-          cancelledBy = requester.name || requester.phone || cancelledBy;
+        } else if (isOwner) {
+          if (requester) {
+            cancelledBy = requester.name || requester.phone || cancelledBy;
+          } else {
+            // Guest
+            cancelledBy = order.customer_name || order.customer_phone || 'Khách vãng lai';
+            if (order.customer_phone) cancelledBy += ` (${order.customer_phone})`;
+          }
         }
 
         const reason = body.cancel_reason || body.admin_notes || body.notes || updatedOrder.cancel_reason || '';

@@ -6,6 +6,7 @@ import { Phone, Lock, Eye, EyeOff, Loader2, Shield } from 'lucide-react';
 import Toast from '@/components/Toast/Toast';
 import { useLandingConfig } from '@/hooks/useLandingConfig';
 import { saveAdminSession, isAdminLoggedIn, getAdminData } from '@/lib/adminAuth';
+import { saveUser } from '@/utils/user';
 
 export default function AdminLogin() {
   const [phone, setPhone] = useState('');
@@ -73,6 +74,10 @@ export default function AdminLogin() {
       if (data.success) {
         // Lưu thông tin admin và token vào localStorage
         saveAdminSession(data.data, data.token);
+
+        // Đồng bộ hóa với phiên người dùng để trang chủ nhận diện đã đăng nhập
+        saveUser(data.data);
+        localStorage.setItem('user_token', data.token);
 
         // Save success message
         localStorage.setItem('admin_login_success_message', 'Đăng nhập thành công!');
