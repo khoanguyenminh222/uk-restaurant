@@ -57,15 +57,30 @@ export function isAdminLoggedIn() {
 
 /**
  * Authenticated fetch wrapper
- * Automatically adds Authorization header and handles 401/403 errors
+ * Automatically adds Authorization header, handles token refresh, and handles 401/403 errors
  */
 export async function adminFetch(url, options = {}) {
-    const token = getAdminToken();
+    let token = getAdminToken();
 
     // If no token, logout and redirect
     if (!token) {
         handleUnauthorized();
         throw new Error('No authentication token found');
+    }
+
+    // Check if token is near expiry (less than 2 hours left)
+    // We refresh early to ensure a smooth experience
+    if (isTokenNearExpiry(token)) {
+        try {
+            const newToken = await refreshAdminToken();
+            if (newToken) {
+                token = newToken;
+            }
+        } catch (error) {
+            console.error('Failed to refresh token:', error);
+            // If refresh fails but we still have a token, we can try to proceed
+            // but if it was 401, the main fetch will catch it anyway
+        }
     }
 
     // Add Authorization header
@@ -87,6 +102,62 @@ export async function adminFetch(url, options = {}) {
     }
 
     return response;
+}
+
+/**
+ * Check if a JWT token is near its expiration time (less than 2 hours)
+ */
+function isTokenNearExpiry(token) {
+    try {
+        // Simple JWT decode (payload is the second part)
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+
+        const payload = JSON.parse(jsonPayload);
+        if (!payload.exp) return false;
+
+        const now = Math.floor(Date.now() / 1000);
+        const timeLeft = payload.exp - now;
+
+        // Refresh if less than 2 hours (7200 seconds) left
+        return timeLeft < 7200;
+    } catch (e) {
+        return false;
+    }
+}
+
+/**
+ * Call the refresh API to get a new token
+ */
+async function refreshAdminToken() {
+    const token = getAdminToken();
+    if (!token) return null;
+
+    try {
+        const response = await fetch('/api/admin/refresh', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            if (result.success && result.token) {
+                // Save the new token
+                localStorage.setItem('admin_token', result.token);
+                console.log('Admin token refreshed successfully');
+                return result.token;
+            }
+        }
+        return null;
+    } catch (error) {
+        console.error('Error refreshing token:', error);
+        return null;
+    }
 }
 
 /**
