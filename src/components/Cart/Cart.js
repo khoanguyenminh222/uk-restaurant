@@ -158,14 +158,14 @@ export default function Cart({ isOpen, onClose }) {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-60 transition-opacity duration-300"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Cart Sidebar */}
       <div
-        className={`fixed top-0 right-0 h-full w-full sm:max-w-sm bg-card shadow-2xl z-50 flex flex-col transform transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "translate-x-full"
+        className={`fixed top-0 right-0 h-full w-full sm:max-w-sm bg-card shadow-2xl z-70 flex flex-col transform transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "translate-x-full"
           }`}
       >
         {/* Header */}
