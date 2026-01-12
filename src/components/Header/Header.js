@@ -242,7 +242,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
               <div className="w-10 h-10 bg-muted animate-pulse rounded-lg"></div>
               <div className="w-32 h-6 bg-muted animate-pulse rounded-lg"></div>
             </div>
-            <div className="hidden md:flex gap-8">
+            <div className="hidden 2xl:flex gap-8">
               {[1, 2, 3, 4].map(i => (
                 <div key={i} className="w-20 h-4 bg-muted animate-pulse rounded-lg"></div>
               ))}
@@ -364,7 +364,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
           </button>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1 cursor-pointer" aria-label="Điều hướng chính">
+          <nav className="hidden 2xl:flex items-center gap-1 cursor-pointer" aria-label="Điều hướng chính">
             {menuItems.map((item) => {
               const IconComponent = item.icon
               return (
@@ -387,7 +387,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
           {/* Cart Icon & Login Button */}
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             {/* Theme Toggle */}
-            <div className="hidden md:block">
+            <div className="hidden 2xl:block">
               <ThemeToggle />
             </div>
 
@@ -407,7 +407,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
 
             {/* User Menu or Login Button */}
             {user ? (
-              <div className="relative hidden md:block" ref={userMenuRef}>
+              <div className="relative hidden 2xl:block" ref={userMenuRef}>
                 <button
                   ref={userButtonRef}
                   onClick={() => {
@@ -501,7 +501,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
               onLoginClick && (
                 <button
                   onClick={onLoginClick}
-                  className="hidden md:flex items-center gap-2 px-3 py-2 cursor-pointer text-foreground hover:text-primary transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded-lg"
+                  className="hidden 2xl:flex items-center gap-2 px-3 py-2 cursor-pointer text-foreground hover:text-primary transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded-lg"
                   aria-label="Đăng nhập"
                 >
                   <User className="w-5 h-5 shrink-0" />
@@ -513,7 +513,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 rounded-lg cursor-pointer text-foreground hover:text-primary hover:bg-muted transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background shrink-0"
+              className="2xl:hidden p-2 rounded-lg cursor-pointer text-foreground hover:text-primary hover:bg-muted transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background shrink-0"
               aria-label={isMenuOpen ? "Đóng menu" : "Mở menu"}
               aria-expanded={isMenuOpen}
               aria-controls="mobile-menu"
@@ -527,7 +527,9 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
       {/* Mobile Menu */}
       <div
         id="mobile-menu"
-        className={`md:hidden cursor-pointer bg-card border-t border-border transition-all duration-300 ease-in-out overflow-hidden ${isMenuOpen ? "opacity-100" : "max-h-0 opacity-0"
+        className={`2xl:hidden cursor-pointer bg-card border-t border-border transition-all duration-300 ease-in-out ${isMenuOpen
+          ? "opacity-100 max-h-[calc(100vh-4rem)] sm:max-h-[calc(100vh-6rem)] sm:overflow-y-auto"
+          : "max-h-0 opacity-0 overflow-hidden"
           }`}
       >
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

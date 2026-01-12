@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { X, Eye, EyeOff, Mail, Phone, User, MapPin, Lock } from "lucide-react"
 import { saveUser } from "@/utils/user"
+import { clearCustomerInfo } from "@/utils/customer"
 import { saveAdminSession } from "@/lib/adminAuth"
 
 export default function Auth({ isOpen, onClose, initialTab = "login" }) {
@@ -227,6 +228,9 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
         if (['admin', 'super_admin', 'manager'].includes(data.data.role)) {
           saveAdminSession(data.data, data.token)
         }
+
+        // Clear guest access info
+        clearCustomerInfo()
 
         // Save success message to show after reload
         localStorage.setItem('login_success_message', 'Đăng nhập thành công!')
@@ -601,6 +605,9 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
             if (['admin', 'super_admin', 'manager'].includes(loginData.data.role)) {
               saveAdminSession(loginData.data, loginData.token)
             }
+
+            // Clear guest access info
+            clearCustomerInfo()
 
             // Close modal
             onClose()

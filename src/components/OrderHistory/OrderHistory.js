@@ -582,7 +582,7 @@ export default function OrderHistory({ isOpen, onClose }) {
       {/* Cancel Confirmation Modal */}
       {showCancelModal && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70] p-4 transition-all duration-300"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-70 p-4 transition-all duration-300"
         >
           <div
             ref={cancelModalRef}

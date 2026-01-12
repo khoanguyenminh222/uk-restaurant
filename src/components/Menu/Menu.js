@@ -450,7 +450,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
         // VÀ Bottom của Menu vẫn còn nằm dưới màn hình một chút
         // Update: Chỉnh threshold top < 200 (thay vì windowHeight - 100) để tránh overlap với Hero button
         const shouldShowScrollBtn =
-          menuRect.top < 200 &&
+          menuRect.top < 500 &&
           menuRect.bottom > windowHeight
 
         setShowScrollButton(shouldShowScrollBtn)
@@ -508,7 +508,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
   }, [])
 
   return (
-    <section id="menu" ref={menuSectionRef} className="pb-8 md:pb-12 px-4 sm:px-6 lg:px-8 bg-muted relative">
+    <section id="menu" ref={menuSectionRef} className="pt-4 pb-8 md:pb-12 px-4 sm:px-6 lg:px-8 bg-muted relative">
       <div className="max-w-6xl mx-auto overflow-hidden">
         {/* Section Header - Design đặc biệt cho landing page */}
         <div
@@ -519,7 +519,7 @@ export default function Menu({ onAddToCart, onOrderClick }) {
             {/* Decorative background */}
             {/* <div className="absolute inset-0 bg-linear-to-r from-primary/20 via-primary/20 to-primary/20 rounded-3xl blur-3xl -z-10 transform"></div> */}
 
-            <div className="relative px-8 py-6">
+            <div className="relative px-8 pt-6">
               <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold font-display mb-2 bg-linear-to-r from-primary via-primary-light to-primary bg-clip-text text-transparent">
                 {sectionTitle}
               </h2>
