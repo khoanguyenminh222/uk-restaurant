@@ -1,34 +1,26 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import Header from "@/components/Header/Header"
 import Hero from "@/components/Hero/Hero"
 import Menu from "@/components/Menu/Menu"
 import WhyChooseUs from "@/components/WhyChooseUs/WhyChooseUs"
 import Testimonials from "@/components/Testimonials/Testimonials"
-import Footer from "@/components/Footer/Footer"
-import ScrollToTop from "@/components/ScrollToTop/ScrollToTop"
-import Cart from "@/components/Cart/Cart"
-import Toast from "@/components/Toast/Toast"
-import Auth from "@/components/Auth/Auth"
-import OrderForm from "@/components/OrderForm/OrderForm"
-import UserProfile from "@/components/UserProfile/UserProfile"
-import OrderHistory from "@/components/OrderHistory/OrderHistory"
 import ReviewForm from "@/components/ReviewForm/ReviewForm"
 import { useLandingConfig } from "@/hooks/useLandingConfig"
+import { useLayoutContext } from "@/contexts/LayoutContext"
 
 export default function Home() {
   const { config } = useLandingConfig()
-  const [isCartOpen, setIsCartOpen] = useState(false)
-  const [isAuthOpen, setIsAuthOpen] = useState(false)
-  const [isOrderFormOpen, setIsOrderFormOpen] = useState(false)
-  const [isUserProfileOpen, setIsUserProfileOpen] = useState(false)
-  const [isOrderHistoryOpen, setIsOrderHistoryOpen] = useState(false)
+  const {
+    openCart,
+    openAuth,
+    showToast,
+    openUserProfile,
+    openOrderHistory,
+    openOrderForm
+  } = useLayoutContext()
+
   const [isReviewFormOpen, setIsReviewFormOpen] = useState(false)
-  const [orderFormItems, setOrderFormItems] = useState(null)
-  const [authTab, setAuthTab] = useState("login")
-  const [toast, setToast] = useState({ message: "", isVisible: false })
-  const cartIconRef = useRef(null)
   const [flyingItem, setFlyingItem] = useState(null)
 
   // Hàm helper để kiểm tra xem một section có được hiển thị không
@@ -47,24 +39,17 @@ export default function Home() {
     const logoutMessage = localStorage.getItem('logout_success_message')
 
     if (loginMessage) {
-      setToast({ message: loginMessage, isVisible: true, type: 'success' })
+      showToast(loginMessage, 'success')
       localStorage.removeItem('login_success_message')
     } else if (logoutMessage) {
-      setToast({ message: logoutMessage, isVisible: true, type: 'success' })
+      showToast(logoutMessage, 'success')
       localStorage.removeItem('logout_success_message')
     }
-  }, [])
-
-  const handleCartClick = () => {
-    setIsCartOpen(true)
-  }
+  }, [showToast])
 
   const handleAddToCart = ({ food, position }) => {
     // Show toast
-    setToast({
-      message: `Đã thêm "${food.name}" vào giỏ hàng`,
-      isVisible: true,
-    })
+    showToast(`Đã thêm "${food.name}" vào giỏ hàng`, 'success')
 
     // Get cart icon position
     const cartIcon = document.querySelector('[aria-label*="Giỏ hàng"]')
@@ -90,121 +75,62 @@ export default function Home() {
       })
 
       // Remove flying item after animation
-      setTimeout(() => setFlyingItem(null), 800)
+      setTimeout(() => {
+        setFlyingItem(null)
+        // openCart() // Removed: Don't open cart, let user decide
+      }, 800)
+    } else {
+      // If cart icon not found, don't open cart immediately
+      // openCart()
     }
   }
 
-  const handleCloseToast = () => {
-    setToast({ ...toast, isVisible: false })
-  }
-
-  const handleCartClose = () => {
-    setIsCartOpen(false)
-  }
-
-  const handleCheckout = (cart) => {
-    setIsCartOpen(false)
-    setOrderFormItems(cart)
-    setIsOrderFormOpen(true)
-  }
-
-  const handleOrderSuccess = (orderData) => {
-    setToast({
-      message: `Đặt hàng thành công! Mã đơn hàng: ${orderData.order_id}`,
-      isVisible: true,
-    })
-  }
-
   const handleOrderNow = (food) => {
-    setOrderFormItems(food)
-    setIsOrderFormOpen(true)
+    // Use global OrderForm
+    openOrderForm(food)
   }
 
-  // Listen for toast events from OrderForm
+  // Listen for toast events from other components if any (legacy support)
   useEffect(() => {
     const handleShowToast = (event) => {
-      setToast({
-        message: event.detail.message,
-        isVisible: true,
-        type: event.detail.type || "success",
-      })
+      showToast(
+        event.detail.message,
+        event.detail.type || "success"
+      )
     }
 
     window.addEventListener("showToast", handleShowToast)
     return () => window.removeEventListener("showToast", handleShowToast)
-  }, [])
-
-  const handleLoginClick = () => {
-    setAuthTab("login")
-    setIsAuthOpen(true)
-  }
-
-  const handleProfileClick = () => {
-    setIsUserProfileOpen(true)
-  }
-
-  const handleOrderHistoryClick = () => {
-    // Mở OrderHistory để xem lịch sử đơn hàng
-    setIsOrderHistoryOpen(true)
-  }
+  }, [showToast])
 
   return (
     <div className="min-h-screen bg-background">
-      <Header
-        onCartClick={handleCartClick}
-        onLoginClick={handleLoginClick}
-        onProfileClick={handleProfileClick}
-        onOrderHistoryClick={handleOrderHistoryClick}
-      />
+      {/* Header is now in ClientLayout */}
+
       <main>
         {isSectionVisible("home") && <Hero />}
-        {/* Scroll Indicator */}
-        {/* <div className="relative flex justify-center py-8 bg-background">
-          <div className="animate-bounce">
-            <div className="w-6 h-10 border-2 border-primary rounded-full flex items-start justify-center p-2">
-              <div className="w-1.5 h-3 bg-primary rounded-full animate-pulse"></div>
-            </div>
-          </div>
-        </div> */}
+
         {isSectionVisible("menu") && (
-          <Menu onAddToCart={handleAddToCart} onOrderClick={handleOrderNow} />
+          <Menu
+            onAddToCart={handleAddToCart}
+            onOrderClick={handleOrderNow}
+            showToast={showToast}
+            onAuthRequired={() => openAuth("login")}
+          />
         )}
+
         {isSectionVisible("why-choose-us") && <WhyChooseUs />}
+
         {isSectionVisible("testimonials") && (
           <Testimonials onReviewFormClick={() => setIsReviewFormOpen(true)} />
         )}
       </main>
-      <Footer />
-      <ScrollToTop />
-      <Cart isOpen={isCartOpen} onClose={handleCartClose} onCheckout={handleCheckout} />
-      <Auth
-        isOpen={isAuthOpen}
-        onClose={() => setIsAuthOpen(false)}
-        initialTab={authTab}
-      />
-      <OrderForm
-        isOpen={isOrderFormOpen}
-        onClose={() => setIsOrderFormOpen(false)}
-        items={orderFormItems}
-        onSuccess={handleOrderSuccess}
-      />
-      <UserProfile
-        isOpen={isUserProfileOpen}
-        onClose={() => setIsUserProfileOpen(false)}
-      />
-      <OrderHistory
-        isOpen={isOrderHistoryOpen}
-        onClose={() => setIsOrderHistoryOpen(false)}
-      />
+
+      {/* Footer, ScrollToTop, Cart, Auth, UserProfile, OrderHistory, Toast, OrderForm are now in ClientLayout */}
+
       <ReviewForm
         isOpen={isReviewFormOpen}
         onClose={() => setIsReviewFormOpen(false)}
-      />
-      <Toast
-        message={toast.message}
-        isVisible={toast.isVisible}
-        onClose={handleCloseToast}
-        type={toast.type || "success"}
       />
 
       {/* Flying Item Animation */}

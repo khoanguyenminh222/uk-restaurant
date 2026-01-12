@@ -5,8 +5,10 @@ import { X, Plus, Minus, Trash2, ShoppingBag } from "lucide-react"
 import Image from "next/image"
 import { getCart, updateCartItem, removeFromCart, clearCart, getCartTotal, addToCart } from "@/utils/cart"
 import { formatCurrency } from "@/utils/helpers"
+import { useLayoutContext } from "@/contexts/LayoutContext"
 
-export default function Cart({ isOpen, onClose, onCheckout }) {
+export default function Cart({ isOpen, onClose }) {
+  const { openOrderForm } = useLayoutContext()
   const [cart, setCart] = useState([])
   const [isAnimating, setIsAnimating] = useState(false)
   const [removingItemId, setRemovingItemId] = useState(null)
@@ -103,7 +105,7 @@ export default function Cart({ isOpen, onClose, onCheckout }) {
         ...item,
         deletedAt: Date.now()
       })
-      
+
       // Animate removal
       setRemovingItemId(itemId)
       setTimeout(() => {
@@ -145,9 +147,7 @@ export default function Cart({ isOpen, onClose, onCheckout }) {
   const handleCheckout = () => {
     if (cart.length === 0) return
     onClose()
-    if (onCheckout) {
-      onCheckout(cart)
-    }
+    openOrderForm(cart)
   }
 
   const total = getCartTotal()
@@ -165,9 +165,8 @@ export default function Cart({ isOpen, onClose, onCheckout }) {
 
       {/* Cart Sidebar */}
       <div
-        className={`fixed top-0 right-0 h-full w-full sm:max-w-sm bg-card shadow-2xl z-50 flex flex-col transform transition-transform duration-300 ease-in-out ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`fixed top-0 right-0 h-full w-full sm:max-w-sm bg-card shadow-2xl z-50 flex flex-col transform transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "translate-x-full"
+          }`}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-6 border-b border-border shrink-0">
@@ -198,13 +197,11 @@ export default function Cart({ isOpen, onClose, onCheckout }) {
               {cart.map((item) => (
                 <div
                   key={item.id}
-                  className={`bg-muted rounded-lg p-4 border border-border transition-all duration-300 ${
-                    removingItemId === item.id 
-                      ? "opacity-0 scale-95 -translate-x-full" 
-                      : "opacity-100 scale-100 translate-x-0"
-                  } ${
-                    showConfirmDelete === item.id ? "ring-2 ring-destructive" : ""
-                  }`}
+                  className={`bg-muted rounded-lg p-4 border border-border transition-all duration-300 ${removingItemId === item.id
+                    ? "opacity-0 scale-95 -translate-x-full"
+                    : "opacity-100 scale-100 translate-x-0"
+                    } ${showConfirmDelete === item.id ? "ring-2 ring-destructive" : ""
+                    }`}
                 >
                   <div className="flex gap-3 sm:gap-4">
                     {/* Image */}
@@ -295,11 +292,11 @@ export default function Cart({ isOpen, onClose, onCheckout }) {
 
         {/* Confirmation Dialog - Delete Item */}
         {showConfirmDelete && (
-          <div 
+          <div
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={() => setShowConfirmDelete(null)}
           >
-            <div 
+            <div
               className="bg-card rounded-lg border border-border shadow-xl max-w-sm w-full p-6 animate-fade-in-scale"
               onClick={(e) => e.stopPropagation()}
             >
@@ -333,11 +330,11 @@ export default function Cart({ isOpen, onClose, onCheckout }) {
 
         {/* Confirmation Dialog - Clear Cart */}
         {showConfirmClearCart && (
-          <div 
+          <div
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={() => setShowConfirmClearCart(false)}
           >
-            <div 
+            <div
               className="bg-card rounded-lg border border-border shadow-xl max-w-sm w-full p-6 animate-fade-in-scale"
               onClick={(e) => e.stopPropagation()}
             >

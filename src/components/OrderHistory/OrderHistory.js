@@ -649,7 +649,7 @@ export default function OrderHistory({ isOpen, onClose }) {
       {/* Status History Modal */}
       {showHistoryModal && selectedOrder && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300"
+          className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 transition-all duration-300"
           style={{ zIndex: 70 }}
         >
           <div

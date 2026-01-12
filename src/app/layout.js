@@ -3,6 +3,8 @@ import "./globals.css";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { getRestaurantName, getSlogan, getSEOConfig, getIconConfig } from "@/lib/restaurantConfig";
 import { getStorageKey, STORAGE_KEYS } from "@/utils/storage";
+import { LayoutProvider } from "@/contexts/LayoutContext";
+import ClientLayout from "@/components/Layout/ClientLayout";
 
 // Force dynamic rendering để metadata (bao gồm icons) được reload mỗi lần request
 // Điều này đảm bảo khi thay đổi icon trong admin panel, nó sẽ được cập nhật ngay mà không cần restart
@@ -33,29 +35,29 @@ export async function generateMetadata() {
   const defaultSlogan = "Ăn no khỏi 'bàn'";
   const name = restaurantName || defaultName;
   const tagline = slogan || defaultSlogan;
-  
+
   // Lấy base URL từ environment variable hoặc dùng localhost cho development
   const metadataBase = process.env.NEXT_PUBLIC_BASE_URL;
-  
+
   // Sử dụng SEO config từ database, fallback về giá trị mặc định
   const metaTitle = seoConfig.meta_title || `${name} - ${tagline}`;
   const metaDescription = seoConfig.meta_description || `Website đặt món online ${name} - Đặt món nhanh chóng, tiện lợi. Khám phá hương vị đặc biệt với thực đơn đa dạng, nguyên liệu tươi ngon và dịch vụ tận tâm`;
   const metaKeywords = seoConfig.meta_keywords || `nhà hàng, đặt món online, ${name}, đồ ăn, giao hàng, thực phẩm tươi ngon`;
-  
+
   const ogTitle = seoConfig.og_title || metaTitle;
   const ogDescription = seoConfig.og_description || metaDescription;
   const ogImage = seoConfig.og_image || "/og-image.jpg";
   const ogType = seoConfig.og_type || "website";
   const ogLocale = seoConfig.og_locale || "vi_VN";
-  
+
   const twitterCard = seoConfig.twitter_card || "summary_large_image";
   const twitterTitle = seoConfig.twitter_title || ogTitle;
   const twitterDescription = seoConfig.twitter_description || ogDescription;
   const twitterImage = seoConfig.twitter_image || ogImage;
-  
+
   const robotsIndex = seoConfig.robots_index !== false;
   const robotsFollow = seoConfig.robots_follow !== false;
-  
+
   // Xử lý icon URLs - luôn export icons trong metadata
   // Nếu là absolute URL (http/https) thì dùng trực tiếp, nếu không thì resolve với metadataBase
   const faviconUrl = iconConfig.favicon.startsWith('http://') || iconConfig.favicon.startsWith('https://')
@@ -64,7 +66,7 @@ export async function generateMetadata() {
   const appleIconUrl = iconConfig.apple.startsWith('http://') || iconConfig.apple.startsWith('https://')
     ? iconConfig.apple
     : new URL(iconConfig.apple, metadataBase).toString();
-  
+
   return {
     metadataBase,
     title: metaTitle,
@@ -121,7 +123,7 @@ export const viewport = {
 
 export default async function RootLayout({ children }) {
   const themeStorageKey = getStorageKey(STORAGE_KEYS.THEME);
-  
+
   return (
     <html lang="vi" className="scroll-smooth" suppressHydrationWarning>
       <body
@@ -145,7 +147,11 @@ export default async function RootLayout({ children }) {
           }}
         />
         <ThemeProvider>
-          {children}
+          <LayoutProvider>
+            <ClientLayout>
+              {children}
+            </ClientLayout>
+          </LayoutProvider>
         </ThemeProvider>
       </body>
     </html>

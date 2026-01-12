@@ -4,8 +4,6 @@ import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
-import Header from "@/components/Header/Header"
-import Footer from "@/components/Footer/Footer"
 import { useScrollAnimation } from "@/hooks/useScrollAnimation"
 import { useAboutConfig } from "@/hooks/useAboutConfig"
 import { useLandingConfig } from "@/hooks/useLandingConfig"
@@ -94,8 +92,7 @@ export default function AboutPage() {
   }))
 
   return (
-    <main className="min-h-screen bg-background">
-      <Header />
+    <div className="min-h-screen bg-background">
 
       {/* Hero Section */}
       <section
@@ -427,7 +424,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <Footer />
-    </main>
+
+    </div>
   )
 }

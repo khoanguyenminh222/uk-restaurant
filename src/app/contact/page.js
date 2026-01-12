@@ -13,8 +13,6 @@ import { useContactConfig } from '@/hooks/useContactConfig'
 import { useLandingConfig } from '@/hooks/useLandingConfig'
 import { useScrollAnimation } from '@/hooks/useScrollAnimation'
 import Link from 'next/link'
-import Header from '@/components/Header/Header'
-import Footer from '@/components/Footer/Footer'
 
 // Icons mapping helper
 const FacebookIcon = ({ className }) => (
@@ -282,8 +280,8 @@ export default function ContactPage() {
   const SubmitIcon = getIconComponent(contactForm.fields?.submit_icon || 'Send');
 
   return (
-    <main className="min-h-screen bg-background overflow-hidden selection:bg-primary/20">
-      <Header />
+    <div className="min-h-screen bg-background overflow-hidden selection:bg-primary/20">
+
       {/* Decorative Background Elements */}
       <div className="fixed inset-0 pointer-events-none -z-10">
         <div className="absolute top-0 right-0 w-3/4 h-3/4 bg-primary/5 rounded-full blur-[100px] translate-x-1/3 -translate-y-1/3"></div>
@@ -737,7 +735,7 @@ export default function ContactPage() {
         </section>
       )}
 
-      <Footer />
-    </main>
+
+    </div>
   )
 }

@@ -27,10 +27,14 @@ export async function POST(request) {
     // Check if phone already exists
     const existingPhone = await db.collection('users').findOne({ phone: body.phone });
     if (existingPhone) {
-      return NextResponse.json(
-        { success: false, error: 'Số điện thoại đã được sử dụng' },
-        { status: 400 }
-      );
+      // Nếu đã tồn tại và đã verify -> Báo lỗi
+      if (existingPhone.email_verified) {
+        return NextResponse.json(
+          { success: false, error: 'Số điện thoại đã được sử dụng' },
+          { status: 400 }
+        );
+      }
+      // Nếu chưa verify -> Cho phép ghi đè/update (User đang đăng ký lại/sửa thông tin)
     }
 
     // Check if email is blacklisted
@@ -48,12 +52,26 @@ export async function POST(request) {
     }
 
     // Check if email already exists
+    // Cần check xem email có thuộc về user k
     const existingEmail = await db.collection('users').findOne({ email: normalizedEmail });
     if (existingEmail) {
-      return NextResponse.json(
-        { success: false, error: 'Email đã được sử dụng' },
-        { status: 400 }
-      );
+      // Nếu email đã có người dùng
+      // 1. Nếu là người khác (phone khác)
+      if (existingEmail.phone !== body.phone) {
+        if (existingEmail.email_verified) {
+          return NextResponse.json(
+            { success: false, error: 'Email đã được sử dụng' },
+            { status: 400 }
+          );
+        }
+        // Nếu email thuộc về user chưa verify khác -> Có thể báo lỗi hoặc cho phép (tùy policy).
+        // Ở đây báo lỗi cho an toàn để tránh confuse
+        return NextResponse.json(
+          { success: false, error: 'Email đã được sử dụng bởi tài khoản khác đang chờ xác thực' },
+          { status: 400 }
+        );
+      }
+      // 2. Nếu là chính user này (phone giống) -> OK, sẽ update bên dưới
     }
 
     // Hash password
@@ -66,42 +84,61 @@ export async function POST(request) {
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
     const verificationCodeExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
-    // Create user object
-    const user = {
-      user_id,
+    // Create user object payload
+    const userPayload = {
       phone: body.phone,
       name: body.name.trim(),
       email: normalizedEmail,
       password: hashedPassword,
       address: body.address?.trim() || '',
-      role: 'user', // Default role for regular users
+      role: existingPhone ? existingPhone.role : 'user', // Keep existing role if updating, else default
       email_verified: false,
       verification_code: verificationCode,
       verification_code_expires: verificationCodeExpires,
-      created_at: new Date(),
+      created_at: existingPhone ? existingPhone.created_at : new Date(), // Keep original created_at if updating
+      updated_at: new Date(),
       last_login: null,
     };
 
-    // Insert user
-    const result = await db.collection('users').insertOne(user);
+    let result;
+    if (existingPhone) {
+      // Update existing unverified user
+      await db.collection('users').updateOne(
+        { phone: body.phone },
+        { $set: userPayload }
+      );
+      result = { insertedId: existingPhone._id }; // Mock result for response
+    } else {
+      // Insert new user
+      userPayload.user_id = user_id; // Add user_id only for new insert
+      result = await db.collection('users').insertOne(userPayload);
+    }
 
     // Send verification email
     // Verification code expires in 15 minutes (from verificationCodeExpires)
     const expiresInMinutes = 15;
+    let emailSent = true;
+    let emailError = null;
+
     try {
-      await sendVerificationEmail(
-        user.email,
+      const emailResult = await sendVerificationEmail(
+        userPayload.email,
         verificationCode,
-        user.name,
+        userPayload.name,
         expiresInMinutes
       );
-    } catch (emailError) {
-      console.error('Error sending verification email:', emailError);
-      // Continue even if email fails (user can request resend later)
+
+      if (!emailResult.success) {
+        throw new Error(emailResult.error || 'Lỗi hệ thống khi gửi email xác thực. Vui lòng thử lại sau.');
+      }
+    } catch (err) {
+      console.error('Error sending verification email:', err);
+      emailSent = false;
+      emailError = err.message || 'Error sending email';
     }
 
     // Return user without password
-    const { password, ...userWithoutPassword } = user;
+    const { password, ...userWithoutPassword } = userPayload;
 
     return NextResponse.json(
       {
@@ -110,8 +147,10 @@ export async function POST(request) {
           _id: result.insertedId,
           ...userWithoutPassword,
         },
+        emailSent,
+        emailError: emailSent ? null : (emailError || 'Không thể gửi email xác thực. Vui lòng kiểm tra lại email hoặc thử gửi lại sau.'),
       },
-      { status: 201 }
+      { status: existingPhone ? 200 : 201 }
     );
   } catch (error) {
     console.error('Error registering user:', error);

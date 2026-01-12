@@ -65,7 +65,7 @@ export async function POST(request) {
 
     if (!emailResult.success) {
       return NextResponse.json(
-        { success: false, error: 'Không thể gửi email. Vui lòng thử lại sau.' },
+        { success: false, error: emailResult.error || 'Không thể gửi email xác thực' },
         { status: 500 }
       );
     }

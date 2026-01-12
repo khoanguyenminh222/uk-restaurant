@@ -5,12 +5,13 @@ import { X, Eye, EyeOff, Mail, Phone, User, MapPin, Lock } from "lucide-react"
 import { saveUser } from "@/utils/user"
 import { clearCustomerInfo } from "@/utils/customer"
 import { saveAdminSession } from "@/lib/adminAuth"
+import { useLayoutContext } from "@/contexts/LayoutContext"
 
 export default function Auth({ isOpen, onClose, initialTab = "login" }) {
+  const { showToast } = useLayoutContext()
   const [activeTab, setActiveTab] = useState(initialTab) // "login" or "register" or "verify" or "forgot-password"
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [successMessage, setSuccessMessage] = useState("")
+
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
@@ -76,8 +77,6 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
   useEffect(() => {
     if (isOpen) {
       setActiveTab(initialTab)
-      setError("")
-      setSuccessMessage("")
       setLoginErrors({})
       setRegisterErrors({})
       setForgotPasswordErrors({})
@@ -124,7 +123,6 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
     if (loginErrors[name]) {
       setLoginErrors((prev) => ({ ...prev, [name]: "" }))
     }
-    setError("")
   }
 
   // Handle register form change
@@ -134,7 +132,6 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
     if (registerErrors[name]) {
       setRegisterErrors((prev) => ({ ...prev, [name]: "" }))
     }
-    setError("")
   }
 
   // Validate login form
@@ -185,7 +182,6 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
   // Handle login submit
   const handleLogin = async (e) => {
     e.preventDefault()
-    setError("")
 
     if (!validateLogin()) {
       return
@@ -251,7 +247,6 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
           })
           setActiveTab("verify")
           setResendCooldown(60) // Cooldown 60 giây
-          setError("")
 
           // Auto resend verification email
           try {
@@ -266,22 +261,22 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
             })
             const resendData = await resendResponse.json()
             if (resendData.success) {
-              setError("") // Clear error, show success message
+              showToast("Đã gửi mã xác thực. Vui lòng kiểm tra email.", "success")
               // Success message will be shown in verification screen
             } else {
-              setError(resendData.error || "Không thể gửi lại email. Vui lòng thử lại sau.")
+              showToast(resendData.error || "Không thể gửi lại email. Vui lòng thử lại sau.", "error")
             }
           } catch (resendErr) {
             console.error("Resend verification error:", resendErr)
-            setError("Không thể gửi lại email. Vui lòng thử lại sau.")
+            showToast("Không thể gửi lại email. Vui lòng thử lại sau.", "error")
           }
         } else {
-          setError(data.error || "Đăng nhập thất bại")
+          showToast(data.error || "Đăng nhập thất bại", "error")
         }
       }
     } catch (err) {
       console.error("Login error:", err)
-      setError("Lỗi kết nối. Vui lòng thử lại sau.")
+      showToast("Lỗi kết nối. Vui lòng thử lại sau.", "error")
     } finally {
       setLoading(false)
     }
@@ -290,7 +285,6 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
   // Handle register submit
   const handleRegister = async (e) => {
     e.preventDefault()
-    setError("")
 
     if (!validateRegister()) {
       return
@@ -325,14 +319,20 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
 
         // Chuyển sang màn hình verification
         setActiveTab("verify")
-        setError("")
         setResendCooldown(60) // Cooldown 60 giây
+
+        // Check explicit false or falsy if success is true
+        if (data.emailSent === false || (data.success && !data.emailSent && data.emailSent !== true)) {
+          showToast(data.emailError || "Không thể gửi email xác thực. Vui lòng thử gửi lại.", "error")
+        } else {
+          showToast("Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.", "success")
+        }
       } else {
-        setError(data.error || "Đăng ký thất bại")
+        showToast(data.error || "Đăng ký thất bại", "error")
       }
     } catch (err) {
       console.error("Register error:", err)
-      setError("Lỗi kết nối. Vui lòng thử lại sau.")
+      showToast("Lỗi kết nối. Vui lòng thử lại sau.", "error")
     } finally {
       setLoading(false)
     }
@@ -380,7 +380,6 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
     }
 
     setLoading(true)
-    setError("")
 
     try {
       const response = await fetch("/api/auth/resend-verification", {
@@ -397,15 +396,14 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
 
       if (data.success) {
         setResendCooldown(60) // Reset cooldown to 60 seconds
-        setError("") // Clear any errors
         // Optionally show success message
-        alert("Đã gửi lại mã xác thực đến email của bạn")
+        showToast("Đã gửi lại mã xác thực đến email của bạn", "success")
       } else {
-        setError(data.error || "Không thể gửi lại email. Vui lòng thử lại sau.")
+        showToast(data.error || "Không thể gửi lại email. Vui lòng thử lại sau.", "error")
       }
     } catch (err) {
       console.error("Resend verification error:", err)
-      setError("Lỗi kết nối. Vui lòng thử lại sau.")
+      showToast("Lỗi kết nối. Vui lòng thử lại sau.", "error")
     } finally {
       setLoading(false)
     }
@@ -415,7 +413,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
   const handleChangeEmail = async (e) => {
     e.preventDefault()
     setEmailError("")
-    setError("")
+    setEmailError("")
 
     if (!registeredUser || !registeredUser.phone) {
       setEmailError("Không tìm thấy thông tin người dùng")
@@ -456,10 +454,9 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
         setNewEmail("")
         setShowChangeEmail(false)
         setResendCooldown(60) // Reset cooldown
-        setError("") // Clear errors
         setEmailError("") // Clear email errors
         // Show success message
-        alert("Đã đổi email và gửi mã xác thực đến email mới")
+        showToast("Đã đổi email và gửi mã xác thực đến email mới", "success")
       } else {
         setEmailError(data.error || "Không thể đổi email. Vui lòng thử lại sau.")
       }
@@ -478,8 +475,6 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
     if (forgotPasswordErrors[name]) {
       setForgotPasswordErrors((prev) => ({ ...prev, [name]: "" }))
     }
-    setError("")
-    setSuccessMessage("")
   }
 
   // Validate forgot password form
@@ -497,8 +492,6 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
   // Handle forgot password submit
   const handleForgotPassword = async (e) => {
     e.preventDefault()
-    setError("")
-    setSuccessMessage("")
 
     if (!validateForgotPassword()) {
       return
@@ -519,18 +512,15 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
       const data = await response.json()
 
       if (data.success) {
-        setSuccessMessage(data.message || "Đã gửi email hướng dẫn đặt lại mật khẩu. Vui lòng kiểm tra hộp thư của bạn.")
-        setError("")
+        showToast(data.message || "Đã gửi email hướng dẫn đặt lại mật khẩu. Vui lòng kiểm tra hộp thư của bạn.", "success")
         // Reset form
         setForgotPasswordForm({ phone: "" })
       } else {
-        setError(data.error || "Không thể gửi email. Vui lòng thử lại sau.")
-        setSuccessMessage("")
+        showToast(data.error || "Không thể gửi email. Vui lòng thử lại sau.", "error")
       }
     } catch (err) {
       console.error("Forgot password error:", err)
-      setError("Lỗi kết nối. Vui lòng thử lại sau.")
-      setSuccessMessage("")
+      showToast("Lỗi kết nối. Vui lòng thử lại sau.", "error")
     } finally {
       setLoading(false)
     }
@@ -539,16 +529,15 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
   // Handle verify email
   const handleVerifyEmail = async (e) => {
     e.preventDefault()
-    setError("")
 
     if (!registeredUser || !registeredUser.phone) {
-      setError("Không tìm thấy thông tin người dùng")
+      showToast("Không tìm thấy thông tin người dùng", "error")
       return
     }
 
     const code = verificationCode.join("")
     if (code.length !== 6) {
-      setError("Vui lòng nhập đầy đủ 6 số")
+      showToast("Vui lòng nhập đầy đủ 6 số", "warning")
       return
     }
 
@@ -615,18 +604,18 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
             // Reload page to update header
             window.location.reload()
           } else {
-            setError(loginData.error || "Xác thực thành công nhưng đăng nhập thất bại. Vui lòng đăng nhập lại.")
+            showToast(loginData.error || "Xác thực thành công nhưng đăng nhập thất bại. Vui lòng đăng nhập lại.", "error")
           }
         } catch (loginErr) {
           console.error("Auto login error:", loginErr)
-          setError("Xác thực thành công nhưng đăng nhập thất bại. Vui lòng đăng nhập lại.")
+          showToast("Xác thực thành công nhưng đăng nhập thất bại. Vui lòng đăng nhập lại.", "error")
         }
       } else {
-        setError(data.error || "Mã xác thực không đúng")
+        showToast(data.error || "Mã xác thực không đúng", "error")
       }
     } catch (err) {
       console.error("Verify email error:", err)
-      setError("Lỗi kết nối. Vui lòng thử lại sau.")
+      showToast("Lỗi kết nối. Vui lòng thử lại sau.", "error")
     } finally {
       setLoading(false)
     }
@@ -644,7 +633,6 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
           <button
             onClick={() => {
               setActiveTab("login")
-              setError("")
               setLoginErrors({})
             }}
             disabled={loading}
@@ -658,7 +646,6 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
           <button
             onClick={() => {
               setActiveTab("register")
-              setError("")
               setRegisterErrors({})
             }}
             disabled={loading}
@@ -711,19 +698,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
 
         {/* Content */}
         <div className="p-6 md:p-8">
-          {/* Error Message */}
-          {error && (
-            <div className="mb-4 p-3 bg-destructive/10 border border-destructive/50 rounded-lg text-destructive text-sm">
-              {error}
-            </div>
-          )}
 
-          {/* Success Message */}
-          {successMessage && (
-            <div className="mb-4 p-3 bg-success/10 border border-success/50 rounded-lg text-success text-sm">
-              {successMessage}
-            </div>
-          )}
 
           {/* Login Form */}
           {activeTab === "login" && (
@@ -797,8 +772,6 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                   className="text-sm text-primary hover:text-primary-dark transition-colors cursor-pointer"
                   onClick={() => {
                     setActiveTab("forgot-password")
-                    setError("")
-                    setSuccessMessage("")
                   }}
                 >
                   Quên mật khẩu?
@@ -1062,8 +1035,6 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                   type="button"
                   onClick={() => {
                     setActiveTab("login")
-                    setError("")
-                    setSuccessMessage("")
                     setForgotPasswordForm({ phone: "" })
                     setForgotPasswordErrors({})
                   }}
@@ -1207,7 +1178,6 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
                   setActiveTab("register")
                   setRegisteredUser(null)
                   setVerificationCode(["", "", "", "", "", ""])
-                  setError("")
                 }}
                 className="w-full py-2 text-muted-foreground hover:text-card-foreground text-sm transition-colors cursor-pointer"
               >
