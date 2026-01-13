@@ -65,7 +65,7 @@ export async function POST(request) {
 
     if (!emailResult.success) {
       return NextResponse.json(
-        { success: false, error: emailResult.error || 'Không thể gửi email xác thực' },
+        { success: false, error: 'Please configure email settings in Admin > Notification Config or set environment variables (EMAIL_USER, EMAIL_PASSWORD).' },
         { status: 500 }
       );
     }

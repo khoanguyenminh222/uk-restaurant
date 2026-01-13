@@ -17,11 +17,30 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
   const [rememberMe, setRememberMe] = useState(false)
   const [verificationCode, setVerificationCode] = useState(["", "", "", "", "", ""])
   const [resendCooldown, setResendCooldown] = useState(0)
+  const [forgotPasswordCooldown, setForgotPasswordCooldown] = useState(0)
+  const [configResendCooldown, setConfigResendCooldown] = useState(60) // Default 60s
   const [registeredUser, setRegisteredUser] = useState(null) // Lưu thông tin user sau khi đăng ký
   const [showChangeEmail, setShowChangeEmail] = useState(false) // Hiển thị form đổi email
   const [newEmail, setNewEmail] = useState("") // Email mới
   const [emailError, setEmailError] = useState("") // Lỗi email
   const modalRef = useRef(null)
+
+  // Fetch spam config
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const response = await fetch('/api/config/spam')
+        const data = await response.json()
+        if (data.success && data.data.resend_code_cooldown) {
+          console.log(data.data.resend_code_cooldown)
+          setConfigResendCooldown(data.data.resend_code_cooldown)
+        }
+      } catch (err) {
+        console.error('Error fetching spam config:', err)
+      }
+    }
+    fetchConfig()
+  }, [])
 
   // Login form state
   const [loginForm, setLoginForm] = useState({
@@ -98,6 +117,16 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
       return () => clearTimeout(timer)
     }
   }, [resendCooldown])
+
+  // Cooldown timer for forgot password
+  useEffect(() => {
+    if (forgotPasswordCooldown > 0) {
+      const timer = setTimeout(() => {
+        setForgotPasswordCooldown(forgotPasswordCooldown - 1)
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [forgotPasswordCooldown])
 
   // Validate phone format (Vietnamese)
   const validatePhone = (phone) => {
@@ -246,7 +275,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
             password: loginForm.password, // Save password for auto login after verification
           })
           setActiveTab("verify")
-          setResendCooldown(60) // Cooldown 60 giây
+          setResendCooldown(configResendCooldown)
 
           // Auto resend verification email
           try {
@@ -319,7 +348,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
 
         // Chuyển sang màn hình verification
         setActiveTab("verify")
-        setResendCooldown(60) // Cooldown 60 giây
+        setResendCooldown(configResendCooldown)
 
         // Check explicit false or falsy if success is true
         if (data.emailSent === false || (data.success && !data.emailSent && data.emailSent !== true)) {
@@ -395,7 +424,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
       const data = await response.json()
 
       if (data.success) {
-        setResendCooldown(60) // Reset cooldown to 60 seconds
+        setResendCooldown(configResendCooldown)
         // Optionally show success message
         showToast("Đã gửi lại mã xác thực đến email của bạn", "success")
       } else {
@@ -453,7 +482,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
         })
         setNewEmail("")
         setShowChangeEmail(false)
-        setResendCooldown(60) // Reset cooldown
+        setResendCooldown(configResendCooldown) // Reset cooldown
         setEmailError("") // Clear email errors
         // Show success message
         showToast("Đã đổi email và gửi mã xác thực đến email mới", "success")
@@ -497,6 +526,10 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
       return
     }
 
+    if (forgotPasswordCooldown > 0) {
+      return
+    }
+
     setLoading(true)
     try {
       const response = await fetch("/api/auth/forgot-password", {
@@ -515,6 +548,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
         showToast(data.message || "Đã gửi email hướng dẫn đặt lại mật khẩu. Vui lòng kiểm tra hộp thư của bạn.", "success")
         // Reset form
         setForgotPasswordForm({ phone: "" })
+        setForgotPasswordCooldown(configResendCooldown)
       } else {
         showToast(data.error || "Không thể gửi email. Vui lòng thử lại sau.", "error")
       }
@@ -627,9 +661,9 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300">
       <div
         ref={modalRef}
-        className="relative w-full max-w-md bg-card rounded-xl shadow-2xl border border-border overflow-hidden animate-in fade-in zoom-in duration-200"
+        className="relative w-full max-w-md max-h-[90vh] bg-card rounded-xl shadow-2xl border border-border overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col"
       >
-        <div className="flex border-b border-border items-center">
+        <div className="flex border-b border-border items-center shrink-0">
           <button
             onClick={() => {
               setActiveTab("login")
@@ -668,7 +702,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
 
         {/* Verification Header */}
         {activeTab === "verify" && (
-          <div className="border-b border-border bg-primary/10 py-4 px-6 flex items-center justify-between">
+          <div className="border-b border-border bg-primary/10 py-4 px-6 flex items-center justify-between shrink-0">
             <h3 className="text-lg font-semibold text-card-foreground flex-1 text-center ml-8">Xác thực email</h3>
             <button
               onClick={onClose}
@@ -683,7 +717,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
 
         {/* Forgot Password Header */}
         {activeTab === "forgot-password" && (
-          <div className="border-b border-border bg-primary/10 py-4 px-6 flex items-center justify-between">
+          <div className="border-b border-border bg-primary/10 py-4 px-6 flex items-center justify-between shrink-0">
             <h3 className="text-lg font-semibold text-card-foreground flex-1 text-center ml-8">Quên mật khẩu</h3>
             <button
               onClick={onClose}
@@ -697,7 +731,7 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
         )}
 
         {/* Content */}
-        <div className="p-6 md:p-8">
+        <div className="p-6 md:p-8 overflow-y-auto flex-1">
 
 
           {/* Login Form */}
@@ -1016,16 +1050,16 @@ export default function Auth({ isOpen, onClose, initialTab = "login" }) {
 
               {/* Info Text */}
               <p className="text-xs text-muted-foreground text-center">
-                Chúng tôi sẽ gửi link đặt lại mật khẩu đến email đã đăng ký của bạn. Link sẽ hết hạn sau 30 phút.
+                Chúng tôi sẽ gửi link đặt lại mật khẩu đến email đã đăng ký của bạn. Link sẽ hết hạn sau 15 phút.
               </p>
 
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || forgotPasswordCooldown > 0}
                 className="w-full py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
-                {loading ? "Đang gửi..." : "Gửi email đặt lại mật khẩu"}
+                {loading ? "Đang gửi..." : forgotPasswordCooldown > 0 ? `Gửi lại sau ${forgotPasswordCooldown}s` : "Gửi email đặt lại mật khẩu"}
               </button>
 
               {/* Back to Login */}

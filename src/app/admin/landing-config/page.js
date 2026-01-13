@@ -2563,6 +2563,25 @@ export default function AdminLandingConfig() {
                     <strong>Gợi ý:</strong> 3600 giây = 1 giờ, 1800 giây = 30 phút, 7200 giây = 2 giờ
                   </p>
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Thời gian chờ giữa các lần gửi mã (giây) <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="30"
+                    max="300"
+                    value={spamData.resend_code_cooldown || 60}
+                    onChange={(e) => setSpamData({ ...spamData, resend_code_cooldown: parseInt(e.target.value) || 60 })}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Thời gian người dùng phải đợi để gửi lại mã xác thực (Cooldown timer của nút gửi lại).
+                    <br />
+                    <strong>Gợi ý:</strong> 60 giây = 1 phút
+                  </p>
+                </div>
               </div>
             </div>
           )}
@@ -3512,26 +3531,7 @@ export default function AdminLandingConfig() {
                   );
                 })}
 
-                {/* Spam section (không có trong TABS) */}
-                <label
-                  className="flex items-center gap-3 p-3 bg-muted rounded-lg hover:bg-muted/80 cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    checked={resetSections.spam || false}
-                    onChange={(e) => {
-                      setResetSections({
-                        ...resetSections,
-                        spam: e.target.checked
-                      });
-                    }}
-                    className="w-4 h-4 rounded border-border cursor-pointer"
-                  />
-                  <div className="flex items-center gap-2 flex-1">
-                    <Shield className="w-4 h-4 text-primary" />
-                    <span className="text-card-foreground font-medium">Ngăn chặn Spam</span>
-                  </div>
-                </label>
+
               </div>
 
               <div className="pt-4 border-t border-border">

@@ -227,18 +227,19 @@ export const defaultLandingConfig = {
   },
   spam: {
     // Giới hạn đặt hàng
-    max_orders: 5, // Số đơn hàng tối đa mà 1 email có thể đặt trong khoảng thời gian
-    order_rate_limit_ttl: 1800, // Thời gian giới hạn đặt hàng (giây) - 30 phút
+    max_orders: 10, // Số đơn hàng tối đa mà 1 email có thể đặt trong khoảng thời gian
+    order_rate_limit_ttl: 900, // Thời gian giới hạn đặt hàng (giây) - 15 phút
     order_rate_limit_blacklist_hours: 24, // Thời gian blacklist khi vượt quá giới hạn (giờ)
 
     // Xác thực email
     verification_code_ttl: 600, // Thời gian mã xác thực có hiệu lực (giây) - 10 phút
-    verified_session_ttl: 1800, // Thời gian session sau khi verify (giây) - 30 phút
+    verified_session_ttl: 86400, // Thời gian session sau khi verify (giây) - 1 ngày
     max_verify_attempts: 5, // Số lần thử nhập mã xác thực sai tối đa
 
     // Giới hạn gửi mã
     max_send_code: 5, // Số lần gửi mã xác thực tối đa trong khoảng thời gian
-    send_code_rate_limit_ttl: 3600, // Thời gian giới hạn gửi mã (giây) - 1 giờ
+    send_code_rate_limit_ttl: 600, // Thời gian giới hạn gửi mã (giây) - 10 phút
+    resend_code_cooldown: 60, // Thời gian chờ giữa các lần gửi mã (giây) - 60 giây
   },
 };
 
@@ -731,6 +732,13 @@ export function validateLandingConfig(data) {
       const ttl = parseInt(data.spam.send_code_rate_limit_ttl);
       if (isNaN(ttl) || ttl < 60 || ttl > 86400) {
         errors.push('Spam: Thời gian giới hạn gửi mã phải là số từ 60 đến 86400 giây (1 phút đến 24 giờ)');
+      }
+    }
+
+    if (data.spam.resend_code_cooldown !== undefined) {
+      const cooldown = parseInt(data.spam.resend_code_cooldown);
+      if (isNaN(cooldown) || cooldown < 30 || cooldown > 300) {
+        errors.push('Spam: Thời gian chờ gửi mã phải là số từ 30 đến 300 giây (30 giây đến 5 phút)');
       }
     }
   }

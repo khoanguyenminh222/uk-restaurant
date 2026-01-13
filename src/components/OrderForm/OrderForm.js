@@ -12,6 +12,8 @@ import Image from "next/image"
 export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) {
   // Verified session TTL state (lấy từ API)
   const [verifiedSessionTTL, setVerifiedSessionTTL] = useState(1800 * 1000) // Default 30 phút (ms)
+  const [resendCooldown, setResendCooldown] = useState(60) // Config từ API (seconds)
+  const [cooldownTimer, setCooldownTimer] = useState(0) // Thời gian còn lại (giây)
   // items: null = từ cart, hoặc array items từ cart, hoặc single item object
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -45,13 +47,17 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
       try {
         const response = await fetch('/api/config/spam')
         const data = await response.json()
-        if (data.success && data.data.verified_session_ttl) {
-          // Lấy từ API và convert từ giây sang milliseconds
-          const ttlSeconds = data.data.verified_session_ttl
-          setVerifiedSessionTTL(ttlSeconds * 1000)
-          //console.log('✅ Đã lấy config từ API:', { verified_session_ttl: ttlSeconds, verified_session_ttl_ms: ttlSeconds * 1000 })
+        if (data.success) {
+          if (data.data.verified_session_ttl) {
+            // Lấy từ API và convert từ giây sang milliseconds
+            const ttlSeconds = data.data.verified_session_ttl
+            setVerifiedSessionTTL(ttlSeconds * 1000)
+          }
+          if (data.data.resend_code_cooldown) {
+            setResendCooldown(data.data.resend_code_cooldown)
+          }
         } else {
-          console.warn('⚠️ API không trả về verified_session_ttl, dùng default:', 1800 * 1000)
+          console.warn('⚠️ API không trả về config, dùng default')
         }
       } catch (err) {
         console.error('❌ Lỗi khi fetch config từ API:', err)
@@ -97,6 +103,16 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
 
     return () => clearInterval(interval)
   }, [isOpen, emailVerification.verified, formData.customer_email])
+
+  // Cooldown timer effect
+  useEffect(() => {
+    if (cooldownTimer > 0) {
+      const timer = setTimeout(() => {
+        setCooldownTimer(prev => prev - 1)
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [cooldownTimer])
 
   // Order items (từ cart hoặc single item)
   const [orderItems, setOrderItems] = useState([])
@@ -499,6 +515,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
 
       if (data.success) {
         setEmailVerification(prev => ({ ...prev, step: 'verify_code', sendingCode: false }))
+        setCooldownTimer(resendCooldown) // Bắt đầu countdown
         if (typeof window !== "undefined") {
           window.dispatchEvent(
             new CustomEvent("showToast", {
@@ -1066,7 +1083,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
             <div>
               <label htmlFor="customer_email" className="block text-sm font-medium text-card-foreground mb-2">
                 <Mail className="inline w-4 h-4 mr-1" />
-                Email <span className="text-destructive">*</span>
+                Email <span className="text-destructive">*</span> <span className="text-xs text-muted-foreground">(Trạng thái đơn hàng sẽ được gửi qua email này)</span>
                 {emailVerification.verified && (
                   <ShieldCheck className="inline w-4 h-4 ml-2 text-green-500" />
                 )}
@@ -1168,7 +1185,13 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                     <button
                       type="button"
                       onClick={handleSendVerificationCode}
-                      disabled={emailVerification.sendingCode || !formData.customer_email || !formData.customer_email.trim() || !validateEmail(formData.customer_email)}
+                      disabled={
+                        emailVerification.sendingCode ||
+                        !formData.customer_email ||
+                        !formData.customer_email.trim() ||
+                        !validateEmail(formData.customer_email) ||
+                        cooldownTimer > 0
+                      }
                       className="px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap flex items-center gap-2 cursor-pointer"
                     >
                       {emailVerification.sendingCode ? (
@@ -1176,6 +1199,8 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                           <Loader2 className="w-4 h-4 animate-spin" />
                           Đang gửi...
                         </>
+                      ) : cooldownTimer > 0 ? (
+                        `Gửi lại sau ${cooldownTimer}s`
                       ) : (
                         "Gửi mã"
                       )}
@@ -1227,8 +1252,6 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
                     >
                       Gửi lại mã
                     </button>
-                    {/* Trạng thía đơn hàng sẽ được gửi qua email này */}
-                    <p className="text-xs text-muted-foreground">Trạng thái đơn hàng sẽ được gửi qua email này</p>
                   </div>
                 )}
 

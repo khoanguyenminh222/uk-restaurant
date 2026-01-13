@@ -129,7 +129,7 @@ export async function POST(request) {
       );
 
       if (!emailResult.success) {
-        throw new Error('Lỗi hệ thống email: Sai cấu hình (Tên đăng nhập hoặc Mật khẩu ứng dụng không đúng). Vui lòng liên hệ Admin.');
+        throw new Error('Please configure email settings in Admin > Notification Config or set environment variables (EMAIL_USER, EMAIL_PASSWORD).');
       }
     } catch (err) {
       console.error('Error sending verification email:', err);

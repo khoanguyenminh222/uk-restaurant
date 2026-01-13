@@ -9,7 +9,7 @@ export async function GET(request) {
   try {
     // Lấy config từ database, fallback về env variables nếu không có
     const spamConfig = await getSpamConfig();
-    
+
     const config = {
       verified_session_ttl: spamConfig.verified_session_ttl || parseInt(process.env.SPAM_VERIFIED_SESSION_TTL || '1800'),
       verification_code_ttl: spamConfig.verification_code_ttl || parseInt(process.env.SPAM_VERIFICATION_CODE_TTL || '600'),
@@ -19,6 +19,7 @@ export async function GET(request) {
       max_orders: spamConfig.max_orders || parseInt(process.env.SPAM_MAX_ORDERS || '5'),
       order_rate_limit_ttl: spamConfig.order_rate_limit_ttl || parseInt(process.env.SPAM_ORDER_RATE_LIMIT_TTL || '1800'),
       order_rate_limit_blacklist_hours: spamConfig.order_rate_limit_blacklist_hours || parseInt(process.env.SPAM_ORDER_RATE_LIMIT_BLACKLIST_HOURS || '24'),
+      resend_code_cooldown: spamConfig.resend_code_cooldown || 60,
     };
 
     return NextResponse.json(

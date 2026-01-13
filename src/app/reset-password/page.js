@@ -144,7 +144,7 @@ function ResetPasswordForm() {
               </p>
               <Link
                 href="/"
-                className="inline-block px-6 py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors"
+                className="inline-block px-6 py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors cursor-pointer"
               >
                 Về trang chủ
               </Link>
@@ -164,14 +164,13 @@ function ResetPasswordForm() {
                     value={password}
                     onChange={handlePasswordChange}
                     placeholder="Ít nhất 6 ký tự"
-                    className={`w-full pl-10 pr-12 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
-                      passwordErrors.password ? "border-destructive" : "border-border"
-                    }`}
+                    className={`w-full pl-10 pr-12 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${passwordErrors.password ? "border-destructive" : "border-border"
+                      }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-card-foreground transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-card-foreground transition-colors cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -194,14 +193,13 @@ function ResetPasswordForm() {
                     value={confirmPassword}
                     onChange={handlePasswordChange}
                     placeholder="Nhập lại mật khẩu"
-                    className={`w-full pl-10 pr-12 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
-                      passwordErrors.confirmPassword ? "border-destructive" : "border-border"
-                    }`}
+                    className={`w-full pl-10 pr-12 py-3 bg-input border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${passwordErrors.confirmPassword ? "border-destructive" : "border-border"
+                      }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-card-foreground transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-card-foreground transition-colors cursor-pointer"
                   >
                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -214,13 +212,13 @@ function ResetPasswordForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {loading ? "Đang đặt lại..." : "Đặt lại mật khẩu"}
               </button>
 
               <p className="text-center text-sm text-muted-foreground">
-                <Link href="/" className="text-primary hover:text-primary-dark font-medium transition-colors">
+                <Link href="/" className="text-primary hover:text-primary-dark font-medium transition-colors cursor-pointer">
                   Về trang chủ
                 </Link>
               </p>

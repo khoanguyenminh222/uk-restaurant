@@ -783,50 +783,46 @@ export default function MenuPage() {
                   </button>
 
                   {/* Category Tabs */}
-                  {categories.length > 0 ? (
-                    categories.map((category, index) => (
-                      <button
-                        key={category.id || category._id}
-                        onClick={() => handleCategoryClick(category.id)}
-                        className={`shrink-0 px-3 md:px-6 py-1.5 md:py-2 rounded-full font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background active:scale-95 category-tab cursor-pointer hover:scale-105 text-sm md:text-base ${selectedCategory === category.id
-                          ? "text-primary-foreground shadow-md shadow-primary/40 scale-105"
-                          : "bg-card text-card-foreground border border-border"
-                          }`}
-                        style={{
-                          ...(selectedCategory === category.id && category.color ? {
-                            backgroundColor: category.color,
-                            borderColor: category.color
-                          } : {}),
-                          ...(selectedCategory !== category.id && category.color ? {
-                            borderColor: category.color,
-                            '--hover-color': category.color
-                          } : {}),
-                          animationDelay: `${index * 0.05}s`
-                        }}
-                        onMouseEnter={(e) => {
-                          if (selectedCategory !== category.id && category.color) {
-                            e.currentTarget.style.backgroundColor = `${category.color}20`
+                  {categories.map((category, index) => (
+                    <button
+                      key={category.id || category._id}
+                      onClick={() => handleCategoryClick(category.id)}
+                      className={`shrink-0 px-3 md:px-6 py-1.5 md:py-2 rounded-full font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background active:scale-95 category-tab cursor-pointer hover:scale-105 text-sm md:text-base ${selectedCategory === category.id
+                        ? "text-primary-foreground shadow-md shadow-primary/40 scale-105"
+                        : "bg-card text-card-foreground border border-border"
+                        }`}
+                      style={{
+                        ...(selectedCategory === category.id && category.color ? {
+                          backgroundColor: category.color,
+                          borderColor: category.color
+                        } : {}),
+                        ...(selectedCategory !== category.id && category.color ? {
+                          borderColor: category.color,
+                          '--hover-color': category.color
+                        } : {}),
+                        animationDelay: `${index * 0.05}s`
+                      }}
+                      onMouseEnter={(e) => {
+                        if (selectedCategory !== category.id && category.color) {
+                          e.currentTarget.style.backgroundColor = `${category.color}20`
+                          e.currentTarget.style.borderColor = category.color
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (selectedCategory !== category.id) {
+                          e.currentTarget.style.backgroundColor = ''
+                          if (category.color) {
                             e.currentTarget.style.borderColor = category.color
+                          } else {
+                            e.currentTarget.style.borderColor = ''
                           }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (selectedCategory !== category.id) {
-                            e.currentTarget.style.backgroundColor = ''
-                            if (category.color) {
-                              e.currentTarget.style.borderColor = category.color
-                            } else {
-                              e.currentTarget.style.borderColor = ''
-                            }
-                          }
-                        }}
-                      >
-                        {category.icon && <span className="mr-2 inline-block animate-bounce-subtle">{category.icon}</span>}
-                        {category.name}
-                      </button>
-                    ))
-                  ) : (
-                    <div className="text-muted-foreground text-sm">Đang tải danh mục...</div>
-                  )}
+                        }
+                      }}
+                    >
+                      {category.icon && <span className="mr-2 inline-block animate-bounce-subtle">{category.icon}</span>}
+                      {category.name}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
@@ -983,29 +979,25 @@ export default function MenuPage() {
               >
                 Tất cả
               </button>
-              {categories.length > 0 ? (
-                categories.map((category, index) => (
-                  <button
-                    key={category.id || category._id}
-                    onClick={() => handleCategoryClick(category.id)}
-                    className={`shrink-0 px-4 md:px-6 py-2 md:py-2.5 rounded-full font-medium transition-transform duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background active:scale-95 cursor-pointer hover:scale-105 ${selectedCategory === category.id
-                      ? "bg-primary text-primary-foreground shadow-md shadow-primary/40 scale-105"
-                      : "bg-card text-card-foreground hover:bg-muted border border-border"
-                      }`}
-                    style={{
-                      ...(category.color && selectedCategory === category.id ? {
-                        backgroundColor: category.color,
-                        borderColor: category.color
-                      } : category.color ? { borderColor: category.color } : {}),
-                    }}
-                  >
-                    {category.icon && <span className="mr-2">{category.icon}</span>}
-                    {category.name}
-                  </button>
-                ))
-              ) : (
-                <div className="text-muted-foreground text-sm">Đang tải danh mục...</div>
-              )}
+              {categories.map((category, index) => (
+                <button
+                  key={category.id || category._id}
+                  onClick={() => handleCategoryClick(category.id)}
+                  className={`shrink-0 px-4 md:px-6 py-2 md:py-2.5 rounded-full font-medium transition-transform duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background active:scale-95 cursor-pointer hover:scale-105 ${selectedCategory === category.id
+                    ? "bg-primary text-primary-foreground shadow-md shadow-primary/40 scale-105"
+                    : "bg-card text-card-foreground hover:bg-muted border border-border"
+                    }`}
+                  style={{
+                    ...(category.color && selectedCategory === category.id ? {
+                      backgroundColor: category.color,
+                      borderColor: category.color
+                    } : category.color ? { borderColor: category.color } : {}),
+                  }}
+                >
+                  {category.icon && <span className="mr-2">{category.icon}</span>}
+                  {category.name}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -1014,7 +1006,7 @@ export default function MenuPage() {
             <div className="flex items-center justify-center py-20">
               <div className="flex flex-col items-center gap-4">
                 <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                <p className="text-muted-foreground">Đang tải thực đơn...</p>
+                <p className="text-muted-foreground">Đang tải sản phẩm...</p>
               </div>
             </div>
           )}
@@ -1145,7 +1137,6 @@ export default function MenuPage() {
           )}
         </div>
       </main>
-      <Footer />
 
       {/* Toast */}
       <Toast
