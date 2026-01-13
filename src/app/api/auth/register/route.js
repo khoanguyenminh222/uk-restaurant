@@ -138,7 +138,7 @@ export async function POST(request) {
     }
 
     // Return user without password
-    const { password, ...userWithoutPassword } = userPayload;
+    const { password, verification_code, verification_code_expires, ...userWithoutPassword } = userPayload;
 
     return NextResponse.json(
       {
