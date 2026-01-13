@@ -45,18 +45,18 @@ const getIconComponent = (iconName) => {
       iconName + 'Icon', // Với suffix Icon
       toPascalCase(iconName) + 'Icon', // PascalCase + Icon
     ]
-    
+
     // Loại bỏ duplicates
     const uniqueVariants = [...new Set(variants)]
-    
+
     let icon = null
     for (const variant of uniqueVariants) {
       icon = lucideIcons[variant]
       if (icon) break
     }
-    
+
     if (!icon) return Users // Fallback về Users nếu không tìm thấy
-    
+
     // Nếu là object với default export, lấy default
     if (typeof icon === 'object' && icon.default) {
       return icon.default
@@ -65,7 +65,7 @@ const getIconComponent = (iconName) => {
     if (typeof icon === 'function' || (typeof icon === 'object' && icon.$$typeof)) {
       return icon
     }
-    
+
     return Users // Fallback về Users
   } catch (error) {
     return Users // Fallback về Users nếu có lỗi
@@ -196,7 +196,7 @@ function AnimatedNumber({ value, isVisible, duration = 2000 }) {
 export default function WhyChooseUs() {
   const [headerRef, isHeaderVisible] = useScrollAnimation({ threshold: 0.2 })
   const [statsRef, isStatsVisible] = useScrollAnimation({ threshold: 0.2 })
-  const { config } = useLandingConfig()
+  const { config, loading } = useLandingConfig()
   const [reviewStats, setReviewStats] = useState(null)
 
   // State và Ref cho logic scroll button (Mới)
@@ -420,18 +420,25 @@ export default function WhyChooseUs() {
   }))
 
   // Cập nhật stats từ reviews nếu auto_calculate_stats = true
+  // Nếu manual thì nó đã lấy từ config?.whyChooseUs?.stats ở trên rồi
   if (config?.whyChooseUs?.auto_calculate_stats && reviewStats) {
     stats = stats.map(stat => {
       // So sánh bằng tên icon (string)
       const iconName = stat.icon
-      if (iconName === 'Users') {
+      if (iconName === 'Users' || iconName === 'users') {
+        const verifiedPercent = reviewStats.verifiedCustomers || 100
         return { ...stat, value: `${reviewStats.totalReviews.toLocaleString('vi-VN')}+` }
       }
-      if (iconName === 'Star') {
+      if (iconName === 'Star' || iconName === 'star') {
         return { ...stat, value: `${reviewStats.averageRating}/5` }
       }
       return stat
     })
+  }
+
+  // Đảm bảo manual stats hiển thị đúng (fallback nếu không có config)
+  if (!config?.whyChooseUs?.auto_calculate_stats && !config?.whyChooseUs?.stats) {
+    stats = defaultStats
   }
 
   return (
@@ -492,28 +499,44 @@ export default function WhyChooseUs() {
           ref={statsRef}
           className={`grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5 mb-10 sm:mb-12 md:mb-16 scroll-fade-in ${isStatsVisible ? "visible" : ""}`}
         >
-          {stats.map((stat, index) => {
-            const IconComponent = getIconComponent(stat.icon)
-            return (
+          {loading ? (
+            // SKELETON LOADING cho Stats Bar
+            [1, 2, 3, 4].map((_, index) => (
               <div
                 key={index}
-                className="relative bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl p-4 sm:p-5 md:p-6"
+                className="relative bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl p-4 sm:p-5 md:p-6 animate-pulse"
               >
-                <div className={`absolute inset-0 bg-linear-to-br ${stat.color} rounded-xl opacity-30`}></div>
-                <div className="relative z-10 flex flex-col items-center text-center">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 mb-2 sm:mb-3 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-                    <IconComponent className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" />
-                  </div>
-                  <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-foreground mb-1 sm:mb-1.5">
-                    <AnimatedNumber value={stat.value} isVisible={isStatsVisible} duration={2000} />
-                  </div>
-                  <div className="text-[10px] sm:text-xs md:text-sm text-muted-foreground font-medium leading-tight px-1">
-                    {stat.label}
-                  </div>
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 mb-2 sm:mb-3 bg-muted rounded-xl"></div>
+                  <div className="h-8 w-24 bg-muted rounded mb-1 sm:mb-1.5"></div>
+                  <div className="h-4 w-32 bg-muted rounded"></div>
                 </div>
               </div>
-            )
-          })}
+            ))
+          ) : (
+            stats.map((stat, index) => {
+              const IconComponent = getIconComponent(stat.icon)
+              return (
+                <div
+                  key={index}
+                  className="relative bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl p-4 sm:p-5 md:p-6"
+                >
+                  <div className={`absolute inset-0 bg-linear-to-br ${stat.color} rounded-xl opacity-30`}></div>
+                  <div className="relative z-10 flex flex-col items-center text-center">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 mb-2 sm:mb-3 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                      <IconComponent className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" />
+                    </div>
+                    <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-foreground mb-1 sm:mb-1.5">
+                      <AnimatedNumber value={stat.value} isVisible={isStatsVisible} duration={2000} />
+                    </div>
+                    <div className="text-[10px] sm:text-xs md:text-sm text-muted-foreground font-medium leading-tight px-1">
+                      {stat.label}
+                    </div>
+                  </div>
+                </div>
+              )
+            })
+          )}
         </div>
 
         {/* Feature Cards - Compact cho mobile, không hover */}

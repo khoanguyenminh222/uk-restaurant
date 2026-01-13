@@ -129,7 +129,14 @@ export async function GET(request) {
             // Không trả về updated_at, is_approved, is_visible
           };
         }),
-        stats,
+        // Chỉ trả về stats nếu là admin request (all=true)
+        // Public request không cần stats thực tế từ DB để tránh lộ thông tin khi Admin dùng Manual Config
+        stats: all === 'true' ? {
+          ...stats,
+          totalApproved: await db.collection('reviews').countDocuments({ is_approved: { $ne: false } }),
+          totalPending: await db.collection('reviews').countDocuments({ is_approved: false }),
+          totalAllReviews: total,
+        } : undefined,
         pagination: {
           total,
           limit,

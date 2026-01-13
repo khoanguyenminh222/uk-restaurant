@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { calculateReviewStats } from '@/lib/models/Review';
+import { getAdminFromToken } from '@/lib/auth';
 
 /**
  * GET /api/reviews/stats
@@ -18,25 +19,62 @@ export async function GET(request) {
       .find({ is_approved: { $ne: false } })
       .toArray();
 
-    const stats = calculateReviewStats(approvedReviews);
+    // Check if user is admin
+    const admin = await getAdminFromToken(request);
 
-    // Thêm thông tin về tổng số reviews đã duyệt và chờ duyệt từ toàn bộ database
-    const totalApproved = await db.collection('reviews').countDocuments({ is_approved: { $ne: false } });
-    const totalPending = await db.collection('reviews').countDocuments({ is_approved: false });
-    const totalReviews = await db.collection('reviews').countDocuments({});
+    // Lấy config để kiểm tra chế độ hiển thị (Auto/Manual)
+    const configDoc = await db.collection('landingConfig').findOne({ config_type: 'landing' });
+    const testimonialsConfig = configDoc?.testimonials || {};
+    const isAutoStats = testimonialsConfig.auto_calculate_stats;
 
-    return NextResponse.json(
-      {
+    // Nếu là Admin: Luôn thấy Real Stats + Internal Stats
+    if (admin) {
+      const stats = calculateReviewStats(approvedReviews);
+
+      const totalApproved = await db.collection('reviews').countDocuments({ is_approved: { $ne: false } });
+      const totalPending = await db.collection('reviews').countDocuments({ is_approved: false });
+      const totalReviews = await db.collection('reviews').countDocuments({});
+
+      return NextResponse.json({
         success: true,
         data: {
           ...stats,
-          totalApproved, // Tổng số reviews đã duyệt
-          totalPending,  // Tổng số reviews chờ duyệt
-          totalAllReviews: totalReviews, // Tổng số tất cả reviews
+          totalApproved,
+          totalPending,
+          totalAllReviews: totalReviews,
+          // Debug info for admin
+          configMode: isAutoStats ? 'Auto' : 'Manual'
         },
-      },
-      { status: 200 }
-    );
+      }, { status: 200 });
+    }
+
+    // Nếu là Public User
+    if (isAutoStats) {
+      // Nếu cấu hình Auto: Trả về Real Stats
+      const stats = calculateReviewStats(approvedReviews);
+      return NextResponse.json({
+        success: true,
+        data: stats,
+      }, { status: 200 });
+    } else {
+      // Nếu cấu hình Manual: Trả về Manual Stats từ Config
+      const trustStats = testimonialsConfig.trustStats || {
+        averageRating: 5,
+        totalReviews: 100,
+        verifiedCustomers: 100,
+      };
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          averageRating: trustStats.averageRating || 5,
+          totalReviews: trustStats.totalReviews || 100,
+          verifiedCustomers: trustStats.verifiedCustomers || 100,
+          // Hide ratingDistribution for manual stats to avoid calculating real data
+          ratingDistribution: null
+        },
+      }, { status: 200 });
+    }
   } catch (error) {
     console.error('Error fetching review stats:', error);
     return NextResponse.json(
