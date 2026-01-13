@@ -89,7 +89,7 @@ export default function Hero() {
   return (
     <section
       id="home"
-      className="relative min-h-[600px] md:min-h-[700px] flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-20 pb-12 overflow-hidden cursor-pointer"
+      className="relative min-h-150 md:min-h-175 flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-20 pb-12 overflow-hidden cursor-pointer"
       onClick={scrollToMenuSection}
     >
       {/* Background Images Slider */}
