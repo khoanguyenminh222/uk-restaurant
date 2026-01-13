@@ -298,7 +298,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
   const getTrackOrderUrl = () => {
     if (typeof window === "undefined" || !successOrder) return ""
     const baseUrl = window.location.origin
-    return `${baseUrl}/track-order?order_id=${successOrder.order_id}`
+    return `${baseUrl}/track-order?order_id=${successOrder.order_id}&phone=${formData.customer_phone}`
   }
 
   // Handle close success screen
@@ -401,7 +401,7 @@ export default function OrderForm({ isOpen, onClose, items = null, onSuccess }) 
   const getOrderHistoryUrl = () => {
     if (typeof window === "undefined" || !successOrder) return ""
     const baseUrl = window.location.origin
-    return `${baseUrl}/track-order?order_id=${successOrder.order_id}`
+    return `${baseUrl}/track-order?order_id=${successOrder.order_id}&phone=${successOrder.customer_phone}`
   }
 
   // Close modal when clicking outside

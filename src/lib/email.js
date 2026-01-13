@@ -705,7 +705,7 @@ export async function sendOrderStatusEmail(order, newStatus, previousStatus = nu
 
     // Track order URL
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const trackOrderUrl = `${baseUrl}/track-order?order_id=${orderId}`;
+    const trackOrderUrl = `${baseUrl}/track-order?order_id=${orderId}&phone=${order.customer_phone}`;
 
     // Lý do hủy (nếu có)
     const cancelReason = newStatus === 'cancelled' ? (order.admin_notes || order.notes || '') : '';

@@ -39,71 +39,119 @@ export async function GET(request) {
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
 
+    // Authenticate user (optional, as we support guest tracking too)
+    const { getUserFromToken } = await import('@/lib/auth');
+    const requester = await getUserFromToken(request);
+
+    // Security & Access Control Logic
+    // 1. Admin: Can view any order, apply any filter
+    // 2. Logged User: Can view ONLY their own orders (query.user_id must match)
+    // 3. Guest: Can ONLY view specific order if they know BOTH order_id AND phone
+
+    const isAdmin = requester && ['admin', 'super_admin', 'manager'].includes(requester.role);
     const query = {};
-    
-    // Specific lookups (for track order)
+
+    // If searching by specific order (Tracking mode)
     if (orderId) {
       query.order_id = orderId;
-    } else if (userId) {
-      query.user_id = userId;
-    } else if (phone) {
-      query.customer_phone = phone;
-    } else {
-      // Admin view - apply filters
-      if (status && status !== 'all') {
-        query.status = status;
-      }
 
-      // Filter by customer type
-      if (customerType === 'logged_in') {
-        query.user_id = { $exists: true, $ne: null };
-      } else if (customerType === 'guest') {
-        query.$or = [
-          { user_id: { $exists: false } },
-          { user_id: null }
-        ];
-      }
-
-      // Filter by date range
-      if (dateFrom || dateTo) {
-        query.created_at = {};
-        if (dateFrom) {
-          // Start of day
-          const fromDate = new Date(dateFrom);
-          fromDate.setHours(0, 0, 0, 0);
-          query.created_at.$gte = fromDate;
-        }
-        if (dateTo) {
-          // End of day
-          const toDate = new Date(dateTo);
-          toDate.setHours(23, 59, 59, 999);
-          query.created_at.$lte = toDate;
-        }
-      }
-
-      if (search) {
-        // If customer type filter already has $or, we need to combine
-        if (query.$or) {
-          // Customer type filter exists, combine with search
-          const customerTypeQuery = { $or: query.$or };
-          query.$and = [
-            customerTypeQuery,
-            {
-              $or: [
-                { order_id: { $regex: search, $options: 'i' } },
-                { customer_name: { $regex: search, $options: 'i' } },
-                { customer_phone: { $regex: search, $options: 'i' } },
-              ]
-            }
-          ];
-          delete query.$or;
+      // Access Control for specific order
+      if (!isAdmin) {
+        // If not admin, strict checks apply
+        if (requester) {
+          // If logged in: Can view if it's their order OR if they know the phone (tracking own order as guest)
+          // Better to enforce ownership for logged in users to avoid confusion, 
+          // but allow phone match for flexibility
+          if (!phone) {
+            // If no phone provided, MUST match user_id
+            query.user_id = requester.user_id;
+          } else {
+            // If phone provided, check phone match (below)
+            query.customer_phone = phone;
+          }
         } else {
+          // If Guest: MUST provide phone to match
+          if (!phone) {
+            return NextResponse.json(
+              { success: false, error: 'Vui lòng nhập số điện thoại để tra cứu đơn hàng' },
+              { status: 403 }
+            );
+          }
+          query.customer_phone = phone;
+        }
+      }
+    } else {
+      // List Mode (Viewing multiple orders)
+
+      // Determine scope based on role
+      if (isAdmin) {
+        // Admin: Allow standard filters
+        if (userId) query.user_id = userId;
+        if (phone) query.customer_phone = phone; // Strict match for privacy in list view?
+        if (status && status !== 'all') query.status = status;
+
+        // Advanced Admin Filters...
+        if (customerType === 'logged_in') {
+          query.user_id = { $exists: true, $ne: null };
+        } else if (customerType === 'guest') {
           query.$or = [
-            { order_id: { $regex: search, $options: 'i' } },
-            { customer_name: { $regex: search, $options: 'i' } },
-            { customer_phone: { $regex: search, $options: 'i' } },
+            { user_id: { $exists: false } },
+            { user_id: null }
           ];
         }
+
+        // Search logic for Admin
+        if (search) {
+          if (query.$or) {
+            const customerTypeQuery = { $or: query.$or };
+            query.$and = [
+              customerTypeQuery,
+              {
+                $or: [
+                  { order_id: { $regex: search, $options: 'i' } },
+                  { customer_name: { $regex: search, $options: 'i' } },
+                  { customer_phone: { $regex: search, $options: 'i' } },
+                ]
+              }
+            ];
+            delete query.$or;
+          } else {
+            query.$or = [
+              { order_id: { $regex: search, $options: 'i' } },
+              { customer_name: { $regex: search, $options: 'i' } },
+              { customer_phone: { $regex: search, $options: 'i' } },
+            ];
+          }
+        }
+
+        // Date Range for Admin
+        if (dateFrom || dateTo) {
+          query.created_at = {};
+          if (dateFrom) {
+            const fromDate = new Date(dateFrom);
+            fromDate.setHours(0, 0, 0, 0);
+            query.created_at.$gte = fromDate;
+          }
+          if (dateTo) {
+            const toDate = new Date(dateTo);
+            toDate.setHours(23, 59, 59, 999);
+            query.created_at.$lte = toDate;
+          }
+        }
+
+      } else if (requester) {
+        // Logged In User: Can ONLY see their own orders
+        query.user_id = requester.user_id;
+
+        // User can still filter their OWN orders by status/date if needed, currently UI might not support it but API is safe
+        if (status && status !== 'all') query.status = status;
+
+      } else {
+        // Guest: CANNOT list orders. Must use tracking (order_id + phone).
+        return NextResponse.json(
+          { success: false, error: 'Unauthorized. Guests can only track specific orders.' },
+          { status: 401 }
+        );
       }
     }
 
@@ -120,8 +168,8 @@ export async function GET(request) {
       .toArray();
 
     return NextResponse.json(
-      { 
-        success: true, 
+      {
+        success: true,
         data: orders,
         pagination: {
           page,
@@ -166,13 +214,13 @@ export async function POST(request) {
     const blacklistCheck = await checkBlacklist(normalizedEmail);
     if (blacklistCheck.isBlocked) {
       let errorMessage = 'Email này đã bị chặn.';
-      
+
       // Nếu không phải permanent và có blocked_until, hiển thị thời gian hết hạn
       if (!blacklistCheck.is_permanent && blacklistCheck.blocked_until) {
         const blockedUntil = new Date(blacklistCheck.blocked_until);
         const now = new Date();
         const hoursRemaining = Math.ceil((blockedUntil - now) / (1000 * 60 * 60));
-        
+
         if (hoursRemaining > 0) {
           errorMessage += ` Email sẽ được mở khóa sau ${hoursRemaining} giờ.`;
         } else {
@@ -183,7 +231,7 @@ export async function POST(request) {
       } else {
         errorMessage += ' Vui lòng liên hệ hỗ trợ.';
       }
-      
+
       return NextResponse.json(
         {
           success: false,
@@ -203,7 +251,7 @@ export async function POST(request) {
     if (body.user_id) {
       // Check if user exists and is logged in
       try {
-        const user = await db.collection('users').findOne({ 
+        const user = await db.collection('users').findOne({
           user_id: body.user_id,
           is_deleted: { $ne: true }
         });
@@ -220,7 +268,7 @@ export async function POST(request) {
         // Continue with email verification check
       }
     }
-    
+
     if (!skipEmailVerification && !isEmailVerified(normalizedEmail)) {
       return NextResponse.json(
         {
@@ -237,14 +285,14 @@ export async function POST(request) {
     const MAX_ORDERS = spamConfig.max_orders || parseInt(process.env.SPAM_MAX_ORDERS || '5');
     const ORDER_RATE_LIMIT_TTL = spamConfig.order_rate_limit_ttl || parseInt(process.env.SPAM_ORDER_RATE_LIMIT_TTL || '1800');
     const ORDER_RATE_LIMIT_BLACKLIST_HOURS = spamConfig.order_rate_limit_blacklist_hours || parseInt(process.env.SPAM_ORDER_RATE_LIMIT_BLACKLIST_HOURS || '24');
-    
+
     const rateLimitKey = `order_count:${normalizedEmail}:${ORDER_RATE_LIMIT_TTL}s`;
     const orderCount = cache.increment(rateLimitKey, ORDER_RATE_LIMIT_TTL);
 
     if (orderCount > MAX_ORDERS) {
       // Auto blacklist email
       await autoBlacklistIfNeeded(normalizedEmail, 'too_many_orders', ORDER_RATE_LIMIT_BLACKLIST_HOURS);
-      
+
       return NextResponse.json(
         {
           success: false,
@@ -270,22 +318,22 @@ export async function POST(request) {
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
     const dateStr = `${year}${month}${day}`; // yyyymmdd
-    
+
     // Tính số đơn hàng trong ngày hiện tại
     const startOfDay = new Date(year, now.getMonth(), now.getDate(), 0, 0, 0, 0);
     const endOfDay = new Date(year, now.getMonth(), now.getDate(), 23, 59, 59, 999);
-    
+
     const ordersToday = await db.collection('orders').countDocuments({
       created_at: {
         $gte: startOfDay,
         $lte: endOfDay
       }
     });
-    
+
     // Số thứ tự = số đơn hàng hiện tại + 1 (bắt đầu từ 0001)
     const sequenceNumber = ordersToday + 1;
     const sequenceStr = String(sequenceNumber).padStart(4, '0'); // Format thành 4 chữ số
-    
+
     body.order_id = `ORD-${dateStr}-${sequenceStr}`;
 
     // Chuẩn hóa category_name cho items (đảm bảo luôn có trong order và orderLog)
@@ -341,7 +389,7 @@ export async function POST(request) {
       let changedByDetail = null;
       if (body.user_id) {
         try {
-          const user = await db.collection('users').findOne({ 
+          const user = await db.collection('users').findOne({
             user_id: body.user_id,
             is_deleted: { $ne: true }
           });
@@ -371,14 +419,14 @@ export async function POST(request) {
           console.error('Error fetching user info for status_history:', userError);
         }
       }
-      
+
       // Fallback to system if no detail
       if (!changedByDetail) {
         changedByDetail = {
           type: 'system',
         };
       }
-      
+
       body.status_history = [{
         status: body.status || 'pending',
         changed_at: new Date(),
@@ -434,8 +482,8 @@ export async function POST(request) {
     if (customerEmail) {
       try {
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-        const trackOrderUrl = `${baseUrl}/track-order?order_id=${body.order_id}`;
-        
+        const trackOrderUrl = `${baseUrl}/track-order?order_id=${body.order_id}&phone=${body.customer_phone}`;
+
         await sendOrderConfirmationEmail(
           customerEmail,
           body.customer_name,

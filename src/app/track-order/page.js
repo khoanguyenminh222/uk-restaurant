@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
-import { Search, Package, Clock, CheckCircle, XCircle, Loader2 } from "lucide-react"
+import { Search, Package, Clock, CheckCircle, XCircle, Loader2, Phone } from "lucide-react"
 import { formatCurrency } from "@/utils/helpers"
 
 const statusConfig = {
@@ -53,21 +53,31 @@ const statusConfig = {
 function TrackOrderForm() {
   const searchParams = useSearchParams()
   const orderIdFromUrl = searchParams.get("order_id")
-  
+  const phoneFromUrl = searchParams.get("phone")
+
   const [orderId, setOrderId] = useState(orderIdFromUrl || "")
+  const [phone, setPhone] = useState(phoneFromUrl || "")
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
   useEffect(() => {
     if (orderIdFromUrl) {
-      fetchOrder(orderIdFromUrl)
+      // Nếu có both ID và Phone từ URL (từ trang Order Success), auto fetch
+      if (phoneFromUrl) {
+        fetchOrder(orderIdFromUrl, phoneFromUrl)
+      }
+      // Nếu chỉ có ID, user phải nhập phone -> không auto fetch ngay mà để user nhập
     }
-  }, [orderIdFromUrl])
+  }, [orderIdFromUrl, phoneFromUrl])
 
-  const fetchOrder = async (id) => {
+  const fetchOrder = async (id, phoneNumber) => {
     if (!id || !id.trim()) {
       setError("Vui lòng nhập mã đơn hàng")
+      return
+    }
+    if (!phoneNumber || !phoneNumber.trim()) {
+      setError("Vui lòng nhập số điện thoại đặt hàng")
       return
     }
 
@@ -76,13 +86,17 @@ function TrackOrderForm() {
     setOrder(null)
 
     try {
-      const response = await fetch(`/api/orders?order_id=${encodeURIComponent(id.trim())}`)
+      const response = await fetch(`/api/orders?order_id=${encodeURIComponent(id.trim())}&phone=${encodeURIComponent(phoneNumber.trim())}`)
       const data = await response.json()
 
       if (data.success && data.data && data.data.length > 0) {
         setOrder(data.data[0])
       } else {
-        setError("Không tìm thấy đơn hàng với mã này")
+        if (response.status === 403) {
+          setError("Thông tin không chính xác (Mã đơn hàng hoặc Số điện thoại)")
+        } else {
+          setError("Không tìm thấy đơn hàng với thông tin này")
+        }
       }
     } catch (err) {
       console.error("Error fetching order:", err)
@@ -94,7 +108,7 @@ function TrackOrderForm() {
 
   const handleSearch = (e) => {
     e.preventDefault()
-    fetchOrder(orderId)
+    fetchOrder(orderId, phone)
   }
 
   const StatusIcon = order ? statusConfig[order.status]?.icon || Clock : Clock
@@ -108,26 +122,36 @@ function TrackOrderForm() {
             <Package className="w-8 h-8 text-primary" />
             Theo dõi đơn hàng
           </h1>
-          <p className="text-muted-foreground">Nhập mã đơn hàng để xem trạng thái đơn hàng của bạn</p>
+          <p className="text-muted-foreground">Nhập mã đơn hàng và số điện thoại để xem trạng thái</p>
         </div>
 
         {/* Search Form */}
         <div className="bg-card rounded-xl p-6 mb-6 border border-border">
-          <form onSubmit={handleSearch} className="flex gap-3">
+          <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-3">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <input
                 type="text"
                 value={orderId}
                 onChange={(e) => setOrderId(e.target.value)}
-                placeholder="Nhập mã đơn hàng (ví dụ: ORD-1234567890-123)"
+                placeholder="Mã đơn hàng (ví dụ: ORD-...)"
+                className="w-full pl-10 pr-4 py-3 bg-input border border-border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+            <div className="flex-1 relative">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="Số điện thoại đặt hàng"
                 className="w-full pl-10 pr-4 py-3 bg-input border border-border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
+              className="px-6 py-3 bg-primary hover:bg-primary-dark text-primary-foreground font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
             >
               {loading ? (
                 <>
@@ -202,12 +226,12 @@ function TrackOrderForm() {
                   <p className="text-card-foreground font-medium">
                     {order.created_at
                       ? new Date(order.created_at).toLocaleString("vi-VN", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
                       : "N/A"}
                   </p>
                 </div>

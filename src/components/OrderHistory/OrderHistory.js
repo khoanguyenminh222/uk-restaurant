@@ -67,7 +67,7 @@ export default function OrderHistory({ isOpen, onClose }) {
     setOrdersLoading(true)
     setError("")
     try {
-      const response = await fetch(`/api/orders?user_id=${userId}`)
+      const response = await userFetch(`/api/orders?user_id=${userId}`)
       const data = await response.json()
 
       if (data.success) {
