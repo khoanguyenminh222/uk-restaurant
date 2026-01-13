@@ -193,27 +193,6 @@ export default function Testimonials({ onReviewFormClick }) {
     return `${Math.floor(diffDays / 365)} năm trước`
   }
 
-  // Mask phone number - ẩn danh, chỉ hiển thị một phần
-  const maskPhone = (phone) => {
-    if (!phone) return ''
-    // Xóa khoảng trắng và ký tự đặc biệt
-    const cleaned = phone.replace(/\s+/g, '').replace(/[^\d]/g, '')
-    if (cleaned.length < 4) return phone // Nếu quá ngắn, trả về nguyên
-
-    // Hiển thị 3 số đầu và 3 số cuối, phần giữa dùng *
-    // Ví dụ: 0901234567 -> 090***567
-    if (cleaned.length >= 6) {
-      const first3 = cleaned.substring(0, 3)
-      const last3 = cleaned.substring(cleaned.length - 3)
-      const middle = '*'.repeat(Math.max(3, cleaned.length - 6))
-      return `${first3}${middle}${last3}`
-    }
-    // Nếu từ 4-5 số, chỉ hiển thị 2 số đầu và 2 số cuối
-    const first2 = cleaned.substring(0, 2)
-    const last2 = cleaned.substring(cleaned.length - 2)
-    return `${first2}**${last2}`
-  }
-
   // Trust stats - Social proof mạnh mẽ
   // Chỉ sử dụng giá trị từ config khi đã load xong, không dùng default ngay
   const defaultTrustStats = {
@@ -247,7 +226,7 @@ export default function Testimonials({ onReviewFormClick }) {
   const displayReviews = reviews.length > 0
     ? reviews.map((review, index) => ({
       name: review.customer_name || 'Khách hàng',
-      role: review.customer_phone ? `SĐT: ${maskPhone(review.customer_phone)}` : 'Khách hàng',
+      role: review.customer_phone ? `SĐT: ${review.customer_phone}` : 'Khách hàng',
       rating: review.rating || 5,
       comment: review.comment || '',
       avatar: review.avatar || '👤',
@@ -490,7 +469,7 @@ export default function Testimonials({ onReviewFormClick }) {
                           </div>
 
                           {/* Author Info */}
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 w-full">
                             <div className="flex items-center gap-2 mb-0.5 sm:mb-1">
                               <h4 className="font-bold text-sm sm:text-base text-card-foreground truncate">{testimonial.name}</h4>
                             </div>

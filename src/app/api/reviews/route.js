@@ -33,22 +33,22 @@ export async function GET(request) {
 
     const query = {};
     const all = searchParams.get('all'); // Cho phép admin lấy tất cả reviews
-    
+
     // Filter by approval status
     if (approved !== null) {
       query.is_approved = approved === 'true';
     }
-    
+
     // Filter by rating
     if (rating && rating !== 'all') {
       query.rating = parseInt(rating);
     }
-    
+
     // Filter by visibility
     if (visible !== null && visible !== 'all') {
       query.is_visible = visible === 'true';
     }
-    
+
     // Search filter
     if (search && search.trim()) {
       const searchRegex = { $regex: search.trim(), $options: 'i' };
@@ -59,7 +59,7 @@ export async function GET(request) {
         { customer_email: searchRegex },
       ];
     }
-    
+
     // Filter by date range
     if (dateFrom || dateTo) {
       query.created_at = {};
@@ -76,7 +76,7 @@ export async function GET(request) {
         query.created_at.$lte = toDate;
       }
     }
-    
+
     // Nếu không có approved param và không phải all, chỉ lấy reviews đã được duyệt và visible (cho public)
     if (approved === null && all !== 'true') {
       query.is_approved = { $ne: false };
@@ -98,16 +98,37 @@ export async function GET(request) {
       .collection('reviews')
       .find({ is_approved: { $ne: false } })
       .toArray();
-    
+
     const stats = calculateReviewStats(allApprovedReviews);
 
     return NextResponse.json(
       {
         success: true,
-        data: reviews.map(review => ({
-          ...review,
-          _id: review._id.toString(),
-        })),
+        data: reviews.map(review => {
+          // Nếu là admin (có param all=true), trả về đầy đủ
+          if (all === 'true') {
+            return {
+              ...review,
+              _id: review._id.toString(),
+            };
+          }
+
+          // Nếu là public API, chỉ trả về các trường safe
+          return {
+            _id: review._id.toString(),
+            customer_name: review.customer_name,
+            rating: review.rating,
+            comment: review.comment,
+            created_at: review.created_at,
+            avatar: review.avatar,
+            color: review.color,
+            borderColor: review.borderColor,
+            // Trả về phone/email đã được che
+            customer_phone: maskPhone(review.customer_phone),
+            customer_email: maskEmail(review.customer_email),
+            // Không trả về updated_at, is_approved, is_visible
+          };
+        }),
         stats,
         pagination: {
           total,
@@ -125,6 +146,21 @@ export async function GET(request) {
       { status: 500 }
     );
   }
+}
+
+// Helper functions để che thông tin
+function maskPhone(phone) {
+  if (!phone || phone.length < 4) return '***';
+  return phone.slice(0, 3) + '*'.repeat(phone.length - 6) + phone.slice(-3);
+}
+
+function maskEmail(email) {
+  if (!email || !email.includes('@')) return '***';
+  const [name, domain] = email.split('@');
+  if (name.length <= 3) {
+    return name + '***@' + domain;
+  }
+  return name.slice(0, 3) + '***@' + domain;
 }
 
 /**
