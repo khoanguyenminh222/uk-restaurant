@@ -389,7 +389,7 @@ export default function AdminReviews() {
                   <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
                   <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover/info:block z-50 pointer-events-none">
                     <div className="bg-popover border border-border rounded-lg p-2 shadow-lg w-64 text-xs text-popover-foreground whitespace-normal">
-                      Điểm trung bình được tính từ tất cả reviews đã duyệt trong database
+                      Điểm trung bình được tính từ tất cả reviews đã duyệt
                     </div>
                     <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-border"></div>
                   </div>
@@ -405,13 +405,13 @@ export default function AdminReviews() {
                   <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
                   <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover/info:block z-50 pointer-events-none">
                     <div className="bg-popover border border-border rounded-lg p-2 shadow-lg w-64 text-xs text-popover-foreground whitespace-normal">
-                      Tổng số reviews đã duyệt trong database (không phụ thuộc filter/phân trang)
+                      Tổng số tất cả reviews (bao gồm cả chờ duyệt và đã duyệt)
                     </div>
                     <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-border"></div>
                   </div>
                 </div>
               </div>
-              <div className="text-2xl font-bold text-foreground">{stats.totalReviews}</div>
+              <div className="text-2xl font-bold text-foreground">{stats.totalAllReviews || stats.totalReviews}</div>
             </div>
             <div className="bg-card border border-border rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -421,7 +421,7 @@ export default function AdminReviews() {
                   <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
                   <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover/info:block z-50 pointer-events-none">
                     <div className="bg-popover border border-border rounded-lg p-2 shadow-lg w-64 text-xs text-popover-foreground whitespace-normal">
-                      Tổng số reviews đã duyệt trong database (không phụ thuộc filter/phân trang)
+                      Tổng số reviews đã duyệt (không phụ thuộc filter/phân trang)
                     </div>
                     <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-border"></div>
                   </div>
@@ -439,7 +439,7 @@ export default function AdminReviews() {
                   <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
                   <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover/info:block z-50 pointer-events-none">
                     <div className="bg-popover border border-border rounded-lg p-2 shadow-lg w-64 text-xs text-popover-foreground whitespace-normal">
-                      Tổng số reviews chờ duyệt trong database (không phụ thuộc filter/phân trang)
+                      Tổng số reviews chờ duyệt (không phụ thuộc filter/phân trang)
                     </div>
                     <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-border"></div>
                   </div>

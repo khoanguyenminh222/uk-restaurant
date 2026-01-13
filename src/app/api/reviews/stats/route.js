@@ -39,6 +39,8 @@ export async function GET(request) {
         success: true,
         data: {
           ...stats,
+          // Override verifiedCustomers with real calculation
+          verifiedCustomers: totalReviews > 0 ? Math.round((totalApproved / totalReviews) * 100) : 0,
           totalApproved,
           totalPending,
           totalAllReviews: totalReviews,
@@ -52,9 +54,20 @@ export async function GET(request) {
     if (isAutoStats) {
       // Nếu cấu hình Auto: Trả về Real Stats
       const stats = calculateReviewStats(approvedReviews);
+
+      // Calculate real verified percentage (Approved / Total Submission)
+      const totalReviewsCount = await db.collection('reviews').countDocuments({});
+      const totalApprovedCount = approvedReviews.length;
+      const verifiedPercentage = totalReviewsCount > 0
+        ? Math.round((totalApprovedCount / totalReviewsCount) * 100)
+        : 0;
+
       return NextResponse.json({
         success: true,
-        data: stats,
+        data: {
+          ...stats,
+          verifiedCustomers: verifiedPercentage
+        },
       }, { status: 200 });
     } else {
       // Nếu cấu hình Manual: Trả về Manual Stats từ Config
