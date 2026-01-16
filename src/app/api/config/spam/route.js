@@ -19,7 +19,7 @@ export async function GET(request) {
       max_orders: spamConfig.max_orders || parseInt(process.env.SPAM_MAX_ORDERS || '5'),
       order_rate_limit_ttl: spamConfig.order_rate_limit_ttl || parseInt(process.env.SPAM_ORDER_RATE_LIMIT_TTL || '1800'),
       order_rate_limit_blacklist_hours: spamConfig.order_rate_limit_blacklist_hours || parseInt(process.env.SPAM_ORDER_RATE_LIMIT_BLACKLIST_HOURS || '24'),
-      resend_code_cooldown: spamConfig.resend_code_cooldown || 60,
+      resend_code_cooldown: spamConfig.resend_code_cooldown || parseInt(process.env.SPAM_RESEND_CODE_COOLDOWN || '60'),
     };
 
     return NextResponse.json(

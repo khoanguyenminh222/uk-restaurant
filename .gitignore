@@ -43,4 +43,4 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-DANH_SACH_CHUC_NANG.md
+.kiro
