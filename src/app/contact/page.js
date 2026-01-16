@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 
 import { defaultContactConfig, mergeWithDefaults } from "@/lib/models/ContactConfig";
 import clientPromise, { getDatabaseName } from "@/lib/mongodb";
@@ -55,3 +57,4 @@ export async function generateMetadata() {
 export default function ContactPage() {
     return <ContactClient />;
 }
+

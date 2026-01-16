@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { validateFood } from '@/lib/models/Food';
@@ -150,4 +152,5 @@ export async function POST(request) {
     );
   }
 }
+
 

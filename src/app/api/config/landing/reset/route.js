@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { defaultLandingConfig } from '@/lib/models/LandingConfig';
@@ -51,4 +53,5 @@ export async function POST(request) {
     );
   }
 }
+
 

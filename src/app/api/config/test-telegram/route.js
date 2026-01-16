@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextResponse } from 'next/server';
 import { sendTestTelegramMessage } from '@/lib/telegram';
 import { getTelegramConfig } from '@/lib/restaurantConfig';
@@ -66,4 +68,5 @@ export async function POST(req) {
     );
   }
 }
+
 

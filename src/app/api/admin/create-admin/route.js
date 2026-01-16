@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { validateUserRegistration } from '@/lib/models/User';
@@ -102,3 +104,4 @@ export async function POST(request) {
     );
   }
 }
+

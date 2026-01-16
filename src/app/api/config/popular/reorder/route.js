@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
@@ -68,4 +70,5 @@ export async function PUT(request) {
     );
   }
 }
+
 

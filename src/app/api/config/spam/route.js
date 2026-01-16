@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextResponse } from 'next/server';
 import { getSpamConfig } from '@/lib/restaurantConfig';
 
@@ -37,4 +39,5 @@ export async function GET(request) {
     );
   }
 }
+
 

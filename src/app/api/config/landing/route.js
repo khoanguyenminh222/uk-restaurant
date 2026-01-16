@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { defaultLandingConfig, validateLandingConfig, mergeWithDefaults } from '@/lib/models/LandingConfig';
@@ -297,4 +299,5 @@ export async function PUT(request) {
     );
   }
 }
+
 

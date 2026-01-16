@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { defaultContactConfig, validateContactConfig, mergeWithDefaults } from '@/lib/models/ContactConfig';
@@ -184,4 +186,5 @@ export async function PUT(request) {
     );
   }
 }
+
 

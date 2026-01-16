@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 "use client"
 
 import { useState, useRef, useEffect } from "react"
@@ -163,3 +165,4 @@ export default function Home() {
     </div>
   )
 }
+

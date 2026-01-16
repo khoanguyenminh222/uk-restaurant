@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextResponse } from 'next/server';
 import { sendTestEmail } from '@/lib/email';
 import { getEmailConfig } from '@/lib/restaurantConfig';
@@ -73,3 +75,4 @@ export async function POST(req) {
     );
   }
 }
+

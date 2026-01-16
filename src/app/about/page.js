@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 
 import { defaultAboutConfig, mergeWithDefaults } from "@/lib/models/AboutConfig";
 import clientPromise, { getDatabaseName } from "@/lib/mongodb";
@@ -55,3 +57,4 @@ export async function generateMetadata() {
 export default function AboutPage() {
   return <AboutClient />;
 }
+

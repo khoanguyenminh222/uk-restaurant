@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import bcrypt from 'bcryptjs';
@@ -102,4 +104,5 @@ export async function POST(request) {
     );
   }
 }
+
 

@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextResponse } from 'next/server';
 import { sendVerificationCode } from '@/lib/emailVerification';
 
@@ -51,4 +53,5 @@ export async function POST(request) {
     );
   }
 }
+
 

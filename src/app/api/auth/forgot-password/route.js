@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { sendResetPasswordEmail } from '@/lib/email';
@@ -97,4 +99,5 @@ export async function POST(request) {
     );
   }
 }
+
 

@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { getAdminFromToken } from '@/lib/auth';
@@ -117,4 +119,5 @@ export async function POST(request) {
     );
   }
 }
+
 

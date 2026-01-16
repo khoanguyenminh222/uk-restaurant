@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { NextResponse } from 'next/server';
 import { getUserFromToken, signJWT } from '@/lib/auth';
 
@@ -36,3 +38,4 @@ export async function POST(request) {
         );
     }
 }
+

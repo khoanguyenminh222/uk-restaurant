@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -1173,4 +1175,5 @@ export default function AdminFood() {
     </div>
   );
 }
+
 
