@@ -29,6 +29,7 @@ export default function AdminsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [formData, setFormData] = useState({
     phone: '',
     name: '',
@@ -442,71 +443,97 @@ export default function AdminsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-card-foreground flex items-center gap-2">
-            <Shield className="w-7 h-7 text-primary" />
-            Quản lý Admin
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">Danh sách tài khoản quản trị hệ thống</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/50 pb-4">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <Shield className="w-6 h-6 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-card-foreground leading-tight flex items-center gap-2">
+              Quản lý Admin
+            </h1>
+            <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Danh sách tài khoản quản trị hệ thống</p>
+          </div>
         </div>
         <button
           onClick={() => setShowCreateForm(true)}
-          className="flex cursor-pointer items-center justify-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg font-medium transition-colors shadow-lg shadow-primary/20"
+          className="flex cursor-pointer items-center justify-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-semibold text-sm transition-all shadow-sm shadow-primary/20 w-full sm:w-auto shrink-0"
         >
-          <UserPlus className="w-5 h-5" />
-          <span>Tạo Admin mới</span>
+          <UserPlus className="w-4 h-4" />
+          <span>Tạo Admin</span>
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="bg-card rounded-lg border border-border p-4 space-y-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          {/* Search */}
+      {/* Filters Section */}
+      <div className="bg-card rounded-xl border border-border p-3 sm:p-4 space-y-3 shadow-sm transition-all duration-300">
+        {/* Main Search Row */}
+        <div className="flex gap-2">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Tìm theo tên, SĐT, email..."
+              placeholder="Tìm tên, SĐT, email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className="w-full pl-10 pr-4 py-2 bg-input border border-border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full pl-9 pr-4 py-2 bg-muted/30 border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
             />
           </div>
+
           <button
             onClick={handleSearch}
             disabled={searching}
-            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-all font-semibold text-sm cursor-pointer disabled:opacity-50 flex items-center gap-2 shadow-sm shrink-0"
           >
-            {searching ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Đang tìm...</span>
-              </>
-            ) : (
-              'Tìm kiếm'
-            )}
+            {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Tìm</span>}
           </button>
 
-          {/* Role Filter */}
-          <div className="relative">
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <button
+            onClick={() => setShowMobileFilters(!showMobileFilters)}
+            className={`sm:hidden flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border transition-all ${showMobileFilters || roleFilter !== 'all'
+              ? 'bg-primary/10 border-primary text-primary'
+              : 'bg-muted/30 border-border text-muted-foreground'
+              }`}
+          >
+            <Filter className="w-4 h-4" />
+            {roleFilter !== 'all' && (
+              <span className="flex items-center justify-center bg-primary text-primary-foreground text-[10px] font-bold w-4 h-4 rounded-full">1</span>
+            )}
+          </button>
+        </div>
+
+        {/* Collapsible/Desktop Filters */}
+        <div className={`${showMobileFilters ? 'flex' : 'hidden'} sm:flex flex-col sm:flex-row items-center gap-3 pt-3 sm:pt-0 sm:border-t-0 border-t border-border/50 animate-in slide-in-from-top-2 duration-300`}>
+          <div className="w-full sm:w-48 relative">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <select
               value={roleFilter}
               onChange={(e) => {
                 setRoleFilter(e.target.value);
                 setPagination(prev => ({ ...prev, page: 1 }));
               }}
-              className="pl-10 pr-8 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring appearance-none"
+              className="w-full pl-9 pr-8 py-2 bg-muted/30 border border-border rounded-lg text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all appearance-none cursor-pointer"
             >
-              <option value="all">Tất cả</option>
+              <option value="all">Tất cả vai trò</option>
               <option value="manager">Manager</option>
               <option value="admin">Admin</option>
               <option value="super_admin">Super Admin</option>
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
           </div>
+
+          {(searchTerm || roleFilter !== 'all') && (
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setRoleFilter('all');
+              }}
+              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-destructive transition-colors ml-auto sm:ml-0"
+            >
+              <X className="w-3.5 h-3.5" />
+              <span>Xóa lọc</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -874,16 +901,16 @@ export default function AdminsPage() {
           admins.map((admin) => (
             <div
               key={admin._id}
-              className="bg-card rounded-xl border border-border p-4 space-y-4 hover:shadow-md transition-shadow relative overflow-hidden group"
+              className="bg-card rounded-xl border border-border p-3.5 space-y-3 hover:shadow-sm transition-all relative overflow-hidden group"
             >
               <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 -mr-8 -mt-8 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors"></div>
 
               <div className="flex items-start justify-between gap-3 relative z-10">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2 flex-wrap">
-                    <h3 className="font-bold text-card-foreground truncate">{admin.name}</h3>
+                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                    <h3 className="text-sm font-bold text-card-foreground truncate">{admin.name}</h3>
                     <span
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase shrink-0 ${admin.role === 'super_admin'
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase shrink-0 ${admin.role === 'super_admin'
                         ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50'
                         : admin.role === 'admin'
                           ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
@@ -891,38 +918,25 @@ export default function AdminsPage() {
                         }`}
                     >
                       {admin.role === 'super_admin' ? (
-                        <ShieldCheck className="w-3 h-3" />
+                        <ShieldCheck className="w-2.5 h-2.5" />
                       ) : (
-                        <Shield className="w-3 h-3" />
+                        <Shield className="w-2.5 h-2.5" />
                       )}
                       {admin.role === 'super_admin' ? 'Super Admin' : admin.role === 'admin' ? 'Admin' : 'Manager'}
                     </span>
                   </div>
-                  <div className="space-y-2 text-sm text-muted-foreground">
+                  <div className="space-y-1.5 text-xs text-muted-foreground">
                     <div className="flex items-center gap-2">
-                      <div className="p-1.5 bg-muted rounded-md shrink-0">
-                        <Phone className="w-3.5 h-3.5" />
-                      </div>
-                      <span className="font-medium">{admin.phone}</span>
+                      <Phone className="w-3 h-3 text-primary/70" />
+                      <span className="font-medium text-foreground">{admin.phone}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="p-1.5 bg-muted rounded-md shrink-0">
-                        <Mail className="w-3.5 h-3.5" />
-                      </div>
+                      <Mail className="w-3 h-3 text-primary/70" />
                       <span className="truncate">{admin.email}</span>
                     </div>
-                    {admin.address && (
-                      <div className="flex items-center gap-2">
-                        <div className="p-1.5 bg-muted rounded-md shrink-0">
-                          <Eye className="w-3.5 h-3.5 text-muted-foreground/60" />
-                        </div>
-                        <span className="truncate">{admin.address}</span>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
-
               <div className="pt-3 border-t border-border/50 grid grid-cols-2 gap-4 text-[11px] text-muted-foreground relative z-10">
                 <div>
                   <span className="block text-muted-foreground/60">Ngày tạo</span>
@@ -937,16 +951,16 @@ export default function AdminsPage() {
               <div className="flex items-center gap-3 pt-3 relative z-10">
                 <button
                   onClick={() => handleEdit(admin)}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-all font-semibold text-sm cursor-pointer border border-primary/20"
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-all font-semibold text-xs cursor-pointer border border-primary/10"
                 >
-                  <Edit2 className="w-4 h-4" />
+                  <Edit2 className="w-3.5 h-3.5" />
                   <span>Sửa</span>
                 </button>
                 <button
                   onClick={() => handleDelete(admin)}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg transition-all font-semibold text-sm cursor-pointer border border-destructive/20"
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg transition-all font-semibold text-xs cursor-pointer border border-destructive/10"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3.5 h-3.5" />
                   <span>Xóa</span>
                 </button>
               </div>

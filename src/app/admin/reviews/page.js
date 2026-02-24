@@ -82,6 +82,7 @@ export default function AdminReviews() {
   const [isApprovingId, setIsApprovingId] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const editModalRef = useRef(null);
   const deleteModalRef = useRef(null);
 
@@ -452,75 +453,39 @@ export default function AdminReviews() {
           </div>
         )}
 
-        {/* Filters */}
-        <div className="bg-card border border-border rounded-lg p-4 mb-6">
-          {/* Date Range Filter */}
-          <div className="mb-4 pb-4 border-b border-border">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
+        {/* Filters Section */}
+        <div className="bg-card rounded-xl border border-border p-3 sm:p-4 mb-6 space-y-3 shadow-sm transition-all duration-300">
+          {/* Main Filter Row (Search + Mobile Toggle) */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1 flex gap-2">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
-                  type="date"
-                  value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="Từ ngày"
+                  type="text"
+                  placeholder="Tìm nội dung, tên khách..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 bg-muted/30 border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                 />
-                <label className="block text-xs text-muted-foreground mt-1 ml-1">Từ ngày</label>
               </div>
-              <div className="relative flex-1">
-                <input
-                  type="date"
-                  value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="Đến ngày"
-                />
-                <label className="block text-xs text-muted-foreground mt-1 ml-1">Đến ngày</label>
-              </div>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Tìm kiếm..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-              />
+              {/* Mobile Toggle */}
+              <button
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className={`sm:hidden flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border transition-all ${showMobileFilters || (statusFilter !== 'all' || ratingFilter !== 'all' || visibilityFilter !== 'all' || dateFrom || dateTo)
+                    ? 'bg-primary/10 border-primary text-primary'
+                    : 'bg-muted/30 border-border text-muted-foreground'
+                  }`}
+              >
+                <Filter className="w-4 h-4" />
+                {(statusFilter !== 'all' || ratingFilter !== 'all' || visibilityFilter !== 'all' || dateFrom || dateTo) && (
+                  <span className="flex items-center justify-center bg-primary text-primary-foreground text-[10px] font-bold w-4 h-4 rounded-full">
+                    {[statusFilter !== 'all', ratingFilter !== 'all', visibilityFilter !== 'all', dateFrom || dateTo].filter(Boolean).length}
+                  </span>
+                )}
+              </button>
             </div>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
-            >
-              <option value="all">Tất cả trạng thái</option>
-              <option value="approved">Đã duyệt</option>
-              <option value="pending">Chờ duyệt</option>
-            </select>
-            <select
-              value={visibilityFilter}
-              onChange={(e) => setVisibilityFilter(e.target.value)}
-              className="px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
-            >
-              <option value="all">Tất cả hiển thị</option>
-              <option value="visible">Đang hiển thị</option>
-              <option value="hidden">Đang ẩn</option>
-            </select>
-            <select
-              value={ratingFilter}
-              onChange={(e) => setRatingFilter(e.target.value)}
-              className="px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
-            >
-              <option value="all">Tất cả điểm</option>
-              <option value="5">5 sao</option>
-              <option value="4">4 sao</option>
-              <option value="3">3 sao</option>
-              <option value="2">2 sao</option>
-              <option value="1">1 sao</option>
-            </select>
+
             <button
               onClick={() => {
                 setSearchTerm('');
@@ -530,10 +495,87 @@ export default function AdminReviews() {
                 setDateFrom('');
                 setDateTo('');
               }}
-              className="px-4 py-2 bg-muted hover:bg-muted/80 border border-border rounded-lg text-foreground transition-colors cursor-pointer"
+              className="hidden sm:flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              <X className="w-4 h-4 inline mr-2" />
-              Xóa bộ lọc
+              <X className="w-4 h-4" />
+              <span>Thiết lập lại</span>
+            </button>
+          </div>
+
+          {/* Collapsible Advanced Filters */}
+          <div className={`${showMobileFilters ? 'grid' : 'hidden'} sm:grid grid-cols-1 md:grid-cols-4 gap-3 pt-3 border-t border-border/50 animate-in slide-in-from-top-2 duration-300`}>
+            {/* Status */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase ml-1">Trạng thái duyệt</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full px-3 py-2 bg-muted/30 border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer"
+              >
+                <option value="all">Tất cả trạng thái</option>
+                <option value="approved">Đã duyệt</option>
+                <option value="pending">Chờ duyệt</option>
+              </select>
+            </div>
+
+            {/* Rating */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase ml-1">Số sao</label>
+              <select
+                value={ratingFilter}
+                onChange={(e) => setRatingFilter(e.target.value)}
+                className="w-full px-3 py-2 bg-muted/30 border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer"
+              >
+                <option value="all">Tất cả mức sao</option>
+                <option value="5">5 sao</option>
+                <option value="4">4 sao</option>
+                <option value="3">3 sao</option>
+                <option value="2">2 sao</option>
+                <option value="1">1 sao</option>
+              </select>
+            </div>
+
+            {/* Visibility */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase ml-1">Kênh hiển thị</label>
+              <select
+                value={visibilityFilter}
+                onChange={(e) => setVisibilityFilter(e.target.value)}
+                className="w-full px-3 py-2 bg-muted/30 border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer"
+              >
+                <option value="all">Tất cả kênh</option>
+                <option value="visible">Đang hiển thị</option>
+                <option value="hidden">Đang ẩn</option>
+              </select>
+            </div>
+
+            {/* Date Range Start (Quick Date) */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase ml-1">Từ ngày</label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 bg-muted/30 border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Reset (Mobile Only) */}
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setStatusFilter('all');
+                setVisibilityFilter('all');
+                setRatingFilter('all');
+                setDateFrom('');
+                setDateTo('');
+              }}
+              className="sm:hidden w-full py-2.5 mt-2 text-xs font-bold text-destructive hover:bg-destructive/5 border border-dashed border-destructive/30 rounded-lg flex items-center justify-center gap-2"
+            >
+              <X className="w-3.5 h-3.5" /> Thiết lập lại bộ lọc
             </button>
           </div>
         </div>
@@ -549,107 +591,103 @@ export default function AdminReviews() {
             <p className="text-muted-foreground">Không có đánh giá nào</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
             {filteredReviews.map((review) => (
               <div
                 key={review._id}
-                className={`bg-card border-2 rounded-lg p-5 ${review.is_approved === false
-                  ? 'border-gray-500/30 bg-gray-500/5 opacity-60'
-                  : 'border-border'
+                className={`bg-card border border-border rounded-xl p-4 sm:p-5 transition-all hover:shadow-md animate-in fade-in duration-300 ${review.is_approved === false ? 'bg-muted/30 grayscale-[0.5]' : ''
                   }`}
               >
-                <div className="flex items-start justify-between gap-4">
-                  {/* Left: Review Info */}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      {/* Avatar */}
-                      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-2xl">
-                        {review.avatar || '👤'}
-                      </div>
-
-                      {/* Customer Info */}
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-bold text-card-foreground">{review.customer_name}</h3>
-                          {review.is_approved === false && (
-                            <XCircle className="w-4 h-4 text-gray-500" title="Chưa duyệt" />
-                          )}
-                        </div>
-                        {review.customer_phone && (
-                          <p className="text-xs text-muted-foreground">{review.customer_phone}</p>
+                <div className="flex flex-col sm:flex-row items-start gap-4">
+                  {/* Left: Avatar & Info */}
+                  <div className="flex items-center sm:items-start gap-3 w-full sm:w-auto">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-2xl shrink-0 shadow-sm">
+                      {review.avatar || '👤'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <h3 className="font-bold text-card-foreground truncate">{review.customer_name}</h3>
+                        {review.is_approved === false && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-yellow-500/10 text-yellow-600 font-bold border border-yellow-500/20">
+                            Chờ duyệt
+                          </span>
                         )}
                       </div>
-
-                      {/* Rating */}
-                      <div className="flex items-center gap-1">
+                      {review.customer_phone && (
+                        <p className="text-xs text-muted-foreground">{review.customer_phone}</p>
+                      )}
+                      <div className="flex items-center gap-1 mt-1">
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
-                            className={`w-5 h-5 ${i < review.rating
-                              ? `fill-yellow-400 text-yellow-400 ${RATING_COLORS[review.rating]}`
-                              : 'text-gray-300'
-                              }`}
+                            className={`w-3.5 h-3.5 ${i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
                           />
                         ))}
-                        <span className="ml-2 font-bold text-foreground">{review.rating}.0</span>
                       </div>
-                    </div>
-
-                    {/* Comment */}
-                    <p className="text-foreground mb-3 leading-relaxed">"{review.comment}"</p>
-
-                    {/* Meta Info */}
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <span>
-                        {new Date(review.created_at).toLocaleDateString('vi-VN', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })}
-                      </span>
-                      {review.order_id && (
-                        <span>Đơn hàng: {review.order_id}</span>
-                      )}
                     </div>
                   </div>
 
-                  {/* Right: Actions */}
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleApprove(review, !review.is_approved)}
-                        disabled={isApprovingId === review._id}
-                        className={`p-2 rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${review.is_approved !== false
-                          ? 'bg-green-500/20 text-green-600 hover:bg-green-500/30'
-                          : 'bg-yellow-500/20 text-yellow-600 hover:bg-yellow-500/30'
-                          }`}
-                        title={review.is_approved !== false ? 'Hủy duyệt' : 'Duyệt'}
-                      >
-                        {isApprovingId === review._id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : review.is_approved !== false ? (
-                          <CheckCircle2 className="w-4 h-4" />
-                        ) : (
-                          <XCircle className="w-4 h-4" />
+                  {/* Right: Comment & Actions */}
+                  <div className="flex-1 flex flex-col justify-between h-full w-full">
+                    <div className="mb-4">
+                      <p className="text-sm sm:text-base text-foreground/90 leading-relaxed italic">
+                        "{review.comment}"
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-border/50">
+                      <div className="flex items-center gap-3 text-[10px] font-medium text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          {new Date(review.created_at).toLocaleDateString('vi-VN')}
+                        </span>
+                        {review.order_id && (
+                          <span className="flex items-center gap-1">
+                            <MessageSquare className="w-3 h-3" />
+                            #{review.order_id.slice(-6)}
+                          </span>
                         )}
-                      </button>
-                      <button
-                        onClick={() => handleOpenEditModal(review)}
-                        className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
-                        title="Chỉnh sửa"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSelectedReview(review);
-                          setShowDeleteModal(true);
-                        }}
-                        className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors cursor-pointer"
-                        title="Xóa"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                        <span className={`px-2 py-0.5 rounded-full ${review.is_visible !== false ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'}`}>
+                          {review.is_visible !== false ? 'Đang hiện' : 'Đang ẩn'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => handleApprove(review, !review.is_approved)}
+                          disabled={isApprovingId === review._id}
+                          className={`p-2 rounded-lg transition-all active:scale-95 ${review.is_approved !== false
+                              ? 'bg-success/10 text-success hover:bg-success/20'
+                              : 'bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20'
+                            }`}
+                          title={review.is_approved !== false ? 'Hủy duyệt' : 'Duyệt'}
+                        >
+                          {isApprovingId === review._id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : review.is_approved !== false ? (
+                            <CheckCircle2 className="w-4 h-4" />
+                          ) : (
+                            <XCircle className="w-4 h-4" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleOpenEditModal(review)}
+                          className="p-2 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg transition-all active:scale-95"
+                          title="Chỉnh sửa"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedReview(review);
+                            setShowDeleteModal(true);
+                          }}
+                          className="p-2 bg-destructive/10 text-destructive hover:bg-destructive/20 rounded-lg transition-all active:scale-95"
+                          title="Xóa"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

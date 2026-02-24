@@ -48,6 +48,7 @@ export default function AdminUsers() {
   });
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
   const [currentAdmin, setCurrentAdmin] = useState(null);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Refs for modals
   const detailModalRef = useRef(null);
@@ -444,62 +445,96 @@ export default function AdminUsers() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center gap-3">
-          <Users className="w-7 h-7 text-primary" />
-          <h1 className="text-2xl lg:text-3xl font-bold text-card-foreground">Quản lý Người dùng</h1>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border/50 pb-4">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <Users className="w-6 h-6 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-card-foreground leading-tight">Quản lý Người dùng</h1>
+            <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Danh sách khách hàng và vai trò hệ thống</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto no-scrollbar py-1 sm:py-0">
+          <div className="px-3 py-1.5 bg-muted/50 rounded-lg border border-border/50 shrink-0">
+            <span className="text-[10px] uppercase font-bold text-muted-foreground block leading-none mb-1">Tổng cộng</span>
+            <span className="text-sm font-bold">{pagination.total}</span>
+          </div>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-card rounded-lg border border-border p-4 space-y-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          {/* Search */}
+      {/* Filters Section */}
+      <div className="bg-card rounded-xl border border-border p-3 sm:p-4 space-y-3 shadow-sm transition-all duration-300">
+        {/* Main Search Row */}
+        <div className="flex gap-2">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Tìm theo tên, SĐT, email..."
+              placeholder="Tìm tên, SĐT, email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              className="w-full pl-10 pr-4 py-2 bg-input border border-border rounded-lg text-card-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full pl-9 pr-4 py-2 bg-muted/30 border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
             />
           </div>
+
           <button
             onClick={handleSearch}
             disabled={searching}
-            className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-all font-semibold text-sm cursor-pointer disabled:opacity-50 flex items-center gap-2 shadow-sm shrink-0"
           >
-            {searching ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Đang tìm...</span>
-              </>
-            ) : (
-              'Tìm kiếm'
-            )}
+            {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Tìm</span>}
           </button>
 
+          <button
+            onClick={() => setShowMobileFilters(!showMobileFilters)}
+            className={`sm:hidden flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border transition-all ${showMobileFilters || roleFilter !== 'all'
+              ? 'bg-primary/10 border-primary text-primary'
+              : 'bg-muted/30 border-border text-muted-foreground'
+              }`}
+          >
+            <Filter className="w-4 h-4" />
+            {roleFilter !== 'all' && (
+              <span className="flex items-center justify-center bg-primary text-primary-foreground text-[10px] font-bold w-4 h-4 rounded-full">1</span>
+            )}
+          </button>
+        </div>
+
+        {/* Collapsible/Desktop Filters */}
+        <div className={`${showMobileFilters ? 'flex' : 'hidden'} sm:flex flex-col sm:flex-row items-center gap-3 pt-3 sm:pt-0 sm:border-t-0 border-t border-border/50 animate-in slide-in-from-top-2 duration-300`}>
           {/* Role Filter */}
-          <div className="relative">
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <div className="w-full sm:w-48 relative">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <select
               value={roleFilter}
               onChange={(e) => {
                 setRoleFilter(e.target.value);
                 setPagination(prev => ({ ...prev, page: 1 }));
               }}
-              className="pl-10 pr-8 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring appearance-none"
+              className="w-full pl-9 pr-8 py-2 bg-muted/30 border border-border rounded-lg text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all appearance-none cursor-pointer"
             >
-              <option value="all">Tất cả</option>
+              <option value="all">Tất cả vai trò</option>
               <option value="user">User</option>
               <option value="manager">Manager</option>
               <option value="admin">Admin</option>
               <option value="super_admin">Super Admin</option>
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
           </div>
+
+          {(searchTerm || roleFilter !== 'all') && (
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setRoleFilter('all');
+              }}
+              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-destructive transition-colors ml-auto sm:ml-0"
+            >
+              <X className="w-3.5 h-3.5" />
+              <span>Xóa lọc</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -661,7 +696,7 @@ export default function AdminUsers() {
             return (
               <div
                 key={user._id || user.user_id}
-                className={`bg-card rounded-lg border border-border p-4 space-y-3 ${isDeleted ? 'opacity-60' : ''}`}
+                className={`bg-card rounded-lg border border-border p-3.5 space-y-2.5 transition-all hover:border-primary/30 ${isDeleted ? 'opacity-60 bg-muted/20 grayscale' : ''}`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
@@ -690,14 +725,15 @@ export default function AdminUsers() {
                           {user.email}
                         </p>
                       )}
-                      <div className="flex items-center gap-4 pt-2 border-t border-border">
+                      <div className="flex items-center gap-4 pt-2 border-t border-border/50 text-xs">
                         <div className="flex items-center gap-1">
-                          <ShoppingCart className="w-4 h-4" />
-                          <span>{user.order_count || 0} đơn</span>
+                          <ShoppingCart className="w-3.5 h-3.5 text-primary/70" />
+                          <span className="font-medium text-foreground">{user.order_count || 0}</span>
+                          <span className="text-muted-foreground">đơn</span>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <DollarSign className="w-4 h-4" />
-                          <span>{formatCurrency(user.total_spent || 0)}</span>
+                        <div className="flex items-center gap-1 border-l border-border/50 pl-4">
+                          <DollarSign className="w-3.5 h-3.5 text-success/70" />
+                          <span className="font-semibold text-foreground">{formatCurrency(user.total_spent || 0)}</span>
                         </div>
                       </div>
                       <div className="pt-2 border-t border-border space-y-1">
@@ -711,24 +747,24 @@ export default function AdminUsers() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 pt-1">
                   <button
                     onClick={() => {
                       setSelectedUser(user);
                       setShowDetailModal(true);
                     }}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium cursor-pointer"
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-all font-semibold text-xs cursor-pointer"
                   >
-                    <Eye className="w-4 h-4" />
+                    <Eye className="w-3.5 h-3.5" />
                     <span>Chi tiết</span>
                   </button>
                   {isDeleted ? (
                     <button
                       onClick={() => handleRestore(user)}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-500/10 hover:bg-green-500/20 text-green-600 rounded-lg transition-colors font-medium cursor-pointer"
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-success/10 hover:bg-success/20 text-success rounded-lg transition-all font-semibold text-xs cursor-pointer"
                       disabled={editing}
                     >
-                      <RotateCcw className="w-4 h-4" />
+                      <RotateCcw className="w-3.5 h-3.5" />
                       <span>Khôi phục</span>
                     </button>
                   ) : (
@@ -736,21 +772,21 @@ export default function AdminUsers() {
                       <button
                         onClick={() => handleEdit(user)}
                         disabled={!canInteractWithUser(user)}
-                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium ${canInteractWithUser(user) ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
+                        className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-all font-semibold text-xs ${canInteractWithUser(user) ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
                           }`}
                         title={!canInteractWithUser(user) ? 'Bạn không có quyền sửa tài khoản admin/super_admin' : 'Sửa'}
                       >
-                        <Edit2 className="w-4 h-4" />
+                        <Edit2 className="w-3.5 h-3.5" />
                         <span>Sửa</span>
                       </button>
                       <button
                         onClick={() => handleDelete(user)}
                         disabled={!canInteractWithUser(user)}
-                        className={`px-4 py-2 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg transition-colors ${canInteractWithUser(user) ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
+                        className={`px-3 py-1.5 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg transition-all ${canInteractWithUser(user) ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
                           }`}
                         title={!canInteractWithUser(user) ? 'Bạn không có quyền xóa tài khoản admin/super_admin' : 'Xóa'}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </>
                   )}
