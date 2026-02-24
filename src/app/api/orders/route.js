@@ -99,6 +99,8 @@ export async function GET(request) {
             { user_id: { $exists: false } },
             { user_id: null }
           ];
+        } else if (customerType === 'direct') {
+          query.created_by_admin = true;
         }
 
         // Discount Filter

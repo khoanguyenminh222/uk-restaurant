@@ -35,6 +35,7 @@ export default function AdminDashboard() {
     to: new Date().toISOString().split('T')[0]
   });
   const [toast, setToast] = useState({ message: "", isVisible: false, type: "success" });
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const allStatusOptions = [
     { value: 'pending', label: 'Chờ xử lý', color: 'bg-yellow-500' },
@@ -143,6 +144,8 @@ export default function AdminDashboard() {
     </div>
   );
 
+  const filterSummary = `Từ ${dateRange.from.split('-').reverse().join('/')} đến ${dateRange.to.split('-').reverse().join('/')} | ${selectedStatuses.length} trạng thái`;
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -152,20 +155,37 @@ export default function AdminDashboard() {
           </div>
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold text-card-foreground">Dashboard</h1>
-            <p className="text-sm text-muted-foreground">Tổng quan hoạt động nhà hàng</p>
+            <p className="text-sm text-muted-foreground">Tổng quan hoạt động</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground bg-muted px-4 py-2 rounded-lg border border-border">
-          <Calendar className="w-4 h-4" />
-          <span>Hệ thống: {new Date().toLocaleDateString('vi-VN')}</span>
+
+        {/* Mobile Filter Toggle & Date Info */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <div className="flex items-center gap-2 text-[10px] sm:text-xs font-medium text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-lg border border-border">
+            <Calendar className="w-3.5 h-3.5" />
+            <span>{filterSummary}</span>
+          </div>
+          <button
+            onClick={() => setShowMobileFilters(!showMobileFilters)}
+            className="md:hidden flex items-center justify-center gap-2 px-4 py-1.5 bg-primary/10 text-primary rounded-lg border border-primary/20 text-xs font-bold transition-all active:scale-95"
+          >
+            <Filter className="w-3.5 h-3.5" />
+            {showMobileFilters ? "Thu gọn bộ lọc" : "Điều chỉnh bộ lọc"}
+          </button>
+          <div className="hidden md:flex items-center gap-2 text-sm font-medium text-muted-foreground bg-muted px-4 py-2 rounded-lg border border-border">
+            <Calendar className="w-4 h-4" />
+            <span>Hệ thống: {new Date().toLocaleDateString('vi-VN')}</span>
+          </div>
         </div>
       </div>
 
-      {/* Date Filters */}
-      <div className="bg-card rounded-xl p-4 border border-border shadow-sm">
-        <div className="flex flex-wrap items-end gap-4">
-          <div className="space-y-1.5 flex-1 min-w-[180px]">
-            <label className="text-xs font-medium text-muted-foreground ml-1">TỪ NGÀY</label>
+      {/* Date & Status Filters */}
+      <div className={`bg-card rounded-xl border border-border shadow-sm transition-all duration-300 overflow-hidden ${showMobileFilters ? 'p-4 opacity-100 max-h-[1000px]' : 'p-0 md:p-4 md:opacity-100 max-h-0 md:max-h-[1000px]'}`}>
+        <div className="flex flex-col md:flex-row items-end gap-3 md:gap-4">
+          <div className="space-y-1.5 w-full md:flex-1">
+            <label className="text-[10px] font-bold text-muted-foreground ml-1 flex items-center gap-1 uppercase tracking-wider">
+              <Calendar className="w-3 h-3" /> Từ ngày
+            </label>
             <div className="relative">
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
@@ -176,8 +196,10 @@ export default function AdminDashboard() {
               />
             </div>
           </div>
-          <div className="space-y-1.5 flex-1 min-w-[180px]">
-            <label className="text-xs font-medium text-muted-foreground ml-1">ĐẾN NGÀY</label>
+          <div className="space-y-1.5 w-full md:flex-1">
+            <label className="text-[10px] font-bold text-muted-foreground ml-1 flex items-center gap-1 uppercase tracking-wider">
+              <Calendar className="w-3 h-3" /> Đến ngày
+            </label>
             <div className="relative">
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
@@ -190,32 +212,43 @@ export default function AdminDashboard() {
           </div>
           <button
             onClick={handleFilter}
-            className="px-6 py-2 bg-primary text-primary-foreground rounded-lg transition-colors font-medium flex items-center gap-2"
+            className="w-full md:w-auto px-8 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-all font-bold flex items-center justify-center gap-2 shadow-sm active:scale-95"
           >
-            Lọc
+            <Filter className="w-4 h-4" />
+            <span>Lọc dữ liệu</span>
           </button>
         </div>
 
         {/* Status Multi-select */}
         <div className="mt-4 pt-4 border-t border-border">
-          <label className="text-xs font-medium text-muted-foreground ml-1 block mb-3">TRẠNG THÁI TÍNH DOANH THU</label>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex items-center justify-between mb-3">
+            <label className="text-[10px] font-bold text-muted-foreground ml-1 flex items-center gap-1 uppercase tracking-wider">
+              TRẠNG THÁI TÍNH DOANH THU
+            </label>
+            <button
+              onClick={() => setSelectedStatuses(['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'completed'])}
+              className="text-[10px] text-primary hover:underline font-bold"
+            >
+              Mặc định
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             {allStatusOptions.map(status => (
               <button
                 key={status.value}
                 onClick={() => toggleStatus(status.value)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-2 border ${selectedStatuses.includes(status.value)
-                  ? 'bg-primary/20 text-primary border-primary/50 shadow-sm'
+                className={`px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-medium transition-all flex items-center gap-2 border ${selectedStatuses.includes(status.value)
+                  ? 'bg-primary/10 text-primary border-primary/30 shadow-sm'
                   : 'bg-muted/50 text-muted-foreground border-transparent hover:border-border'
                   }`}
               >
-                <div className={`w-2 h-2 rounded-full ${status.color}`} />
+                <div className={`w-1.5 h-1.5 rounded-full ${status.color}`} />
                 {status.label}
               </button>
             ))}
           </div>
-          <p className="text-[10px] text-muted-foreground mt-2 italic">
-            * Chọn các trạng thái bạn muốn bao gồm trong báo cáo doanh thu và biểu đồ (Mặc định: Đã giao, Hoàn thành).
+          <p className="text-[10px] text-muted-foreground mt-3 italic leading-relaxed">
+            * Các trạng thái được chọn sẽ dùng để tính doanh thu và vẽ biểu đồ.
           </p>
         </div>
       </div>

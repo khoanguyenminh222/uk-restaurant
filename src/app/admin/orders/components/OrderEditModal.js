@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { Edit2, X, Search, Package, User, ShoppingCart, Minus, Plus, Loader2, CheckCircle2, Tag } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/utils/helpers';
 
@@ -32,6 +33,8 @@ export default function OrderEditModal({
     discountPercent,
     setDiscountPercent,
 }) {
+    const [activeTab, setActiveTab] = useState('menu'); // 'menu' or 'cart'
+
     if (!isOpen || !selectedOrder) return null;
 
     const isSuperAdmin = adminRole === 'super_admin';
@@ -100,42 +103,58 @@ export default function OrderEditModal({
     return (
         <div className="fixed inset-0 bg-background z-[100] flex flex-col animate-in fade-in duration-200">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                        <Edit2 className="w-6 h-6" />
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border bg-card">
+                <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg text-primary">
+                        <Edit2 className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-card-foreground line-clamp-1">
-                            Cập nhật đơn hàng #{selectedOrder.order_id}
+                        <h2 className="text-base sm:text-xl font-bold text-card-foreground line-clamp-1">
+                            Cập nhật đơn #{selectedOrder.order_id}
                         </h2>
-                        <p className="text-xs text-muted-foreground font-medium">
+                        <p className="text-[10px] sm:text-xs text-muted-foreground font-medium">
                             {formatDate(selectedOrder.created_at)}
                         </p>
                     </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-card-foreground transition-colors cursor-pointer"
+                        className="px-3 py-1.5 text-xs sm:text-sm font-medium text-muted-foreground hover:text-card-foreground transition-colors cursor-pointer"
                     >
-                        Đóng
+                        Hủy
                     </button>
                     <button
                         onClick={onSave}
                         disabled={isSaving || cannotSave}
-                        className="px-6 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors font-semibold flex items-center gap-2 shadow-sm disabled:opacity-50"
+                        className="px-4 sm:px-6 py-1.5 sm:py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-colors text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-sm disabled:opacity-50"
                         title={cannotSave ? "Không thể lưu đơn hàng đã hủy, hoàn thành hoặc xóa (Chỉ Super Admin mới có quyền này)" : ""}
                     >
                         {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                        <span>Lưu thay đổi</span>
+                        <span>Lưu</span>
                     </button>
                 </div>
             </div>
 
-            <div className="flex-1 flex overflow-hidden">
+            {/* Mobile Tab Navigation */}
+            <div className="lg:hidden flex border-b border-border bg-card">
+                <button
+                    onClick={() => setActiveTab('menu')}
+                    className={`flex-1 py-3 text-sm font-bold border-b-2 transition-all ${activeTab === 'menu' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'}`}
+                >
+                    1. Chọn món
+                </button>
+                <button
+                    onClick={() => setActiveTab('cart')}
+                    className={`flex-1 py-3 text-sm font-bold border-b-2 transition-all ${activeTab === 'cart' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'}`}
+                >
+                    2. Giỏ hàng & Thông tin ({editingItems.length})
+                </button>
+            </div>
+
+            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
                 {/* Left Column: Dish Selection */}
-                <div className="w-[65%] flex flex-col bg-muted/20 border-r border-border h-full">
+                <div className={`${activeTab === 'menu' ? 'flex' : 'hidden'} lg:flex w-full lg:w-[65%] flex-col bg-muted/20 lg:border-r border-border h-full overflow-hidden`}>
                     <div className="p-4 space-y-4 bg-card shadow-sm z-10">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -173,8 +192,8 @@ export default function OrderEditModal({
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-                        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <div className="flex-1 overflow-y-auto p-3 sm:p-4 custom-scrollbar">
+                        <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-2 sm:gap-4">
                             {allFoods
                                 .filter(food => {
                                     const matchesSearch = food.name.toLowerCase().includes(foodSearchTerm.toLowerCase());
@@ -187,32 +206,32 @@ export default function OrderEditModal({
                                         <div
                                             key={food.id}
                                             onClick={() => addItemToOrder(food)}
-                                            className={`relative flex flex-col bg-card rounded-xl border-2 overflow-hidden cursor-pointer transition-all hover:shadow-xl hover:-translate-y-1 group ${inOrder ? 'border-primary shadow-lg ring-1 ring-primary/20' : 'border-transparent shadow-md'}`}
+                                            className={`relative flex flex-col bg-card rounded-lg sm:rounded-xl border border-border sm:border-2 overflow-hidden cursor-pointer transition-all active:scale-95 lg:hover:shadow-xl lg:hover:-translate-y-1 group ${inOrder ? 'border-primary shadow-md ring-1 ring-primary/20' : 'shadow-sm'}`}
                                         >
-                                            <div className="aspect-[4/3] bg-muted relative">
+                                            <div className="aspect-[16/10] sm:aspect-[4/3] bg-muted relative">
                                                 {food.image ? (
                                                     <img src={food.image} alt={food.name} className="w-full h-full object-cover" />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                                                        <Package className="w-8 h-8 opacity-20" />
+                                                        <Package className="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
                                                     </div>
                                                 )}
                                                 {inOrder && (
-                                                    <div className="absolute top-2 right-2 bg-primary text-primary-foreground w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shadow-lg animate-in zoom-in duration-300">
+                                                    <div className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-primary text-primary-foreground w-5 h-5 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10px] sm:text-sm font-bold shadow-lg animate-in zoom-in duration-300">
                                                         {inOrder.quantity}
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className="p-3">
-                                                <h4 className="font-bold text-sm text-card-foreground line-clamp-2 leading-snug h-10 group-hover:text-primary transition-colors">
+                                            <div className="p-1.5 sm:p-3">
+                                                <h4 className="font-bold text-[11px] sm:text-sm text-card-foreground line-clamp-2 leading-tight h-7 sm:h-10 group-hover:text-primary transition-colors">
                                                     {food.name}
                                                 </h4>
-                                                <div className="flex items-center justify-between mt-2">
-                                                    <span className="text-primary font-bold text-sm">
+                                                <div className="flex items-center justify-between mt-1 sm:mt-2">
+                                                    <span className="text-primary font-bold text-[10px] sm:text-sm">
                                                         {formatCurrency(food.price)}
                                                     </span>
-                                                    <div className="p-1 bg-primary/10 rounded-lg text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                                                        <Plus className="w-4 h-4" />
+                                                    <div className="p-1 bg-primary/10 rounded-md sm:rounded-lg text-primary lg:group-hover:bg-primary lg:group-hover:text-primary-foreground transition-all">
+                                                        <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                                                     </div>
                                                 </div>
                                             </div>
@@ -224,11 +243,11 @@ export default function OrderEditModal({
                 </div>
 
                 {/* Right Column: Order Info */}
-                <div className="w-[35%] flex flex-col bg-card h-full shadow-2xl relative z-10">
+                <div className={`${activeTab === 'cart' ? 'flex' : 'hidden'} lg:flex w-full lg:w-[35%] flex-col bg-card h-full lg:shadow-2xl relative z-10 overflow-hidden`}>
                     <div className="flex-1 flex flex-col overflow-hidden">
-                        <div className="p-6 border-b border-border bg-muted/5">
-                            <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-card-foreground">
-                                <User className="w-5 h-5 text-primary" />
+                        <div className="p-4 sm:p-6 border-b border-border bg-muted/5">
+                            <h3 className="text-base sm:text-lg font-bold mb-3 sm:mb-4 flex items-center gap-2 text-card-foreground">
+                                <User className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                                 Thông tin đơn hàng
                             </h3>
                             <div className="space-y-4">
@@ -268,13 +287,12 @@ export default function OrderEditModal({
                         </div>
 
                         <div className="flex-1 flex flex-col overflow-hidden">
-                            <div className="px-6 py-4 flex items-center justify-between bg-muted/10 border-b border-border">
-                                <h3 className="font-bold flex items-center gap-2 text-card-foreground">
-                                    <ShoppingCart className="w-5 h-5 text-primary" />
+                            <div className="px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between bg-muted/10 border-b border-border">
+                                <h3 className="text-sm sm:font-bold flex items-center gap-2 text-card-foreground">
+                                    <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                                     Danh sách món ({editingItems.length})
                                 </h3>
                             </div>
-
                             <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
                                 {editingItems.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center h-full text-muted-foreground opacity-50 space-y-2">
@@ -322,7 +340,7 @@ export default function OrderEditModal({
                             </div>
                         </div>
 
-                        <div className="p-6 bg-muted/20 border-t border-border space-y-4">
+                        <div className="p-4 sm:p-6 bg-muted/20 border-t border-border space-y-3 sm:space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Trạng thái đơn</label>

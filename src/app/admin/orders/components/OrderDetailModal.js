@@ -21,7 +21,7 @@ export default function OrderDetailModal({
                     <div className="flex items-center justify-between mb-6 relative">
                         <div className="flex items-center gap-3">
                             <ShoppingCart className="w-6 h-6 text-primary" />
-                            <h2 className="text-2xl font-bold text-card-foreground">Chi tiết đơn hàng</h2>
+                            <h2 className="text-2xl font-bold text-card-foreground line-clamp-1">Chi tiết đơn hàng</h2>
                         </div>
                         <div className="flex items-center gap-2">
                             {order.status_history && order.status_history.length > 0 && (
@@ -30,7 +30,7 @@ export default function OrderDetailModal({
                                     className="flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors font-medium cursor-pointer"
                                 >
                                     <History className="w-4 h-4" />
-                                    <span>Lịch sử thay đổi</span>
+                                    <span className='line-clamp-1'>Lịch sử</span>
                                 </button>
                             )}
                             <button
