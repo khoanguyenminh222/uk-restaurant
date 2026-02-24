@@ -120,6 +120,16 @@ export async function PUT(request, { params }) {
       }
     }
 
+    // Chặn mọi chỉnh sửa đối với đơn hàng đã có trạng thái kết thúc (Hủy, Hoàn thành, Xóa)
+    // NGOẠI LỆ: Super Admin vẫn có quyền chỉnh sửa lại để sửa lỗi hoặc cập nhật thông tin đặc biệt.
+    if (['cancelled', 'completed', 'deleted'].includes(order.status) && requester?.role !== 'super_admin') {
+      const statusLabels = { cancelled: 'đã hủy', completed: 'đã hoàn thành', deleted: 'đã xóa' };
+      return NextResponse.json(
+        { success: false, error: `Đơn hàng ${statusLabels[order.status] || order.status}, không thể chỉnh sửa nội dung (Chỉ Super Admin mới có quyền này).` },
+        { status: 400 }
+      );
+    }
+
     // Validate status transition
     const validStatuses = ['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'completed', 'cancelled'];
     if (body.status && !validStatuses.includes(body.status)) {
@@ -129,18 +139,10 @@ export async function PUT(request, { params }) {
       );
     }
 
-    // Validate status transition rules
+    // Validate status transition rules (specific cases)
     if (body.status && order.status) {
       const currentStatus = order.status;
       const newStatus = body.status;
-
-      // Cannot change from cancelled or completed
-      if (currentStatus === 'cancelled' || currentStatus === 'completed') {
-        return NextResponse.json(
-          { success: false, error: `Không thể thay đổi status từ ${currentStatus}` },
-          { status: 400 }
-        );
-      }
 
       // Cannot change to cancelled if already delivered
       if (newStatus === 'cancelled' && currentStatus === 'delivered') {
@@ -225,7 +227,7 @@ export async function PUT(request, { params }) {
       trackChange('status', order.status, body.status);
     }
 
-    if (body.status) {
+    if (body.status && body.status !== order.status) {
       updateData.status = body.status;
 
       // Add to status_history if exists
@@ -281,6 +283,9 @@ export async function PUT(request, { params }) {
         changed_by: body.changed_by || (isAdmin ? 'admin' : (isOwner ? (requester ? 'user' : 'customer') : 'system')),
         changed_by_detail: changedByDetail,
       });
+    } else if (body.status === order.status) {
+      // Just ensure updateData.status is set if provided, but no history entry
+      updateData.status = body.status;
     }
 
     if (body.notes !== undefined) {
@@ -460,7 +465,16 @@ export async function DELETE(request, { params }) {
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
 
-    // Get order before deleting
+    // Get admin info for status_history and permission check
+    const adminInfo = await getAdminFromToken(request);
+    if (!adminInfo) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    // Find order before deleting
     const order = await db.collection('orders').findOne({ order_id: id });
     if (!order) {
       return NextResponse.json(
@@ -469,20 +483,21 @@ export async function DELETE(request, { params }) {
       );
     }
 
+    // Chặn xóa đối với đơn hàng đã có trạng thái kết thúc (Hủy, Hoàn thành, Xóa)
+    // NGOẠI LỆ: Super Admin có quyền xóa vĩnh viễn (soft-delete) bất kỳ đơn nào
+    if (['cancelled', 'completed', 'deleted'].includes(order.status) && adminInfo.role !== 'super_admin') {
+      const statusLabels = { cancelled: 'đã hủy', completed: 'đã hoàn thành', deleted: 'đã được xóa trước đó' };
+      return NextResponse.json(
+        { success: false, error: `Đơn hàng ${statusLabels[order.status] || order.status}, không thể thực hiện xóa (Chỉ Super Admin mới có quyền này).` },
+        { status: 400 }
+      );
+    }
+
     // Soft delete: set status to deleted and add to status_history
     const updateData = {
       status: 'deleted',
       updated_at: new Date(),
     };
-
-    // Get admin info for status_history
-    const adminInfo = await getAdminFromToken(request);
-    if (!adminInfo) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
 
     // Add to status_history
     if (!order.status_history) {
