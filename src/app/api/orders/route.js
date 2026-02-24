@@ -31,6 +31,7 @@ export async function GET(request) {
     const status = searchParams.get('status');
     const search = searchParams.get('search');
     const customerType = searchParams.get('customer_type');
+    const discountFilter = searchParams.get('discount_filter'); // 'all', 'discounted', 'standard'
     const dateFrom = searchParams.get('date_from');
     const dateTo = searchParams.get('date_to');
     const page = parseInt(searchParams.get('page') || '1');
@@ -97,6 +98,17 @@ export async function GET(request) {
           query.$or = [
             { user_id: { $exists: false } },
             { user_id: null }
+          ];
+        }
+
+        // Discount Filter
+        if (discountFilter === 'discounted') {
+          query.discount_percent = { $gt: 0 };
+        } else if (discountFilter === 'standard') {
+          query.$or = [
+            { discount_percent: { $exists: false } },
+            { discount_percent: 0 },
+            { discount_percent: null }
           ];
         }
 

@@ -1,4 +1,4 @@
-import { Plus, X, Search, Package, User, ShoppingCart, Minus, Loader2, CheckCircle2 } from 'lucide-react';
+import { Plus, X, Search, Package, User, ShoppingCart, Minus, Loader2, CheckCircle2, Tag } from 'lucide-react';
 import { formatCurrency } from '@/utils/helpers';
 
 export default function OrderAddModal({
@@ -28,7 +28,9 @@ export default function OrderAddModal({
     setEditingStatus,
     STATUS_OPTIONS,
     isSaving,
-    onSave
+    onSave,
+    discountPercent,
+    setDiscountPercent,
 }) {
     if (!isOpen) return null;
 
@@ -48,16 +50,18 @@ export default function OrderAddModal({
             });
         }
         setEditingItems(newItems);
-        const total = newItems.reduce((sum, i) => sum + (i.price || 0) * (i.quantity || 1), 0);
-        setEditingTotalPrice(total);
+        const subtotal = newItems.reduce((sum, i) => sum + (i.price || 0) * (i.quantity || 1), 0);
+        const disc = Math.min(Math.max(discountPercent || 0, 0), 100);
+        setEditingTotalPrice(Math.round(subtotal * (1 - disc / 100)));
         setFoodSearchTerm('');
     };
 
     const removeItem = (index) => {
         const newItems = editingItems.filter((_, i) => i !== index);
         setEditingItems(newItems);
-        const total = newItems.reduce((sum, i) => sum + (i.price || 0) * (i.quantity || 1), 0);
-        setEditingTotalPrice(total);
+        const subtotal = newItems.reduce((sum, i) => sum + (i.price || 0) * (i.quantity || 1), 0);
+        const disc = Math.min(Math.max(discountPercent || 0, 0), 100);
+        setEditingTotalPrice(Math.round(subtotal * (1 - disc / 100)));
     };
 
     const updateQuantity = (index, delta) => {
@@ -65,8 +69,9 @@ export default function OrderAddModal({
         if (newItems[index].quantity + delta > 0) {
             newItems[index].quantity += delta;
             setEditingItems(newItems);
-            const total = newItems.reduce((sum, i) => sum + (i.price || 0) * (i.quantity || 1), 0);
-            setEditingTotalPrice(total);
+            const subtotal = newItems.reduce((sum, i) => sum + (i.price || 0) * (i.quantity || 1), 0);
+            const disc = Math.min(Math.max(discountPercent || 0, 0), 100);
+            setEditingTotalPrice(Math.round(subtotal * (1 - disc / 100)));
         }
     };
 
@@ -74,9 +79,19 @@ export default function OrderAddModal({
         const newItems = [...editingItems];
         newItems[index].price = parseInt(newPrice) || 0;
         setEditingItems(newItems);
-        const total = newItems.reduce((sum, i) => sum + (i.price || 0) * (i.quantity || 1), 0);
-        setEditingTotalPrice(total);
+        const subtotal = newItems.reduce((sum, i) => sum + (i.price || 0) * (i.quantity || 1), 0);
+        const disc = Math.min(Math.max(discountPercent || 0, 0), 100);
+        setEditingTotalPrice(Math.round(subtotal * (1 - disc / 100)));
     };
+
+    const applyDiscount = (newDiscount) => {
+        const disc = Math.min(Math.max(newDiscount || 0, 0), 100);
+        setDiscountPercent(disc);
+        const subtotal = editingItems.reduce((sum, i) => sum + (i.price || 0) * (i.quantity || 1), 0);
+        setEditingTotalPrice(Math.round(subtotal * (1 - disc / 100)));
+    };
+
+    const subtotal = editingItems.reduce((sum, i) => sum + (i.price || 0) * (i.quantity || 1), 0);
 
     return (
         <div className="fixed inset-0 bg-background z-[100] flex flex-col animate-in fade-in duration-200">
@@ -322,12 +337,33 @@ export default function OrderAddModal({
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Tổng tiền dự tính</label>
-                                    <div className="text-xl font-extrabold text-primary pt-1">
-                                        {formatCurrency(editingTotalPrice)}
+                                    <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1 flex items-center gap-1"><Tag className="w-3 h-3" /> Giảm giá (%)</label>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max="100"
+                                            step="1"
+                                            value={discountPercent || ''}
+                                            onChange={(e) => applyDiscount(Number(e.target.value))}
+                                            className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                            placeholder="0"
+                                        />
+                                        <span className="text-sm font-bold text-muted-foreground">%</span>
                                     </div>
                                 </div>
                             </div>
+                            {discountPercent > 0 && (
+                                <div className="flex items-center justify-between text-sm bg-green-500/10 border border-green-500/30 rounded-lg px-3 py-2">
+                                    <span className="text-muted-foreground">Giá gốc: <span className="line-through">{formatCurrency(subtotal)}</span></span>
+                                    <span className="text-green-600 font-bold">Giảm {discountPercent}% → {formatCurrency(editingTotalPrice)}</span>
+                                </div>
+                            )}
+                            {discountPercent === 0 && (
+                                <div className="flex items-center justify-end">
+                                    <span className="text-xl font-extrabold text-primary">{formatCurrency(editingTotalPrice)}</span>
+                                </div>
+                            )}
                             <div>
                                 <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Ghi chú cho đơn hàng này</label>
                                 <textarea

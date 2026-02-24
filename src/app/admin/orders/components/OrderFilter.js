@@ -1,4 +1,4 @@
-import { Search, Loader2, Calendar, Filter, ChevronDown, User } from 'lucide-react';
+import { Search, Loader2, Calendar, Filter, ChevronDown, User, Tag } from 'lucide-react';
 
 export default function OrderFilter({
     searchTerm,
@@ -13,6 +13,8 @@ export default function OrderFilter({
     setStatusFilter,
     customerTypeFilter,
     setCustomerTypeFilter,
+    discountFilter,
+    setDiscountFilter,
     setPagination,
     STATUS_OPTIONS
 }) {
@@ -126,6 +128,24 @@ export default function OrderFilter({
                         <option value="all">Tất cả KH</option>
                         <option value="logged_in">Đã đăng nhập</option>
                         <option value="guest">Vãng lai</option>
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                </div>
+
+                {/* Discount Filter */}
+                <div className="relative">
+                    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <select
+                        value={discountFilter}
+                        onChange={(e) => {
+                            setDiscountFilter(e.target.value);
+                            setPagination(prev => ({ ...prev, page: 1 }));
+                        }}
+                        className="pl-10 pr-8 py-2 bg-input border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring appearance-none"
+                    >
+                        <option value="all">Tất cả đơn</option>
+                        <option value="discounted">Có giảm giá</option>
+                        <option value="standard">Không giảm giá</option>
                     </select>
                     <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                 </div>

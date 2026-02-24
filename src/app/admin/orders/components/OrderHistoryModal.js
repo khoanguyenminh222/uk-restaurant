@@ -20,6 +20,8 @@ const FIELD_LABELS = {
     status: { label: 'Trạng thái', icon: Tag },
     admin_notes: { label: 'Ghi chú', icon: MessageSquare },
     items: { label: 'Món ăn', icon: Package },
+    discount_percent: { label: 'Giảm giá', icon: Tag },
+    original_price: { label: 'Giá gốc', icon: DollarSign },
 };
 
 export default function OrderHistoryModal({
@@ -67,7 +69,8 @@ export default function OrderHistoryModal({
             const cfg = STATUS_CONFIG[value];
             return cfg ? <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${cfg.color}`}>{cfg.label}</span> : value;
         }
-        if (field === 'total_price') return <span className="font-bold text-primary">{formatCurrency(value)}</span>;
+        if (field === 'total_price' || field === 'original_price') return <span className="font-bold text-primary">{formatCurrency(value)}</span>;
+        if (field === 'discount_percent') return <span className="font-bold text-green-600">Giảm {value}%</span>;
         return <span className="text-card-foreground">{String(value)}</span>;
     };
 

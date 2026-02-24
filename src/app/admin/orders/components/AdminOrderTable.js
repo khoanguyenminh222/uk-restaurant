@@ -87,8 +87,15 @@ export default function AdminOrderTable({
                                                     'N/A'
                                                 )}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary">
-                                                {formatCurrency(order.total_price || 0)}
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="flex flex-col gap-0.5">
+                                                    <span className="text-sm font-bold text-primary">{formatCurrency(order.total_price || 0)}</span>
+                                                    {order.discount_percent > 0 && (
+                                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] rounded-full bg-green-500/20 text-green-600 border border-green-500/40 w-fit">
+                                                            -{order.discount_percent}%
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center gap-2">
@@ -113,7 +120,12 @@ export default function AdminOrderTable({
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                {order.user_id ? (
+                                                {order.created_by_admin ? (
+                                                    <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-amber-500/20 text-amber-600 border border-amber-500/50">
+                                                        <User className="w-3 h-3" />
+                                                        Bán hàng trực tiếp
+                                                    </span>
+                                                ) : order.user_id ? (
                                                     <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-600 border border-blue-500/50">
                                                         <User className="w-3 h-3" />
                                                         Đăng nhập
@@ -206,7 +218,12 @@ export default function AdminOrderTable({
                                                     </button>
                                                 )}
                                             </div>
-                                            {order.user_id ? (
+                                            {order.created_by_admin ? (
+                                                <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-amber-500/20 text-amber-600 border border-amber-500/50 shrink-0">
+                                                    <User className="w-3 h-3" />
+                                                    Bán hàng trực tiếp
+                                                </span>
+                                            ) : order.user_id ? (
                                                 <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-600 border border-blue-500/50 shrink-0">
                                                     <User className="w-3 h-3" />
                                                     Đã đăng nhập
@@ -243,9 +260,16 @@ export default function AdminOrderTable({
                                             <p className="truncate">{getItemNames(order)}</p>
                                             <p className="text-xs mt-1">{getItemCount(order)} món</p>
                                         </div>
-                                        <p className="text-lg font-bold text-primary mt-2">
-                                            {formatCurrency(order.total_price || 0)}
-                                        </p>
+                                        <div className="flex items-center gap-2 mt-2">
+                                            <p className="text-lg font-bold text-primary">
+                                                {formatCurrency(order.total_price || 0)}
+                                            </p>
+                                            {order.discount_percent > 0 && (
+                                                <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] rounded-full bg-green-500/20 text-green-600 border border-green-500/40 font-medium">
+                                                    -{order.discount_percent}%
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 pt-2 border-t border-border">

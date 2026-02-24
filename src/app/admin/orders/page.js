@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { ShoppingCart, Loader2, Plus } from 'lucide-react';
 import { adminFetch } from '@/lib/adminAuth';
 import Toast from '@/components/Toast/Toast';
@@ -33,6 +34,7 @@ const STATUS_OPTIONS = [
   { value: 'delivered', label: 'Đã giao' },
   { value: 'completed', label: 'Hoàn thành' },
   { value: 'cancelled', label: 'Đã hủy' },
+  { value: 'deleted', label: 'Đã xóa' },
 ];
 
 const STATUS_FLOW = ['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'completed'];
@@ -45,14 +47,36 @@ const getNextStatus = (currentStatus) => {
 };
 
 export default function AdminOrders() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <div className="text-muted-foreground">Đang tải cấu hình...</div>
+        </div>
+      </div>
+    }>
+      <OrdersContent />
+    </Suspense>
+  );
+}
+
+function OrdersContent() {
+  const searchParams = useSearchParams();
+  const initialStatus = searchParams.get('status') || 'all';
+  const initialDateFrom = searchParams.get('date_from') || '';
+  const initialDateTo = searchParams.get('date_to') || '';
+  const initialDiscountFilter = searchParams.get('discount_filter') || 'all';
+
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState({ message: '', isVisible: false, type: 'success' });
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState(initialStatus);
   const [customerTypeFilter, setCustomerTypeFilter] = useState('all');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  const [discountFilter, setDiscountFilter] = useState(initialDiscountFilter); // Use initial value
+  const [dateFrom, setDateFrom] = useState(initialDateFrom);
+  const [dateTo, setDateTo] = useState(initialDateTo);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -83,6 +107,7 @@ export default function AdminOrders() {
   const [customerEmail, setCustomerEmail] = useState('');
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [discountPercent, setDiscountPercent] = useState(0);
 
   const [adminRole, setAdminRole] = useState(null);
   const detailModalRef = useRef(null);
@@ -101,11 +126,42 @@ export default function AdminOrders() {
     }
   }, []);
 
+  // Sync filter with URL parameter if it changes
+  useEffect(() => {
+    const statusParam = searchParams.get('status') || 'all';
+    const fromParam = searchParams.get('date_from') || '';
+    const toParam = searchParams.get('date_to') || '';
+    const discParam = searchParams.get('discount_filter') || 'all';
+
+    let changed = false;
+    if (statusParam !== statusFilter) {
+      setStatusFilter(statusParam);
+      changed = true;
+    }
+    if (fromParam !== dateFrom) {
+      setDateFrom(fromParam);
+      changed = true;
+    }
+    if (toParam !== dateTo) {
+      setDateTo(toParam);
+      changed = true;
+    }
+    if (discParam !== discountFilter) {
+      setDiscountFilter(discParam);
+      changed = true;
+    }
+
+    if (changed) {
+      setPagination(prev => ({ ...prev, page: 1 }));
+      // fetchOrders is handled by the dependency array of the primary useEffect
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     fetchOrders();
     fetchAllFoods();
     fetchCategories();
-  }, [statusFilter, customerTypeFilter, dateFrom, dateTo, pagination.page]);
+  }, [pagination.page, statusFilter, customerTypeFilter, discountFilter, dateFrom, dateTo]);
 
   useEffect(() => {
     const handleShowToast = (event) => {
@@ -190,6 +246,7 @@ export default function AdminOrders() {
       });
       if (statusFilter !== 'all') params.append('status', statusFilter);
       if (customerTypeFilter !== 'all') params.append('customer_type', customerTypeFilter);
+      if (discountFilter !== 'all') params.append('discount_filter', discountFilter); // Added discount_filter
       if (dateFrom) params.append('date_from', dateFrom);
       if (dateTo) params.append('date_to', dateTo);
       if (searchTerm) params.append('search', searchTerm);
@@ -378,6 +435,7 @@ export default function AdminOrders() {
     setEditingCustomerAddress(order.customer_address || '');
     setEditingTotalPrice(order.total_price || 0);
     setEditingItems(order.items && Array.isArray(order.items) ? [...order.items] : []);
+    setDiscountPercent(order.discount_percent || 0);
     setShowEditModal(true);
   };
 
@@ -399,6 +457,7 @@ export default function AdminOrders() {
     setCustomerEmail(adminInfo.email || '');
     setEditingTotalPrice(0);
     setEditingItems([]);
+    setDiscountPercent(0);
     setSelectedCategory('all');
     setShowAddModal(true);
   };
@@ -432,14 +491,40 @@ export default function AdminOrders() {
           total_price: editingTotalPrice,
           status: editingStatus,
           admin_notes: editingAdminNotes.trim() || '',
+          discount_percent: discountPercent || 0,
+          original_price: discountPercent > 0
+            ? Math.round(editingTotalPrice / (1 - discountPercent / 100))
+            : editingTotalPrice,
           user_id: adminId,
           created_by_admin: true,
+          created_by_admin_detail: adminData ? {
+            user_id: adminId,
+            name: JSON.parse(adminData).fullname || JSON.parse(adminData).name || 'Admin',
+          } : null,
         }),
       });
       const data = await response.json();
       if (data.success) {
         showToastMsg('Tạo đơn hàng thành công!', 'success');
-        setShowAddModal(false);
+
+        // Reset form để tạo tiếp mẫu khác nhưng không đóng modal
+        const adminData = localStorage.getItem('admin_data');
+        let adminInfo = {};
+        if (adminData) {
+          try { adminInfo = JSON.parse(adminData); } catch (e) { }
+        }
+
+        setEditingAdminNotes('');
+        setEditingCustomerName(adminInfo.fullname || adminInfo.name || '');
+        setEditingCustomerPhone(adminInfo.phone || '');
+        setEditingCustomerAddress(adminInfo.address || '');
+        setCustomerEmail(adminInfo.email || '');
+        setEditingTotalPrice(0);
+        setEditingItems([]);
+        setDiscountPercent(0);
+        setSelectedCategory('all');
+        setFoodSearchTerm('');
+
         fetchOrders();
       } else { showToastMsg(data.error || 'Không thể tạo đơn hàng', 'error'); }
     } catch (err) {
@@ -475,6 +560,10 @@ export default function AdminOrders() {
           customer_address: editingCustomerAddress.trim() || '',
           items: editingItems,
           total_price: editingTotalPrice,
+          discount_percent: discountPercent || 0,
+          original_price: discountPercent > 0
+            ? Math.round(editingTotalPrice / (1 - discountPercent / 100))
+            : editingTotalPrice,
           changed_by: 'admin',
           currentAdminPhone: adminPhone,
         }),
@@ -531,11 +620,22 @@ export default function AdminOrders() {
       </div>
 
       <OrderFilter
-        searchTerm={searchTerm} setSearchTerm={setSearchTerm} handleSearch={handleSearch} searching={searching}
-        dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo}
-        statusFilter={statusFilter} setStatusFilter={setStatusFilter}
-        customerTypeFilter={customerTypeFilter} setCustomerTypeFilter={setCustomerTypeFilter}
-        setPagination={setPagination} STATUS_OPTIONS={STATUS_OPTIONS}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        handleSearch={handleSearch}
+        searching={searching}
+        dateFrom={dateFrom}
+        setDateFrom={setDateFrom}
+        dateTo={dateTo}
+        setDateTo={setDateTo}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        customerTypeFilter={customerTypeFilter}
+        setCustomerTypeFilter={setCustomerTypeFilter}
+        discountFilter={discountFilter}
+        setDiscountFilter={setDiscountFilter}
+        setPagination={setPagination}
+        STATUS_OPTIONS={STATUS_OPTIONS}
       />
 
       <AdminOrderTable
@@ -573,6 +673,7 @@ export default function AdminOrders() {
         editingAdminNotes={editingAdminNotes} setEditingAdminNotes={setEditingAdminNotes}
         editingStatus={editingStatus} setEditingStatus={setEditingStatus}
         STATUS_OPTIONS={STATUS_OPTIONS} isSaving={isSaving} onSave={handleSaveNewOrder}
+        discountPercent={discountPercent} setDiscountPercent={setDiscountPercent}
       />
 
       <OrderEditModal
@@ -588,6 +689,7 @@ export default function AdminOrders() {
         editingStatus={editingStatus} setEditingStatus={setEditingStatus}
         STATUS_OPTIONS={STATUS_OPTIONS} isSaving={isSaving} onSave={handleSaveEditOrder}
         adminRole={adminRole}
+        discountPercent={discountPercent} setDiscountPercent={setDiscountPercent}
       />
 
       <OrderHistoryModal

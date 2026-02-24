@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, Menu, X, LayoutDashboard, FolderOpen, UtensilsCrossed, Users, LogOut, ShoppingCart, UserCircle, Image as ImageIcon, TrendingUp, Settings, ChevronDown, ChevronRight, Shield, Bell, BookOpen, Phone, MessageSquare } from 'lucide-react';
+import { Home, Menu, X, LayoutDashboard, FolderOpen, UtensilsCrossed, Users, LogOut, ShoppingCart, UserCircle, Image as ImageIcon, TrendingUp, Settings, ChevronDown, ChevronRight, Shield, Bell, BookOpen, Phone, MessageSquare, BarChart3 } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle/ThemeToggle';
 import { useLandingConfig } from '@/hooks/useLandingConfig';
 import { isAdminLoggedIn, getAdminData, clearAdminSession } from '@/lib/adminAuth';

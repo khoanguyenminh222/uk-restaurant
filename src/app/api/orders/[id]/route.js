@@ -205,6 +205,14 @@ export async function PUT(request, { params }) {
       trackChange('admin_notes', order.admin_notes || '', body.admin_notes || '');
     }
 
+    if (body.discount_percent !== undefined && body.discount_percent !== order.discount_percent) {
+      trackChange('discount_percent', order.discount_percent, body.discount_percent);
+    }
+
+    if (body.original_price !== undefined && body.original_price !== order.original_price) {
+      trackChange('original_price', order.original_price, body.original_price);
+    }
+
     // Track items changes (compare JSON strings)
     if (body.items !== undefined) {
       // Normalize old items
@@ -326,6 +334,15 @@ export async function PUT(request, { params }) {
     // Update total_price
     if (body.total_price !== undefined) {
       updateData.total_price = parseFloat(body.total_price);
+    }
+
+    // Update discount fields
+    if (body.discount_percent !== undefined) {
+      updateData.discount_percent = parseFloat(body.discount_percent);
+    }
+
+    if (body.original_price !== undefined) {
+      updateData.original_price = parseFloat(body.original_price);
     }
 
     // Add to change_history if there are any changes

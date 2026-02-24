@@ -67,8 +67,41 @@ export default function OrderDetailModal({
                                 })()}
                             </div>
                             <div>
+                                <p className="text-sm text-muted-foreground mb-1">Loại khách hàng</p>
+                                {order.created_by_admin ? (
+                                    <div className="flex flex-col gap-1">
+                                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-amber-500/20 text-amber-600 border border-amber-500/50 w-fit">
+                                            Bán hàng trực tiếp
+                                        </span>
+                                        {order.created_by_admin_detail?.name && (
+                                            <p className="text-[10px] text-muted-foreground italic">
+                                                Bởi: {order.created_by_admin_detail.name}
+                                            </p>
+                                        )}
+                                    </div>
+                                ) : order.user_id ? (
+                                    <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-600 border border-blue-500/50">
+                                        Đăng nhập
+                                    </span>
+                                ) : (
+                                    <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-gray-500/20 text-gray-600 border border-gray-500/50">
+                                        Vãng lai
+                                    </span>
+                                )}
+                            </div>
+                            <div>
                                 <p className="text-sm text-muted-foreground mb-1">Tổng tiền</p>
-                                <p className="font-bold text-lg text-primary">{formatCurrency(order.total_price || 0)}</p>
+                                {order.discount_percent > 0 ? (
+                                    <div className="flex flex-col gap-1">
+                                        <p className="font-bold text-lg text-primary">{formatCurrency(order.total_price || 0)}</p>
+                                        <div className="flex items-center gap-2 text-xs">
+                                            <span className="line-through text-muted-foreground">{formatCurrency(order.original_price || 0)}</span>
+                                            <span className="px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-600 border border-green-500/40 font-medium">Giảm {order.discount_percent}%</span>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="font-bold text-lg text-primary">{formatCurrency(order.total_price || 0)}</p>
+                                )}
                             </div>
                         </div>
 
