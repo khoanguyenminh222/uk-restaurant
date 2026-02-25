@@ -5,6 +5,7 @@ import { getRestaurantName, getSlogan, getSEOConfig, getIconConfig } from "@/lib
 import { getStorageKey, STORAGE_KEYS } from "@/utils/storage";
 import { LayoutProvider } from "@/contexts/LayoutContext";
 import ClientLayout from "@/components/Layout/ClientLayout";
+import { Analytics } from '@vercel/analytics/next';
 
 // Force dynamic rendering để metadata (bao gồm icons) được reload mỗi lần request
 // Điều này đảm bảo khi thay đổi icon trong admin panel, nó sẽ được cập nhật ngay mà không cần restart
@@ -153,6 +154,7 @@ export default async function RootLayout({ children }) {
             </ClientLayout>
           </LayoutProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
