@@ -761,30 +761,31 @@ export default function AdminAboutConfig() {
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Settings className="w-8 h-8 text-primary" />
-            <h1 className="text-3xl font-bold text-foreground">Cấu hình Trang About</h1>
+        <div className="mb-4 md:mb-6">
+          <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+            <Settings className="w-5 h-5 md:w-8 md:h-8 text-primary shrink-0" />
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">Cấu hình Trang About</h1>
           </div>
-          <p className="text-muted-foreground">Quản lý tất cả nội dung text động trên trang About</p>
+          <p className="text-sm text-muted-foreground">Quản lý tất cả nội dung text động trên trang About</p>
         </div>
 
         {/* Tabs */}
-        <div className="mb-6 border-b border-border">
-          <div className="flex flex-wrap gap-2">
+        <div className="mb-4 md:mb-6 border-b border-border overflow-x-auto scrollbar-hide">
+          <div className="flex gap-1 min-w-full pb-0">
             {TABS.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-t-lg transition-colors cursor-pointer ${activeTab === tab.id
+                  title={tab.label}
+                  className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-t-lg transition-colors cursor-pointer whitespace-nowrap text-sm ${activeTab === tab.id
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted text-muted-foreground hover:bg-muted/80'
                     }`}
                 >
-                  <Icon className="w-4 h-4" />
-                  {tab.label}
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="hidden sm:inline">{tab.label}</span>
                 </button>
               );
             })}
@@ -792,7 +793,7 @@ export default function AdminAboutConfig() {
         </div>
 
         {/* Tab Content */}
-        <div className="bg-card border border-border rounded-lg p-6 mb-6">
+        <div className="bg-card border border-border rounded-lg p-4 sm:p-5 md:p-6 mb-4 md:mb-6">
           {/* Hero Tab */}
           {activeTab === 'hero' && (
             <div className="space-y-4">
@@ -954,28 +955,34 @@ export default function AdminAboutConfig() {
                   Thêm Item
                 </button>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {missionData.items?.map((item, index) => {
                   const Icon = getLucideIcon(item.icon) || Award;
                   return (
-                    <div key={index} className="flex items-center gap-4 p-4 bg-muted rounded-lg">
-                      <Icon className="w-5 h-5 text-primary" />
-                      <div className="flex-1">
-                        <p className="font-medium text-card-foreground">{item.title}</p>
-                        <p className="text-sm text-muted-foreground">{item.description}</p>
+                    <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 bg-muted rounded-xl border border-border/50 hover:border-primary/30 transition-colors">
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                          <Icon className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-card-foreground truncate">{item.title}</p>
+                          <p className="text-sm text-muted-foreground line-clamp-1">{item.description}</p>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-end gap-2 pt-3 sm:pt-0 border-t sm:border-t-0 border-border/50">
                         <button
                           onClick={() => handleEditMissionItem(index)}
-                          className="p-2 hover:bg-muted rounded-lg cursor-pointer"
+                          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-2 sm:p-2 bg-background sm:bg-transparent border sm:border-0 border-border rounded-lg hover:bg-muted transition-colors cursor-pointer"
                         >
-                          <Edit2 className="w-4 h-4" />
+                          <Edit2 className="w-4 h-4 text-primary" />
+                          <span className="sm:hidden text-xs font-medium">Sửa</span>
                         </button>
                         <button
                           onClick={() => handleDeleteMissionItem(index)}
-                          className="p-2 hover:bg-muted rounded-lg text-red-400 cursor-pointer"
+                          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-2 sm:p-2 bg-background sm:bg-transparent border sm:border-0 border-border rounded-lg hover:bg-red-500/10 transition-colors text-red-400 cursor-pointer"
                         >
                           <Trash2 className="w-4 h-4" />
+                          <span className="sm:hidden text-xs font-medium">Xóa</span>
                         </button>
                       </div>
                     </div>
@@ -1019,21 +1026,26 @@ export default function AdminAboutConfig() {
                   Thêm Feature
                 </button>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {features.map((feature, index) => {
                   const Icon = getLucideIcon(feature.icon) || Leaf;
                   return (
-                    <div key={index} className="flex items-center gap-4 p-4 bg-muted rounded-lg">
-                      <Icon className="w-5 h-5 text-primary" />
-                      <div className="flex-1">
-                        <p className="font-medium text-card-foreground">{feature.title}</p>
-                        <p className="text-sm text-muted-foreground">{feature.description}</p>
+                    <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 bg-muted rounded-xl border border-border/50 hover:border-primary/30 transition-colors">
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                          <Icon className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-card-foreground truncate">{feature.title}</p>
+                          <p className="text-sm text-muted-foreground line-clamp-1">{feature.description}</p>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-end gap-2 pt-3 sm:pt-0 border-t sm:border-t-0 border-border/50">
                         {index > 0 && (
                           <button
                             onClick={() => handleMoveFeature(index, 'up')}
-                            className="p-2 hover:bg-muted rounded-lg cursor-pointer"
+                            className="p-2 hover:bg-background rounded-lg cursor-pointer transition-colors"
+                            title="Di chuyển lên"
                           >
                             <ArrowUp className="w-4 h-4" />
                           </button>
@@ -1041,22 +1053,25 @@ export default function AdminAboutConfig() {
                         {index < features.length - 1 && (
                           <button
                             onClick={() => handleMoveFeature(index, 'down')}
-                            className="p-2 hover:bg-muted rounded-lg cursor-pointer"
+                            className="p-2 hover:bg-background rounded-lg cursor-pointer transition-colors"
+                            title="Di chuyển xuống"
                           >
                             <ArrowDown className="w-4 h-4" />
                           </button>
                         )}
                         <button
                           onClick={() => handleEditFeature(index)}
-                          className="p-2 hover:bg-muted rounded-lg cursor-pointer"
+                          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-2 sm:p-2 bg-background sm:bg-transparent border sm:border-0 border-border rounded-lg hover:bg-muted transition-colors cursor-pointer"
                         >
-                          <Edit2 className="w-4 h-4" />
+                          <Edit2 className="w-4 h-4 text-primary" />
+                          <span className="sm:hidden text-xs font-medium">Sửa</span>
                         </button>
                         <button
                           onClick={() => handleDeleteFeature(index)}
-                          className="p-2 hover:bg-muted rounded-lg text-red-400 cursor-pointer"
+                          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-2 sm:p-2 bg-background sm:bg-transparent border sm:border-0 border-border rounded-lg hover:bg-red-500/10 transition-colors text-red-400 cursor-pointer"
                         >
                           <Trash2 className="w-4 h-4" />
+                          <span className="sm:hidden text-xs font-medium">Xóa</span>
                         </button>
                       </div>
                     </div>
@@ -1100,31 +1115,37 @@ export default function AdminAboutConfig() {
                   Thêm Thành Viên
                 </button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {teamData.members?.map((member, index) => {
                   const Icon = getLucideIcon(member.icon) || ChefHat;
                   return (
-                    <div key={index} className="p-4 bg-muted rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <Icon className="w-8 h-8 text-primary" />
+                    <div key={index} className="p-4 bg-muted rounded-xl border border-border/50 hover:border-primary/30 transition-all group">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                          <Icon className="w-6 h-6 text-primary" />
+                        </div>
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleEditTeamMember(index)}
-                            className="p-2 hover:bg-muted rounded-lg cursor-pointer"
+                            className="p-2 hover:bg-background rounded-lg cursor-pointer transition-colors"
+                            title="Sửa"
                           >
-                            <Edit2 className="w-4 h-4" />
+                            <Edit2 className="w-4 h-4 text-primary" />
                           </button>
                           <button
                             onClick={() => handleDeleteTeamMember(index)}
-                            className="p-2 hover:bg-muted rounded-lg text-red-400 cursor-pointer"
+                            className="p-2 hover:bg-background rounded-lg text-red-400 cursor-pointer transition-colors"
+                            title="Xóa"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
-                      <p className="font-semibold text-card-foreground">{member.name}</p>
-                      <p className="text-sm text-primary">{member.role}</p>
-                      <p className="text-xs text-muted-foreground">{member.specialty}</p>
+                      <div>
+                        <p className="font-bold text-card-foreground text-lg">{member.name}</p>
+                        <p className="text-sm text-primary font-medium mb-1">{member.role}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-2">{member.specialty}</p>
+                      </div>
                     </div>
                   );
                 })}
@@ -1169,7 +1190,7 @@ export default function AdminAboutConfig() {
                   Ảnh nền cho CTA section. Nếu để trống sẽ hiển thị gradient mặc định.
                 </p>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-card-foreground mb-2">Button Primary Text</label>
                   <input
@@ -1547,33 +1568,37 @@ export default function AdminAboutConfig() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-between">
+        <div className="fixed sm:relative bottom-0 left-0 right-0 p-4 sm:p-0 bg-card sm:bg-transparent border-t sm:border-0 border-border z-10 sm:z-auto shadow-[0_-4px_10px_rgba(0,0,0,0.1)] sm:shadow-none flex items-center justify-between gap-3">
           <button
             onClick={() => setShowResetModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg cursor-pointer"
+            className="flex-1 sm:flex-none flex cursor-pointer items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-muted text-card-foreground rounded-lg hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm sm:text-base"
           >
-            <RotateCcw className="w-4 h-4" />
-            Reset về mặc định
+            <RotateCcw className="w-4 h-4 shrink-0" />
+            <span className="hidden sm:inline">Reset về mặc định</span>
+            <span className="sm:hidden">Reset</span>
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg font-semibold disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+            className="flex-1 sm:flex-none flex cursor-pointer items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark disabled:opacity-50 font-medium text-sm sm:text-base shadow-sm"
           >
             {saving ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Đang lưu...
+                <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                <span>Đang lưu...</span>
               </>
             ) : (
               <>
-                <Save className="w-4 h-4" />
-                Lưu thay đổi
+                <Save className="w-4 h-4 shrink-0" />
+                <span>Lưu thay đổi</span>
               </>
             )}
           </button>
         </div>
       </div>
+
+      {/* Spacer cho mobile để không bị đè bởi fixed footer */}
+      <div className="h-20 sm:hidden"></div>
 
       {/* Feature Modal */}
       {showFeatureModal && (
@@ -1713,13 +1738,13 @@ export default function AdminAboutConfig() {
                     className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="from-green-500/20 to-emerald-600/10"
                   />
-                  <div className="grid grid-cols-6 gap-2">
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                     {FEATURE_COLORS.map((colorOption, idx) => (
                       <button
                         key={idx}
                         type="button"
                         onClick={() => setFeatureForm({ ...featureForm, color: colorOption.color, borderColor: colorOption.borderColor })}
-                        className={`h-10 rounded border-2 cursor-pointer ${featureForm.color === colorOption.color ? 'border-primary' : 'border-border'
+                        className={`h-10 rounded-lg border-2 cursor-pointer transition-all ${featureForm.color === colorOption.color ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-border/80'
                           }`}
                         style={{
                           background: `linear-gradient(to bottom right, ${colorOption.color.includes('green') ? 'rgba(34, 197, 94, 0.2)' :
@@ -1760,18 +1785,18 @@ export default function AdminAboutConfig() {
                   className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground"
                 />
               </div>
-              <div className="flex justify-end gap-2">
+              <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-2">
                 <button
                   onClick={() => { setShowFeatureModal(false); setEditingFeature(null); }}
-                  className="px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg cursor-pointer"
+                  className="flex-1 sm:flex-none px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg cursor-pointer transition-colors"
                 >
                   Hủy
                 </button>
                 <button
                   onClick={handleSaveFeature}
-                  className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg cursor-pointer"
+                  className="flex-1 sm:flex-none px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg cursor-pointer transition-colors font-medium"
                 >
-                  Lưu
+                  Lưu thay đổi
                 </button>
               </div>
             </div>
@@ -1784,7 +1809,7 @@ export default function AdminAboutConfig() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
           <div
             ref={statModalRef}
-            className="bg-card border border-border rounded-xl p-6 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200"
+            className="bg-card border border-border rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-200"
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-card-foreground">
@@ -1847,18 +1872,18 @@ export default function AdminAboutConfig() {
                   ))}
                 </select>
               </div>
-              <div className="flex justify-end gap-2">
+              <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-2">
                 <button
                   onClick={() => { setShowStatModal(false); setEditingStat(null); }}
-                  className="px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg cursor-pointer"
+                  className="flex-1 sm:flex-none px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg cursor-pointer transition-colors"
                 >
                   Hủy
                 </button>
                 <button
                   onClick={handleSaveStat}
-                  className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg cursor-pointer"
+                  className="flex-1 sm:flex-none px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg cursor-pointer transition-colors font-medium"
                 >
-                  Lưu
+                  Lưu thay đổi
                 </button>
               </div>
             </div>
@@ -1871,7 +1896,7 @@ export default function AdminAboutConfig() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
           <div
             ref={missionItemModalRef}
-            className="bg-card border border-border rounded-xl p-6 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200"
+            className="bg-card border border-border rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-200"
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-card-foreground">
@@ -1992,18 +2017,18 @@ export default function AdminAboutConfig() {
                   className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground"
                 />
               </div>
-              <div className="flex justify-end gap-2">
+              <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-2">
                 <button
                   onClick={() => { setShowMissionItemModal(false); setEditingMissionItem(null); }}
-                  className="px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg cursor-pointer"
+                  className="flex-1 sm:flex-none px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg cursor-pointer transition-colors"
                 >
                   Hủy
                 </button>
                 <button
                   onClick={handleSaveMissionItem}
-                  className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg cursor-pointer"
+                  className="flex-1 sm:flex-none px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg cursor-pointer transition-colors font-medium"
                 >
-                  Lưu
+                  Lưu thay đổi
                 </button>
               </div>
             </div>
@@ -2016,7 +2041,7 @@ export default function AdminAboutConfig() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
           <div
             ref={teamMemberModalRef}
-            className="bg-card border border-border rounded-xl p-6 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200"
+            className="bg-card border border-border rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-200"
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-card-foreground">
@@ -2146,18 +2171,18 @@ export default function AdminAboutConfig() {
                   className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground"
                 />
               </div>
-              <div className="flex justify-end gap-2">
+              <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-2">
                 <button
                   onClick={() => { setShowTeamMemberModal(false); setEditingTeamMember(null); }}
-                  className="px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg cursor-pointer"
+                  className="flex-1 sm:flex-none px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg cursor-pointer transition-colors"
                 >
                   Hủy
                 </button>
                 <button
                   onClick={handleSaveTeamMember}
-                  className="px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg cursor-pointer"
+                  className="flex-1 sm:flex-none px-4 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg cursor-pointer transition-colors font-medium"
                 >
-                  Lưu
+                  Lưu thay đổi
                 </button>
               </div>
             </div>
@@ -2170,7 +2195,7 @@ export default function AdminAboutConfig() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
           <div
             ref={deleteFeatureModalRef}
-            className="bg-card border border-border rounded-xl p-6 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200"
+            className="bg-card border border-border rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-200"
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-semibold text-card-foreground">
@@ -2219,7 +2244,7 @@ export default function AdminAboutConfig() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
           <div
             ref={deleteMissionItemModalRef}
-            className="bg-card border border-border rounded-xl p-6 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200"
+            className="bg-card border border-border rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-200"
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-semibold text-card-foreground">
@@ -2268,7 +2293,7 @@ export default function AdminAboutConfig() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
           <div
             ref={deleteTeamMemberModalRef}
-            className="bg-card border border-border rounded-xl p-6 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200"
+            className="bg-card border border-border rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-200"
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-semibold text-card-foreground">
@@ -2368,17 +2393,17 @@ export default function AdminAboutConfig() {
               </div>
 
               <div className="pt-4 border-t border-border">
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <button
                     onClick={() => setShowResetModal(false)}
-                    className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 cursor-pointer"
+                    className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 cursor-pointer transition-colors"
                   >
                     Hủy
                   </button>
                   <button
                     onClick={handleReset}
                     disabled={saving || Object.values(resetSections).every(v => !v)}
-                    className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors font-medium"
                   >
                     {saving ? (
                       <>
@@ -2388,7 +2413,7 @@ export default function AdminAboutConfig() {
                     ) : (
                       <>
                         <RotateCcw className="w-4 h-4" />
-                        <span>Reset</span>
+                        <span>Reset về mặc định</span>
                       </>
                     )}
                   </button>

@@ -566,15 +566,6 @@ export default function Menu({ onAddToCart, onOrderClick }) {
             </div>
           </div>
         )}
-        <div className={`mb-4 md:mb-6 flex items-center justify-center gap-2`}>
-          <button
-            onClick={handleViewAllMenu}
-            className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground rounded-full font-medium transition-all duration-300 group cursor-pointer shadow-sm hover:shadow-md text-sm sm:text-base"
-          >
-            <span>Xem tất cả</span>
-            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-          </button>
-        </div>
 
         {/* Section Header - Món nổi bật - Gọn gàng */}
         {!loading && !error && isShowingPopular && selectedCategory === null && !searchQuery && (
@@ -681,7 +672,16 @@ export default function Menu({ onAddToCart, onOrderClick }) {
                   ))}
                 </div>
 
-
+                {/* Nút Xem tất cả - nằm dưới grid food */}
+                <div className="mt-6 md:mt-8 flex items-center justify-center">
+                  <button
+                    onClick={handleViewAllMenu}
+                    className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground rounded-full font-medium transition-all duration-300 group cursor-pointer shadow-sm hover:shadow-md text-sm sm:text-base"
+                  >
+                    <span>Xem tất cả</span>
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  </button>
+                </div>
 
                 {/* Subtle Scroll Indicator - Cuộn xuống WhyChooseUs */}
                 {/* Fixed position with smart visibility */}

@@ -15,7 +15,18 @@ import {
   XCircle,
   MessageSquare,
   Calendar,
-  Info
+  Info,
+  Settings,
+  User,
+  MoreVertical,
+  ChevronRight,
+  ChevronLeft,
+  ArrowUpRight,
+  Eye,
+  Menu,
+  RotateCcw,
+  Save,
+  Check
 } from 'lucide-react';
 import * as lucideIcons from 'lucide-react';
 import { adminFetch } from '@/lib/adminAuth';
@@ -120,7 +131,6 @@ export default function AdminReviews() {
 
   useEffect(() => {
     fetchReviews();
-    fetchStats();
   }, [statusFilter, ratingFilter, visibilityFilter, pagination.page, searchTerm, dateFrom, dateTo]);
 
   // Listen for toast events
@@ -213,6 +223,9 @@ export default function AdminReviews() {
         // Dữ liệu đã được filter từ backend, không cần filter lại ở frontend
         setReviews(data.data);
         setPagination(prev => ({ ...prev, total: data.pagination?.total || 0 }));
+        if (data.stats) {
+          setStats(data.stats);
+        }
       } else {
         setToast({ message: data.error || 'Lỗi khi tải danh sách đánh giá', isVisible: true, type: 'error' });
       }
@@ -253,7 +266,6 @@ export default function AdminReviews() {
           type: 'success'
         });
         fetchReviews();
-        fetchStats();
       } else {
         setToast({ message: data.error || 'Lỗi khi cập nhật', isVisible: true, type: 'error' });
       }
@@ -371,611 +383,671 @@ export default function AdminReviews() {
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <MessageSquare className="w-8 h-8 text-primary" />
-            <h1 className="text-3xl font-bold text-foreground">Quản lý Đánh giá</h1>
+        <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 shadow-sm shrink-0">
+                <MessageSquare className="w-8 h-8 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Quản lý Đánh giá</h1>
+                <p className="text-sm text-muted-foreground mt-1">Duyệt, chỉnh sửa và quản lý trải nghiệm khách hàng</p>
+              </div>
+            </div>
           </div>
-          <p className="text-muted-foreground">Duyệt, chỉnh sửa và quản lý đánh giá từ khách hàng</p>
         </div>
 
         {/* Stats Cards */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-card border border-border rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                <span className="text-sm text-muted-foreground">Điểm trung bình</span>
-                <div className="relative group/info">
-                  <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
-                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover/info:block z-50 pointer-events-none">
-                    <div className="bg-popover border border-border rounded-lg p-2 shadow-lg w-64 text-xs text-popover-foreground whitespace-normal">
-                      Điểm trung bình được tính từ tất cả reviews đã duyệt
-                    </div>
-                    <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-border"></div>
-                  </div>
-                </div>
-              </div>
-              <div className="text-2xl font-bold text-foreground">{stats.averageRating}/5</div>
-            </div>
-            <div className="bg-card border border-border rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <MessageSquare className="w-5 h-5 text-primary" />
-                <span className="text-sm text-muted-foreground">Tổng đánh giá</span>
-                <div className="relative group/info">
-                  <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
-                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover/info:block z-50 pointer-events-none">
-                    <div className="bg-popover border border-border rounded-lg p-2 shadow-lg w-64 text-xs text-popover-foreground whitespace-normal">
-                      Tổng số tất cả reviews (bao gồm cả chờ duyệt và đã duyệt)
-                    </div>
-                    <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-border"></div>
-                  </div>
-                </div>
-              </div>
-              <div className="text-2xl font-bold text-foreground">{stats.totalAllReviews || stats.totalReviews}</div>
-            </div>
-            <div className="bg-card border border-border rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <CheckCircle2 className="w-5 h-5 text-green-400" />
-                <span className="text-sm text-muted-foreground">Đã duyệt</span>
-                <div className="relative group/info">
-                  <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
-                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover/info:block z-50 pointer-events-none">
-                    <div className="bg-popover border border-border rounded-lg p-2 shadow-lg w-64 text-xs text-popover-foreground whitespace-normal">
-                      Tổng số reviews đã duyệt (không phụ thuộc filter/phân trang)
-                    </div>
-                    <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-border"></div>
-                  </div>
-                </div>
-              </div>
-              <div className="text-2xl font-bold text-foreground">
-                {stats.totalApproved || 0}
-              </div>
-            </div>
-            <div className="bg-card border border-border rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <XCircle className="w-5 h-5 text-yellow-400" />
-                <span className="text-sm text-muted-foreground">Chờ duyệt</span>
-                <div className="relative group/info">
-                  <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
-                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover/info:block z-50 pointer-events-none">
-                    <div className="bg-popover border border-border rounded-lg p-2 shadow-lg w-64 text-xs text-popover-foreground whitespace-normal">
-                      Tổng số reviews chờ duyệt (không phụ thuộc filter/phân trang)
-                    </div>
-                    <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-border"></div>
-                  </div>
-                </div>
-              </div>
-              <div className="text-2xl font-bold text-foreground">
-                {stats.totalPending || 0}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Filters Section */}
-        <div className="bg-card rounded-xl border border-border p-3 sm:p-4 mb-6 space-y-3 shadow-sm transition-all duration-300">
-          {/* Main Filter Row (Search + Mobile Toggle) */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-1 flex gap-2">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Tìm nội dung, tên khách..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 bg-muted/30 border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-                />
-              </div>
-
-              {/* Mobile Toggle */}
-              <button
-                onClick={() => setShowMobileFilters(!showMobileFilters)}
-                className={`sm:hidden flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border transition-all ${showMobileFilters || (statusFilter !== 'all' || ratingFilter !== 'all' || visibilityFilter !== 'all' || dateFrom || dateTo)
-                    ? 'bg-primary/10 border-primary text-primary'
-                    : 'bg-muted/30 border-border text-muted-foreground'
-                  }`}
-              >
-                <Filter className="w-4 h-4" />
-                {(statusFilter !== 'all' || ratingFilter !== 'all' || visibilityFilter !== 'all' || dateFrom || dateTo) && (
-                  <span className="flex items-center justify-center bg-primary text-primary-foreground text-[10px] font-bold w-4 h-4 rounded-full">
-                    {[statusFilter !== 'all', ratingFilter !== 'all', visibilityFilter !== 'all', dateFrom || dateTo].filter(Boolean).length}
-                  </span>
-                )}
-              </button>
-            </div>
-
-            <button
-              onClick={() => {
-                setSearchTerm('');
-                setStatusFilter('all');
-                setVisibilityFilter('all');
-                setRatingFilter('all');
-                setDateFrom('');
-                setDateTo('');
-              }}
-              className="hidden sm:flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <X className="w-4 h-4" />
-              <span>Thiết lập lại</span>
-            </button>
-          </div>
-
-          {/* Collapsible Advanced Filters */}
-          <div className={`${showMobileFilters ? 'grid' : 'hidden'} sm:grid grid-cols-1 md:grid-cols-4 gap-3 pt-3 border-t border-border/50 animate-in slide-in-from-top-2 duration-300`}>
-            {/* Status */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase ml-1">Trạng thái duyệt</label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 bg-muted/30 border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer"
-              >
-                <option value="all">Tất cả trạng thái</option>
-                <option value="approved">Đã duyệt</option>
-                <option value="pending">Chờ duyệt</option>
-              </select>
-            </div>
-
-            {/* Rating */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase ml-1">Số sao</label>
-              <select
-                value={ratingFilter}
-                onChange={(e) => setRatingFilter(e.target.value)}
-                className="w-full px-3 py-2 bg-muted/30 border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer"
-              >
-                <option value="all">Tất cả mức sao</option>
-                <option value="5">5 sao</option>
-                <option value="4">4 sao</option>
-                <option value="3">3 sao</option>
-                <option value="2">2 sao</option>
-                <option value="1">1 sao</option>
-              </select>
-            </div>
-
-            {/* Visibility */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase ml-1">Kênh hiển thị</label>
-              <select
-                value={visibilityFilter}
-                onChange={(e) => setVisibilityFilter(e.target.value)}
-                className="w-full px-3 py-2 bg-muted/30 border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer"
-              >
-                <option value="all">Tất cả kênh</option>
-                <option value="visible">Đang hiển thị</option>
-                <option value="hidden">Đang ẩn</option>
-              </select>
-            </div>
-
-            {/* Date Range Start (Quick Date) */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase ml-1">Từ ngày</label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                <input
-                  type="date"
-                  value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-muted/30 border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-                />
-              </div>
-            </div>
-
-            {/* Reset (Mobile Only) */}
-            <button
-              onClick={() => {
-                setSearchTerm('');
-                setStatusFilter('all');
-                setVisibilityFilter('all');
-                setRatingFilter('all');
-                setDateFrom('');
-                setDateTo('');
-              }}
-              className="sm:hidden w-full py-2.5 mt-2 text-xs font-bold text-destructive hover:bg-destructive/5 border border-dashed border-destructive/30 rounded-lg flex items-center justify-center gap-2"
-            >
-              <X className="w-3.5 h-3.5" /> Thiết lập lại bộ lọc
-            </button>
-          </div>
-        </div>
-
-        {/* Reviews List */}
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        ) : filteredReviews.length === 0 ? (
-          <div className="text-center py-12 bg-card border border-border rounded-lg">
-            <MessageSquare className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">Không có đánh giá nào</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-            {filteredReviews.map((review) => (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+            {[
+              {
+                label: 'Điểm trung bình',
+                value: `${stats.averageRating}/5`,
+                icon: Star,
+                color: 'text-yellow-500',
+                bgColor: 'bg-yellow-500/10',
+                borderColor: 'border-yellow-500/20',
+                info: 'Điểm trung bình từ các đánh giá đã phê duyệt'
+              },
+              {
+                label: 'Tổng đánh giá',
+                value: stats.totalAllReviews || stats.totalReviews || 0,
+                icon: MessageSquare,
+                color: 'text-primary',
+                bgColor: 'bg-primary/10',
+                borderColor: 'border-primary/20',
+                info: 'Tổng số tất cả đánh giá nhận được'
+              },
+              {
+                label: 'Đã phê duyệt',
+                value: stats.totalApproved || 0,
+                icon: CheckCircle2,
+                color: 'text-emerald-500',
+                bgColor: 'bg-emerald-500/10',
+                borderColor: 'border-emerald-500/20',
+                info: 'Số lượng đánh giá đã được duyệt hiển thị'
+              },
+              {
+                label: 'Chờ xử lý',
+                value: stats.totalPending || 0,
+                icon: XCircle,
+                color: 'text-amber-500',
+                bgColor: 'bg-amber-500/10',
+                borderColor: 'border-amber-500/20',
+                info: 'Các đánh giá mới đang chờ quản trị viên duyệt'
+              }
+            ].map((stat, idx) => (
               <div
-                key={review._id}
-                className={`bg-card border border-border rounded-xl p-4 sm:p-5 transition-all hover:shadow-md animate-in fade-in duration-300 ${review.is_approved === false ? 'bg-muted/30 grayscale-[0.5]' : ''
-                  }`}
+                key={idx}
+                className="bg-card rounded-xl sm:rounded-2xl border border-border p-3.5 sm:p-5 shadow-sm hover:shadow-md transition-all group relative"
               >
-                <div className="flex flex-col sm:flex-row items-start gap-4">
-                  {/* Left: Avatar & Info */}
-                  <div className="flex items-center sm:items-start gap-3 w-full sm:w-auto">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-2xl shrink-0 shadow-sm">
-                      {review.avatar || '👤'}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <h3 className="font-bold text-card-foreground truncate">{review.customer_name}</h3>
-                        {review.is_approved === false && (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-yellow-500/10 text-yellow-600 font-bold border border-yellow-500/20">
-                            Chờ duyệt
-                          </span>
-                        )}
-                      </div>
-                      {review.customer_phone && (
-                        <p className="text-xs text-muted-foreground">{review.customer_phone}</p>
-                      )}
-                      <div className="flex items-center gap-1 mt-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-3.5 h-3.5 ${i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
-                          />
-                        ))}
-                      </div>
-                    </div>
+                {/* Background Wave with its own overflow management to avoid clipping tooltips */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-[inherit]">
+                  <div className={`absolute top-0 right-0 w-16 h-16 sm:w-24 sm:h-24 ${stat.bgColor} opacity-20 rounded-bl-full -mr-8 -mt-8 sm:-mr-12 sm:-mt-12 transition-transform group-hover:scale-110`} />
+                </div>
+
+                <div className="flex items-start justify-between mb-3 sm:mb-4 relative z-10">
+                  <div className={`w-8 h-8 sm:w-10 sm:h-10 ${stat.bgColor} ${stat.borderColor} border rounded-lg sm:rounded-xl flex items-center justify-center shadow-sm`}>
+                    <stat.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${stat.color} ${stat.icon === Star ? 'fill-current' : ''}`} />
                   </div>
-
-                  {/* Right: Comment & Actions */}
-                  <div className="flex-1 flex flex-col justify-between h-full w-full">
-                    <div className="mb-4">
-                      <p className="text-sm sm:text-base text-foreground/90 leading-relaxed italic">
-                        "{review.comment}"
-                      </p>
-                    </div>
-
-                    <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-border/50">
-                      <div className="flex items-center gap-3 text-[10px] font-medium text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {new Date(review.created_at).toLocaleDateString('vi-VN')}
-                        </span>
-                        {review.order_id && (
-                          <span className="flex items-center gap-1">
-                            <MessageSquare className="w-3 h-3" />
-                            #{review.order_id.slice(-6)}
-                          </span>
-                        )}
-                        <span className={`px-2 py-0.5 rounded-full ${review.is_visible !== false ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'}`}>
-                          {review.is_visible !== false ? 'Đang hiện' : 'Đang ẩn'}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => handleApprove(review, !review.is_approved)}
-                          disabled={isApprovingId === review._id}
-                          className={`p-2 rounded-lg transition-all active:scale-95 ${review.is_approved !== false
-                              ? 'bg-success/10 text-success hover:bg-success/20'
-                              : 'bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20'
-                            }`}
-                          title={review.is_approved !== false ? 'Hủy duyệt' : 'Duyệt'}
-                        >
-                          {isApprovingId === review._id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : review.is_approved !== false ? (
-                            <CheckCircle2 className="w-4 h-4" />
-                          ) : (
-                            <XCircle className="w-4 h-4" />
-                          )}
-                        </button>
-                        <button
-                          onClick={() => handleOpenEditModal(review)}
-                          className="p-2 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg transition-all active:scale-95"
-                          title="Chỉnh sửa"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedReview(review);
-                            setShowDeleteModal(true);
-                          }}
-                          className="p-2 bg-destructive/10 text-destructive hover:bg-destructive/20 rounded-lg transition-all active:scale-95"
-                          title="Xóa"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
+                  <div className="text-[9px] sm:text-[10px] text-muted-foreground/60 font-medium leading-tight text-right flex-1 ml-3 pt-0.5">
+                    {stat.info}
                   </div>
+                </div>
+
+                <div className="relative z-10">
+                  <div className="text-lg sm:text-2xl font-bold tracking-tight text-foreground">{stat.value}</div>
+                  <div className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider mt-0.5 sm:mt-1">{stat.label}</div>
                 </div>
               </div>
             ))}
           </div>
         )}
 
+        {/* Filters Section */}
+        <div className="bg-card rounded-2xl border border-border p-4 mb-8 shadow-sm transition-all duration-300">
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Search Bar */}
+            <div className="flex-1 flex gap-3">
+              <div className="flex-1 relative group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Tìm nội dung feedback, tên khách hàng..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-11 pr-4 py-3 bg-muted/40 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted-foreground"
+                />
+              </div>
+
+              {/* Mobile Filter Toggle */}
+              <button
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className={`lg:hidden relative flex items-center justify-center w-12 h-12 rounded-xl border transition-all active:scale-95 ${showMobileFilters || statusFilter !== 'all' || ratingFilter !== 'all' || visibilityFilter !== 'all' || dateFrom || dateTo
+                  ? 'bg-primary/10 border-primary/30 text-primary shadow-sm'
+                  : 'bg-muted/40 border-border text-muted-foreground'
+                  }`}
+              >
+                <Filter className="w-5 h-5" />
+                {(statusFilter !== 'all' || ratingFilter !== 'all' || visibilityFilter !== 'all' || dateFrom || dateTo) && (
+                  <span className="absolute -top-1 -right-1 flex items-center justify-center bg-primary text-primary-foreground text-[10px] font-bold w-5 h-5 rounded-full ring-2 ring-background shadow-sm">
+                    {[statusFilter !== 'all', ratingFilter !== 'all', visibilityFilter !== 'all', dateFrom !== '', dateTo !== ''].filter(Boolean).length}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* Desktop Filters (Always visible on large screens) */}
+            <div className="hidden lg:flex items-center gap-3">
+              <div className="h-10 w-[1px] bg-border/60 mx-1" />
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setStatusFilter('all');
+                  setVisibilityFilter('all');
+                  setRatingFilter('all');
+                  setDateFrom('');
+                  setDateTo('');
+                }}
+                className="flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-xl transition-all cursor-pointer whitespace-nowrap"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Xóa lọc
+              </button>
+            </div>
+          </div>
+
+          {/* Collapsible Mobile / Extended Filters */}
+          <div className={`${showMobileFilters ? 'grid animate-in slide-in-from-top-4 duration-300' : 'hidden'} lg:grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 pt-4 mt-4 border-t border-border/50`}>
+            {/* Status Filter */}
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Trạng thái</label>
+              <div className="relative">
+                <Menu className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-muted/40 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer appearance-none"
+                >
+                  <option value="all">Tất cả trạng thái</option>
+                  <option value="approved">Đã phê duyệt</option>
+                  <option value="pending">Đang chờ</option>
+                </select>
+                <ChevronRight className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground rotate-90 pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Rating Filter */}
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Đánh giá</label>
+              <div className="relative">
+                <Star className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                <select
+                  value={ratingFilter}
+                  onChange={(e) => setRatingFilter(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-muted/40 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer appearance-none"
+                >
+                  <option value="all">Tất cả mức sao</option>
+                  {[5, 4, 3, 2, 1].map(r => (
+                    <option key={r} value={r}>{r} Sao</option>
+                  ))}
+                </select>
+                <ChevronRight className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground rotate-90 pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Visibility Filter */}
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Hiển thị</label>
+              <div className="relative">
+                <Eye className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                <select
+                  value={visibilityFilter}
+                  onChange={(e) => setVisibilityFilter(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-muted/40 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer appearance-none"
+                >
+                  <option value="all">Tất cả</option>
+                  <option value="visible">Đang hiển thị</option>
+                  <option value="hidden">Đang ẩn</option>
+                </select>
+                <ChevronRight className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground rotate-90 pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Date Filters */}
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Từ ngày</label>
+              <div className="relative">
+                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-muted/40 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Đến ngày</label>
+              <div className="relative">
+                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-muted/40 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Mobile Reset (Visible only on mobile inside toggle) */}
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setStatusFilter('all');
+                setVisibilityFilter('all');
+                setRatingFilter('all');
+                setDateFrom('');
+                setDateTo('');
+              }}
+              className="lg:hidden w-full flex items-center justify-center gap-2 py-3 mt-2 text-sm font-bold text-destructive bg-destructive/5 rounded-xl border border-dashed border-destructive/30 active:scale-95 transition-all"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Thiết lập lại bộ lọc
+            </button>
+          </div>
+        </div>
+
+        {/* Reviews List */}
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <Loader2 className="w-10 h-10 animate-spin text-primary" />
+            <p className="text-sm font-medium text-muted-foreground animate-pulse">Đang tải danh sách đánh giá...</p>
+          </div>
+        ) : filteredReviews.length === 0 ? (
+          <div className="text-center py-20 bg-card border border-border rounded-2xl shadow-sm border-dashed">
+            <div className="w-20 h-20 bg-muted/40 rounded-full flex items-center justify-center mx-auto mb-6">
+              <MessageSquare className="w-10 h-10 text-muted-foreground/60" />
+            </div>
+            <h3 className="text-lg font-bold text-foreground mb-2">Không tìm thấy đánh giá</h3>
+            <p className="text-sm text-muted-foreground max-w-xs mx-auto">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm của bạn.</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-hidden bg-white dark:bg-card border border-border rounded-2xl shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-muted/30 border-b border-border">
+                      <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">Khách hàng</th>
+                      <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">Nội dung feedback</th>
+                      <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider text-center">Đánh giá</th>
+                      <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">Ngày gửi</th>
+                      <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">Trạng thái</th>
+                      <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider text-right">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {filteredReviews.map((review) => (
+                      <tr key={review._id} className="hover:bg-muted/10 transition-colors group">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-lg shrink-0">
+                              {review.avatar || '👤'}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-sm font-bold text-foreground">{review.customer_name}</span>
+                              <span className="text-xs text-muted-foreground">{review.customer_phone || 'N/A'}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 max-w-xs xl:max-w-md">
+                          <p className="text-sm text-foreground/80 leading-relaxed line-clamp-2 italic">"{review.comment}"</p>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center justify-center gap-0.5">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-3.5 h-3.5 ${i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`}
+                              />
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium text-foreground">{new Date(review.created_at).toLocaleDateString('vi-VN')}</span>
+                            <span className="text-[10px] text-muted-foreground uppercase">{new Date(review.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex flex-col gap-1.5">
+                            <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold border ${review.is_approved !== false
+                              ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
+                              : 'bg-amber-500/10 text-amber-600 border-amber-500/20'
+                              }`}>
+                              {review.is_approved !== false ? <CheckCircle2 className="w-3 h-3" /> : <Loader2 className="w-3 h-3" />}
+                              {review.is_approved !== false ? 'Đã duyệt' : 'Chờ duyệt'}
+                            </div>
+                            <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold border ${review.is_visible !== false
+                              ? 'bg-blue-500/10 text-blue-600 border-blue-500/20'
+                              : 'bg-muted/80 text-muted-foreground border-border'
+                              }`}>
+                              {review.is_visible !== false ? <Eye className="w-3 h-3" /> : <Eye className="w-3 h-3 opacity-40" />}
+                              {review.is_visible !== false ? 'Hiển thị' : 'Đang ẩn'}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => handleApprove(review, !review.is_approved)}
+                              disabled={isApprovingId === review._id}
+                              className={`p-2 rounded-xl transition-all active:scale-95 border ${review.is_approved !== false
+                                ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20'
+                                : 'bg-primary/10 text-primary border-primary/20 hover:bg-primary/20'
+                                }`}
+                            >
+                              {isApprovingId === review._id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                            </button>
+                            <button
+                              onClick={() => handleOpenEditModal(review)}
+                              className="p-2 bg-muted/50 text-foreground hover:bg-primary hover:text-white rounded-xl transition-all active:scale-95 border border-border"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedReview(review);
+                                setShowDeleteModal(true);
+                              }}
+                              className="p-2 bg-destructive/10 text-destructive hover:bg-destructive hover:text-white rounded-xl transition-all active:scale-95 border border-destructive/20"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-4">
+              {filteredReviews.map((review) => (
+                <div key={review._id} className="bg-card border border-border rounded-2xl p-5 shadow-sm space-y-4 animate-in fade-in duration-300">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex gap-4">
+                      <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-xl shrink-0">
+                        {review.avatar || '👤'}
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-bold text-foreground truncate">{review.customer_name}</span>
+                        <div className="flex items-center gap-1 mt-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-3 h-3 ${i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1.5">
+                      <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border ${review.is_approved !== false ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 'bg-amber-500/10 text-amber-600 border-amber-500/20'}`}>
+                        {review.is_approved !== false ? 'Đã duyệt' : 'Chờ duyệt'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="bg-muted/30 rounded-xl p-4 relative">
+                    <div className="absolute top-0 right-4 -translate-y-1/2 flex gap-2">
+                      <span className={`p-1.5 rounded-full bg-background border border-border shadow-sm ${review.is_visible !== false ? 'text-blue-500' : 'text-muted-foreground'}`}>
+                        <Eye className="w-3 h-3" />
+                      </span>
+                    </div>
+                    <p className="text-[14px] text-foreground/80 leading-relaxed italic line-clamp-4">"{review.comment}"</p>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground pt-1 px-1">
+                    <div className="flex items-center gap-3">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {new Date(review.created_at).toLocaleDateString('vi-VN')}
+                      </span>
+                      {review.order_id && (
+                        <span className="flex items-center gap-1">
+                          <MessageSquare className="w-3 h-3" />
+                          #{review.order_id.slice(-6)}
+                        </span>
+                      )}
+                    </div>
+                    <span className="font-mono">{review.customer_phone || 'N/A'}</span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3 pt-2">
+                    <button
+                      onClick={() => handleApprove(review, !review.is_approved)}
+                      disabled={isApprovingId === review._id}
+                      className="flex items-center justify-center gap-2 py-2.5 bg-muted/50 hover:bg-primary/10 text-foreground hover:text-primary rounded-xl transition-all font-bold text-xs border border-border active:scale-95"
+                    >
+                      {isApprovingId === review._id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                      Duyệt
+                    </button>
+                    <button
+                      onClick={() => handleOpenEditModal(review)}
+                      className="flex items-center justify-center gap-2 py-2.5 bg-muted/50 hover:bg-muted-foreground/10 text-foreground rounded-xl transition-all font-bold text-xs border border-border active:scale-95"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                      Sửa
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedReview(review);
+                        setShowDeleteModal(true);
+                      }}
+                      className="flex items-center justify-center gap-2 py-2.5 bg-destructive/5 hover:bg-destructive text-destructive hover:text-white rounded-xl transition-all font-bold text-xs border border-destructive/20 active:scale-95"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Xóa
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+        }
+
         {/* Pagination */}
         {pagination.total > pagination.limit && (
-          <div className="flex items-center justify-center gap-2 mt-6">
-            <button
-              onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
-              disabled={pagination.page === 1}
-              className="px-4 py-2 bg-muted hover:bg-muted/80 border border-border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-            >
-              Trước
-            </button>
-            <span className="text-sm text-muted-foreground">
-              Trang {pagination.page} / {Math.ceil(pagination.total / pagination.limit)}
-            </span>
-            <button
-              onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
-              disabled={pagination.page >= Math.ceil(pagination.total / pagination.limit)}
-              className="px-4 py-2 bg-muted hover:bg-muted/80 border border-border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-            >
-              Sau
-            </button>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 pb-10">
+            <p className="text-sm text-muted-foreground order-2 sm:order-1">
+              Hiển thị <span className="font-bold text-foreground">{(pagination.page - 1) * pagination.limit + 1}</span> - <span className="font-bold text-foreground">{Math.min(pagination.page * pagination.limit, pagination.total)}</span> trong tổng số <span className="font-bold text-foreground">{pagination.total}</span> đánh giá
+            </p>
+            <div className="flex items-center gap-2 order-1 sm:order-2">
+              <button
+                onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
+                disabled={pagination.page === 1}
+                className="w-10 h-10 flex items-center justify-center rounded-xl border border-border bg-card text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 shadow-sm"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-1">
+                {[...Array(Math.ceil(pagination.total / pagination.limit))].map((_, i) => {
+                  const pageNum = i + 1;
+                  if (
+                    pageNum === 1 ||
+                    pageNum === Math.ceil(pagination.total / pagination.limit) ||
+                    (pageNum >= pagination.page - 1 && pageNum <= pagination.page + 1)
+                  ) {
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => setPagination(prev => ({ ...prev, page: pageNum }))}
+                        className={`w-10 h-10 rounded-xl text-sm font-bold transition-all active:scale-95 shadow-sm border ${pagination.page === pageNum
+                          ? 'bg-primary text-primary-foreground border-primary shadow-primary/20'
+                          : 'bg-card text-foreground border-border hover:bg-muted'
+                          }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  } else if (
+                    (pageNum === 2 && pagination.page > 3) ||
+                    (pageNum === Math.ceil(pagination.total / pagination.limit) - 1 && pagination.page < Math.ceil(pagination.total / pagination.limit) - 2)
+                  ) {
+                    return <span key={i} className="px-2 text-muted-foreground">...</span>;
+                  }
+                  return null;
+                })}
+              </div>
+
+              <button
+                onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+                disabled={pagination.page >= Math.ceil(pagination.total / pagination.limit)}
+                className="w-10 h-10 flex items-center justify-center rounded-xl border border-border bg-card text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 shadow-sm"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         )}
 
         {/* Edit Modal */}
-        {showEditModal && selectedReview && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300">
+        {showEditModal && editForm && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 transition-all duration-300">
             <div
               ref={editModalRef}
-              className="bg-card border border-border rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-200"
+              className="bg-card border border-border rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 flex flex-col"
             >
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-card-foreground">Chỉnh sửa đánh giá</h2>
+              {/* Modal Header */}
+              <div className="p-6 border-b border-border flex items-center justify-between bg-muted/20">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20">
+                    <Edit2 className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-foreground">Chỉnh sửa đánh giá</h2>
+                    <p className="text-xs text-muted-foreground mt-0.5">Cập nhật thông tin và trạng thái hiển thị</p>
+                  </div>
+                </div>
                 <button
-                  onClick={() => {
-                    if (isSaving) return;
-                    setShowEditModal(false);
-                  }}
-                  disabled={isSaving}
-                  className="p-2 hover:bg-muted rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
+                  onClick={() => setShowEditModal(false)}
+                  className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground hover:text-foreground"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="space-y-4">
-                {/* Tên khách hàng - Readonly */}
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Tên khách hàng
-                  </label>
-                  <input
-                    type="text"
-                    value={editForm.customer_name}
-                    readOnly
-                    disabled
-                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-muted-foreground cursor-not-allowed"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Không thể chỉnh sửa</p>
-                </div>
-
-                {/* Điểm đánh giá - Readonly */}
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Điểm đánh giá
-                  </label>
-                  <div className="flex items-center gap-2 opacity-60">
-                    {[1, 2, 3, 4, 5].map((rating) => (
-                      <div
-                        key={rating}
-                        className="p-2 rounded-lg bg-muted/50"
-                      >
-                        <Star className={`w-6 h-6 ${editForm.rating >= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+              {/* Modal Content */}
+              <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Left Column: Reviewer Info */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-bold text-foreground/70 flex items-center gap-2 mb-2">
+                      <User className="w-3.5 h-3.5" /> Thông tin người gửi
+                    </h3>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 ml-1">Họ tên</label>
+                        <input
+                          type="text"
+                          value={editForm.customer_name}
+                          onChange={(e) => setEditForm({ ...editForm, customer_name: e.target.value })}
+                          className="w-full px-4 py-2.5 bg-muted/40 border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        />
                       </div>
-                    ))}
-                    <span className="ml-2 font-bold text-muted-foreground">{editForm.rating}/5</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">Không thể chỉnh sửa</p>
-                </div>
-
-                {/* Bình luận - Readonly */}
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Bình luận
-                  </label>
-                  <textarea
-                    value={editForm.comment}
-                    readOnly
-                    disabled
-                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-muted-foreground cursor-not-allowed resize-none"
-                    rows={4}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Không thể chỉnh sửa</p>
-                </div>
-
-                {/* Avatar */}
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Avatar (Emoji)
-                  </label>
-                  <input
-                    type="text"
-                    value={editForm.avatar}
-                    onChange={(e) => setEditForm({ ...editForm, avatar: e.target.value })}
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    maxLength={10}
-                    placeholder="👤"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Gợi ý emoji: <a href="https://emojipedia.org/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Emojipedia</a> hoặc <a href="https://getemoji.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">GetEmoji</a>
-                  </p>
-                </div>
-
-                {/* Color */}
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Màu gradient background
-                  </label>
-                  <div className="space-y-2">
-                    <input
-                      type="text"
-                      value={editForm.color}
-                      onChange={(e) => setEditForm({ ...editForm, color: e.target.value })}
-                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="from-blue-500/20 to-blue-600/10"
-                    />
-                    <div className="grid grid-cols-6 gap-2">
-                      {REVIEW_COLORS.map((colorOption, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => setEditForm({ ...editForm, color: colorOption.color, borderColor: colorOption.borderColor })}
-                          className={`h-10 rounded border-2 transition-all ${editForm.color === colorOption.color ? 'border-primary scale-105' : 'border-border hover:border-primary/50'
-                            }`}
-                          style={{
-                            background: `linear-gradient(to bottom right, ${colorOption.color.includes('green') ? 'rgba(34, 197, 94, 0.2)' :
-                              colorOption.color.includes('orange') ? 'rgba(249, 115, 22, 0.2)' :
-                                colorOption.color.includes('blue') ? 'rgba(59, 130, 246, 0.2)' :
-                                  colorOption.color.includes('purple') ? 'rgba(168, 85, 247, 0.2)' :
-                                    colorOption.color.includes('pink') ? 'rgba(236, 72, 153, 0.2)' :
-                                      'rgba(234, 179, 8, 0.2)'}, ${colorOption.color.includes('green') ? 'rgba(5, 150, 105, 0.1)' :
-                                        colorOption.color.includes('orange') ? 'rgba(217, 119, 6, 0.1)' :
-                                          colorOption.color.includes('blue') ? 'rgba(37, 99, 235, 0.1)' :
-                                            colorOption.color.includes('purple') ? 'rgba(124, 58, 237, 0.1)' :
-                                              colorOption.color.includes('pink') ? 'rgba(219, 39, 119, 0.1)' :
-                                                'rgba(217, 119, 6, 0.1)'})`
-                          }}
+                      <div>
+                        <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 ml-1">Số điện thoại</label>
+                        <input
+                          type="text"
+                          value={editForm.customer_phone || ''}
+                          onChange={(e) => setEditForm({ ...editForm, customer_phone: e.target.value })}
+                          className="w-full px-4 py-2.5 bg-muted/40 border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                         />
-                      ))}
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 ml-1">Avatar (Emoji)</label>
+                          <input
+                            type="text"
+                            value={editForm.avatar}
+                            onChange={(e) => setEditForm({ ...editForm, avatar: e.target.value })}
+                            className="w-full px-4 py-2.5 bg-muted/40 border border-border rounded-xl text-center text-xl focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                            maxLength={5}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 ml-1">Số sao</label>
+                          <select
+                            value={editForm.rating}
+                            onChange={(e) => setEditForm({ ...editForm, rating: parseInt(e.target.value) })}
+                            className="w-full px-4 py-2.5 bg-muted/40 border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all cursor-pointer"
+                          >
+                            {[5, 4, 3, 2, 1].map(r => (
+                              <option key={r} value={r}>{r} sao</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="mt-2 p-3 bg-muted/50 border border-border rounded-lg">
-                    <p className="text-xs font-medium text-card-foreground mb-1">💡 Hướng dẫn tạo màu gradient:</p>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      Format: <code className="bg-background px-1 py-0.5 rounded">from-{`{color}-{shade}/opacity`} to-{`{color}-{shade}/opacity`}</code>
-                    </p>
-                    <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                      <li>Màu: red, orange, yellow, green, blue, indigo, purple, pink, gray, slate, zinc, neutral, stone</li>
-                      <li>Shade: 50, 100, 200, 300, 400, 500, 600, 700, 800, 900</li>
-                      <li>Opacity: 10, 20, 30, 40, 50 (từ 0-100)</li>
-                      <li>Ví dụ: <code className="bg-background px-1 py-0.5 rounded">from-rose-500/20 to-pink-600/10</code></li>
-                      <li>Xem thêm: <a href="https://tailwindcss.com/docs/gradient-color-stops" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Tailwind Gradient Docs</a></li>
-                    </ul>
-                  </div>
-                </div>
 
-                {/* Border Color */}
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Màu border
-                  </label>
-                  <div className="space-y-2">
-                    <input
-                      type="text"
-                      value={editForm.borderColor}
-                      onChange={(e) => setEditForm({ ...editForm, borderColor: e.target.value })}
-                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="border-blue-500/30"
-                    />
-                    <div className="grid grid-cols-6 gap-2">
-                      {REVIEW_COLORS.map((colorOption, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => setEditForm({ ...editForm, color: colorOption.color, borderColor: colorOption.borderColor })}
-                          className={`h-10 rounded border-2 transition-all ${editForm.borderColor === colorOption.borderColor ? 'border-primary scale-105' : 'border-border hover:border-primary/50'
-                            }`}
-                          style={{
-                            borderColor: colorOption.borderColor.includes('green') ? 'rgba(34, 197, 94, 0.3)' :
-                              colorOption.borderColor.includes('orange') ? 'rgba(249, 115, 22, 0.3)' :
-                                colorOption.borderColor.includes('blue') ? 'rgba(59, 130, 246, 0.3)' :
-                                  colorOption.borderColor.includes('purple') ? 'rgba(168, 85, 247, 0.3)' :
-                                    colorOption.borderColor.includes('pink') ? 'rgba(236, 72, 153, 0.3)' :
-                                      'rgba(234, 179, 8, 0.3)',
-                            background: 'transparent'
-                          }}
+                  {/* Right Column: Content & Status */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-bold text-foreground/70 flex items-center gap-2 mb-2">
+                      <MessageSquare className="w-3.5 h-3.5" /> Nội dung & Trạng thái
+                    </h3>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 ml-1">Nội dung đánh giá</label>
+                        <textarea
+                          rows={4}
+                          value={editForm.comment}
+                          onChange={(e) => setEditForm({ ...editForm, comment: e.target.value })}
+                          className="w-full px-4 py-2.5 bg-muted/40 border border-border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none italic"
                         />
-                      ))}
+                      </div>
+
+                      <div className="p-4 bg-muted/20 border border-border rounded-xl space-y-3">
+                        <label className="flex items-center gap-3 cursor-pointer group">
+                          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${editForm.is_approved ? 'bg-primary border-primary' : 'border-muted-foreground/30 bg-background'}`}>
+                            {editForm.is_approved && <Check className="w-3.5 h-3.5 text-white" />}
+                            <input
+                              type="checkbox"
+                              checked={editForm.is_approved}
+                              onChange={(e) => {
+                                const val = e.target.checked;
+                                if (!val) {
+                                  setEditForm({ ...editForm, is_approved: false, is_visible: false });
+                                } else {
+                                  setEditForm({ ...editForm, is_approved: true });
+                                }
+                              }}
+                              className="sr-only"
+                            />
+                          </div>
+                          <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">Đã phê duyệt đánh giá</span>
+                        </label>
+
+                        <label className={`flex items-center gap-3 cursor-pointer group transition-opacity ${!editForm.is_approved ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${editForm.is_visible ? 'bg-blue-500 border-blue-500' : 'border-muted-foreground/30 bg-background'}`}>
+                            {editForm.is_visible && <Eye className="w-3.5 h-3.5 text-white" />}
+                            <input
+                              type="checkbox"
+                              checked={editForm.is_visible}
+                              onChange={(e) => {
+                                if (e.target.checked && !editForm.is_approved) {
+                                  setToast({ message: 'Cần duyệt đánh giá trước khi hiển thị!', isVisible: true, type: 'error' });
+                                  return;
+                                }
+                                setEditForm({ ...editForm, is_visible: e.target.checked });
+                              }}
+                              disabled={!editForm.is_approved}
+                              className="sr-only"
+                            />
+                          </div>
+                          <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">Hiển thị trên trang chủ</span>
+                        </label>
+                      </div>
                     </div>
                   </div>
-                  <div className="mt-2 p-3 bg-muted/50 border border-border rounded-lg">
-                    <p className="text-xs font-medium text-card-foreground mb-1">💡 Hướng dẫn tạo màu border:</p>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      Format: <code className="bg-background px-1 py-0.5 rounded">border-{`{color}-{shade}/opacity`}</code>
-                    </p>
-                    <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                      <li>Màu: red, orange, yellow, green, blue, indigo, purple, pink, gray, slate, zinc, neutral, stone</li>
-                      <li>Shade: 50, 100, 200, 300, 400, 500, 600, 700, 800, 900</li>
-                      <li>Opacity: 10, 20, 30, 40, 50 (từ 0-100)</li>
-                      <li>Ví dụ: <code className="bg-background px-1 py-0.5 rounded">border-rose-500/30</code></li>
-                      <li>Xem thêm: <a href="https://tailwindcss.com/docs/border-color" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Tailwind Border Color Docs</a></li>
-                    </ul>
-                  </div>
                 </div>
+              </div>
 
-                {/* Checkboxes */}
-                <div className="space-y-2 pt-2 border-t border-border">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={editForm.is_approved}
-                      onChange={(e) => {
-                        const newApproved = e.target.checked;
-                        // Nếu hủy duyệt, tự động tắt hiển thị
-                        if (!newApproved) {
-                          setEditForm({ ...editForm, is_approved: false, is_visible: false });
-                        } else {
-                          setEditForm({ ...editForm, is_approved: true });
-                        }
-                      }}
-                      className="w-4 h-4 rounded border-border cursor-pointer"
-                    />
-                    <span className="text-sm text-card-foreground">Đã duyệt</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={editForm.is_visible}
-                      onChange={(e) => {
-                        // Nếu đang bật hiển thị nhưng chưa được duyệt, không cho phép
-                        if (e.target.checked && editForm.is_approved === false) {
-                          setToast({ message: 'Không thể hiển thị review chưa được duyệt. Vui lòng duyệt review trước.', isVisible: true, type: 'error' });
-                          return;
-                        }
-                        setEditForm({ ...editForm, is_visible: e.target.checked });
-                      }}
-                      disabled={editForm.is_approved === false}
-                      className="w-4 h-4 rounded border-border cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                    />
-                    <span className={`text-sm ${editForm.is_approved === false ? 'text-muted-foreground' : 'text-card-foreground'}`}>
-                      Hiển thị trên Home
-                      {editForm.is_approved === false && (
-                        <span className="text-xs text-muted-foreground ml-1">(Cần duyệt trước)</span>
-                      )}
-                    </span>
-                  </label>
-                </div>
-
-                <div className="flex items-center gap-3 pt-4 border-t border-border">
-                  <button
-                    onClick={handleSaveEdit}
-                    disabled={isSaving}
-                    className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    {isSaving ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Đang lưu...</span>
-                      </>
-                    ) : (
-                      'Lưu'
-                    )}
-                  </button>
-                  <button
-                    onClick={() => setShowEditModal(false)}
-                    disabled={isSaving}
-                    className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 border border-border rounded-lg text-foreground cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Hủy
-                  </button>
-                </div>
+              {/* Modal Footer */}
+              <div className="p-6 border-t border-border bg-muted/20 flex items-center gap-3">
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  disabled={isSaving}
+                  className="flex-1 px-4 py-3 bg-muted hover:bg-muted-foreground/10 text-foreground font-bold rounded-xl transition-all border border-border disabled:opacity-50 active:scale-95"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={isSaving}
+                  className="flex-1 px-4 py-3 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95"
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Đang lưu...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      <span>Lưu thay đổi</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>
@@ -983,36 +1055,37 @@ export default function AdminReviews() {
 
         {/* Delete Confirmation Modal */}
         {showDeleteModal && selectedReview && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4 transition-all duration-300">
             <div
               ref={deleteModalRef}
-              className="bg-card border border-border rounded-xl p-6 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200"
+              className="bg-card border border-border rounded-2xl p-8 max-w-md w-full shadow-2xl animate-in fade-in zoom-in-95 duration-200 text-center"
             >
-              <h2 className="text-xl font-bold text-card-foreground mb-4">Xác nhận xóa</h2>
-              <p className="text-muted-foreground mb-6">
-                Bạn có chắc muốn xóa đánh giá từ <strong>{selectedReview.customer_name}</strong>? Hành động này không thể hoàn tác.
+              <div className="w-20 h-20 bg-destructive/10 text-destructive rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-destructive/5">
+                <Trash2 className="w-10 h-10" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground mb-3">Xác nhận xóa</h2>
+              <p className="text-muted-foreground mb-8 leading-relaxed">
+                Bạn có chắc chắn muốn xóa đánh giá của <span className="font-bold text-foreground">"{selectedReview.customer_name}"</span>?
+                Hành động này <span className="text-destructive font-bold underline decoration-destructive/30 underline-offset-4">không thể hoàn tác</span>.
               </p>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {isDeleting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Đang xóa...</span>
-                    </>
-                  ) : (
-                    'Xóa'
-                  )}
-                </button>
+              <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => setShowDeleteModal(false)}
                   disabled={isDeleting}
-                  className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 border border-border rounded-lg text-foreground cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-3 bg-muted hover:bg-muted-foreground/10 text-foreground font-bold rounded-xl transition-all border border-border disabled:opacity-50 active:scale-95"
                 >
-                  Hủy
+                  Quay lại
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="px-4 py-3 bg-destructive text-white font-bold rounded-xl shadow-lg shadow-destructive/20 hover:bg-destructive/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95"
+                >
+                  {isDeleting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <span>Xác nhận xóa</span>
+                  )}
                 </button>
               </div>
             </div>

@@ -195,12 +195,6 @@ const STAT_COLORS = [
   'from-pink-500/20 to-pink-600/10',
 ];
 
-// Default icons cho social media
-const SOCIAL_ICONS = [
-  'FacebookIcon', 'MessageCircle', 'InstagramIcon', 'Twitter',
-  'Youtube', 'Tiktok', 'Linkedin', 'Share2'
-];
-
 export default function AdminLandingConfig() {
   // Check if user has permission (only admin and super_admin)
   const { isAuthorized, isChecking } = useRoleCheck(['admin', 'super_admin']);
@@ -300,14 +294,6 @@ export default function AdminLandingConfig() {
   const [statIconSuggestions, setStatIconSuggestions] = useState([]);
   const [showStatIconDropdown, setShowStatIconDropdown] = useState(false);
 
-  const [showSocialModal, setShowSocialModal] = useState(false);
-  const [editingSocial, setEditingSocial] = useState(null);
-  const [socialForm, setSocialForm] = useState({
-    name: '', url: '', icon: 'FacebookIcon', description: '', color: 'text-blue-400', order: 1
-  });
-  const [socialIconSuggestions, setSocialIconSuggestions] = useState([]);
-  const [showSocialIconDropdown, setShowSocialIconDropdown] = useState(false);
-
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [editingLink, setEditingLink] = useState(null);
   const [linkForm, setLinkForm] = useState({ text: '', url: '#', order: 1 });
@@ -323,7 +309,6 @@ export default function AdminLandingConfig() {
   // Modal refs
   const featureModalRef = useRef(null);
   const statModalRef = useRef(null);
-  const socialModalRef = useRef(null);
   const linkModalRef = useRef(null);
   const deleteFeatureModalRef = useRef(null);
   const deleteStatModalRef = useRef(null);
@@ -371,10 +356,6 @@ export default function AdminLandingConfig() {
         setShowStatModal(false);
         setEditingStat(null);
       }
-      if (showSocialModal && socialModalRef.current && !socialModalRef.current.contains(event.target)) {
-        setShowSocialModal(false);
-        setEditingSocial(null);
-      }
       if (showLinkModal && linkModalRef.current && !linkModalRef.current.contains(event.target)) {
         setShowLinkModal(false);
         setEditingLink(null);
@@ -392,17 +373,17 @@ export default function AdminLandingConfig() {
       }
     };
 
-    const isAnyModalOpen = showFeatureModal || showStatModal || showSocialModal || showLinkModal || showDeleteFeatureModal || showDeleteStatModal || showResetModal;
+    const isAnyModalOpen = showFeatureModal || showStatModal || showLinkModal || showDeleteFeatureModal || showDeleteStatModal || showResetModal;
 
     if (isAnyModalOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showFeatureModal, showStatModal, showSocialModal, showLinkModal, showDeleteFeatureModal, showDeleteStatModal, showResetModal, saving]);
+  }, [showFeatureModal, showStatModal, showLinkModal, showDeleteFeatureModal, showDeleteStatModal, showResetModal, saving]);
 
   // Handle scroll lock when any modal is open
   useEffect(() => {
-    const isAnyModalOpen = showFeatureModal || showStatModal || showSocialModal || showLinkModal || showDeleteFeatureModal || showDeleteStatModal || showResetModal;
+    const isAnyModalOpen = showFeatureModal || showStatModal || showLinkModal || showDeleteFeatureModal || showDeleteStatModal || showResetModal;
 
     if (isAnyModalOpen) {
       document.body.style.overflow = 'hidden';
@@ -412,7 +393,7 @@ export default function AdminLandingConfig() {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [showFeatureModal, showStatModal, showSocialModal, showLinkModal, showDeleteFeatureModal, showDeleteStatModal, showResetModal]);
+  }, [showFeatureModal, showStatModal, showLinkModal, showDeleteFeatureModal, showDeleteStatModal, showResetModal]);
 
   // Listen for toast events
   useEffect(() => {
@@ -997,73 +978,6 @@ export default function AdminLandingConfig() {
     });
   };
 
-  // Social media management
-  const handleOpenSocialModal = (social = null) => {
-    if (social) {
-      setEditingSocial(social);
-      setSocialForm({ ...social });
-    } else {
-      setEditingSocial(null);
-      const maxOrder = testimonialsData.social_media.length > 0
-        ? Math.max(...testimonialsData.social_media.map(s => s.order || 0))
-        : 0;
-      setSocialForm({ name: '', url: '', icon: 'FacebookIcon', description: '', color: 'text-blue-400', order: maxOrder + 1 });
-    }
-    setShowSocialModal(true);
-    setShowSocialIconDropdown(false);
-  };
-
-  // Handle social icon input change
-  const handleSocialIconChange = (value) => {
-    setSocialForm({ ...socialForm, icon: value });
-    // Luôn cho phép nhập bất kỳ giá trị nào, suggestions chỉ là gợi ý
-    if (value) {
-      const filtered = SOCIAL_ICONS.filter(icon =>
-        icon.toLowerCase().includes(value.toLowerCase())
-      );
-      setSocialIconSuggestions(filtered);
-      // Hiển thị dropdown nếu có suggestions hoặc nếu đang focus
-      setShowSocialIconDropdown(filtered.length > 0);
-    } else {
-      setSocialIconSuggestions(SOCIAL_ICONS);
-      setShowSocialIconDropdown(false);
-    }
-  };
-
-  const handleSaveSocial = () => {
-    if (!socialForm.name || !socialForm.url) {
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent('showToast', {
-            detail: { message: 'Vui lòng điền đầy đủ thông tin', type: 'error' },
-          })
-        );
-      }
-      return;
-    }
-
-    const newSocial = [...testimonialsData.social_media];
-    if (editingSocial) {
-      const index = newSocial.findIndex(s => s === editingSocial);
-      if (index !== -1) {
-        newSocial[index] = { ...socialForm };
-      }
-    } else {
-      newSocial.push({ ...socialForm });
-    }
-
-    setTestimonialsData({ ...testimonialsData, social_media: newSocial });
-    setShowSocialModal(false);
-    setEditingSocial(null);
-    setSocialForm({ name: '', url: '', icon: 'FacebookIcon', description: '', color: 'text-blue-400', order: 1 });
-  };
-
-  const handleDeleteSocial = (social) => {
-    if (!confirm('Bạn có chắc muốn xóa social media này?')) return;
-    const newSocial = testimonialsData.social_media.filter(s => s !== social);
-    setTestimonialsData({ ...testimonialsData, social_media: newSocial });
-  };
-
   // Footer links management
   const handleOpenLinkModal = (link = null) => {
     if (link) {
@@ -1131,30 +1045,31 @@ export default function AdminLandingConfig() {
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Settings className="w-8 h-8 text-primary" />
-            <h1 className="text-3xl font-bold text-foreground">Cấu hình Trang chủ</h1>
+        <div className="mb-4 md:mb-6">
+          <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+            <Settings className="w-5 h-5 md:w-8 md:h-8 text-primary shrink-0" />
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">Cấu hình Trang chủ</h1>
           </div>
-          <p className="text-muted-foreground">Quản lý tất cả nội dung text động trên landing page</p>
+          <p className="text-sm text-muted-foreground">Quản lý tất cả nội dung text động trên landing page</p>
         </div>
 
         {/* Tabs */}
-        <div className="mb-6 border-b border-border">
-          <div className="flex flex-wrap gap-2">
+        <div className="mb-4 md:mb-6 border-b border-border overflow-x-auto scrollbar-hide">
+          <div className="flex gap-1 min-w-full pb-0">
             {TABS.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-t-lg transition-colors cursor-pointer ${activeTab === tab.id
+                  title={tab.label}
+                  className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-t-lg transition-colors cursor-pointer whitespace-nowrap text-sm ${activeTab === tab.id
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted text-muted-foreground hover:bg-muted/80'
                     }`}
                 >
-                  <Icon className="w-4 h-4" />
-                  {tab.label}
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="hidden sm:inline">{tab.label}</span>
                 </button>
               );
             })}
@@ -1162,7 +1077,7 @@ export default function AdminLandingConfig() {
         </div>
 
         {/* Tab Content */}
-        <div className="bg-card border border-border rounded-lg p-6 mb-6">
+        <div className="bg-card border border-border rounded-lg p-4 sm:p-5 md:p-6 mb-4 md:mb-6">
           {/* General Tab */}
           {activeTab === 'general' && (
             <div className="space-y-4">
@@ -1718,14 +1633,14 @@ export default function AdminLandingConfig() {
 
               {/* Features Management */}
               <div>
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                   <label className="block text-sm font-medium text-card-foreground">
                     Features <span className="text-red-400">*</span> ({whyChooseUsData.features.length}/6)
                   </label>
                   <button
                     onClick={() => handleOpenFeatureModal()}
                     disabled={whyChooseUsData.features.length >= 6}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-sm w-full sm:w-auto"
                   >
                     <Plus className="w-4 h-4" />
                     Thêm Feature
@@ -1737,27 +1652,29 @@ export default function AdminLandingConfig() {
                     return (
                       <div
                         key={index}
-                        className="flex items-center justify-between p-4 bg-muted border border-border rounded-lg"
+                        className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-muted border border-border rounded-lg gap-3"
                       >
-                        <div className="flex items-center gap-3 flex-1">
-                          <div className="flex items-center justify-center w-10 h-10 bg-primary/10 rounded-lg text-primary">
-                            <FeatureIcon className="w-5 h-5" />
+                        <div className="flex items-center gap-3 flex-1 overflow-hidden">
+                          <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-primary/10 rounded-lg text-primary shrink-0">
+                            <FeatureIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                           </div>
-                          <div className="flex-1">
-                            <div className="font-medium text-card-foreground">{feature.title}</div>
-                            <div className="text-sm text-muted-foreground">{feature.description}</div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-card-foreground text-sm sm:text-base truncate">{feature.title}</div>
+                            <div className="text-xs sm:text-sm text-muted-foreground truncate">{feature.description}</div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-end gap-2 border-t sm:border-t-0 border-border/50 pt-2 sm:pt-0">
                           <button
                             onClick={() => handleOpenFeatureModal(feature)}
                             className="p-2 text-primary hover:bg-primary/10 rounded cursor-pointer"
+                            title="Chỉnh sửa"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDeleteFeature(feature)}
                             className="p-2 text-red-400 hover:bg-red-400/10 rounded cursor-pointer"
+                            title="Xóa"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -1773,27 +1690,27 @@ export default function AdminLandingConfig() {
 
               {/* Stats Management */}
               <div>
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                   <label className="block text-sm font-medium text-card-foreground">
                     Stats (Số liệu thống kê)
                   </label>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <button
                       onClick={() => handleOpenStatModal()}
                       disabled={whyChooseUsData.auto_calculate_stats}
-                      className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-sm"
                     >
                       <Plus className="w-4 h-4" />
                       Thêm Stat
                     </button>
-                    <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
                       <input
                         type="checkbox"
                         checked={whyChooseUsData.auto_calculate_stats || false}
                         onChange={(e) => handleToggleAutoCalculateStats(e.target.checked)}
                         className="w-4 h-4 rounded border-border cursor-pointer"
                       />
-                      <span>Tự động tính từ đánh giá</span>
+                      <span>Tự động tính</span>
                     </label>
                   </div>
                 </div>
@@ -1801,16 +1718,16 @@ export default function AdminLandingConfig() {
                 {whyChooseUsData.auto_calculate_stats && reviewStats && (
                   <div className="mb-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
                     <p className="text-sm text-blue-400 font-medium mb-2">📊 Stats từ đánh giá:</p>
-                    <div className="grid grid-cols-3 gap-2 text-sm">
-                      <div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                      <div className="flex justify-between sm:block">
                         <span className="text-muted-foreground">Tổng đánh giá:</span>
                         <span className="ml-2 font-bold text-foreground">{reviewStats.totalReviews}</span>
                       </div>
-                      <div>
+                      <div className="flex justify-between sm:block">
                         <span className="text-muted-foreground">Điểm TB:</span>
                         <span className="ml-2 font-bold text-foreground">{reviewStats.averageRating}/5</span>
                       </div>
-                      <div>
+                      <div className="flex justify-between sm:block">
                         <span className="text-muted-foreground">Đã xác minh:</span>
                         <span className="ml-2 font-bold text-foreground">{reviewStats.verifiedCustomers}%</span>
                       </div>
@@ -1829,29 +1746,29 @@ export default function AdminLandingConfig() {
                     return (
                       <div
                         key={index}
-                        className={`flex items-center justify-between p-4 border rounded-lg ${isFixedStat ? 'bg-muted/50 border-primary/30' : 'bg-muted border-border'
+                        className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg gap-3 ${isFixedStat ? 'bg-muted/50 border-primary/30' : 'bg-muted border-border'
                           }`}
                       >
-                        <div className="flex items-center gap-3 flex-1">
-                          <div className="flex items-center justify-center w-10 h-10 bg-primary/10 rounded-lg text-primary">
-                            <StatIcon className="w-5 h-5" />
+                        <div className="flex items-center gap-3 flex-1 overflow-hidden">
+                          <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-primary/10 rounded-lg text-primary shrink-0">
+                            <StatIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                           </div>
-                          <div className="flex-1">
-                            <div className="font-medium text-card-foreground">
-                              {stat.label}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-card-foreground text-sm sm:text-base flex items-center gap-2">
+                              <span className="truncate">{stat.label}</span>
                               {isFixedStat && (
-                                <span className="ml-2 text-xs text-primary">(Tự động tính)</span>
+                                <span className="text-[10px] sm:text-xs text-primary bg-primary/10 px-1.5 py-0.5 rounded-full shrink-0">Tự động</span>
                               )}
                             </div>
-                            <div className="text-sm text-muted-foreground">Giá trị: <code>{stat.value}</code></div>
+                            <div className="text-xs sm:text-sm text-muted-foreground truncate">Giá trị: <code className="bg-background/50 px-1 rounded">{stat.value}</code></div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-end gap-2 border-t sm:border-t-0 border-border/50 pt-2 sm:pt-0">
                           <button
                             onClick={() => handleOpenStatModal(stat)}
                             className="p-2 text-primary hover:bg-primary/10 rounded cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={whyChooseUsData.auto_calculate_stats || isFixedStat}
-                            title={isFixedStat ? 'Không thể chỉnh sửa stat tự động tính' : ''}
+                            title={isFixedStat ? 'Không thể chỉnh sửa stat tự động tính' : 'Chỉnh sửa'}
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
@@ -1859,7 +1776,7 @@ export default function AdminLandingConfig() {
                             onClick={() => handleDeleteStat(stat)}
                             className="p-2 text-red-400 hover:bg-red-400/10 rounded cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={whyChooseUsData.auto_calculate_stats || isFixedStat}
-                            title={isFixedStat ? 'Không thể xóa stat tự động tính' : ''}
+                            title={isFixedStat ? 'Không thể xóa stat tự động tính' : 'Xóa'}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -1876,1101 +1793,927 @@ export default function AdminLandingConfig() {
           )}
 
           {/* Testimonials Tab */}
-          {activeTab === 'testimonials' && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-card-foreground mb-4">Cấu hình Testimonials Section</h2>
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Section Title <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={testimonialsData.section_title}
-                  onChange={(e) => setTestimonialsData({ ...testimonialsData, section_title: e.target.value })}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="Đánh giá từ khách hàng"
-                  maxLength={100}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  {testimonialsData.section_title.length}/100 ký tự
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Section Description
-                </label>
-                <textarea
-                  value={testimonialsData.section_description}
-                  onChange={(e) => setTestimonialsData({ ...testimonialsData, section_description: e.target.value })}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="Những phản hồi chân thật từ khách hàng đã sử dụng dịch vụ của chúng tôi"
-                  rows={3}
-                  maxLength={300}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  {testimonialsData.section_description.length}/300 ký tự
-                </p>
-              </div>
-
-              {/* Trust Stats Management */}
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <label className="block text-sm font-medium text-card-foreground">
-                    Trust Stats (Thống kê đánh giá)
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <input
-                        type="checkbox"
-                        checked={testimonialsData.auto_calculate_stats || false}
-                        onChange={(e) => setTestimonialsData({ ...testimonialsData, auto_calculate_stats: e.target.checked })}
-                        className="w-4 h-4 rounded border-border cursor-pointer"
-                      />
-                      <span>Tự động tính từ đánh giá</span>
-                    </label>
-                  </div>
-                </div>
-
-                {testimonialsData.auto_calculate_stats && reviewStats && (
-                  <div className="mb-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-                    <p className="text-sm text-blue-400 font-medium mb-2">📊 Stats từ đánh giá:</p>
-                    <div className="grid grid-cols-3 gap-2 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">Tổng đánh giá:</span>
-                        <span className="ml-2 font-bold text-foreground">{reviewStats.totalReviews}</span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Điểm TB:</span>
-                        <span className="ml-2 font-bold text-foreground">{reviewStats.averageRating}/5</span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Đã xác minh:</span>
-                        <span className="ml-2 font-bold text-foreground">{reviewStats.verifiedCustomers}%</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-card-foreground mb-2">
-                      Điểm đánh giá trung bình
-                    </label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      max="5"
-                      value={testimonialsData.trustStats?.averageRating || 0}
-                      onChange={(e) =>
-                        setTestimonialsData({
-                          ...testimonialsData,
-                          trustStats: { ...(testimonialsData.trustStats || {}), averageRating: parseFloat(e.target.value) || 0 },
-                        })
-                      }
-                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
-                      disabled={testimonialsData.auto_calculate_stats}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-card-foreground mb-2">
-                      Tổng số đánh giá
-                    </label>
-                    <input
-                      type="text"
-                      value={testimonialsData.trustStats?.totalReviews || 0}
-                      onChange={(e) =>
-                        setTestimonialsData({
-                          ...testimonialsData,
-                          trustStats: { ...(testimonialsData.trustStats || {}), totalReviews: parseInt(e.target.value) || 0 },
-                        })
-                      }
-                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
-                      disabled={testimonialsData.auto_calculate_stats}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-card-foreground mb-2">
-                      % Khách hàng đã xác minh
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={testimonialsData.trustStats?.verifiedCustomers || 0}
-                      onChange={(e) =>
-                        setTestimonialsData({
-                          ...testimonialsData,
-                          trustStats: { ...(testimonialsData.trustStats || {}), verifiedCustomers: parseInt(e.target.value) || 0 },
-                        })
-                      }
-                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
-                      disabled={testimonialsData.auto_calculate_stats}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Testimonials Note */}
-              <div className="p-4 bg-muted border border-border rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  💡 <strong>Lưu ý:</strong> Testimonials được quản lý từ hệ thống đánh giá. Admin có thể duyệt và chọn hiển thị các đánh giá từ trang quản lý Reviews riêng.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Footer Tab */}
-          {activeTab === 'footer' && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-card-foreground mb-4">Cấu hình Footer</h2>
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Restaurant Name <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={footerData.restaurant_name}
-                  onChange={(e) => setFooterData({ ...footerData, restaurant_name: e.target.value })}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="UK Restaurant"
-                  maxLength={50}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  {footerData.restaurant_name.length}/50 ký tự
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Slogan <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={footerData.slogan}
-                  onChange={(e) => setFooterData({ ...footerData, slogan: e.target.value })}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder='Ăn no khỏi "bàn"'
-                  maxLength={200}
-                />
-                <p className="text-xs text-muted-foreground mt-1">{footerData.slogan.length}/200 ký tự</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Description <span className="text-red-400">*</span>
-                </label>
-                <textarea
-                  value={footerData.description}
-                  onChange={(e) => setFooterData({ ...footerData, description: e.target.value })}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  rows={3}
-                  placeholder="Khám phá hương vị đặc biệt..."
-                  maxLength={500}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  {footerData.description.length}/500 ký tự
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Copyright Text
-                </label>
-                <input
-                  type="text"
-                  value={footerData.copyright_text || ''}
-                  onChange={(e) => setFooterData({ ...footerData, copyright_text: e.target.value })}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="Tất cả quyền được bảo lưu."
-                  maxLength={200}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  {(footerData.copyright_text || '').length}/200 ký tự
-                </p>
-              </div>
-
-              {/* Footer Links Management */}
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <label className="block text-sm font-medium text-card-foreground">Footer Links</label>
-                  <button
-                    onClick={() => handleOpenLinkModal()}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark cursor-pointer"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Thêm Link
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  {footerData.links.map((link, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-4 bg-muted border border-border rounded-lg"
-                    >
-                      <div className="flex-1">
-                        <div className="font-medium text-card-foreground">{link.text}</div>
-                        <div className="text-sm text-muted-foreground">{link.url}</div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleOpenLinkModal(link)}
-                          className="p-2 text-primary hover:bg-primary/10 rounded cursor-pointer"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteLink(link)}
-                          className="p-2 text-red-400 hover:bg-red-400/10 rounded cursor-pointer"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                  {footerData.links.length === 0 && (
-                    <p className="text-muted-foreground text-center py-4">Chưa có link nào</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Legal Tab */}
-          {activeTab === 'legal' && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-card-foreground mb-4">Cấu hình Trang Pháp lý</h2>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Privacy Policy */}
-                <div className="space-y-4 p-6 bg-muted border border-border rounded-xl">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Shield className="w-5 h-5 text-primary" />
-                    <h3 className="text-lg font-medium text-card-foreground">Chính sách bảo mật</h3>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-card-foreground mb-2">
-                      Tiêu đề trang
-                    </label>
-                    <input
-                      type="text"
-                      value={legalData.privacy_policy?.title || ''}
-                      onChange={(e) => setLegalData({
-                        ...legalData,
-                        privacy_policy: { ...legalData.privacy_policy, title: e.target.value }
-                      })}
-                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="Chính sách bảo mật"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-card-foreground mb-2">
-                      Nội dung
-                    </label>
-                    <RichTextEditor
-                      value={legalData.privacy_policy?.content || ''}
-                      onChange={(content) => setLegalData({
-                        ...legalData,
-                        privacy_policy: { ...legalData.privacy_policy, content }
-                      })}
-                      placeholder="Nhập nội dung chính sách bảo mật..."
-                    />
-                  </div>
-                </div>
-
-                {/* Terms of Service */}
-                <div className="space-y-4 p-6 bg-muted border border-border rounded-xl">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Gavel className="w-5 h-5 text-primary" />
-                    <h3 className="text-lg font-medium text-card-foreground">Điều khoản sử dụng</h3>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-card-foreground mb-2">
-                      Tiêu đề trang
-                    </label>
-                    <input
-                      type="text"
-                      value={legalData.terms_of_service?.title || ''}
-                      onChange={(e) => setLegalData({
-                        ...legalData,
-                        terms_of_service: { ...legalData.terms_of_service, title: e.target.value }
-                      })}
-                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="Điều khoản sử dụng"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-card-foreground mb-2">
-                      Nội dung
-                    </label>
-                    <RichTextEditor
-                      value={legalData.terms_of_service?.content || ''}
-                      onChange={(content) => setLegalData({
-                        ...legalData,
-                        terms_of_service: { ...legalData.terms_of_service, content }
-                      })}
-                      placeholder="Nhập nội dung điều khoản sử dụng..."
-                    />
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          )}
-
-          {/* SEO Tab */}
-          {activeTab === 'seo' && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-card-foreground mb-4">Cấu hình SEO</h2>
-
-              {/* Icons */}
-              <div className="space-y-4 border-t border-b border-border pt-6 pb-6">
-                <h3 className="text-lg font-medium text-card-foreground">Icons (Favicon & Apple Icon)</h3>
-
+          {
+            activeTab === 'testimonials' && (
+              <div className="space-y-6">
+                <h2 className="text-xl font-semibold text-card-foreground mb-4">Cấu hình Testimonials Section</h2>
                 <div>
                   <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Favicon URL <span className="text-muted-foreground font-normal">(Icon hiển thị trên tab browser)</span>
+                    Section Title <span className="text-red-400">*</span>
                   </label>
                   <input
                     type="text"
-                    value={seoData.icon_favicon || ''}
-                    onChange={(e) => setSeoData({ ...seoData, icon_favicon: e.target.value })}
+                    value={testimonialsData.section_title}
+                    onChange={(e) => setTestimonialsData({ ...testimonialsData, section_title: e.target.value })}
                     className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="/favicon.ico"
-                  />
-                  <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-border">
-                    <p className="text-xs text-muted-foreground mb-2">
-                      <strong>Hướng dẫn:</strong>
-                    </p>
-                    <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                      <li>Đường dẫn tương đối: <code className="bg-background px-1 rounded">/favicon.ico</code> (file trong thư mục <code className="bg-background px-1 rounded">public</code>)</li>
-                      <li>URL đầy đủ: <code className="bg-background px-1 rounded">https://example.com/favicon.ico</code></li>
-                      <li>Kích thước khuyến nghị: <strong>32x32px</strong> hoặc <strong>16x16px</strong></li>
-                      <li>Định dạng: ICO, PNG, hoặc SVG</li>
-                      <li>Ví dụ: <code className="bg-background px-1 rounded">/images/favicon.ico</code></li>
-                    </ul>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Apple Touch Icon URL <span className="text-muted-foreground font-normal">(Icon hiển thị khi thêm vào home screen trên iOS)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={seoData.icon_apple || ''}
-                    onChange={(e) => setSeoData({ ...seoData, icon_apple: e.target.value })}
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="/apple-icon.png"
-                  />
-                  <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-border">
-                    <p className="text-xs text-muted-foreground mb-2">
-                      <strong>Hướng dẫn:</strong>
-                    </p>
-                    <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                      <li>Đường dẫn tương đối: <code className="bg-background px-1 rounded">/apple-icon.png</code> (file trong thư mục <code className="bg-background px-1 rounded">public</code>)</li>
-                      <li>URL đầy đủ: <code className="bg-background px-1 rounded">https://example.com/apple-icon.png</code></li>
-                      <li>Kích thước khuyến nghị: <strong>180x180px</strong> (cho iPhone)</li>
-                      <li>Định dạng: PNG (không trong suốt)</li>
-                      <li>Ví dụ: <code className="bg-background px-1 rounded">/images/apple-icon.png</code></li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              {/* Basic Meta Tags */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium text-card-foreground">Meta Tags Cơ Bản</h3>
-
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Meta Title
-                  </label>
-                  <input
-                    type="text"
-                    value={seoData.meta_title || ''}
-                    onChange={(e) => setSeoData({ ...seoData, meta_title: e.target.value })}
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="Để trống sẽ dùng: {Tên cửa hàng} - {Slogan}"
+                    placeholder="Đánh giá từ khách hàng"
                     maxLength={100}
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    {(seoData.meta_title || '').length}/100 ký tự. Để trống sẽ tự động dùng "{restaurantName || 'UK Restaurant'} - {slogan || 'Ăn no khỏi \"bàn\"'}"
+                    {testimonialsData.section_title.length}/100 ký tự
                   </p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Meta Description
+                    Section Description
                   </label>
                   <textarea
-                    value={seoData.meta_description || ''}
-                    onChange={(e) => setSeoData({ ...seoData, meta_description: e.target.value })}
+                    value={testimonialsData.section_description}
+                    onChange={(e) => setTestimonialsData({ ...testimonialsData, section_description: e.target.value })}
                     className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="Những phản hồi chân thật từ khách hàng đã sử dụng dịch vụ của chúng tôi"
                     rows={3}
-                    placeholder="Mô tả ngắn gọn về website (150-160 ký tự là lý tưởng)"
-                    maxLength={200}
+                    maxLength={300}
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    {(seoData.meta_description || '').length}/200 ký tự
+                    {testimonialsData.section_description.length}/300 ký tự
                   </p>
                 </div>
 
+                {/* Trust Stats Management */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <label className="block text-sm font-medium text-card-foreground">
+                      Trust Stats (Thống kê đánh giá)
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <input
+                          type="checkbox"
+                          checked={testimonialsData.auto_calculate_stats || false}
+                          onChange={(e) => setTestimonialsData({ ...testimonialsData, auto_calculate_stats: e.target.checked })}
+                          className="w-4 h-4 rounded border-border cursor-pointer"
+                        />
+                        <span>Tự động tính từ đánh giá</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {testimonialsData.auto_calculate_stats && reviewStats && (
+                    <div className="mb-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                      <p className="text-sm text-blue-400 font-medium mb-2">📊 Stats từ đánh giá:</p>
+                      <div className="grid grid-cols-3 gap-2 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">Tổng đánh giá:</span>
+                          <span className="ml-2 font-bold text-foreground">{reviewStats.totalReviews}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Điểm TB:</span>
+                          <span className="ml-2 font-bold text-foreground">{reviewStats.averageRating}/5</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Đã xác minh:</span>
+                          <span className="ml-2 font-bold text-foreground">{reviewStats.verifiedCustomers}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
+                        Điểm đánh giá trung bình
+                      </label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max="5"
+                        value={testimonialsData.trustStats?.averageRating || 0}
+                        onChange={(e) =>
+                          setTestimonialsData({
+                            ...testimonialsData,
+                            trustStats: { ...(testimonialsData.trustStats || {}), averageRating: parseFloat(e.target.value) || 0 },
+                          })
+                        }
+                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                        disabled={testimonialsData.auto_calculate_stats}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
+                        Tổng số đánh giá
+                      </label>
+                      <input
+                        type="text"
+                        value={testimonialsData.trustStats?.totalReviews || 0}
+                        onChange={(e) =>
+                          setTestimonialsData({
+                            ...testimonialsData,
+                            trustStats: { ...(testimonialsData.trustStats || {}), totalReviews: parseInt(e.target.value) || 0 },
+                          })
+                        }
+                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                        disabled={testimonialsData.auto_calculate_stats}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
+                        % Khách hàng đã xác minh
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={testimonialsData.trustStats?.verifiedCustomers || 0}
+                        onChange={(e) =>
+                          setTestimonialsData({
+                            ...testimonialsData,
+                            trustStats: { ...(testimonialsData.trustStats || {}), verifiedCustomers: parseInt(e.target.value) || 0 },
+                          })
+                        }
+                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                        disabled={testimonialsData.auto_calculate_stats}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Testimonials Note */}
+                <div className="p-4 bg-muted border border-border rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    💡 <strong>Lưu ý:</strong> Testimonials được quản lý từ hệ thống đánh giá. Admin có thể duyệt và chọn hiển thị các đánh giá từ trang quản lý Reviews riêng.
+                  </p>
+                </div>
+              </div>
+            )
+          }
+
+          {/* Footer Tab */}
+          {
+            activeTab === 'footer' && (
+              <div className="space-y-6">
+                <h2 className="text-xl font-semibold text-card-foreground mb-4">Cấu hình Footer</h2>
                 <div>
                   <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Meta Keywords
+                    Restaurant Name <span className="text-red-400">*</span>
                   </label>
                   <input
                     type="text"
-                    value={seoData.meta_keywords || ''}
-                    onChange={(e) => setSeoData({ ...seoData, meta_keywords: e.target.value })}
+                    value={footerData.restaurant_name}
+                    onChange={(e) => setFooterData({ ...footerData, restaurant_name: e.target.value })}
                     className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="nhà hàng, đặt món online, đồ ăn, giao hàng"
+                    placeholder="UK Restaurant"
+                    maxLength={50}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {footerData.restaurant_name.length}/50 ký tự
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Slogan <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={footerData.slogan}
+                    onChange={(e) => setFooterData({ ...footerData, slogan: e.target.value })}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder='Ăn no khỏi "bàn"'
+                    maxLength={200}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">{footerData.slogan.length}/200 ký tự</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Description <span className="text-red-400">*</span>
+                  </label>
+                  <textarea
+                    value={footerData.description}
+                    onChange={(e) => setFooterData({ ...footerData, description: e.target.value })}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    rows={3}
+                    placeholder="Khám phá hương vị đặc biệt..."
                     maxLength={500}
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    {(seoData.meta_keywords || '').length}/500 ký tự. Phân cách bằng dấu phẩy
+                    {footerData.description.length}/500 ký tự
                   </p>
                 </div>
-              </div>
-
-              {/* Open Graph */}
-              <div className="space-y-4 border-t border-border pt-6">
-                <h3 className="text-lg font-medium text-card-foreground">Open Graph (Facebook, LinkedIn)</h3>
-
                 <div>
                   <label className="block text-sm font-medium text-card-foreground mb-2">
-                    OG Title
+                    Copyright Text
                   </label>
                   <input
                     type="text"
-                    value={seoData.og_title || ''}
-                    onChange={(e) => setSeoData({ ...seoData, og_title: e.target.value })}
+                    value={footerData.copyright_text || ''}
+                    onChange={(e) => setFooterData({ ...footerData, copyright_text: e.target.value })}
                     className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="Để trống sẽ dùng Meta Title"
-                    maxLength={100}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {(seoData.og_title || '').length}/100 ký tự
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    OG Description
-                  </label>
-                  <textarea
-                    value={seoData.og_description || ''}
-                    onChange={(e) => setSeoData({ ...seoData, og_description: e.target.value })}
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    rows={3}
-                    placeholder="Để trống sẽ dùng Meta Description"
+                    placeholder="Tất cả quyền được bảo lưu."
                     maxLength={200}
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    {(seoData.og_description || '').length}/200 ký tự
+                    {(footerData.copyright_text || '').length}/200 ký tự
                   </p>
                 </div>
 
+                {/* Footer Links Management */}
                 <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    OG Image URL <span className="text-muted-foreground font-normal">(Hình ảnh hiển thị khi chia sẻ trên Facebook, LinkedIn...)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={seoData.og_image || ''}
-                    onChange={(e) => setSeoData({ ...seoData, og_image: e.target.value })}
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="/og-image.jpg"
-                  />
-                  <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-border">
-                    <p className="text-xs text-muted-foreground mb-2">
-                      <strong>Hướng dẫn:</strong>
-                    </p>
-                    <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                      <li>Đường dẫn tương đối: <code className="bg-background px-1 rounded">/og-image.jpg</code> (file trong thư mục <code className="bg-background px-1 rounded">public</code>)</li>
-                      <li>URL đầy đủ: <code className="bg-background px-1 rounded">https://example.com/image.jpg</code></li>
-                      <li>Kích thước khuyến nghị: <strong>1200x630px</strong> (tỷ lệ 1.91:1)</li>
-                      <li>Định dạng: JPG, PNG, hoặc WebP</li>
-                      <li>Ví dụ: <code className="bg-background px-1 rounded">/images/og-image.jpg</code> hoặc <code className="bg-background px-1 rounded">https://yourdomain.com/og-image.jpg</code></li>
-                    </ul>
+                  <div className="flex items-center justify-between mb-4">
+                    <label className="block text-sm font-medium text-card-foreground">Footer Links</label>
+                    <button
+                      onClick={() => handleOpenLinkModal()}
+                      className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark cursor-pointer"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Thêm Link
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {footerData.links.map((link, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-4 bg-muted border border-border rounded-lg"
+                      >
+                        <div className="flex-1">
+                          <div className="font-medium text-card-foreground">{link.text}</div>
+                          <div className="text-sm text-muted-foreground">{link.url}</div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleOpenLinkModal(link)}
+                            className="p-2 text-primary hover:bg-primary/10 rounded cursor-pointer"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteLink(link)}
+                            className="p-2 text-red-400 hover:bg-red-400/10 rounded cursor-pointer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {footerData.links.length === 0 && (
+                      <p className="text-muted-foreground text-center py-4">Chưa có link nào</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )
+          }
+
+          {/* Legal Tab */}
+          {
+            activeTab === 'legal' && (
+              <div className="space-y-6">
+                <h2 className="text-xl font-semibold text-card-foreground mb-4">Cấu hình Trang Pháp lý</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Privacy Policy */}
+                  <div className="space-y-4 p-6 bg-muted border border-border rounded-xl">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Shield className="w-5 h-5 text-primary" />
+                      <h3 className="text-lg font-medium text-card-foreground">Chính sách bảo mật</h3>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
+                        Tiêu đề trang
+                      </label>
+                      <input
+                        type="text"
+                        value={legalData.privacy_policy?.title || ''}
+                        onChange={(e) => setLegalData({
+                          ...legalData,
+                          privacy_policy: { ...legalData.privacy_policy, title: e.target.value }
+                        })}
+                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                        placeholder="Chính sách bảo mật"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
+                        Nội dung
+                      </label>
+                      <RichTextEditor
+                        value={legalData.privacy_policy?.content || ''}
+                        onChange={(content) => setLegalData({
+                          ...legalData,
+                          privacy_policy: { ...legalData.privacy_policy, content }
+                        })}
+                        placeholder="Nhập nội dung chính sách bảo mật..."
+                      />
+                    </div>
+                  </div>
+
+                  {/* Terms of Service */}
+                  <div className="space-y-4 p-6 bg-muted border border-border rounded-xl">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Gavel className="w-5 h-5 text-primary" />
+                      <h3 className="text-lg font-medium text-card-foreground">Điều khoản sử dụng</h3>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
+                        Tiêu đề trang
+                      </label>
+                      <input
+                        type="text"
+                        value={legalData.terms_of_service?.title || ''}
+                        onChange={(e) => setLegalData({
+                          ...legalData,
+                          terms_of_service: { ...legalData.terms_of_service, title: e.target.value }
+                        })}
+                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                        placeholder="Điều khoản sử dụng"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
+                        Nội dung
+                      </label>
+                      <RichTextEditor
+                        value={legalData.terms_of_service?.content || ''}
+                        onChange={(content) => setLegalData({
+                          ...legalData,
+                          terms_of_service: { ...legalData.terms_of_service, content }
+                        })}
+                        placeholder="Nhập nội dung điều khoản sử dụng..."
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-card-foreground mb-2">
-                      OG Type <span className="text-muted-foreground font-normal text-xs">(Loại nội dung)</span>
-                    </label>
-                    <select
-                      value={seoData.og_type || 'website'}
-                      onChange={(e) => setSeoData({ ...seoData, og_type: e.target.value })}
-                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    >
-                      <option value="website">Website - Trang web thông thường (Khuyến nghị)</option>
-                      <option value="article">Article - Bài viết/Blog</option>
-                      <option value="product">Product - Sản phẩm</option>
-                    </select>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Chọn "Website" cho trang chủ/landing page
-                    </p>
-                  </div>
+              </div>
+            )
+          }
+
+          {/* SEO Tab */}
+          {
+            activeTab === 'seo' && (
+              <div className="space-y-6">
+                <h2 className="text-xl font-semibold text-card-foreground mb-4">Cấu hình SEO</h2>
+
+                {/* Icons */}
+                <div className="space-y-4 border-t border-b border-border pt-6 pb-6">
+                  <h3 className="text-lg font-medium text-card-foreground">Icons (Favicon & Apple Icon)</h3>
 
                   <div>
                     <label className="block text-sm font-medium text-card-foreground mb-2">
-                      OG Locale
+                      Favicon URL <span className="text-muted-foreground font-normal">(Icon hiển thị trên tab browser)</span>
                     </label>
                     <input
                       type="text"
-                      value={seoData.og_locale || 'vi_VN'}
-                      onChange={(e) => setSeoData({ ...seoData, og_locale: e.target.value })}
+                      value={seoData.icon_favicon || ''}
+                      onChange={(e) => setSeoData({ ...seoData, icon_favicon: e.target.value })}
                       className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="vi_VN"
+                      placeholder="/favicon.ico"
                     />
+                    <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-border">
+                      <p className="text-xs text-muted-foreground mb-2">
+                        <strong>Hướng dẫn:</strong>
+                      </p>
+                      <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                        <li>Đường dẫn tương đối: <code className="bg-background px-1 rounded">/favicon.ico</code> (file trong thư mục <code className="bg-background px-1 rounded">public</code>)</li>
+                        <li>URL đầy đủ: <code className="bg-background px-1 rounded">https://example.com/favicon.ico</code></li>
+                        <li>Kích thước khuyến nghị: <strong>32x32px</strong> hoặc <strong>16x16px</strong></li>
+                        <li>Định dạng: ICO, PNG, hoặc SVG</li>
+                        <li>Ví dụ: <code className="bg-background px-1 rounded">/images/favicon.ico</code></li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      Apple Touch Icon URL <span className="text-muted-foreground font-normal">(Icon hiển thị khi thêm vào home screen trên iOS)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={seoData.icon_apple || ''}
+                      onChange={(e) => setSeoData({ ...seoData, icon_apple: e.target.value })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="/apple-icon.png"
+                    />
+                    <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-border">
+                      <p className="text-xs text-muted-foreground mb-2">
+                        <strong>Hướng dẫn:</strong>
+                      </p>
+                      <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                        <li>Đường dẫn tương đối: <code className="bg-background px-1 rounded">/apple-icon.png</code> (file trong thư mục <code className="bg-background px-1 rounded">public</code>)</li>
+                        <li>URL đầy đủ: <code className="bg-background px-1 rounded">https://example.com/apple-icon.png</code></li>
+                        <li>Kích thước khuyến nghị: <strong>180x180px</strong> (cho iPhone)</li>
+                        <li>Định dạng: PNG (không trong suốt)</li>
+                        <li>Ví dụ: <code className="bg-background px-1 rounded">/images/apple-icon.png</code></li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Basic Meta Tags */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-card-foreground">Meta Tags Cơ Bản</h3>
+
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      Meta Title
+                    </label>
+                    <input
+                      type="text"
+                      value={seoData.meta_title || ''}
+                      onChange={(e) => setSeoData({ ...seoData, meta_title: e.target.value })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="Để trống sẽ dùng: {Tên cửa hàng} - {Slogan}"
+                      maxLength={100}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {(seoData.meta_title || '').length}/100 ký tự. Để trống sẽ tự động dùng "{restaurantName || 'UK Restaurant'} - {slogan || 'Ăn no khỏi \"bàn\"'}"
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      Meta Description
+                    </label>
+                    <textarea
+                      value={seoData.meta_description || ''}
+                      onChange={(e) => setSeoData({ ...seoData, meta_description: e.target.value })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      rows={3}
+                      placeholder="Mô tả ngắn gọn về website (150-160 ký tự là lý tưởng)"
+                      maxLength={200}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {(seoData.meta_description || '').length}/200 ký tự
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      Meta Keywords
+                    </label>
+                    <input
+                      type="text"
+                      value={seoData.meta_keywords || ''}
+                      onChange={(e) => setSeoData({ ...seoData, meta_keywords: e.target.value })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="nhà hàng, đặt món online, đồ ăn, giao hàng"
+                      maxLength={500}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {(seoData.meta_keywords || '').length}/500 ký tự. Phân cách bằng dấu phẩy
+                    </p>
+                  </div>
+                </div>
+
+                {/* Open Graph */}
+                <div className="space-y-4 border-t border-border pt-6">
+                  <h3 className="text-lg font-medium text-card-foreground">Open Graph (Facebook, LinkedIn)</h3>
+
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      OG Title
+                    </label>
+                    <input
+                      type="text"
+                      value={seoData.og_title || ''}
+                      onChange={(e) => setSeoData({ ...seoData, og_title: e.target.value })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="Để trống sẽ dùng Meta Title"
+                      maxLength={100}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {(seoData.og_title || '').length}/100 ký tự
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      OG Description
+                    </label>
+                    <textarea
+                      value={seoData.og_description || ''}
+                      onChange={(e) => setSeoData({ ...seoData, og_description: e.target.value })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      rows={3}
+                      placeholder="Để trống sẽ dùng Meta Description"
+                      maxLength={200}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {(seoData.og_description || '').length}/200 ký tự
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      OG Image URL <span className="text-muted-foreground font-normal">(Hình ảnh hiển thị khi chia sẻ trên Facebook, LinkedIn...)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={seoData.og_image || ''}
+                      onChange={(e) => setSeoData({ ...seoData, og_image: e.target.value })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="/og-image.jpg"
+                    />
+                    <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-border">
+                      <p className="text-xs text-muted-foreground mb-2">
+                        <strong>Hướng dẫn:</strong>
+                      </p>
+                      <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                        <li>Đường dẫn tương đối: <code className="bg-background px-1 rounded">/og-image.jpg</code> (file trong thư mục <code className="bg-background px-1 rounded">public</code>)</li>
+                        <li>URL đầy đủ: <code className="bg-background px-1 rounded">https://example.com/image.jpg</code></li>
+                        <li>Kích thước khuyến nghị: <strong>1200x630px</strong> (tỷ lệ 1.91:1)</li>
+                        <li>Định dạng: JPG, PNG, hoặc WebP</li>
+                        <li>Ví dụ: <code className="bg-background px-1 rounded">/images/og-image.jpg</code> hoặc <code className="bg-background px-1 rounded">https://yourdomain.com/og-image.jpg</code></li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
+                        OG Type <span className="text-muted-foreground font-normal text-xs">(Loại nội dung)</span>
+                      </label>
+                      <select
+                        value={seoData.og_type || 'website'}
+                        onChange={(e) => setSeoData({ ...seoData, og_type: e.target.value })}
+                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value="website">Website - Trang web thông thường (Khuyến nghị)</option>
+                        <option value="article">Article - Bài viết/Blog</option>
+                        <option value="product">Product - Sản phẩm</option>
+                      </select>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Chọn "Website" cho trang chủ/landing page
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-card-foreground mb-2">
+                        OG Locale
+                      </label>
+                      <input
+                        type="text"
+                        value={seoData.og_locale || 'vi_VN'}
+                        onChange={(e) => setSeoData({ ...seoData, og_locale: e.target.value })}
+                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                        placeholder="vi_VN"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Twitter Card */}
+                <div className="space-y-4 border-t border-border pt-6">
+                  <h3 className="text-lg font-medium text-card-foreground">Twitter Card</h3>
+
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      Twitter Card Type <span className="text-muted-foreground font-normal">(Định dạng hiển thị khi chia sẻ trên Twitter/X)</span>
+                    </label>
+                    <select
+                      value={seoData.twitter_card || 'summary_large_image'}
+                      onChange={(e) => setSeoData({ ...seoData, twitter_card: e.target.value })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="summary">Summary - Hiển thị nhỏ (120x120px)</option>
+                      <option value="summary_large_image">Summary Large Image - Hiển thị lớn (1200x628px) - Khuyến nghị</option>
+                    </select>
+                    <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-border">
+                      <p className="text-xs text-muted-foreground mb-2">
+                        <strong>Giải thích:</strong>
+                      </p>
+                      <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                        <li><strong>Summary:</strong> Hiển thị hình ảnh nhỏ (120x120px) bên cạnh nội dung</li>
+                        <li><strong>Summary Large Image:</strong> Hiển thị hình ảnh lớn (1200x628px) phía trên nội dung - <strong>Khuyến nghị dùng</strong></li>
+                      </ul>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        💡 <strong>Lưu ý:</strong> Nên chọn "Summary Large Image" để hình ảnh hiển thị đẹp và thu hút hơn khi chia sẻ trên Twitter/X.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      Twitter Title
+                    </label>
+                    <input
+                      type="text"
+                      value={seoData.twitter_title || ''}
+                      onChange={(e) => setSeoData({ ...seoData, twitter_title: e.target.value })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="Để trống sẽ dùng OG Title"
+                      maxLength={100}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {(seoData.twitter_title || '').length}/100 ký tự
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      Twitter Description
+                    </label>
+                    <textarea
+                      value={seoData.twitter_description || ''}
+                      onChange={(e) => setSeoData({ ...seoData, twitter_description: e.target.value })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      rows={3}
+                      placeholder="Để trống sẽ dùng OG Description"
+                      maxLength={200}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {(seoData.twitter_description || '').length}/200 ký tự
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      Twitter Image URL <span className="text-muted-foreground font-normal">(Tùy chọn - để trống sẽ dùng OG Image)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={seoData.twitter_image || ''}
+                      onChange={(e) => setSeoData({ ...seoData, twitter_image: e.target.value })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="Để trống sẽ dùng OG Image"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Đường dẫn tương đối (bắt đầu với /) hoặc URL đầy đủ. Nếu để trống, Twitter sẽ tự động dùng hình ảnh từ OG Image.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Robots */}
+                <div className="space-y-4 border-t border-border pt-6">
+                  <h3 className="text-lg font-medium text-card-foreground">Search Engine Robots</h3>
+
+                  <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={seoData.robots_index !== false}
+                        onChange={(e) => setSeoData({ ...seoData, robots_index: e.target.checked })}
+                        className="w-4 h-4 text-primary bg-input border-border rounded focus:ring-primary"
+                      />
+                      <span className="text-sm text-card-foreground">Cho phép index (robots: index)</span>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={seoData.robots_follow !== false}
+                        onChange={(e) => setSeoData({ ...seoData, robots_follow: e.target.checked })}
+                        className="w-4 h-4 text-primary bg-input border-border rounded focus:ring-primary"
+                      />
+                      <span className="text-sm text-card-foreground">Cho phép follow links (robots: follow)</span>
+                    </label>
                   </div>
                 </div>
               </div>
+            )
+          }
 
-              {/* Twitter Card */}
-              <div className="space-y-4 border-t border-border pt-6">
-                <h3 className="text-lg font-medium text-card-foreground">Twitter Card</h3>
+          {
+            activeTab === 'spam' && (
+              <div className="space-y-6">
+                <h2 className="text-xl font-semibold text-card-foreground mb-4">Cấu hình ngăn chặn Spam</h2>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Cấu hình các giới hạn và thời gian hiệu lực để bảo vệ hệ thống khỏi spam và lạm dụng.
+                </p>
 
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Twitter Card Type <span className="text-muted-foreground font-normal">(Định dạng hiển thị khi chia sẻ trên Twitter/X)</span>
-                  </label>
-                  <select
-                    value={seoData.twitter_card || 'summary_large_image'}
-                    onChange={(e) => setSeoData({ ...seoData, twitter_card: e.target.value })}
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="summary">Summary - Hiển thị nhỏ (120x120px)</option>
-                    <option value="summary_large_image">Summary Large Image - Hiển thị lớn (1200x628px) - Khuyến nghị</option>
-                  </select>
-                  <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-border">
-                    <p className="text-xs text-muted-foreground mb-2">
-                      <strong>Giải thích:</strong>
+                {/* Giới hạn đặt hàng */}
+                <div className="space-y-4 border-t border-b border-border pt-6 pb-6">
+                  <h3 className="text-lg font-medium text-card-foreground">1. Giới hạn đặt hàng</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Ngăn chặn việc đặt quá nhiều đơn hàng trong thời gian ngắn từ cùng một email.
+                  </p>
+
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      Số đơn hàng tối đa <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={spamData.max_orders || 5}
+                      onChange={(e) => setSpamData({ ...spamData, max_orders: parseInt(e.target.value) || 5 })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Số đơn hàng tối đa mà một email có thể đặt trong khoảng thời gian giới hạn (theo "Thời gian giới hạn đặt hàng" bên dưới).
+                      <br />
+                      <strong>Ví dụ:</strong> Nếu đặt là 5 và thời gian là 30 phút, thì một email chỉ có thể đặt tối đa 5 đơn trong 30 phút.
                     </p>
-                    <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                      <li><strong>Summary:</strong> Hiển thị hình ảnh nhỏ (120x120px) bên cạnh nội dung</li>
-                      <li><strong>Summary Large Image:</strong> Hiển thị hình ảnh lớn (1200x628px) phía trên nội dung - <strong>Khuyến nghị dùng</strong></li>
-                    </ul>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      💡 <strong>Lưu ý:</strong> Nên chọn "Summary Large Image" để hình ảnh hiển thị đẹp và thu hút hơn khi chia sẻ trên Twitter/X.
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      Thời gian giới hạn đặt hàng (giây) <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="60"
+                      max="86400"
+                      value={spamData.order_rate_limit_ttl || 1800}
+                      onChange={(e) => setSpamData({ ...spamData, order_rate_limit_ttl: parseInt(e.target.value) || 1800 })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Khoảng thời gian (tính bằng giây) để đếm số đơn hàng. Hệ thống sẽ đếm số đơn trong khoảng thời gian này.
+                      <br />
+                      <strong>Gợi ý:</strong> 1800 giây = 30 phút, 3600 giây = 1 giờ, 7200 giây = 2 giờ
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      Thời gian blacklist khi vượt quá (giờ) <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="720"
+                      value={spamData.order_rate_limit_blacklist_hours || 24}
+                      onChange={(e) => setSpamData({ ...spamData, order_rate_limit_blacklist_hours: parseInt(e.target.value) || 24 })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Khi email đặt quá số đơn cho phép (vượt "Số đơn hàng tối đa"), hệ thống sẽ tự động chặn email này trong bao nhiêu giờ.
+                      <br />
+                      <strong>Ví dụ:</strong> 24 giờ = 1 ngày, 168 giờ = 1 tuần
                     </p>
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Twitter Title
-                  </label>
-                  <input
-                    type="text"
-                    value={seoData.twitter_title || ''}
-                    onChange={(e) => setSeoData({ ...seoData, twitter_title: e.target.value })}
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="Để trống sẽ dùng OG Title"
-                    maxLength={100}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {(seoData.twitter_title || '').length}/100 ký tự
+                {/* Xác thực email */}
+                <div className="space-y-4 border-t border-b border-border pt-6 pb-6">
+                  <h3 className="text-lg font-medium text-card-foreground">2. Xác thực email</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Cấu hình thời gian hiệu lực của mã xác thực và số lần thử nhập mã.
                   </p>
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Twitter Description
-                  </label>
-                  <textarea
-                    value={seoData.twitter_description || ''}
-                    onChange={(e) => setSeoData({ ...seoData, twitter_description: e.target.value })}
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    rows={3}
-                    placeholder="Để trống sẽ dùng OG Description"
-                    maxLength={200}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {(seoData.twitter_description || '').length}/200 ký tự
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Twitter Image URL <span className="text-muted-foreground font-normal">(Tùy chọn - để trống sẽ dùng OG Image)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={seoData.twitter_image || ''}
-                    onChange={(e) => setSeoData({ ...seoData, twitter_image: e.target.value })}
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="Để trống sẽ dùng OG Image"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Đường dẫn tương đối (bắt đầu với /) hoặc URL đầy đủ. Nếu để trống, Twitter sẽ tự động dùng hình ảnh từ OG Image.
-                  </p>
-                </div>
-              </div>
-
-              {/* Robots */}
-              <div className="space-y-4 border-t border-border pt-6">
-                <h3 className="text-lg font-medium text-card-foreground">Search Engine Robots</h3>
-
-                <div className="flex items-center gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      Thời gian mã xác thực có hiệu lực (giây) <span className="text-red-400">*</span>
+                    </label>
                     <input
-                      type="checkbox"
-                      checked={seoData.robots_index !== false}
-                      onChange={(e) => setSeoData({ ...seoData, robots_index: e.target.checked })}
-                      className="w-4 h-4 text-primary bg-input border-border rounded focus:ring-primary"
+                      type="number"
+                      min="60"
+                      max="3600"
+                      value={spamData.verification_code_ttl || 600}
+                      onChange={(e) => setSpamData({ ...spamData, verification_code_ttl: parseInt(e.target.value) || 600 })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                     />
-                    <span className="text-sm text-card-foreground">Cho phép index (robots: index)</span>
-                  </label>
-                </div>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Sau thời gian này, mã xác thực sẽ hết hạn và người dùng phải gửi lại mã mới.
+                      <br />
+                      <strong>Gợi ý:</strong> 600 giây = 10 phút, 300 giây = 5 phút
+                    </p>
+                  </div>
 
-                <div className="flex items-center gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      Thời gian session sau khi verify (giây) <span className="text-red-400">*</span>
+                    </label>
                     <input
-                      type="checkbox"
-                      checked={seoData.robots_follow !== false}
-                      onChange={(e) => setSeoData({ ...seoData, robots_follow: e.target.checked })}
-                      className="w-4 h-4 text-primary bg-input border-border rounded focus:ring-primary"
+                      type="number"
+                      min="60"
+                      max="86400"
+                      value={spamData.verified_session_ttl || 1800}
+                      onChange={(e) => setSpamData({ ...spamData, verified_session_ttl: parseInt(e.target.value) || 1800 })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                     />
-                    <span className="text-sm text-card-foreground">Cho phép follow links (robots: follow)</span>
-                  </label>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Sau khi xác thực email thành công, session sẽ có hiệu lực trong khoảng thời gian này. Trong thời gian này, người dùng không cần xác thực lại khi đặt hàng.
+                      <br />
+                      <strong>Gợi ý:</strong> 1800 giây = 30 phút, 3600 giây = 1 giờ
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      Số lần thử nhập mã sai tối đa <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="20"
+                      value={spamData.max_verify_attempts || 5}
+                      onChange={(e) => setSpamData({ ...spamData, max_verify_attempts: parseInt(e.target.value) || 5 })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Nếu nhập sai mã quá số lần này, người dùng phải gửi lại mã mới.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Giới hạn gửi mã */}
+                <div className="space-y-4 border-t border-b border-border pt-6 pb-6">
+                  <h3 className="text-lg font-medium text-card-foreground">3. Giới hạn gửi mã</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Ngăn chặn việc yêu cầu gửi quá nhiều mã xác thực trong thời gian ngắn.
+                  </p>
+
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      Số lần gửi mã tối đa <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="50"
+                      value={spamData.max_send_code || 5}
+                      onChange={(e) => setSpamData({ ...spamData, max_send_code: parseInt(e.target.value) || 5 })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Số lần gửi mã xác thực tối đa mà một email có thể yêu cầu trong khoảng thời gian giới hạn (theo "Thời gian giới hạn gửi mã" bên dưới).
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      Thời gian giới hạn gửi mã (giây) <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="60"
+                      max="86400"
+                      value={spamData.send_code_rate_limit_ttl || 3600}
+                      onChange={(e) => setSpamData({ ...spamData, send_code_rate_limit_ttl: parseInt(e.target.value) || 3600 })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Khoảng thời gian (tính bằng giây) để đếm số lần gửi mã. Hệ thống sẽ đếm số lần gửi mã trong khoảng thời gian này.
+                      <br />
+                      <strong>Gợi ý:</strong> 3600 giây = 1 giờ, 1800 giây = 30 phút, 7200 giây = 2 giờ
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      Thời gian chờ giữa các lần gửi mã (giây) <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="30"
+                      max="300"
+                      value={spamData.resend_code_cooldown || 60}
+                      onChange={(e) => setSpamData({ ...spamData, resend_code_cooldown: parseInt(e.target.value) || 60 })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Thời gian người dùng phải đợi để gửi lại mã xác thực (Cooldown timer của nút gửi lại).
+                      <br />
+                      <strong>Gợi ý:</strong> 60 giây = 1 phút
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-
-          {activeTab === 'spam' && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-card-foreground mb-4">Cấu hình ngăn chặn Spam</h2>
-              <p className="text-sm text-muted-foreground mb-6">
-                Cấu hình các giới hạn và thời gian hiệu lực để bảo vệ hệ thống khỏi spam và lạm dụng.
-              </p>
-
-              {/* Giới hạn đặt hàng */}
-              <div className="space-y-4 border-t border-b border-border pt-6 pb-6">
-                <h3 className="text-lg font-medium text-card-foreground">1. Giới hạn đặt hàng</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Ngăn chặn việc đặt quá nhiều đơn hàng trong thời gian ngắn từ cùng một email.
-                </p>
-
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Số đơn hàng tối đa <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="100"
-                    value={spamData.max_orders || 5}
-                    onChange={(e) => setSpamData({ ...spamData, max_orders: parseInt(e.target.value) || 5 })}
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Số đơn hàng tối đa mà một email có thể đặt trong khoảng thời gian giới hạn (theo "Thời gian giới hạn đặt hàng" bên dưới).
-                    <br />
-                    <strong>Ví dụ:</strong> Nếu đặt là 5 và thời gian là 30 phút, thì một email chỉ có thể đặt tối đa 5 đơn trong 30 phút.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Thời gian giới hạn đặt hàng (giây) <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min="60"
-                    max="86400"
-                    value={spamData.order_rate_limit_ttl || 1800}
-                    onChange={(e) => setSpamData({ ...spamData, order_rate_limit_ttl: parseInt(e.target.value) || 1800 })}
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Khoảng thời gian (tính bằng giây) để đếm số đơn hàng. Hệ thống sẽ đếm số đơn trong khoảng thời gian này.
-                    <br />
-                    <strong>Gợi ý:</strong> 1800 giây = 30 phút, 3600 giây = 1 giờ, 7200 giây = 2 giờ
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Thời gian blacklist khi vượt quá (giờ) <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="720"
-                    value={spamData.order_rate_limit_blacklist_hours || 24}
-                    onChange={(e) => setSpamData({ ...spamData, order_rate_limit_blacklist_hours: parseInt(e.target.value) || 24 })}
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Khi email đặt quá số đơn cho phép (vượt "Số đơn hàng tối đa"), hệ thống sẽ tự động chặn email này trong bao nhiêu giờ.
-                    <br />
-                    <strong>Ví dụ:</strong> 24 giờ = 1 ngày, 168 giờ = 1 tuần
-                  </p>
-                </div>
-              </div>
-
-              {/* Xác thực email */}
-              <div className="space-y-4 border-t border-b border-border pt-6 pb-6">
-                <h3 className="text-lg font-medium text-card-foreground">2. Xác thực email</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Cấu hình thời gian hiệu lực của mã xác thực và số lần thử nhập mã.
-                </p>
-
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Thời gian mã xác thực có hiệu lực (giây) <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min="60"
-                    max="3600"
-                    value={spamData.verification_code_ttl || 600}
-                    onChange={(e) => setSpamData({ ...spamData, verification_code_ttl: parseInt(e.target.value) || 600 })}
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Sau thời gian này, mã xác thực sẽ hết hạn và người dùng phải gửi lại mã mới.
-                    <br />
-                    <strong>Gợi ý:</strong> 600 giây = 10 phút, 300 giây = 5 phút
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Thời gian session sau khi verify (giây) <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min="60"
-                    max="86400"
-                    value={spamData.verified_session_ttl || 1800}
-                    onChange={(e) => setSpamData({ ...spamData, verified_session_ttl: parseInt(e.target.value) || 1800 })}
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Sau khi xác thực email thành công, session sẽ có hiệu lực trong khoảng thời gian này. Trong thời gian này, người dùng không cần xác thực lại khi đặt hàng.
-                    <br />
-                    <strong>Gợi ý:</strong> 1800 giây = 30 phút, 3600 giây = 1 giờ
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Số lần thử nhập mã sai tối đa <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="20"
-                    value={spamData.max_verify_attempts || 5}
-                    onChange={(e) => setSpamData({ ...spamData, max_verify_attempts: parseInt(e.target.value) || 5 })}
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Nếu nhập sai mã quá số lần này, người dùng phải gửi lại mã mới.
-                  </p>
-                </div>
-              </div>
-
-              {/* Giới hạn gửi mã */}
-              <div className="space-y-4 border-t border-b border-border pt-6 pb-6">
-                <h3 className="text-lg font-medium text-card-foreground">3. Giới hạn gửi mã</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Ngăn chặn việc yêu cầu gửi quá nhiều mã xác thực trong thời gian ngắn.
-                </p>
-
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Số lần gửi mã tối đa <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="50"
-                    value={spamData.max_send_code || 5}
-                    onChange={(e) => setSpamData({ ...spamData, max_send_code: parseInt(e.target.value) || 5 })}
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Số lần gửi mã xác thực tối đa mà một email có thể yêu cầu trong khoảng thời gian giới hạn (theo "Thời gian giới hạn gửi mã" bên dưới).
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Thời gian giới hạn gửi mã (giây) <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min="60"
-                    max="86400"
-                    value={spamData.send_code_rate_limit_ttl || 3600}
-                    onChange={(e) => setSpamData({ ...spamData, send_code_rate_limit_ttl: parseInt(e.target.value) || 3600 })}
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Khoảng thời gian (tính bằng giây) để đếm số lần gửi mã. Hệ thống sẽ đếm số lần gửi mã trong khoảng thời gian này.
-                    <br />
-                    <strong>Gợi ý:</strong> 3600 giây = 1 giờ, 1800 giây = 30 phút, 7200 giây = 2 giờ
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Thời gian chờ giữa các lần gửi mã (giây) <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min="30"
-                    max="300"
-                    value={spamData.resend_code_cooldown || 60}
-                    onChange={(e) => setSpamData({ ...spamData, resend_code_cooldown: parseInt(e.target.value) || 60 })}
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Thời gian người dùng phải đợi để gửi lại mã xác thực (Cooldown timer của nút gửi lại).
-                    <br />
-                    <strong>Gợi ý:</strong> 60 giây = 1 phút
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+            )
+          }
+        </div >
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-between">
+        < div className="fixed sm:relative bottom-0 left-0 right-0 p-4 sm:p-0 bg-card sm:bg-transparent border-t sm:border-0 border-border z-10 sm:z-auto shadow-[0_-4px_10px_rgba(0,0,0,0.1)] sm:shadow-none flex items-center justify-between gap-3" >
           <button
             onClick={handleOpenResetModal}
             disabled={saving}
-            className="flex cursor-pointer items-center gap-2 px-6 py-3 bg-muted text-foreground rounded-lg hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 sm:flex-none flex cursor-pointer items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-muted text-foreground rounded-lg hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm sm:text-base"
           >
-            <RotateCcw className="w-4 h-4" />
-            <span>Reset về mặc định</span>
+            <RotateCcw className="w-4 h-4 shrink-0" />
+            <span className="hidden sm:inline">Reset về mặc định</span>
+            <span className="sm:hidden">Reset</span>
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex cursor-pointer items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark disabled:opacity-50"
+            className="flex-1 sm:flex-none flex cursor-pointer items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark disabled:opacity-50 font-medium text-sm sm:text-base shadow-sm"
           >
             {saving ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Đang lưu...
+                <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                <span>Đang lưu...</span>
               </>
             ) : (
               <>
-                <Save className="w-4 h-4" />
-                Lưu cấu hình
+                <Save className="w-4 h-4 shrink-0" />
+                <span>Lưu cấu hình</span>
               </>
             )}
           </button>
-        </div>
-      </div>
+        </div >
+      </div >
+
+      {/* Spacer cho mobile để không bị đè bởi fixed footer */}
+      < div className="h-20 sm:hidden" ></div >
 
       {/* Feature Modal */}
-      {showFeatureModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300">
-          <div
-            ref={featureModalRef}
-            className="bg-card border border-border rounded-xl p-6 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-card-foreground">
-                {editingFeature ? 'Sửa Feature' : 'Thêm Feature'}
-              </h3>
-              <button
-                onClick={() => {
-                  if (saving) return;
-                  setShowFeatureModal(false);
-                  setEditingFeature(null);
-                }}
-                disabled={saving}
-                className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Title <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={featureForm.title}
-                  onChange={(e) => setFeatureForm({ ...featureForm, title: e.target.value })}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  maxLength={100}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Description <span className="text-red-400">*</span>
-                </label>
-                <textarea
-                  value={featureForm.description}
-                  onChange={(e) => setFeatureForm({ ...featureForm, description: e.target.value })}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  rows={3}
-                  maxLength={300}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Icon <span className="text-red-400">*</span>
-                </label>
-                <div className="space-y-2">
-                  <div className="relative flex items-center gap-3">
-                    <div className="flex-1 relative">
-                      <input
-                        type="text"
-                        value={featureForm.icon}
-                        onChange={(e) => handleFeatureIconChange(e.target.value)}
-                        onFocus={() => {
-                          if (featureForm.icon) {
-                            const filtered = FEATURE_ICONS.filter(icon =>
-                              icon.toLowerCase().includes(featureForm.icon.toLowerCase())
-                            );
-                            setFeatureIconSuggestions(filtered.length > 0 ? filtered : FEATURE_ICONS);
-                            setShowFeatureIconDropdown(filtered.length > 0);
-                          } else {
-                            setFeatureIconSuggestions(FEATURE_ICONS);
-                            setShowFeatureIconDropdown(true);
-                          }
-                        }}
-                        onBlur={() => {
-                          // Delay để cho phép click vào suggestion
-                          setTimeout(() => setShowFeatureIconDropdown(false), 200);
-                        }}
-                        placeholder="Nhập tên icon (ví dụ: CheckCircle2, Zap, Heart...)"
-                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                      {showFeatureIconDropdown && featureIconSuggestions.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                          {featureIconSuggestions.map((icon) => {
-                            const IconComponent = getLucideIcon(icon) || CheckCircle2;
-                            return (
-                              <button
-                                key={icon}
-                                type="button"
-                                onClick={() => {
-                                  setFeatureForm({ ...featureForm, icon });
-                                  setShowFeatureIconDropdown(false);
-                                }}
-                                className="w-full flex items-center gap-3 px-4 py-2 hover:bg-muted text-left text-sm text-card-foreground"
-                              >
-                                <IconComponent className="w-4 h-4 text-primary" />
-                                <span>{icon}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-center w-12 h-12 bg-muted border border-border rounded-lg shrink-0">
-                      {featureForm.icon && (() => {
-                        try {
-                          const IconComponent = getLucideIcon(featureForm.icon);
-                          if (IconComponent) {
-                            return (
-                              <div className="text-primary">
-                                <IconComponent className="w-6 h-6" />
-                              </div>
-                            );
-                          }
-                        } catch (e) {
-                          console.error('Error rendering icon:', e);
-                        }
-                        return <CheckCircle2 className="w-6 h-6 text-muted-foreground" />;
-                      })()}
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-muted-foreground">
-                      {featureForm.icon && isValidLucideIcon(featureForm.icon) ? (
-                        <span className="text-green-400">✓ Icon hợp lệ</span>
-                      ) : featureForm.icon ? (
-                        <span className="text-red-400">✗ Icon không tồn tại</span>
-                      ) : (
-                        'Xem trước icon'
-                      )}
-                    </p>
-                    <a
-                      href="https://lucide.dev/icons"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-primary hover:underline"
-                    >
-                      Xem tất cả icons →
-                    </a>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">Order</label>
-                <input
-                  type="number"
-                  value={featureForm.order}
-                  onChange={(e) => setFeatureForm({ ...featureForm, order: parseInt(e.target.value) || 1 })}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  min={1}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Color (Gradient) <span className="text-muted-foreground text-xs">(ví dụ: from-green-500/20 to-emerald-600/10)</span>
-                </label>
-                <div className="space-y-2">
-                  <input
-                    type="text"
-                    value={featureForm.color}
-                    onChange={(e) => setFeatureForm({ ...featureForm, color: e.target.value })}
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="from-green-500/20 to-emerald-600/10"
-                  />
-                  <div className="grid grid-cols-6 gap-2">
-                    {FEATURE_COLORS.map((colorOption, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setFeatureForm({ ...featureForm, color: colorOption.color, borderColor: colorOption.borderColor })}
-                        className={`h-10 rounded border-2 ${featureForm.color === colorOption.color ? 'border-primary' : 'border-border'
-                          }`}
-                        style={{
-                          background: `linear-gradient(to bottom right, ${colorOption.color.includes('green') ? 'rgba(34, 197, 94, 0.2)' :
-                            colorOption.color.includes('orange') ? 'rgba(249, 115, 22, 0.2)' :
-                              colorOption.color.includes('blue') ? 'rgba(59, 130, 246, 0.2)' :
-                                colorOption.color.includes('purple') ? 'rgba(168, 85, 247, 0.2)' :
-                                  colorOption.color.includes('pink') ? 'rgba(236, 72, 153, 0.2)' :
-                                    'rgba(234, 179, 8, 0.2)'}, ${colorOption.color.includes('green') ? 'rgba(5, 150, 105, 0.1)' :
-                                      colorOption.color.includes('orange') ? 'rgba(217, 119, 6, 0.1)' :
-                                        colorOption.color.includes('blue') ? 'rgba(37, 99, 235, 0.1)' :
-                                          colorOption.color.includes('purple') ? 'rgba(124, 58, 237, 0.1)' :
-                                            colorOption.color.includes('pink') ? 'rgba(219, 39, 119, 0.1)' :
-                                              'rgba(217, 119, 6, 0.1)'})`
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Border Color <span className="text-muted-foreground text-xs">(ví dụ: border-green-500/30)</span>
-                </label>
-                <input
-                  type="text"
-                  value={featureForm.borderColor}
-                  onChange={(e) => setFeatureForm({ ...featureForm, borderColor: e.target.value })}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="border-green-500/30"
-                />
-              </div>
-              <div className="flex gap-2">
+      {
+        showFeatureModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300">
+            <div
+              ref={featureModalRef}
+              className="bg-card border border-border rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-200"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-card-foreground">
+                  {editingFeature ? 'Sửa Feature' : 'Thêm Feature'}
+                </h3>
                 <button
                   onClick={() => {
                     if (saving) return;
@@ -2978,364 +2721,92 @@ export default function AdminLandingConfig() {
                     setEditingFeature(null);
                   }}
                   disabled={saving}
-                  className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
                 >
-                  Hủy
-                </button>
-                <button
-                  onClick={handleSaveFeature}
-                  disabled={saving}
-                  className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Lưu
+                  <X className="w-5 h-5" />
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Stat Modal */}
-      {showStatModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300">
-          <div
-            ref={statModalRef}
-            className="bg-card border border-border rounded-xl p-6 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-card-foreground">
-                {editingStat ? 'Sửa Stat' : 'Thêm Stat'}
-              </h3>
-              <button
-                onClick={() => {
-                  if (saving) return;
-                  setShowStatModal(false);
-                  setEditingStat(null);
-                }}
-                disabled={saving}
-                className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Icon <span className="text-red-400">*</span>
-                </label>
-                <div className="space-y-2">
-                  <div className="relative flex items-center gap-3">
-                    <div className="flex-1 relative">
-                      <input
-                        type="text"
-                        value={statForm.icon}
-                        onChange={(e) => handleStatIconChange(e.target.value)}
-                        onFocus={() => {
-                          if (statForm.icon) {
-                            const filtered = STAT_ICONS.filter(icon =>
-                              icon.toLowerCase().includes(statForm.icon.toLowerCase())
-                            );
-                            setStatIconSuggestions(filtered.length > 0 ? filtered : STAT_ICONS);
-                            setShowStatIconDropdown(filtered.length > 0);
-                          } else {
-                            setStatIconSuggestions(STAT_ICONS);
-                            setShowStatIconDropdown(true);
-                          }
-                        }}
-                        onBlur={() => {
-                          setTimeout(() => setShowStatIconDropdown(false), 200);
-                        }}
-                        placeholder="Nhập tên icon (ví dụ: Users, Star, Clock...)"
-                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                      {showStatIconDropdown && statIconSuggestions.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                          {statIconSuggestions.map((icon) => {
-                            const IconComponent = getLucideIcon(icon) || Users;
-                            return (
-                              <button
-                                key={icon}
-                                type="button"
-                                onClick={() => {
-                                  setStatForm({ ...statForm, icon });
-                                  setShowStatIconDropdown(false);
-                                }}
-                                className="w-full flex items-center gap-3 px-4 py-2 hover:bg-muted text-left text-sm text-card-foreground"
-                              >
-                                <IconComponent className="w-4 h-4 text-primary" />
-                                <span>{icon}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-center w-12 h-12 bg-muted border border-border rounded-lg shrink-0">
-                      {statForm.icon && (() => {
-                        try {
-                          const IconComponent = getLucideIcon(statForm.icon);
-                          if (IconComponent) {
-                            return (
-                              <div className="text-primary">
-                                <IconComponent className="w-6 h-6" />
-                              </div>
-                            );
-                          }
-                        } catch (e) {
-                          console.error('Error rendering icon:', e);
-                        }
-                        return <Users className="w-6 h-6 text-muted-foreground" />;
-                      })()}
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-muted-foreground">
-                      {statForm.icon && isValidLucideIcon(statForm.icon) ? (
-                        <span className="text-green-400">✓ Icon hợp lệ</span>
-                      ) : statForm.icon ? (
-                        <span className="text-red-400">✗ Icon không tồn tại</span>
-                      ) : (
-                        'Xem trước icon'
-                      )}
-                    </p>
-                    <a
-                      href="https://lucide.dev/icons"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-primary hover:underline"
-                    >
-                      Xem tất cả icons →
-                    </a>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Value <span className="text-red-400">*</span> <span className="text-muted-foreground text-xs">(ví dụ: 10,000+, 4.9/5, 30')</span>
-                </label>
-                <input
-                  type="text"
-                  value={statForm.value}
-                  onChange={(e) => setStatForm({ ...statForm, value: e.target.value })}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="10,000+"
-                  maxLength={50}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Label <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={statForm.label}
-                  onChange={(e) => setStatForm({ ...statForm, label: e.target.value })}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="Khách hàng tin tưởng"
-                  maxLength={100}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Color (Gradient) <span className="text-muted-foreground text-xs">(ví dụ: from-blue-500/20 to-blue-600/10)</span>
-                </label>
-                <div className="space-y-2">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Title <span className="text-red-400">*</span>
+                  </label>
                   <input
                     type="text"
-                    value={statForm.color}
-                    onChange={(e) => setStatForm({ ...statForm, color: e.target.value })}
+                    value={featureForm.title}
+                    onChange={(e) => setFeatureForm({ ...featureForm, title: e.target.value })}
                     className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="from-blue-500/20 to-blue-600/10"
+                    maxLength={100}
                   />
-                  <div className="grid grid-cols-6 gap-2">
-                    {STAT_COLORS.map((colorOption, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setStatForm({ ...statForm, color: colorOption })}
-                        className={`h-10 rounded border-2 ${statForm.color === colorOption ? 'border-primary' : 'border-border'
-                          }`}
-                        style={{
-                          background: `linear-gradient(to bottom right, ${colorOption.includes('blue') ? 'rgba(59, 130, 246, 0.2)' :
-                            colorOption.includes('yellow') ? 'rgba(234, 179, 8, 0.2)' :
-                              colorOption.includes('green') ? 'rgba(34, 197, 94, 0.2)' :
-                                colorOption.includes('primary') ? 'rgba(59, 130, 246, 0.2)' :
-                                  colorOption.includes('purple') ? 'rgba(168, 85, 247, 0.2)' :
-                                    'rgba(236, 72, 153, 0.2)'}, ${colorOption.includes('blue') ? 'rgba(37, 99, 235, 0.1)' :
-                                      colorOption.includes('yellow') ? 'rgba(217, 119, 6, 0.1)' :
-                                        colorOption.includes('green') ? 'rgba(5, 150, 105, 0.1)' :
-                                          colorOption.includes('primary') ? 'rgba(37, 99, 235, 0.1)' :
-                                            colorOption.includes('purple') ? 'rgba(124, 58, 237, 0.1)' :
-                                              'rgba(219, 39, 119, 0.1)'})`
-                        }}
-                      />
-                    ))}
-                  </div>
                 </div>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    if (saving) return;
-                    setShowStatModal(false);
-                    setEditingStat(null);
-                  }}
-                  disabled={saving}
-                  className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Hủy
-                </button>
-                <button
-                  onClick={handleSaveStat}
-                  disabled={saving}
-                  className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Lưu
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Social Modal */}
-      {showSocialModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300">
-          <div
-            ref={socialModalRef}
-            className="bg-card border border-border rounded-xl p-6 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-card-foreground">
-                {editingSocial ? 'Sửa Social Media' : 'Thêm Social Media'}
-              </h3>
-              <button
-                onClick={() => {
-                  if (saving) return;
-                  setShowSocialModal(false);
-                  setEditingSocial(null);
-                }}
-                disabled={saving}
-                className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Name <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={socialForm.name}
-                  onChange={(e) => setSocialForm({ ...socialForm, name: e.target.value })}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  maxLength={50}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
-                  URL <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="url"
-                  value={socialForm.url}
-                  onChange={(e) => setSocialForm({ ...socialForm, url: e.target.value })}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">Icon</label>
-                <div className="space-y-2">
-                  <div className="relative flex items-center gap-3">
-                    <div className="flex-1 relative">
-                      <input
-                        type="text"
-                        value={socialForm.icon}
-                        onChange={(e) => handleSocialIconChange(e.target.value)}
-                        onFocus={() => {
-                          if (socialForm.icon) {
-                            const filtered = SOCIAL_ICONS.filter(icon =>
-                              icon.toLowerCase().includes(socialForm.icon.toLowerCase())
-                            );
-                            setSocialIconSuggestions(filtered.length > 0 ? filtered : SOCIAL_ICONS);
-                            setShowSocialIconDropdown(filtered.length > 0);
-                          } else {
-                            setSocialIconSuggestions(SOCIAL_ICONS);
-                            setShowSocialIconDropdown(true);
-                          }
-                        }}
-                        onBlur={() => {
-                          // Delay để cho phép click vào suggestion
-                          setTimeout(() => setShowSocialIconDropdown(false), 200);
-                        }}
-                        placeholder="Nhập tên icon (ví dụ: FacebookIcon, MessageCircle...)"
-                        className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                      {showSocialIconDropdown && socialIconSuggestions.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                          {socialIconSuggestions.map((icon) => {
-                            let IconComponent = MessageCircle;
-                            if (icon === 'FacebookIcon') {
-                              IconComponent = () => (
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                                </svg>
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Description <span className="text-red-400">*</span>
+                  </label>
+                  <textarea
+                    value={featureForm.description}
+                    onChange={(e) => setFeatureForm({ ...featureForm, description: e.target.value })}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    rows={3}
+                    maxLength={300}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Icon <span className="text-red-400">*</span>
+                  </label>
+                  <div className="space-y-2">
+                    <div className="relative flex items-center gap-3">
+                      <div className="flex-1 relative">
+                        <input
+                          type="text"
+                          value={featureForm.icon}
+                          onChange={(e) => handleFeatureIconChange(e.target.value)}
+                          onFocus={() => {
+                            if (featureForm.icon) {
+                              const filtered = FEATURE_ICONS.filter(icon =>
+                                icon.toLowerCase().includes(featureForm.icon.toLowerCase())
                               );
-                            } else if (icon === 'InstagramIcon') {
-                              IconComponent = () => (
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-                                </svg>
-                              );
+                              setFeatureIconSuggestions(filtered.length > 0 ? filtered : FEATURE_ICONS);
+                              setShowFeatureIconDropdown(filtered.length > 0);
                             } else {
-                              const lucideIcon = getLucideIcon(icon);
-                              if (lucideIcon) {
-                                IconComponent = lucideIcon;
-                              }
+                              setFeatureIconSuggestions(FEATURE_ICONS);
+                              setShowFeatureIconDropdown(true);
                             }
-                            return (
-                              <button
-                                key={icon}
-                                type="button"
-                                onClick={() => {
-                                  setSocialForm({ ...socialForm, icon });
-                                  setShowSocialIconDropdown(false);
-                                }}
-                                className="w-full flex items-center gap-3 px-4 py-2 hover:bg-muted text-left text-sm text-card-foreground"
-                              >
-                                <IconComponent className="w-4 h-4 text-primary" />
-                                <span>{icon}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-center w-12 h-12 bg-muted border border-border rounded-lg shrink-0">
-                      {socialForm.icon && (() => {
-                        try {
-                          if (socialForm.icon === 'FacebookIcon') {
-                            return (
-                              <div className="text-primary">
-                                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                                </svg>
-                              </div>
-                            );
-                          } else if (socialForm.icon === 'InstagramIcon') {
-                            return (
-                              <div className="text-primary">
-                                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-                                </svg>
-                              </div>
-                            );
-                          } else {
-                            const IconComponent = getLucideIcon(socialForm.icon);
+                          }}
+                          onBlur={() => {
+                            // Delay để cho phép click vào suggestion
+                            setTimeout(() => setShowFeatureIconDropdown(false), 200);
+                          }}
+                          placeholder="Nhập tên icon (ví dụ: CheckCircle2, Zap, Heart...)"
+                          className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                        />
+                        {showFeatureIconDropdown && featureIconSuggestions.length > 0 && (
+                          <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            {featureIconSuggestions.map((icon) => {
+                              const IconComponent = getLucideIcon(icon) || CheckCircle2;
+                              return (
+                                <button
+                                  key={icon}
+                                  type="button"
+                                  onClick={() => {
+                                    setFeatureForm({ ...featureForm, icon });
+                                    setShowFeatureIconDropdown(false);
+                                  }}
+                                  className="w-full flex items-center gap-3 px-4 py-2 hover:bg-muted text-left text-sm text-card-foreground"
+                                >
+                                  <IconComponent className="w-4 h-4 text-primary" />
+                                  <span>{icon}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-center w-12 h-12 bg-muted border border-border rounded-lg shrink-0">
+                        {featureForm.icon && (() => {
+                          try {
+                            const IconComponent = getLucideIcon(featureForm.icon);
                             if (IconComponent) {
                               return (
                                 <div className="text-primary">
@@ -3343,150 +2814,339 @@ export default function AdminLandingConfig() {
                                 </div>
                               );
                             }
+                          } catch (e) {
+                            console.error('Error rendering icon:', e);
                           }
-                        } catch (e) {
-                          console.error('Error rendering icon:', e);
-                        }
-                        return <MessageCircle className="w-6 h-6 text-muted-foreground" />;
-                      })()}
+                          return <CheckCircle2 className="w-6 h-6 text-muted-foreground" />;
+                        })()}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-muted-foreground">
+                        {featureForm.icon && isValidLucideIcon(featureForm.icon) ? (
+                          <span className="text-green-400">✓ Icon hợp lệ</span>
+                        ) : featureForm.icon ? (
+                          <span className="text-red-400">✗ Icon không tồn tại</span>
+                        ) : (
+                          'Xem trước icon'
+                        )}
+                      </p>
+                      <a
+                        href="https://lucide.dev/icons"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Xem tất cả icons →
+                      </a>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-muted-foreground">
-                      {socialForm.icon && (isValidLucideIcon(socialForm.icon) || socialForm.icon === 'FacebookIcon' || socialForm.icon === 'InstagramIcon') ? (
-                        <span className="text-green-400">✓ Icon hợp lệ</span>
-                      ) : socialForm.icon ? (
-                        <span className="text-red-400">✗ Icon không tồn tại</span>
-                      ) : (
-                        'Xem trước icon'
-                      )}
-                    </p>
-                    <a
-                      href="https://lucide.dev/icons"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-primary hover:underline"
-                    >
-                      Xem tất cả icons →
-                    </a>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">Order</label>
+                  <input
+                    type="number"
+                    value={featureForm.order}
+                    onChange={(e) => setFeatureForm({ ...featureForm, order: parseInt(e.target.value) || 1 })}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    min={1}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Color (Gradient) <span className="text-muted-foreground text-xs">(ví dụ: from-green-500/20 to-emerald-600/10)</span>
+                  </label>
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={featureForm.color}
+                      onChange={(e) => setFeatureForm({ ...featureForm, color: e.target.value })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="from-green-500/20 to-emerald-600/10"
+                    />
+                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                      {FEATURE_COLORS.map((colorOption, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setFeatureForm({ ...featureForm, color: colorOption.color, borderColor: colorOption.borderColor })}
+                          className={`h-10 rounded border-2 ${featureForm.color === colorOption.color ? 'border-primary' : 'border-border'
+                            }`}
+                          style={{
+                            background: `linear-gradient(to bottom right, ${colorOption.color.includes('green') ? 'rgba(34, 197, 94, 0.2)' :
+                              colorOption.color.includes('orange') ? 'rgba(249, 115, 22, 0.2)' :
+                                colorOption.color.includes('blue') ? 'rgba(59, 130, 246, 0.2)' :
+                                  colorOption.color.includes('purple') ? 'rgba(168, 85, 247, 0.2)' :
+                                    colorOption.color.includes('pink') ? 'rgba(236, 72, 153, 0.2)' :
+                                      'rgba(234, 179, 8, 0.2)'}, ${colorOption.color.includes('green') ? 'rgba(5, 150, 105, 0.1)' :
+                                        colorOption.color.includes('orange') ? 'rgba(217, 119, 6, 0.1)' :
+                                          colorOption.color.includes('blue') ? 'rgba(37, 99, 235, 0.1)' :
+                                            colorOption.color.includes('purple') ? 'rgba(124, 58, 237, 0.1)' :
+                                              colorOption.color.includes('pink') ? 'rgba(219, 39, 119, 0.1)' :
+                                                'rgba(217, 119, 6, 0.1)'})`
+                          }}
+                        />
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">Description</label>
-                <input
-                  type="text"
-                  value={socialForm.description || ''}
-                  onChange={(e) => setSocialForm({ ...socialForm, description: e.target.value })}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  maxLength={200}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">Color</label>
-                <input
-                  type="text"
-                  value={socialForm.color}
-                  onChange={(e) => setSocialForm({ ...socialForm, color: e.target.value })}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="text-blue-400"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">Order</label>
-                <input
-                  type="number"
-                  value={socialForm.order}
-                  onChange={(e) => setSocialForm({ ...socialForm, order: parseInt(e.target.value) || 1 })}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  min={1}
-                />
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    if (saving) return;
-                    setShowSocialModal(false);
-                    setEditingSocial(null);
-                  }}
-                  disabled={saving}
-                  className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Hủy
-                </button>
-                <button
-                  onClick={handleSaveSocial}
-                  disabled={saving}
-                  className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Lưu
-                </button>
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Border Color <span className="text-muted-foreground text-xs">(ví dụ: border-green-500/30)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={featureForm.borderColor}
+                    onChange={(e) => setFeatureForm({ ...featureForm, borderColor: e.target.value })}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="border-green-500/30"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      if (saving) return;
+                      setShowFeatureModal(false);
+                      setEditingFeature(null);
+                    }}
+                    disabled={saving}
+                    className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={handleSaveFeature}
+                    disabled={saving}
+                    className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                    Lưu
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
+
+      {/* Stat Modal */}
+      {
+        showStatModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300">
+            <div
+              ref={statModalRef}
+              className="bg-card border border-border rounded-xl p-6 max-w-md w-full max-h-[100vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-200"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-card-foreground">
+                  {editingStat ? 'Sửa Stat' : 'Thêm Stat'}
+                </h3>
+                <button
+                  onClick={() => {
+                    if (saving) return;
+                    setShowStatModal(false);
+                    setEditingStat(null);
+                  }}
+                  disabled={saving}
+                  className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Icon <span className="text-red-400">*</span>
+                  </label>
+                  <div className="space-y-2">
+                    <div className="relative flex items-center gap-3">
+                      <div className="flex-1 relative">
+                        <input
+                          type="text"
+                          value={statForm.icon}
+                          onChange={(e) => handleStatIconChange(e.target.value)}
+                          onFocus={() => {
+                            if (statForm.icon) {
+                              const filtered = STAT_ICONS.filter(icon =>
+                                icon.toLowerCase().includes(statForm.icon.toLowerCase())
+                              );
+                              setStatIconSuggestions(filtered.length > 0 ? filtered : STAT_ICONS);
+                              setShowStatIconDropdown(filtered.length > 0);
+                            } else {
+                              setStatIconSuggestions(STAT_ICONS);
+                              setShowStatIconDropdown(true);
+                            }
+                          }}
+                          onBlur={() => {
+                            setTimeout(() => setShowStatIconDropdown(false), 200);
+                          }}
+                          placeholder="Nhập tên icon (ví dụ: Users, Star, Clock...)"
+                          className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                        />
+                        {showStatIconDropdown && statIconSuggestions.length > 0 && (
+                          <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            {statIconSuggestions.map((icon) => {
+                              const IconComponent = getLucideIcon(icon) || Users;
+                              return (
+                                <button
+                                  key={icon}
+                                  type="button"
+                                  onClick={() => {
+                                    setStatForm({ ...statForm, icon });
+                                    setShowStatIconDropdown(false);
+                                  }}
+                                  className="w-full flex items-center gap-3 px-4 py-2 hover:bg-muted text-left text-sm text-card-foreground"
+                                >
+                                  <IconComponent className="w-4 h-4 text-primary" />
+                                  <span>{icon}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-center w-12 h-12 bg-muted border border-border rounded-lg shrink-0">
+                        {statForm.icon && (() => {
+                          try {
+                            const IconComponent = getLucideIcon(statForm.icon);
+                            if (IconComponent) {
+                              return (
+                                <div className="text-primary">
+                                  <IconComponent className="w-6 h-6" />
+                                </div>
+                              );
+                            }
+                          } catch (e) {
+                            console.error('Error rendering icon:', e);
+                          }
+                          return <Users className="w-6 h-6 text-muted-foreground" />;
+                        })()}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-muted-foreground">
+                        {statForm.icon && isValidLucideIcon(statForm.icon) ? (
+                          <span className="text-green-400">✓ Icon hợp lệ</span>
+                        ) : statForm.icon ? (
+                          <span className="text-red-400">✗ Icon không tồn tại</span>
+                        ) : (
+                          'Xem trước icon'
+                        )}
+                      </p>
+                      <a
+                        href="https://lucide.dev/icons"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Xem tất cả icons →
+                      </a>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Value <span className="text-red-400">*</span> <span className="text-muted-foreground text-xs">(ví dụ: 10,000+, 4.9/5, 30')</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={statForm.value}
+                    onChange={(e) => setStatForm({ ...statForm, value: e.target.value })}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="10,000+"
+                    maxLength={50}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Label <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={statForm.label}
+                    onChange={(e) => setStatForm({ ...statForm, label: e.target.value })}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="Khách hàng tin tưởng"
+                    maxLength={100}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Color (Gradient) <span className="text-muted-foreground text-xs">(ví dụ: from-blue-500/20 to-blue-600/10)</span>
+                  </label>
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={statForm.color}
+                      onChange={(e) => setStatForm({ ...statForm, color: e.target.value })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="from-blue-500/20 to-blue-600/10"
+                    />
+                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                      {STAT_COLORS.map((colorOption, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setStatForm({ ...statForm, color: colorOption })}
+                          className={`h-10 rounded border-2 ${statForm.color === colorOption ? 'border-primary' : 'border-border'
+                            }`}
+                          style={{
+                            background: `linear-gradient(to bottom right, ${colorOption.includes('blue') ? 'rgba(59, 130, 246, 0.2)' :
+                              colorOption.includes('yellow') ? 'rgba(234, 179, 8, 0.2)' :
+                                colorOption.includes('green') ? 'rgba(34, 197, 94, 0.2)' :
+                                  colorOption.includes('primary') ? 'rgba(59, 130, 246, 0.2)' :
+                                    colorOption.includes('purple') ? 'rgba(168, 85, 247, 0.2)' :
+                                      'rgba(236, 72, 153, 0.2)'}, ${colorOption.includes('blue') ? 'rgba(37, 99, 235, 0.1)' :
+                                        colorOption.includes('yellow') ? 'rgba(217, 119, 6, 0.1)' :
+                                          colorOption.includes('green') ? 'rgba(5, 150, 105, 0.1)' :
+                                            colorOption.includes('primary') ? 'rgba(37, 99, 235, 0.1)' :
+                                              colorOption.includes('purple') ? 'rgba(124, 58, 237, 0.1)' :
+                                                'rgba(219, 39, 119, 0.1)'})`
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      if (saving) return;
+                      setShowStatModal(false);
+                      setEditingStat(null);
+                    }}
+                    disabled={saving}
+                    className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={handleSaveStat}
+                    disabled={saving}
+                    className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                    Lưu
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      }
 
       {/* Link Modal */}
-      {showLinkModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300">
-          <div
-            ref={linkModalRef}
-            className="bg-card border border-border rounded-xl p-6 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-card-foreground">
-                {editingLink ? 'Sửa Link' : 'Thêm Link'}
-              </h3>
-              <button
-                onClick={() => {
-                  if (saving) return;
-                  setShowLinkModal(false);
-                  setEditingLink(null);
-                }}
-                disabled={saving}
-                className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Text <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={linkForm.text}
-                  onChange={(e) => setLinkForm({ ...linkForm, text: e.target.value })}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  maxLength={100}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
-                  URL <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={linkForm.url}
-                  onChange={(e) => setLinkForm({ ...linkForm, url: e.target.value })}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="#"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">Order</label>
-                <input
-                  type="number"
-                  value={linkForm.order}
-                  onChange={(e) => setLinkForm({ ...linkForm, order: parseInt(e.target.value) || 1 })}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  min={1}
-                />
-              </div>
-              <div className="flex gap-2">
+      {
+        showLinkModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300">
+            <div
+              ref={linkModalRef}
+              className="bg-card border border-border rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-200"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-card-foreground">
+                  {editingLink ? 'Sửa Link' : 'Thêm Link'}
+                </h3>
                 <button
                   onClick={() => {
                     if (saving) return;
@@ -3494,231 +3154,286 @@ export default function AdminLandingConfig() {
                     setEditingLink(null);
                   }}
                   disabled={saving}
-                  className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
                 >
-                  Hủy
-                </button>
-                <button
-                  onClick={handleSaveLink}
-                  disabled={saving}
-                  className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Lưu
+                  <X className="w-5 h-5" />
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Feature Confirmation Modal */}
-      {showDeleteFeatureModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300">
-          <div
-            ref={deleteFeatureModalRef}
-            className="bg-card border border-border rounded-xl p-6 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-card-foreground">
-                Xác nhận xóa Feature
-              </h3>
-              <button
-                onClick={() => {
-                  setShowDeleteFeatureModal(false);
-                  setFeatureToDelete(null);
-                }}
-                className="text-muted-foreground hover:text-foreground cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <p className="text-card-foreground">
-                Bạn có chắc muốn xóa feature <strong>"{featureToDelete?.title}"</strong>?
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Hành động này không thể hoàn tác.
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    if (saving) return;
-                    setShowDeleteFeatureModal(false);
-                    setFeatureToDelete(null);
-                  }}
-                  disabled={saving}
-                  className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Hủy
-                </button>
-                <button
-                  onClick={confirmDeleteFeature}
-                  disabled={saving}
-                  className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Xóa
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Stat Confirmation Modal */}
-      {showDeleteStatModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300">
-          <div
-            ref={deleteStatModalRef}
-            className="bg-card border border-border rounded-xl p-6 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-card-foreground">
-                Xác nhận xóa Stat
-              </h3>
-              <button
-                onClick={() => {
-                  setShowDeleteStatModal(false);
-                  setStatToDelete(null);
-                }}
-                className="text-muted-foreground hover:text-foreground cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <p className="text-card-foreground">
-                Bạn có chắc muốn xóa stat <strong>"{statToDelete?.label}"</strong>?
-              </p>
-              {statToDelete && (
-                <div className="p-3 bg-muted rounded-lg">
-                  <div className="text-sm text-muted-foreground">
-                    <div>Icon: <code>{statToDelete.icon}</code></div>
-                    <div>Giá trị: <code>{statToDelete.value}</code></div>
-                  </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Text <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={linkForm.text}
+                    onChange={(e) => setLinkForm({ ...linkForm, text: e.target.value })}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    maxLength={100}
+                  />
                 </div>
-              )}
-              <p className="text-sm text-muted-foreground">
-                Hành động này không thể hoàn tác.
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    if (saving) return;
-                    setShowDeleteStatModal(false);
-                    setStatToDelete(null);
-                  }}
-                  disabled={saving}
-                  className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Hủy
-                </button>
-                <button
-                  onClick={confirmDeleteStat}
-                  disabled={saving}
-                  className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Xóa
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Reset Config Modal */}
-      {showResetModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300">
-          <div
-            ref={resetModalRef}
-            className="bg-card border border-border rounded-xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-200"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-card-foreground">
-                Chọn phần muốn reset
-              </h3>
-              <button
-                onClick={() => {
-                  if (saving) return;
-                  setShowResetModal(false);
-                }}
-                disabled={saving}
-                className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Chọn các phần bạn muốn reset về giá trị mặc định. Các phần không được chọn sẽ giữ nguyên.
-              </p>
-
-              <div className="space-y-3">
-                {TABS.filter(tab => tab.id !== 'general' || true).map((tab) => {
-                  const sectionKey = tab.id === 'whyChooseUs' ? 'whyChooseUs' :
-                    tab.id === 'general' ? 'general' : tab.id;
-                  const sectionLabel = tab.id === 'whyChooseUs' ? 'Why Choose Us' : tab.label;
-
-                  return (
-                    <label
-                      key={tab.id}
-                      className="flex items-center gap-3 p-3 bg-muted rounded-lg hover:bg-muted/80 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={resetSections[sectionKey] || false}
-                        onChange={(e) => {
-                          setResetSections({
-                            ...resetSections,
-                            [sectionKey]: e.target.checked
-                          });
-                        }}
-                        className="w-4 h-4 rounded border-border cursor-pointer"
-                      />
-                      <div className="flex items-center gap-2 flex-1">
-                        <tab.icon className="w-4 h-4 text-primary" />
-                        <span className="text-card-foreground font-medium">{sectionLabel}</span>
-                      </div>
-                    </label>
-                  );
-                })}
-
-
-              </div>
-
-              <div className="pt-4 border-t border-border">
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    URL <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={linkForm.url}
+                    onChange={(e) => setLinkForm({ ...linkForm, url: e.target.value })}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="#"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">Order</label>
+                  <input
+                    type="number"
+                    value={linkForm.order}
+                    onChange={(e) => setLinkForm({ ...linkForm, order: parseInt(e.target.value) || 1 })}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    min={1}
+                  />
+                </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setShowResetModal(false)}
-                    className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 cursor-pointer"
+                    onClick={() => {
+                      if (saving) return;
+                      setShowLinkModal(false);
+                      setEditingLink(null);
+                    }}
+                    disabled={saving}
+                    className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Hủy
                   </button>
                   <button
-                    onClick={handleReset}
-                    disabled={saving || Object.values(resetSections).every(v => !v)}
-                    className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    onClick={handleSaveLink}
+                    disabled={saving}
+                    className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    {saving ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Đang reset...</span>
-                      </>
-                    ) : (
-                      <>
-                        <RotateCcw className="w-4 h-4" />
-                        <span>Reset</span>
-                      </>
-                    )}
+                    {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                    Lưu
                   </button>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
+
+      {/* Delete Feature Confirmation Modal */}
+      {
+        showDeleteFeatureModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300">
+            <div
+              ref={deleteFeatureModalRef}
+              className="bg-card border border-border rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-200"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-card-foreground">
+                  Xác nhận xóa Feature
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowDeleteFeatureModal(false);
+                    setFeatureToDelete(null);
+                  }}
+                  className="text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="space-y-4">
+                <p className="text-card-foreground">
+                  Bạn có chắc muốn xóa feature <strong>"{featureToDelete?.title}"</strong>?
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Hành động này không thể hoàn tác.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      if (saving) return;
+                      setShowDeleteFeatureModal(false);
+                      setFeatureToDelete(null);
+                    }}
+                    disabled={saving}
+                    className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={confirmDeleteFeature}
+                    disabled={saving}
+                    className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                    Xóa
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      {/* Delete Stat Confirmation Modal */}
+      {
+        showDeleteStatModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300">
+            <div
+              ref={deleteStatModalRef}
+              className="bg-card border border-border rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-200"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-card-foreground">
+                  Xác nhận xóa Stat
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowDeleteStatModal(false);
+                    setStatToDelete(null);
+                  }}
+                  className="text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="space-y-4">
+                <p className="text-card-foreground">
+                  Bạn có chắc muốn xóa stat <strong>"{statToDelete?.label}"</strong>?
+                </p>
+                {statToDelete && (
+                  <div className="p-3 bg-muted rounded-lg">
+                    <div className="text-sm text-muted-foreground">
+                      <div>Icon: <code>{statToDelete.icon}</code></div>
+                      <div>Giá trị: <code>{statToDelete.value}</code></div>
+                    </div>
+                  </div>
+                )}
+                <p className="text-sm text-muted-foreground">
+                  Hành động này không thể hoàn tác.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      if (saving) return;
+                      setShowDeleteStatModal(false);
+                      setStatToDelete(null);
+                    }}
+                    disabled={saving}
+                    className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={confirmDeleteStat}
+                    disabled={saving}
+                    className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                    Xóa
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      {/* Reset Config Modal */}
+      {
+        showResetModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300">
+            <div
+              ref={resetModalRef}
+              className="bg-card border border-border rounded-xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-200"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-card-foreground">
+                  Chọn phần muốn reset
+                </h3>
+                <button
+                  onClick={() => {
+                    if (saving) return;
+                    setShowResetModal(false);
+                  }}
+                  disabled={saving}
+                  className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Chọn các phần bạn muốn reset về giá trị mặc định. Các phần không được chọn sẽ giữ nguyên.
+                </p>
+
+                <div className="space-y-3">
+                  {TABS.filter(tab => tab.id !== 'general' || true).map((tab) => {
+                    const sectionKey = tab.id === 'whyChooseUs' ? 'whyChooseUs' :
+                      tab.id === 'general' ? 'general' : tab.id;
+                    const sectionLabel = tab.id === 'whyChooseUs' ? 'Why Choose Us' : tab.label;
+
+                    return (
+                      <label
+                        key={tab.id}
+                        className="flex items-center gap-3 p-3 bg-muted rounded-lg hover:bg-muted/80 cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={resetSections[sectionKey] || false}
+                          onChange={(e) => {
+                            setResetSections({
+                              ...resetSections,
+                              [sectionKey]: e.target.checked
+                            });
+                          }}
+                          className="w-4 h-4 rounded border-border cursor-pointer"
+                        />
+                        <div className="flex items-center gap-2 flex-1">
+                          <tab.icon className="w-4 h-4 text-primary" />
+                          <span className="text-card-foreground font-medium">{sectionLabel}</span>
+                        </div>
+                      </label>
+                    );
+                  })}
+
+
+                </div>
+
+                <div className="pt-4 border-t border-border">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowResetModal(false)}
+                      className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 cursor-pointer"
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      onClick={handleReset}
+                      disabled={saving || Object.values(resetSections).every(v => !v)}
+                      className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {saving ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Đang reset...</span>
+                        </>
+                      ) : (
+                        <>
+                          <RotateCcw className="w-4 h-4" />
+                          <span>Reset</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      }
 
       <Toast
         message={toast.message}
@@ -3726,7 +3441,7 @@ export default function AdminLandingConfig() {
         onClose={() => setToast({ message: '', isVisible: false })}
         type={toast.type || 'success'}
       />
-    </div>
+    </div >
   );
 }
 

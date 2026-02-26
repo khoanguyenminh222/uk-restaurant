@@ -527,7 +527,7 @@ export default function Header({ onCartClick, onLoginClick, onProfileClick, onOr
       {/* Mobile Menu */}
       <div
         id="mobile-menu"
-        className={`2xl:hidden cursor-pointer bg-card border-t border-border transition-all duration-300 ease-in-out ${isMenuOpen
+        className={`2xl:hidden cursor-pointer bg-background border-t-2 border-primary shadow-2xl shadow-black/40 transition-all duration-300 ease-in-out ${isMenuOpen
           ? "opacity-100 max-h-[calc(100vh-4rem)] sm:max-h-[calc(100vh-6rem)] sm:overflow-y-auto"
           : "max-h-0 opacity-0 overflow-hidden"
           }`}

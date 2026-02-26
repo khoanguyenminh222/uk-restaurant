@@ -45,8 +45,23 @@ export async function GET(request) {
       query.is_permanent = isPermanent === 'true';
     }
 
-    // Get total count
-    const total = await db.collection('spamBlacklist').countDocuments(query);
+    // Get stats based on query (before pagination)
+    const stats = {
+      total: await db.collection('spamBlacklist').countDocuments(query),
+      permanent: await db.collection('spamBlacklist').countDocuments({ ...query, is_permanent: true }),
+      active: await db.collection('spamBlacklist').countDocuments({
+        ...query,
+        $or: [
+          { is_permanent: true },
+          { blocked_until: { $gt: new Date() } }
+        ]
+      }),
+      expired: await db.collection('spamBlacklist').countDocuments({
+        ...query,
+        is_permanent: false,
+        blocked_until: { $lte: new Date() }
+      })
+    };
 
     // Get blacklist entries with pagination
     const blacklist = await db
@@ -61,11 +76,12 @@ export async function GET(request) {
       {
         success: true,
         data: blacklist,
+        stats,
         pagination: {
           page,
           limit,
-          total,
-          totalPages: Math.ceil(total / limit),
+          total: stats.total,
+          totalPages: Math.ceil(stats.total / limit),
         },
       },
       { status: 200 }

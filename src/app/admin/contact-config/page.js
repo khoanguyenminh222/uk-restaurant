@@ -437,30 +437,31 @@ export default function AdminContactConfig() {
 
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <div className="mb-6">
-                    <div className="flex items-center gap-3 mb-2">
-                        <Settings className="w-8 h-8 text-primary" />
-                        <h1 className="text-3xl font-bold text-foreground">Cấu hình Trang Liên Hệ</h1>
+                <div className="mb-4 md:mb-6">
+                    <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+                        <Settings className="w-5 h-5 md:w-8 md:h-8 text-primary shrink-0" />
+                        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">Cấu hình Trang Liên Hệ</h1>
                     </div>
-                    <p className="text-muted-foreground">Quản lý nội dung, hình ảnh và thông tin liên hệ</p>
+                    <p className="text-sm text-muted-foreground">Quản lý nội dung, hình ảnh và thông tin liên hệ</p>
                 </div>
 
                 {/* Tabs */}
-                <div className="mb-6 border-b border-border">
-                    <div className="flex flex-wrap gap-2">
+                <div className="mb-4 md:mb-6 border-b border-border overflow-x-auto scrollbar-hide">
+                    <div className="flex gap-1 min-w-full pb-0">
                         {TABS.map((tab) => {
                             const Icon = tab.icon;
                             return (
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-t-lg transition-colors cursor-pointer ${activeTab === tab.id
+                                    title={tab.label}
+                                    className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-t-lg transition-colors cursor-pointer whitespace-nowrap text-sm ${activeTab === tab.id
                                         ? 'bg-primary text-primary-foreground'
                                         : 'bg-muted text-muted-foreground hover:bg-muted/80'
                                         }`}
                                 >
-                                    <Icon className="w-4 h-4" />
-                                    {tab.label}
+                                    <Icon className="w-4 h-4 shrink-0" />
+                                    <span className="hidden sm:inline">{tab.label}</span>
                                 </button>
                             );
                         })}
@@ -468,75 +469,73 @@ export default function AdminContactConfig() {
                 </div>
 
                 {/* Content Area */}
-                <div className="bg-card border border-border rounded-lg p-6 mb-6 min-h-[500px]">
+                <div className="bg-card border border-border rounded-lg p-4 sm:p-5 md:p-6 mb-4 md:mb-6 min-h-[500px]">
 
                     {/* Hero Tab */}
                     {activeTab === 'hero' && (
                         <div className="space-y-4 animate-in fade-in duration-300">
                             <h2 className="text-xl font-bold text-card-foreground mb-4">Hero Section</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+                                <div className="space-y-4 md:space-y-6">
                                     <div>
-                                        <label className="block text-sm font-medium text-card-foreground mb-2">Badge (Nhãn)</label>
+                                        <label className="block text-sm font-medium text-card-foreground mb-1.5">Badge (Nhãn)</label>
                                         <input
                                             type="text"
                                             value={heroData.badge}
                                             onChange={(e) => setHeroData({ ...heroData, badge: e.target.value })}
-                                            className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground"
+                                            className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                             placeholder="📞 Liên Hệ Với Chúng Tôi"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-card-foreground mb-2">Tiêu đề lớn</label>
+                                        <label className="block text-sm font-medium text-card-foreground mb-1.5">Tiêu đề lớn</label>
                                         <input
                                             type="text"
                                             value={heroData.title}
                                             onChange={(e) => setHeroData({ ...heroData, title: e.target.value })}
-                                            className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground font-bold text-lg"
+                                            className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground font-bold text-lg focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                             placeholder="Chúng Tôi Luôn Sẵn Sàng..."
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-card-foreground mb-2">Mô tả</label>
+                                        <label className="block text-sm font-medium text-card-foreground mb-1.5">Mô tả</label>
                                         <textarea
                                             rows={4}
                                             value={heroData.description}
                                             onChange={(e) => setHeroData({ ...heroData, description: e.target.value })}
-                                            className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground"
+                                            className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                             placeholder="Hãy liên hệ với chúng tôi..."
                                         />
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="block text-sm font-medium text-card-foreground">CTA Chính (Primary Button)</label>
-                                        <div className="flex gap-2">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="space-y-1.5">
+                                            <label className="block text-sm font-medium text-card-foreground">CTA Chính (Primary Button)</label>
                                             <input
                                                 placeholder="Text (e.g. Gọi Ngay)"
                                                 value={heroData.cta_primary?.text}
                                                 onChange={(e) => setHeroData({ ...heroData, cta_primary: { ...heroData.cta_primary, text: e.target.value } })}
-                                                className="flex-1 px-4 py-2 bg-input border border-border rounded-lg text-foreground"
+                                                className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                             />
                                             <input
                                                 placeholder="Link (e.g. tel:...)"
                                                 value={heroData.cta_primary?.link}
                                                 onChange={(e) => setHeroData({ ...heroData, cta_primary: { ...heroData.cta_primary, link: e.target.value } })}
-                                                className="flex-1 px-4 py-2 bg-input border border-border rounded-lg text-foreground"
+                                                className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                             />
                                         </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="block text-sm font-medium text-card-foreground">CTA Phụ (Secondary Button)</label>
-                                        <div className="flex gap-2">
+                                        <div className="space-y-1.5">
+                                            <label className="block text-sm font-medium text-card-foreground">CTA Phụ (Secondary Button)</label>
                                             <input
                                                 placeholder="Text (e.g. Xem Thực Đơn)"
                                                 value={heroData.cta_secondary?.text}
                                                 onChange={(e) => setHeroData({ ...heroData, cta_secondary: { ...heroData.cta_secondary, text: e.target.value } })}
-                                                className="flex-1 px-4 py-2 bg-input border border-border rounded-lg text-foreground"
+                                                className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                             />
                                             <input
                                                 placeholder="Link (e.g. /menu)"
                                                 value={heroData.cta_secondary?.link}
                                                 onChange={(e) => setHeroData({ ...heroData, cta_secondary: { ...heroData.cta_secondary, link: e.target.value } })}
-                                                className="flex-1 px-4 py-2 bg-input border border-border rounded-lg text-foreground"
+                                                className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                             />
                                         </div>
                                     </div>
@@ -580,8 +579,9 @@ export default function AdminContactConfig() {
                     {/* Info Tab */}
                     {activeTab === 'info' && (
                         <div className="space-y-6 animate-in fade-in duration-300">
-                            <h2 className="text-xl font-bold text-card-foreground mb-4">Thông tin liên hệ hiển thị</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <h2 className="text-xl font-bold text-card-foreground">Thông tin liên hệ</h2>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                 {/* Phone Config */}
                                 <div className="bg-muted/30 p-4 rounded-lg border border-border">
                                     <div className="flex items-center gap-2 mb-3">
@@ -713,64 +713,83 @@ export default function AdminContactConfig() {
                     {activeTab === 'social' && (
                         <div className="space-y-6 animate-in fade-in duration-300">
                             {/* Section Header Inputs */}
-                            <div className="bg-muted/30 p-4 rounded-lg border border-border mb-6">
+                            <div className="bg-muted/30 p-4 rounded-xl border border-border mb-6">
                                 <h3 className="font-semibold mb-3">Tiêu đề Section</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                                     <div>
-                                        <label className="block text-xs text-muted-foreground mb-1">Badge (Nhãn)</label>
+                                        <label className="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wider">Badge (Nhãn)</label>
                                         <input
                                             value={socialSection.badge || 'Kết Nối'}
                                             onChange={(e) => setSocialSection({ ...socialSection, badge: e.target.value })}
-                                            className="w-full px-3 py-2 bg-input border border-border rounded-md"
+                                            className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs text-muted-foreground mb-1">Tiêu đề lớn</label>
+                                        <label className="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wider">Tiêu đề lớn</label>
                                         <input
                                             value={socialSection.title || 'Theo Dõi Chúng Tôi'}
                                             onChange={(e) => setSocialSection({ ...socialSection, title: e.target.value })}
-                                            className="w-full px-3 py-2 bg-input border border-border rounded-md font-semibold"
+                                            className="w-full px-4 py-2 bg-input border border-border rounded-lg font-semibold focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                         />
                                     </div>
-                                    <div className="md:col-span-2">
-                                        <label className="block text-xs text-muted-foreground mb-1">Mô tả</label>
+                                    <div className="sm:col-span-2 lg:col-span-1">
+                                        <label className="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wider">Mô tả</label>
                                         <input
                                             value={socialSection.description || ''}
                                             onChange={(e) => setSocialSection({ ...socialSection, description: e.target.value })}
-                                            className="w-full px-3 py-2 bg-input border border-border rounded-md"
+                                            className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                         />
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="flex justify-between items-center">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                                 <h2 className="text-xl font-bold text-card-foreground">Danh sách mạng xã hội</h2>
                                 <button
                                     onClick={handleAddSocial}
-                                    className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg transition-colors font-medium border border-primary/20 cursor-pointer"
+                                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg transition-all font-medium border border-primary/20 cursor-pointer"
                                     type="button"
                                 >
                                     <Plus className="w-4 h-4" /> Thêm mới
                                 </button>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {socialMedia.map((social, index) => (
-                                    <div key={index} className="flex flex-col p-5 border border-border rounded-lg bg-card hover:shadow-md transition-all">
-                                        <div className="flex justify-between items-start mb-3">
-                                            <div className="flex items-center gap-2">
-                                                <span className="p-2 bg-muted rounded-md"><Globe className="w-4 h-4 text-muted-foreground" /></span>
-                                                <span className="font-semibold text-card-foreground">{social.name}</span>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {socialMedia.map((social, index) => {
+                                    const Icon = lucideIcons[social.icon] || Globe;
+                                    return (
+                                        <div key={index} className="flex flex-col p-5 border border-border rounded-xl bg-card hover:border-primary/30 hover:shadow-lg transition-all group">
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2.5 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+                                                        <Icon className="w-5 h-5 text-primary" />
+                                                    </div>
+                                                    <span className="font-bold text-card-foreground">{social.name}</span>
+                                                </div>
+                                                <div className="flex gap-1">
+                                                    <button
+                                                        onClick={() => handleEditSocial(index)}
+                                                        className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
+                                                        title="Sửa"
+                                                    >
+                                                        <Edit2 className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteSocialClick(index)}
+                                                        className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
+                                                        title="Xóa"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <div className="flex gap-1">
-                                                <button onClick={() => handleEditSocial(index)} className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-md transition-colors cursor-pointer"><Edit2 className="w-4 h-4" /></button>
-                                                <button onClick={() => handleDeleteSocialClick(index)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-md transition-colors cursor-pointer"><Trash2 className="w-4 h-4" /></button>
+                                            <div className="space-y-1">
+                                                <p className="text-sm text-primary truncate hover:underline cursor-pointer font-medium">{social.url}</p>
+                                                <p className="text-xs text-muted-foreground line-clamp-2">{social.description}</p>
                                             </div>
                                         </div>
-                                        <p className="text-sm text-blue-500 truncate mb-1 hover:underline cursor-pointer">{social.url}</p>
-                                        <p className="text-xs text-muted-foreground">{social.description}</p>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                                 {socialMedia.length === 0 && (
                                     <div className="col-span-full py-12 text-center text-muted-foreground border-2 border-dashed border-border rounded-lg bg-muted/20">
                                         <Globe className="w-12 h-12 mx-auto mb-3 opacity-20" />
@@ -787,7 +806,7 @@ export default function AdminContactConfig() {
                         <div className="space-y-6 animate-in fade-in duration-300">
                             <h2 className="text-xl font-bold text-card-foreground mb-6">Cấu hình Form Liên Hệ</h2>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 border border-border rounded-lg bg-card/50">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-4 sm:p-6 border border-border rounded-xl bg-card/50">
                                 <div>
                                     <label className="block text-sm font-medium text-card-foreground mb-2">Badge (Nhãn)</label>
                                     <input
@@ -824,7 +843,7 @@ export default function AdminContactConfig() {
                                     />
                                 </div>
 
-                                <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border">
+                                <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-border">
                                     <h4 className="col-span-full font-medium text-sm text-muted-foreground">Nhãn các trường (Labels)</h4>
                                     {Object.entries(formData.fields || {}).filter(([key]) => key !== 'submit_icon').map(([key, value]) => (
                                         <div key={key}>
@@ -873,8 +892,8 @@ export default function AdminContactConfig() {
                     {activeTab === 'map' && (
                         <div className="space-y-6 animate-in fade-in duration-300">
                             <h2 className="text-xl font-bold text-card-foreground mb-4">Cấu hình Bản đồ</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div className="md:col-span-1 space-y-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                <div className="lg:col-span-1 space-y-4">
                                     <div>
                                         <label className="block text-sm font-medium text-card-foreground mb-2">Badge (Nhãn)</label>
                                         <input
@@ -962,8 +981,8 @@ export default function AdminContactConfig() {
                                 <label htmlFor="showStats" className="text-sm font-medium cursor-pointer">Hiển thị section này</label>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 border border-border rounded-lg bg-card/50">
-                                <div className="md:col-span-2 grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-4 sm:p-6 border border-border rounded-xl bg-card/50">
+                                <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium mb-1">Badge</label>
                                         <input
@@ -991,8 +1010,8 @@ export default function AdminContactConfig() {
                                 </div>
                             </div>
 
-                            <div className="bg-linear-to-br from-primary/10 via-blue-50/50 to-primary/5 dark:from-primary/20 dark:via-blue-900/10 dark:to-primary/10 border-2 border-primary/20 rounded-xl p-6">
-                                <div className="flex items-start gap-4">
+                            <div className="bg-linear-to-br from-primary/10 via-blue-50/50 to-primary/5 dark:from-primary/20 dark:via-blue-900/10 dark:to-primary/10 border-2 border-primary/20 rounded-xl p-4 sm:p-6">
+                                <div className="flex flex-col sm:flex-row items-start gap-4">
                                     <div className="shrink-0 p-3 bg-primary/20 rounded-lg">
                                         <Info className="w-6 h-6 text-primary" />
                                     </div>
@@ -1001,21 +1020,27 @@ export default function AdminContactConfig() {
                                             <CheckCircle2 className="w-5 h-5 text-green-500" />
                                             Số liệu tự động từ Landing Page
                                         </h4>
-                                        <p className="text-sm text-muted-foreground mb-4">
+                                        <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
                                             Các chỉ số thống kê (Đánh giá trung bình, Tổng đánh giá, Khách hàng đã xác minh) được tự động đồng bộ từ hệ thống đánh giá khách hàng và cấu hình tại trang <strong>Landing Config</strong>. Bạn không cần cấu hình lại ở đây.
                                         </p>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
-                                            <div className="flex items-center gap-2 p-2 bg-card/50 rounded-lg">
-                                                <Star className="w-4 h-4 text-yellow-500" />
-                                                <span className="text-xs font-medium">Đánh giá trung bình</span>
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                            <div className="flex items-center gap-3 p-3 bg-card/60 rounded-xl border border-border/50 shadow-xs">
+                                                <div className="p-2 bg-yellow-500/10 rounded-lg shrink-0">
+                                                    <Star className="w-4 h-4 text-yellow-500" />
+                                                </div>
+                                                <span className="text-xs font-semibold text-card-foreground">Đánh giá trung bình</span>
                                             </div>
-                                            <div className="flex items-center gap-2 p-2 bg-card/50 rounded-lg">
-                                                <MessageCircle className="w-4 h-4 text-primary" />
-                                                <span className="text-xs font-medium">Tổng đánh giá</span>
+                                            <div className="flex items-center gap-3 p-3 bg-card/60 rounded-xl border border-border/50 shadow-xs">
+                                                <div className="p-2 bg-primary/10 rounded-lg shrink-0">
+                                                    <MessageCircle className="w-4 h-4 text-primary" />
+                                                </div>
+                                                <span className="text-xs font-semibold text-card-foreground">Tổng đánh giá</span>
                                             </div>
-                                            <div className="flex items-center gap-2 p-2 bg-card/50 rounded-lg">
-                                                <CheckCircle2 className="w-4 h-4 text-green-500" />
-                                                <span className="text-xs font-medium">Khách hàng xác minh</span>
+                                            <div className="flex items-center gap-3 p-3 bg-card/60 rounded-xl border border-border/50 shadow-xs">
+                                                <div className="p-2 bg-green-500/10 rounded-lg shrink-0">
+                                                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                                </div>
+                                                <span className="text-xs font-semibold text-card-foreground">Khách hàng xác minh</span>
                                             </div>
                                         </div>
                                     </div>
@@ -1034,8 +1059,8 @@ export default function AdminContactConfig() {
                                 <p>Section CTA hiển thị ở cuối trang contact với hình nền và các nút kêu gọi hành động.</p>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 border border-border rounded-lg bg-card/50">
-                                <div className="md:col-span-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-4 sm:p-6 border border-border rounded-xl bg-card/50">
+                                <div className="sm:col-span-2">
                                     <label className="block text-sm font-medium text-card-foreground mb-2">Tiêu đề CTA</label>
                                     <input
                                         type="text"
@@ -1078,7 +1103,7 @@ export default function AdminContactConfig() {
                                     )}
                                 </div>
 
-                                <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border">
+                                <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-border">
                                     <div className="space-y-2">
                                         <label className="block text-sm font-medium text-card-foreground mb-2">Nút Chính (Primary Button)</label>
                                         <input
@@ -1290,7 +1315,7 @@ export default function AdminContactConfig() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-card-foreground mb-2">
                                             OG Type <span className="text-muted-foreground font-normal text-xs">(Loại nội dung)</span>
@@ -1435,43 +1460,47 @@ export default function AdminContactConfig() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex items-center justify-between">
+                <div className="fixed sm:relative bottom-0 left-0 right-0 p-4 sm:p-0 bg-card sm:bg-transparent border-t sm:border-0 border-border z-10 sm:z-auto shadow-[0_-4px_10px_rgba(0,0,0,0.1)] sm:shadow-none flex items-center justify-between gap-3">
                     <button
                         onClick={() => setShowResetModal(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 text-card-foreground rounded-lg cursor-pointer"
+                        className="flex-1 sm:flex-none flex cursor-pointer items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-muted text-card-foreground rounded-lg hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm sm:text-base"
                     >
-                        <RotateCcw className="w-4 h-4" />
-                        Reset về mặc định
+                        <RotateCcw className="w-4 h-4 shrink-0" />
+                        <span className="hidden sm:inline">Reset về mặc định</span>
+                        <span className="sm:hidden">Reset</span>
                     </button>
                     <button
                         onClick={handleSave}
                         disabled={saving}
-                        className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg font-semibold disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+                        className="flex-1 sm:flex-none flex cursor-pointer items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark disabled:opacity-50 font-medium text-sm sm:text-base shadow-sm"
                     >
                         {saving ? (
                             <>
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                Đang lưu...
+                                <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                                <span>Đang lưu...</span>
                             </>
                         ) : (
                             <>
-                                <Save className="w-4 h-4" />
-                                Lưu thay đổi
+                                <Save className="w-4 h-4 shrink-0" />
+                                <span>Lưu thay đổi</span>
                             </>
                         )}
                     </button>
                 </div>
             </div>
 
+            {/* Spacer cho mobile để không bị đè bởi fixed footer */}
+            <div className="h-20 sm:hidden"></div>
+
             {/* Social Modal */}
             {showSocialModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300">
                     <div
                         ref={socialModalRef}
-                        className="bg-background rounded-xl p-6 w-full max-w-lg shadow-2xl animate-in fade-in zoom-in duration-200 overflow-y-auto max-h-[90vh]"
+                        className="bg-card rounded-2xl w-full max-w-lg shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden flex flex-col max-h-[90vh] border border-border"
                     >
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-xl font-bold">{editingSocial !== null ? 'Sửa Liên Kết' : 'Thêm Mạng Xã Hội'}</h3>
+                        <div className="flex justify-between items-center p-6 border-b border-border">
+                            <h3 className="text-xl font-bold text-card-foreground">{editingSocial !== null ? 'Sửa Liên Kết' : 'Thêm Mạng Xã Hội'}</h3>
                             <button
                                 onClick={() => {
                                     if (saving) return;
@@ -1479,13 +1508,13 @@ export default function AdminContactConfig() {
                                     setEditingSocial(null);
                                 }}
                                 disabled={saving}
-                                className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
+                                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="p-6 overflow-y-auto space-y-6 custom-scrollbar">
                             <div>
                                 <label className="block text-sm font-medium mb-1">Tên mạng xã hội</label>
                                 <input
@@ -1502,15 +1531,15 @@ export default function AdminContactConfig() {
                                 <p className="text-xs text-muted-foreground mb-2">Chọn icon phổ biến hoặc nhập tên Icon từ thư viện Lucide</p>
 
                                 {/* Common Icons Chips */}
-                                <div className="flex flex-wrap gap-2 mb-3">
+                                <div className="flex flex-wrap gap-2 mb-4 p-3 bg-muted/30 rounded-xl border border-border">
                                     {COMMON_SOCIAL_ICONS.map(iconName => (
                                         <button
                                             key={iconName}
                                             type="button"
                                             onClick={() => setSocialForm({ ...socialForm, icon: iconName })}
-                                            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer ${socialForm.icon === iconName
-                                                ? 'bg-primary text-primary-foreground border-primary'
-                                                : 'bg-muted hover:bg-muted/80 border-transparent'
+                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${socialForm.icon === iconName
+                                                ? 'bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/20 scale-105'
+                                                : 'bg-card hover:bg-muted border-border text-muted-foreground hover:text-foreground'
                                                 }`}
                                         >
                                             {iconName}
@@ -1563,16 +1592,16 @@ export default function AdminContactConfig() {
                             </div>
                         </div>
 
-                        <div className="flex justify-end gap-3 mt-6">
+                        <div className="flex flex-col sm:flex-row justify-end gap-3 p-6 border-t border-border bg-muted/30">
                             <button
                                 onClick={() => setShowSocialModal(false)}
-                                className="px-4 py-2 rounded-lg hover:bg-muted font-medium transition-colors cursor-pointer"
+                                className="w-full sm:w-auto px-6 py-2.5 rounded-xl hover:bg-muted font-semibold transition-all cursor-pointer border border-transparent hover:border-border"
                             >
                                 Hủy
                             </button>
                             <button
                                 onClick={handleSaveSocial}
-                                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 font-medium transition-colors cursor-pointer"
+                                className="w-full sm:w-auto px-8 py-2.5 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 font-bold shadow-lg shadow-primary/20 transition-all cursor-pointer"
                             >
                                 {editingSocial !== null ? 'Cập nhật' : 'Thêm mới'}
                             </button>
@@ -1595,18 +1624,18 @@ export default function AdminContactConfig() {
                             <h3 className="text-lg font-bold text-foreground">Xác nhận xóa</h3>
                             <p className="text-sm text-muted-foreground mt-1">Bạn có chắc chắn muốn xóa liên kết này không? Hành động này không thể hoàn tác.</p>
                         </div>
-                        <div className="flex gap-3 justify-center">
+                        <div className="flex flex-col sm:flex-row gap-3 justify-center">
                             <button
                                 onClick={() => setShowDeleteModal(false)}
                                 disabled={saving}
-                                className="px-4 py-2 rounded-lg bg-muted hover:bg-muted/80 font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-muted hover:bg-muted/80 font-semibold transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border border-transparent hover:border-border"
                             >
                                 Không
                             </button>
                             <button
                                 onClick={handleConfirmDelete}
                                 disabled={saving}
-                                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-red-500/20"
                             >
                                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                                 Có, xóa ngay
@@ -1671,18 +1700,18 @@ export default function AdminContactConfig() {
                                 })}
                             </div>
 
-                            <div className="pt-4 border-t border-border">
-                                <div className="flex gap-2">
+                            <div className="pt-6 border-t border-border">
+                                <div className="flex flex-col sm:flex-row gap-3">
                                     <button
                                         onClick={() => setShowResetModal(false)}
-                                        className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 cursor-pointer"
+                                        className="w-full sm:w-auto flex-1 px-6 py-2.5 bg-muted text-foreground rounded-xl hover:bg-muted/80 font-semibold transition-all cursor-pointer border border-transparent hover:border-border"
                                     >
                                         Hủy
                                     </button>
                                     <button
                                         onClick={handleReset}
                                         disabled={saving || Object.values(resetSections).every(v => !v)}
-                                        className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                        className="w-full sm:w-auto flex-1 px-6 py-2.5 bg-red-500 text-white rounded-xl hover:bg-red-600 font-bold transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-red-500/20"
                                     >
                                         {saving ? (
                                             <>
@@ -1692,7 +1721,7 @@ export default function AdminContactConfig() {
                                         ) : (
                                             <>
                                                 <RotateCcw className="w-4 h-4" />
-                                                <span>Reset</span>
+                                                <span>Xác nhận Reset</span>
                                             </>
                                         )}
                                     </button>

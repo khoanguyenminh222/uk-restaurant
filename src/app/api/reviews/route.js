@@ -83,6 +83,13 @@ export async function GET(request) {
       query.is_visible = true; // Chỉ hiển thị reviews được đánh dấu visible
     }
 
+    // Base query for stats calculations (ignores approval status to count both approved/pending)
+    const statsBaseQuery = {};
+    if (query.rating) statsBaseQuery.rating = query.rating;
+    if (query.is_visible !== undefined) statsBaseQuery.is_visible = query.is_visible;
+    if (query.$or) statsBaseQuery.$or = query.$or;
+    if (query.created_at) statsBaseQuery.created_at = query.created_at;
+
     const reviews = await db
       .collection('reviews')
       .find(query)
@@ -93,13 +100,16 @@ export async function GET(request) {
 
     const total = await db.collection('reviews').countDocuments(query);
 
-    // Calculate stats
-    const allApprovedReviews = await db
+    // Calculate stats based on filtered reviews
+    const filteredApprovedQuery = { ...statsBaseQuery, is_approved: { $ne: false } };
+    const filteredApprovedReviews = await db
       .collection('reviews')
-      .find({ is_approved: { $ne: false } })
+      .find(filteredApprovedQuery)
       .toArray();
 
-    const stats = calculateReviewStats(allApprovedReviews);
+    const stats = calculateReviewStats(filteredApprovedReviews);
+    const totalApproved = await db.collection('reviews').countDocuments(filteredApprovedQuery);
+    const totalPending = await db.collection('reviews').countDocuments({ ...statsBaseQuery, is_approved: false });
 
     return NextResponse.json(
       {
@@ -130,12 +140,12 @@ export async function GET(request) {
           };
         }),
         // Chỉ trả về stats nếu là admin request (all=true)
-        // Public request không cần stats thực tế từ DB để tránh lộ thông tin khi Admin dùng Manual Config
         stats: all === 'true' ? {
           ...stats,
-          totalApproved: await db.collection('reviews').countDocuments({ is_approved: { $ne: false } }),
-          totalPending: await db.collection('reviews').countDocuments({ is_approved: false }),
-          totalAllReviews: total,
+          totalApproved,
+          totalPending,
+          totalAllReviews: totalApproved + totalPending,
+          totalFiltered: total,
         } : undefined,
         pagination: {
           total,

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRoleCheck } from '@/hooks/useRoleCheck';
 import Toast from '@/components/Toast/Toast';
-import { Settings, Save, Loader2, RotateCcw, Mail, MessageSquare, X } from 'lucide-react';
+import { Settings, Save, Loader2, RotateCcw, Mail, MessageSquare, X, ArrowUpRight, Check, Eye, Trash2 } from 'lucide-react';
 import { adminFetch } from '@/lib/adminAuth';
 
 const TABS = [
@@ -517,30 +517,35 @@ export default function AdminNotificationConfig() {
 
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Settings className="w-8 h-8 text-primary" />
-            <h1 className="text-3xl font-bold text-foreground">Cấu hình thông báo</h1>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-primary/10 rounded-xl">
+              <Settings className="w-6 h-6 lg:w-7 lg:h-7 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl lg:text-3xl font-bold text-card-foreground">Cấu hình thông báo</h1>
+              <p className="text-sm text-muted-foreground mt-1 text-balance">Quản lý cấu hình email và các kênh thông báo tự động từ hệ thống</p>
+            </div>
           </div>
-          <p className="text-muted-foreground">Quản lý cấu hình email và các kênh thông báo khác</p>
         </div>
 
         {/* Tabs */}
-        <div className="mb-6 border-b border-border">
-          <div className="flex flex-wrap gap-2">
+        <div className="w-full overflow-x-auto pb-4 mb-2 scrollbar-none">
+          <div className="flex gap-2 min-w-max p-1 bg-muted/30 rounded-2xl border border-border/50">
             {TABS.map((tab) => {
               const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors cursor-pointer ${activeTab === tab.id
-                    ? 'text-primary border-b-2 border-primary'
-                    : 'text-muted-foreground hover:text-foreground'
+                  className={`flex items-center gap-2.5 px-6 py-3 rounded-xl transition-all font-bold text-sm cursor-pointer whitespace-nowrap active:scale-95 ${isActive
+                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                     }`}
                 >
-                  <Icon className="w-4 h-4" />
-                  {tab.label}
+                  <Icon className={`w-4 h-4 ${isActive ? 'scale-110' : ''}`} />
+                  <span>{tab.label}</span>
                 </button>
               );
             })}
@@ -548,160 +553,173 @@ export default function AdminNotificationConfig() {
         </div>
 
         {/* Content */}
-        <div className="bg-card border border-border rounded-lg p-6 mb-6">
+        <div className="mb-6 space-y-6">
           {/* Email Tab */}
           {activeTab === 'email' && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-card-foreground mb-4">Cấu hình Email</h2>
-
-              <div className="bg-blue-500/10 border border-blue-500/50 rounded-lg p-4 mb-6">
-                <p className="text-sm text-blue-400 mb-2">
-                  <strong>Lưu ý quan trọng:</strong>
-                </p>
-                <ul className="text-sm text-blue-400 space-y-1 list-disc list-inside">
-                  <li>Email này sẽ được sử dụng để gửi tất cả email từ hệ thống (xác thực, đặt lại mật khẩu, xác nhận đơn hàng)</li>
-                  <li>Tên người gửi sẽ tự động lấy từ "Tên cửa hàng" trong Cấu hình Landing Page</li>
-                  <li>Nếu dùng Gmail, bạn cần bật "App Password" thay vì dùng mật khẩu thường</li>
-                  <li><strong>App Password có khoảng trắng là bình thường</strong> (ví dụ: xxxx xxxx xxxx xxxx)</li>
-                  <li>Hướng dẫn tạo App Password: <a href="https://support.google.com/accounts/answer/185833" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-300">Xem tại đây</a></li>
-                </ul>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Email gửi <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="email"
-                  value={emailData.sender_email}
-                  onChange={(e) => setEmailData({ ...emailData, sender_email: e.target.value })}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="your-email@gmail.com"
-                  maxLength={100}
-                />
-                <p className="text-xs text-muted-foreground mt-2">
-                  Email này sẽ được dùng làm địa chỉ người gửi cho tất cả email từ hệ thống.
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Mật khẩu email <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="password"
-                  value={emailData.sender_password}
-                  onChange={(e) => setEmailData({ ...emailData, sender_password: e.target.value })}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="••••••••••••••••"
-                  maxLength={200}
-                />
-                <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-border">
-                  <p className="text-xs text-muted-foreground mb-2">
-                    <strong>Đối với Gmail:</strong>
-                  </p>
-                  <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
-                    <li>Vào tài khoản Google của bạn</li>
-                    <li>Chọn "Bảo mật" (Security)</li>
-                    <li>Bật "Xác minh 2 bước" (2-Step Verification) nếu chưa bật</li>
-                    <li>Tìm "Mật khẩu ứng dụng" (App passwords)</li>
-                    <li>Tạo mật khẩu mới cho "Mail"</li>
-                    <li>Sao chép mật khẩu 16 ký tự và dán vào đây</li>
-                  </ol>
-                </div>
-              </div>
-
-              <div className="bg-yellow-500/10 border border-yellow-500/50 rounded-lg p-4">
-                <p className="text-sm text-yellow-400">
-                  <strong>Bảo mật:</strong> Mật khẩu sẽ được lưu an toàn trong database. Không chia sẻ thông tin này với bất kỳ ai.
-                </p>
-              </div>
-
-              {/* Email Notifications Configuration */}
-              <div className="border-t border-border pt-6">
-                <h3 className="text-lg font-medium text-card-foreground mb-3">Cấu hình thông báo email theo trạng thái đơn hàng</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Chọn các trạng thái đơn hàng mà bạn muốn gửi email thông báo cho khách hàng. Mặc định chỉ gửi cho các trạng thái quan trọng để tránh spam.
-                </p>
-
-                <div className="space-y-3">
-                  {[
-                    { key: 'confirmed', label: 'Đơn hàng đã được xác nhận', description: 'Gửi email khi đơn hàng được xác nhận' },
-                    { key: 'preparing', label: 'Đơn hàng đang được chuẩn bị', description: 'Gửi email khi đơn hàng đang được chuẩn bị' },
-                    { key: 'ready', label: 'Đơn hàng đã sẵn sàng', description: 'Gửi email khi đơn hàng đã sẵn sàng' },
-                    { key: 'delivered', label: 'Đơn hàng đã được giao', description: 'Gửi email khi đơn hàng đã được giao' },
-                    { key: 'completed', label: 'Đơn hàng đã hoàn thành', description: 'Gửi email khi đơn hàng đã hoàn thành' },
-                    { key: 'cancelled', label: 'Đơn hàng bị hủy', description: 'Gửi email khi đơn hàng bị hủy' },
-                  ].map((status) => (
-                    <div key={status.key} className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg border border-border">
-                      <input
-                        type="checkbox"
-                        id={`email-notification-${status.key}`}
-                        checked={emailData.email_notifications[status.key] || false}
-                        onChange={(e) => {
-                          setEmailData({
-                            ...emailData,
-                            email_notifications: {
-                              ...emailData.email_notifications,
-                              [status.key]: e.target.checked,
-                            },
-                          });
-                        }}
-                        className="mt-1 w-4 h-4 text-primary bg-input border-border rounded focus:ring-primary"
-                      />
-                      <div className="flex-1">
-                        <label htmlFor={`email-notification-${status.key}`} className="text-sm font-medium text-card-foreground cursor-pointer block">
-                          {status.label}
-                        </label>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {status.description}
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Left Column: Instructions */}
+                <div className="lg:col-span-1 space-y-4">
+                  <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+                    <h3 className="text-lg font-bold text-card-foreground mb-4 flex items-center gap-2">
+                      <Mail className="w-5 h-5 text-primary" />
+                      Hướng dẫn cấu hình
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="p-4 bg-primary/5 border border-primary/10 rounded-xl">
+                        <p className="text-xs font-bold text-primary uppercase tracking-wider mb-2">Vai trò email</p>
+                        <p className="text-sm text-card-foreground leading-relaxed">
+                          Email này được sử dụng để gửi tất cả thông báo hệ thống như <b>xác thực tài khoản, đặt lại mật khẩu và xác nhận đơn hàng</b>.
                         </p>
                       </div>
+                      <div className="p-4 bg-amber-500/5 border border-amber-500/10 rounded-xl">
+                        <p className="text-xs font-bold text-amber-600 uppercase tracking-wider mb-2">Đối với Gmail</p>
+                        <ul className="text-[13px] text-muted-foreground space-y-2 list-disc list-inside">
+                          <li>Bật <b>Xác minh 2 bước</b> trong tài khoản Google.</li>
+                          <li>Tạo <b>App Password</b> cho mục "Thư".</li>
+                          <li>Sử dụng mật khẩu 16 ký tự đó thay cho mật khẩu chính.</li>
+                        </ul>
+                        <a
+                          href="https://support.google.com/accounts/answer/185833"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-3 inline-flex text-xs font-bold text-primary hover:underline items-center gap-1"
+                        >
+                          Xem hướng dẫn chi tiết <ArrowUpRight className="w-3 h-3" />
+                        </a>
+                      </div>
                     </div>
-                  ))}
+                  </div>
+
+                  <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+                    <h3 className="text-lg font-bold text-card-foreground mb-4 flex items-center gap-2">
+                      <Eye className="w-5 h-5 text-primary" />
+                      Kiểm tra kết nối
+                    </h3>
+                    <div className="space-y-3">
+                      <input
+                        type="email"
+                        value={testEmail}
+                        onChange={(e) => setTestEmail(e.target.value)}
+                        className="w-full px-4 py-2.5 bg-muted/40 border border-border rounded-xl text-card-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                        placeholder="Nhập email nhận thử..."
+                        disabled={sendingTest}
+                      />
+                      <button
+                        onClick={handleSendTestEmail}
+                        disabled={sendingTest || !testEmail}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-muted hover:bg-muted-foreground/10 text-foreground rounded-xl transition-all font-bold border border-border active:scale-95 cursor-pointer disabled:opacity-50 text-sm"
+                      >
+                        {sendingTest ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>Đang gửi...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Mail className="w-4 h-4" />
+                            <span>Gửi email thử</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/50 rounded-lg">
-                  <p className="text-xs text-blue-400">
-                    <strong>Lưu ý:</strong> Nếu tắt email cho một trạng thái, khách hàng sẽ không nhận được email thông báo khi đơn hàng chuyển sang trạng thái đó.
-                    Chỉ nên tắt các trạng thái không quan trọng để tránh làm phiền khách hàng.
-                  </p>
-                </div>
-              </div>
+                {/* Right Column: Settings */}
+                <div className="lg:col-span-2 space-y-6">
+                  {/* Account Settings */}
+                  <div className="bg-card rounded-2xl border border-border p-6 shadow-sm space-y-6">
+                    <h3 className="text-lg font-bold text-card-foreground flex items-center gap-2">
+                      <div className="w-1.5 h-5 bg-primary rounded-full" />
+                      Thông tin tài khoản gửi
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-sm font-bold text-card-foreground flex items-center gap-1.5">
+                          Email người gửi <span className="text-destructive">*</span>
+                        </label>
+                        <input
+                          type="email"
+                          value={emailData.sender_email}
+                          onChange={(e) => setEmailData({ ...emailData, sender_email: e.target.value })}
+                          className="w-full px-4 py-3 bg-muted/40 border border-border rounded-xl text-card-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                          placeholder="your-email@gmail.com"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-bold text-card-foreground flex items-center gap-1.5">
+                          Ứng dụng Password <span className="text-destructive">*</span>
+                        </label>
+                        <input
+                          type="password"
+                          value={emailData.sender_password}
+                          onChange={(e) => setEmailData({ ...emailData, sender_password: e.target.value })}
+                          className="w-full px-4 py-3 bg-muted/40 border border-border rounded-xl text-card-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                          placeholder="•••• •••• •••• ••••"
+                        />
+                      </div>
+                    </div>
+                  </div>
 
-              {/* Test Email Section (Optional - for future enhancement) */}
-              <div className="border-t border-border pt-6">
-                <h3 className="text-lg font-medium text-card-foreground mb-3">Kiểm tra email</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Sau khi lưu cấu hình, bạn có thể gửi email thử nghiệm để kiểm tra kết nối.
-                </p>
+                  {/* Status Configuration */}
+                  <div className="bg-card rounded-2xl border border-border p-6 shadow-sm space-y-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                      <h3 className="text-lg font-bold text-card-foreground flex items-center gap-2">
+                        <div className="w-1.5 h-5 bg-primary rounded-full" />
+                        Thông báo theo trạng thái
+                      </h3>
+                      <p className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-full border border-border">
+                        Gửi email tự động khi đơn hàng đổi trạng thái
+                      </p>
+                    </div>
 
-                <div className="flex gap-3">
-                  <input
-                    type="email"
-                    value={testEmail}
-                    onChange={(e) => setTestEmail(e.target.value)}
-                    className="flex-1 px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="Nhập email để nhận email thử nghiệm"
-                    disabled={sendingTest}
-                  />
-                  <button
-                    onClick={handleSendTestEmail}
-                    disabled={sendingTest || !testEmail}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                  >
-                    {sendingTest ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Đang gửi...
-                      </>
-                    ) : (
-                      <>
-                        <Mail className="w-4 h-4" />
-                        Gửi email thử
-                      </>
-                    )}
-                  </button>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {[
+                        { key: 'confirmed', label: 'Xác nhận đơn', icon: '✅', color: '#10b981', desc: 'Đã nhận đơn hàng' },
+                        { key: 'preparing', label: 'Đang chuẩn bị', icon: '👨‍🍳', color: '#3b82f6', desc: 'Đang chế biến' },
+                        { key: 'ready', label: 'Đã sẵn sàng', icon: '🥡', color: '#f59e0b', desc: 'Đã xong món' },
+                        { key: 'delivered', label: 'Đã giao hàng', icon: '🛵', color: '#8b5cf6', desc: 'Đã giao cho khách' },
+                        { key: 'completed', label: 'Hoàn thành', icon: '⭐', color: '#ec4899', desc: 'Đơn hàng kết thúc' },
+                        { key: 'cancelled', label: 'Đã hủy đơn', icon: '❌', color: '#ef4444', desc: 'Đơn bị hủy bỏ' },
+                      ].map((status) => {
+                        const isChecked = emailData.email_notifications[status.key];
+                        return (
+                          <div
+                            key={status.key}
+                            className={`group relative p-4 rounded-2xl border transition-all cursor-pointer select-none ${isChecked
+                              ? 'bg-card border-primary/30 shadow-md shadow-primary/5'
+                              : 'bg-muted/30 border-border/50 hover:border-primary/20'
+                              }`}
+                            onClick={() => {
+                              setEmailData({
+                                ...emailData,
+                                email_notifications: {
+                                  ...emailData.email_notifications,
+                                  [status.key]: !isChecked,
+                                },
+                              });
+                            }}
+                          >
+                            <div className="flex items-center gap-4">
+                              <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl shadow-sm transition-transform group-hover:scale-110 ${isChecked ? 'bg-white' : 'bg-muted'}`} style={{ borderLeft: `4px solid ${status.color}` }}>
+                                {status.icon}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className={`text-[13px] font-bold truncate ${isChecked ? 'text-card-foreground' : 'text-muted-foreground'}`}>
+                                  {status.label}
+                                </h4>
+                                <p className="text-[11px] text-muted-foreground truncate">{status.desc}</p>
+                              </div>
+                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${isChecked ? 'bg-primary border-primary' : 'border-border'}`}>
+                                {isChecked && <Check className="w-3 h-3 text-white" />}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -709,235 +727,234 @@ export default function AdminNotificationConfig() {
 
           {/* Telegram Tab */}
           {activeTab === 'telegram' && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-card-foreground mb-4">Cấu hình Telegram</h2>
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-sm">
+                {/* Left Column: Instructions */}
+                <div className="lg:col-span-1 space-y-4">
+                  <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+                    <h3 className="text-lg font-bold text-card-foreground mb-4 flex items-center gap-2">
+                      <MessageSquare className="w-5 h-5 text-primary" />
+                      Hướng dẫn Telegram
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="p-4 bg-primary/5 border border-primary/10 rounded-xl">
+                        <p className="text-xs font-bold text-primary uppercase tracking-wider mb-2">Tính năng</p>
+                        <p className="text-sm text-card-foreground leading-relaxed">
+                          Telegram Bot sẽ tự động thông báo khi có <b>đơn hàng mới, đơn hàng bị hủy hoặc cập nhật trạng thái</b>.
+                        </p>
+                      </div>
+                      <div className="p-4 bg-blue-500/5 border border-blue-500/10 rounded-xl">
+                        <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2">Cách lấy Chat ID</p>
+                        <ol className="text-[13px] text-muted-foreground space-y-2 list-decimal list-inside">
+                          <li>Tìm <b>@BotFather</b> để tạo bot mới.</li>
+                          <li>Thêm bot vào Group/Channel.</li>
+                          <li>Dùng bot <b>@userinfobot</b> để lấy Chat ID của Group đó.</li>
+                        </ol>
+                      </div>
+                    </div>
+                  </div>
 
-              <div className="bg-blue-500/10 border border-blue-500/50 rounded-lg p-4 mb-6">
-                <p className="text-sm text-blue-400 mb-2">
-                  <strong>Lưu ý quan trọng:</strong>
-                </p>
-                <ul className="text-sm text-blue-400 space-y-1 list-disc list-inside">
-                  <li>Telegram bot sẽ tự động thông báo khi có đơn hàng mới hoặc đơn hàng bị hủy</li>
-                  <li>Bạn cần tạo bot mới qua @BotFather trên Telegram</li>
-                  <li>Thêm bot vào Telegram group/channel của bạn</li>
-                  <li>Lấy Chat ID của group/channel (có thể dùng bot @userinfobot hoặc API)</li>
-                </ul>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  id="telegram-enabled"
-                  checked={telegramData.enabled}
-                  onChange={(e) => setTelegramData({ ...telegramData, enabled: e.target.checked })}
-                  className="w-4 h-4 text-primary bg-input border-border rounded focus:ring-primary"
-                />
-                <label htmlFor="telegram-enabled" className="text-sm font-medium text-card-foreground cursor-pointer">
-                  Bật thông báo Telegram
-                </label>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Bot Token <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={telegramData.bot_token}
-                  onChange={(e) => setTelegramData({ ...telegramData, bot_token: e.target.value })}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
-                  maxLength={200}
-                />
-                <p className="text-xs text-muted-foreground mt-2">
-                  Bot Token từ @BotFather trên Telegram. Ví dụ: 1234567890:ABCdefGHIjklMNOpqrsTUVwxyz
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-card-foreground mb-2">
-                  Chat ID <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={telegramData.chat_id}
-                  onChange={(e) => setTelegramData({ ...telegramData, chat_id: e.target.value })}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="-1001234567890"
-                  maxLength={50}
-                />
-                <p className="text-xs text-muted-foreground mt-2">
-                  Chat ID của Telegram group/channel. Có thể là số dương (user) hoặc số âm (group/channel).
-                </p>
-                <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-border">
-                  <p className="text-xs text-muted-foreground mb-2">
-                    <strong>Cách lấy Chat ID:</strong>
-                  </p>
-                  <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
-                    <li>Thêm bot @userinfobot vào group/channel của bạn</li>
-                    <li>Bot sẽ tự động trả về Chat ID</li>
-                    <li>Hoặc gửi tin nhắn bất kỳ trong group, sau đó truy cập: <code className="bg-muted px-1 rounded">https://api.telegram.org/bot&lt;YOUR_BOT_TOKEN&gt;/getUpdates</code></li>
-                    <li>Tìm <code className="bg-muted px-1 rounded">chat.id</code> trong response</li>
-                  </ol>
+                  <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+                    <h3 className="text-lg font-bold text-card-foreground mb-4 flex items-center gap-2">
+                      <Eye className="w-5 h-5 text-primary" />
+                      Kiểm tra Bot
+                    </h3>
+                    <div className="space-y-4">
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Hãy lưu cấu hình trước khi thử nghiệm để đảm bảo Bot đã được kết nối đúng.
+                      </p>
+                      <button
+                        onClick={handleSendTestTelegram}
+                        disabled={sendingTelegramTest || !telegramData.bot_token || !telegramData.chat_id}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-muted hover:bg-muted-foreground/10 text-foreground rounded-xl transition-all font-bold border border-border active:scale-95 cursor-pointer disabled:opacity-50 text-sm"
+                      >
+                        {sendingTelegramTest ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>Đang test...</span>
+                          </>
+                        ) : (
+                          <>
+                            <MessageSquare className="w-4 h-4" />
+                            <span>Gửi test Telegram</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              <div className="bg-yellow-500/10 border border-yellow-500/50 rounded-lg p-4">
-                <p className="text-sm text-yellow-400">
-                  <strong>Bảo mật:</strong> Bot Token và Chat ID sẽ được lưu an toàn trong database. Không chia sẻ thông tin này với bất kỳ ai.
-                </p>
-              </div>
+                {/* Right Column: Settings */}
+                <div className="lg:col-span-2 space-y-6">
+                  {/* Connection Settings */}
+                  <div className="bg-card rounded-2xl border border-border p-6 shadow-sm space-y-6">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-bold text-card-foreground flex items-center gap-2">
+                        <div className="w-1.5 h-5 bg-primary rounded-full" />
+                        Kết nối Telegram Bot
+                      </h3>
+                      <button
+                        onClick={() => setTelegramData({ ...telegramData, enabled: !telegramData.enabled })}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${telegramData.enabled ? 'bg-primary' : 'bg-muted'}`}
+                      >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${telegramData.enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                      </button>
+                    </div>
 
-              {/* Test Telegram Section */}
-              <div className="border-t border-border pt-6">
-                <h3 className="text-lg font-medium text-card-foreground mb-3">Kiểm tra Telegram</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Sau khi lưu cấu hình, bạn có thể gửi thông báo thử nghiệm để kiểm tra kết nối.
-                </p>
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <label className="text-sm font-bold text-card-foreground flex items-center gap-1.5 font-mono">
+                          Bot Token <span className="text-destructive">*</span>
+                        </label>
+                        <div className="relative group">
+                          <input
+                            type="text"
+                            value={telegramData.bot_token}
+                            onChange={(e) => setTelegramData({ ...telegramData, bot_token: e.target.value })}
+                            className="w-full pl-10 pr-4 py-3 bg-muted/40 border border-border rounded-xl text-card-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 outline-none transition-all font-mono text-[13px]"
+                            placeholder="1234567890:ABCdef..."
+                          />
+                          <MessageSquare className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                        </div>
+                      </div>
 
-                <button
-                  onClick={handleSendTestTelegram}
-                  disabled={sendingTelegramTest || !telegramData.bot_token || !telegramData.chat_id}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  {sendingTelegramTest ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Đang gửi...
-                    </>
-                  ) : (
-                    <>
-                      <MessageSquare className="w-4 h-4" />
-                      Gửi thông báo thử
-                    </>
-                  )}
-                </button>
+                      <div className="space-y-2">
+                        <label className="text-sm font-bold text-card-foreground flex items-center gap-1.5 font-mono">
+                          Chat ID <span className="text-destructive">*</span>
+                        </label>
+                        <div className="relative group">
+                          <input
+                            type="text"
+                            value={telegramData.chat_id}
+                            onChange={(e) => setTelegramData({ ...telegramData, chat_id: e.target.value })}
+                            className="w-full pl-10 pr-4 py-3 bg-muted/40 border border-border rounded-xl text-card-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 outline-none transition-all font-mono text-[13px]"
+                            placeholder="-1001234567890"
+                          />
+                          <Settings className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-amber-500/5 border border-amber-500/10 rounded-xl flex gap-3">
+                      <div className="mt-0.5">⚠️</div>
+                      <p className="text-xs text-amber-600 leading-relaxed italic">
+                        Bot Token và Chat ID là thông tin bảo mật. Đảm bảo cấu hình đúng Group/Channel để tránh lộ lọt thông tin đơn hàng của khách hàng.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => setShowResetModal(true)}
-            disabled={saving}
-            className="flex cursor-pointer items-center gap-2 px-6 py-3 bg-muted text-foreground rounded-lg hover:bg-muted/80 disabled:opacity-50"
-          >
-            <RotateCcw className="w-4 h-4" />
-            Reset về mặc định
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="flex cursor-pointer items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark disabled:opacity-50"
-          >
-            {saving ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Đang lưu...
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4" />
-                Lưu cấu hình
-              </>
-            )}
-          </button>
+        {/* Global Action Bar */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t border-border z-10 lg:relative lg:bg-transparent lg:border-none lg:p-0 lg:mt-8">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-end gap-3 lg:gap-4">
+            <button
+              onClick={() => setShowResetModal(true)}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-muted hover:bg-muted-foreground/10 text-foreground rounded-2xl transition-all font-bold border border-border active:scale-95 cursor-pointer text-sm"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Reset mặc định
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 bg-primary text-primary-foreground rounded-2xl transition-all font-bold shadow-lg shadow-primary/25 hover:bg-primary-dark active:scale-95 disabled:opacity-50 cursor-pointer text-sm"
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Đang lưu...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>Lưu cấu hình</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Reset Modal */}
-      {showResetModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300">
-          <div
-            ref={resetModalRef}
-            className="bg-card border border-border rounded-xl p-6 w-full max-w-md shadow-2xl animate-in fade-in zoom-in duration-200"
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-card-foreground">Reset về mặc định</h3>
-              <button
-                onClick={() => {
-                  if (saving) return;
-                  setShowResetModal(false);
-                }}
-                disabled={saving}
-                className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Chọn các phần bạn muốn reset về giá trị mặc định. Các phần không được chọn sẽ giữ nguyên.
-              </p>
+        {/* Spacer for fixed bar on mobile */}
+        <div className="h-32 lg:hidden" />
 
-              <div className="space-y-3">
-                {TABS.map((tab) => {
-                  const sectionKey = tab.id;
-                  return (
-                    <label
-                      key={tab.id}
-                      className="flex items-center gap-3 p-3 bg-muted rounded-lg hover:bg-muted/80 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={resetSections[sectionKey] || false}
-                        onChange={(e) => {
-                          setResetSections({
-                            ...resetSections,
-                            [sectionKey]: e.target.checked
-                          });
-                        }}
-                        className="w-4 h-4 rounded border-border cursor-pointer"
-                      />
-                      <div className="flex items-center gap-2 flex-1">
-                        <tab.icon className="w-4 h-4 text-primary" />
-                        <span className="text-card-foreground font-medium">{tab.label}</span>
-                      </div>
-                    </label>
-                  );
-                })}
-              </div>
+        {/* Reset Confirmation Modal */}
+        {showResetModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/60 backdrop-blur-sm animate-in fade-in duration-300">
+            <div
+              ref={resetModalRef}
+              className="bg-card w-full max-w-md rounded-3xl border border-border shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300"
+            >
+              <div className="relative p-8 text-center">
+                <button
+                  onClick={() => setShowResetModal(false)}
+                  className="absolute right-4 top-4 p-2 text-muted-foreground hover:bg-muted rounded-full transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
 
-              <div className="pt-4 border-t border-border">
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowResetModal(false)}
-                    className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 cursor-pointer"
-                  >
-                    Hủy
-                  </button>
+                <div className="w-20 h-20 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <RotateCcw className="w-10 h-10 text-amber-500" />
+                </div>
+
+                <h3 className="text-2xl font-bold text-card-foreground mb-2">Reset cấu hình?</h3>
+                <p className="text-muted-foreground mb-8 text-balance text-sm">
+                  Dữ liệu hiện tại sẽ bị ghi đè bằng giá trị mặc định. Vui lòng chọn các phần bạn muốn khôi phục:
+                </p>
+
+                <div className="grid grid-cols-2 gap-3 mb-8">
+                  {[
+                    { key: 'email', label: 'Email', icon: Mail },
+                    { key: 'telegram', label: 'Telegram', icon: MessageSquare },
+                  ].map((section) => {
+                    const isSelected = resetSections[section.key];
+                    const Icon = section.icon;
+                    return (
+                      <button
+                        key={section.key}
+                        onClick={() => setResetSections({ ...resetSections, [section.key]: !isSelected })}
+                        className={`relative flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all cursor-pointer ${isSelected
+                          ? 'bg-primary/5 border-primary shadow-sm'
+                          : 'bg-muted/30 border-border hover:border-primary/30'
+                          }`}
+                      >
+                        <Icon className={`w-5 h-5 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <span className={`text-sm font-bold ${isSelected ? 'text-primary' : 'text-muted-foreground'}`}>
+                          {section.label}
+                        </span>
+                        {isSelected && (
+                          <div className="absolute top-2 right-2">
+                            <Check className="w-4 h-4 text-primary" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="flex flex-col gap-3">
                   <button
                     onClick={handleReset}
                     disabled={saving || Object.values(resetSections).every(v => !v)}
-                    className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-destructive text-destructive-foreground rounded-2xl font-bold shadow-lg shadow-destructive/20 hover:bg-destructive-dark transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer text-sm"
                   >
-                    {saving ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Đang reset...</span>
-                      </>
-                    ) : (
-                      <>
-                        <RotateCcw className="w-4 h-4" />
-                        <span>Reset</span>
-                      </>
-                    )}
+                    {saving ? 'Đang xử lý...' : 'Xác nhận Reset'}
+                  </button>
+                  <button
+                    onClick={() => setShowResetModal(false)}
+                    className="w-full py-4 bg-muted text-foreground rounded-2xl font-bold hover:bg-muted-foreground/10 transition-all active:scale-[0.98] cursor-pointer text-sm"
+                  >
+                    Hủy bỏ
                   </button>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      <Toast
-        message={toast.message}
-        isVisible={toast.isVisible}
-        onClose={() => setToast({ message: '', isVisible: false })}
-        type={toast.type || 'success'}
-      />
+        )}
+      </div>
     </div>
   );
 }

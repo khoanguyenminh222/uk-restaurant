@@ -10,13 +10,48 @@ import { getAdminFromToken } from '@/lib/auth';
  */
 export async function GET(request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get('search');
+    const rating = searchParams.get('rating');
+    const visible = searchParams.get('visible');
+    const dateFrom = searchParams.get('date_from');
+    const dateTo = searchParams.get('date_to');
+
     const client = await clientPromise;
     const db = client.db(getDatabaseName());
 
-    // Lấy tất cả reviews đã được duyệt để tính stats
+    // Build common filter
+    const statsBaseQuery = {};
+    if (rating && rating !== 'all') statsBaseQuery.rating = parseInt(rating);
+    if (visible !== null && visible !== 'all') statsBaseQuery.is_visible = visible === 'true';
+    if (search && search.trim()) {
+      const searchRegex = { $regex: search.trim(), $options: 'i' };
+      statsBaseQuery.$or = [
+        { customer_name: searchRegex },
+        { comment: searchRegex },
+        { customer_phone: searchRegex },
+        { customer_email: searchRegex },
+      ];
+    }
+    if (dateFrom || dateTo) {
+      statsBaseQuery.created_at = {};
+      if (dateFrom) {
+        const fromDate = new Date(dateFrom);
+        fromDate.setHours(0, 0, 0, 0);
+        statsBaseQuery.created_at.$gte = fromDate;
+      }
+      if (dateTo) {
+        const toDate = new Date(dateTo);
+        toDate.setHours(23, 59, 59, 999);
+        statsBaseQuery.created_at.$lte = toDate;
+      }
+    }
+
+    // Lấy tất cả reviews đã được duyệt để tính stats (within filter)
+    const approvedQuery = { ...statsBaseQuery, is_approved: { $ne: false } };
     const approvedReviews = await db
       .collection('reviews')
-      .find({ is_approved: { $ne: false } })
+      .find(approvedQuery)
       .toArray();
 
     // Check if user is admin
@@ -31,20 +66,18 @@ export async function GET(request) {
     if (admin) {
       const stats = calculateReviewStats(approvedReviews);
 
-      const totalApproved = await db.collection('reviews').countDocuments({ is_approved: { $ne: false } });
-      const totalPending = await db.collection('reviews').countDocuments({ is_approved: false });
-      const totalReviews = await db.collection('reviews').countDocuments({});
+      const totalApproved = await db.collection('reviews').countDocuments(approvedQuery);
+      const totalPending = await db.collection('reviews').countDocuments({ ...statsBaseQuery, is_approved: false });
+      const totalReviews = totalApproved + totalPending;
 
       return NextResponse.json({
         success: true,
         data: {
           ...stats,
-          // Override verifiedCustomers with real calculation
           verifiedCustomers: totalReviews > 0 ? Math.round((totalApproved / totalReviews) * 100) : 0,
           totalApproved,
           totalPending,
           totalAllReviews: totalReviews,
-          // Debug info for admin
           configMode: isAutoStats ? 'Auto' : 'Manual'
         },
       }, { status: 200 });

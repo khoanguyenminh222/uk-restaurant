@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRoleCheck } from '@/hooks/useRoleCheck'
-import { Shield, Search, Plus, Edit, Trash2, Filter, X, Loader2, CheckCircle, XCircle, Calendar, FileText } from 'lucide-react'
+import { Shield, Search, Plus, Edit, Trash2, Filter, X, Loader2, CheckCircle, XCircle, Calendar, FileText, RotateCcw, ChevronLeft, ChevronRight, MoreVertical } from 'lucide-react'
 import Toast from '@/components/Toast/Toast';
 import { adminFetch } from '@/lib/adminAuth';
 
@@ -21,6 +21,8 @@ export default function AdminBlacklist() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
+  const [stats, setStats] = useState(null)
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -80,6 +82,7 @@ export default function AdminBlacklist() {
 
       if (data.success) {
         setBlacklist(data.data)
+        setStats(data.stats)
         setTotalPages(data.pagination.totalPages)
         setTotal(data.pagination.total)
       } else {
@@ -383,560 +386,761 @@ export default function AdminBlacklist() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Shield className="w-6 h-6 text-primary" />
-            Quản lý Blacklist Email
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Quản lý danh sách email bị chặn đặt hàng và đăng ký
-          </p>
+    <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto min-h-screen bg-background text-foreground transition-colors duration-300">
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+        {/* Header */}
+        <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 shadow-sm shrink-0">
+                <Shield className="w-8 h-8 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Quản lý Blacklist</h1>
+                <p className="text-sm text-muted-foreground mt-1">Chặn và quản lý các email vi phạm chính sách cửa hàng</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-bold text-sm shadow-lg shadow-primary/20 hover:bg-primary/90 hover:translate-y-[-2px] active:translate-y-[0] transition-all cursor-pointer"
+            >
+              <Plus className="w-5 h-5" />
+              <span>Thêm Email</span>
+            </button>
+          </div>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark transition-colors flex items-center gap-2 cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          Thêm Email
-        </button>
-      </div>
 
-      {/* Filters */}
-      <div className="bg-card border border-border rounded-lg p-4 space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value)
-                setPage(1)
-              }}
-              placeholder="Tìm kiếm email..."
-              className="w-full pl-10 pr-4 py-2 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            />
+        {/* Stats Cards */}
+        {stats && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+            {[
+              {
+                label: 'Tổng số email',
+                value: stats.total || 0,
+                icon: Shield,
+                color: 'text-primary',
+                bgColor: 'bg-primary/10',
+                borderColor: 'border-primary/20',
+                info: 'Tổng số email đang có trong danh sách chặn'
+              },
+              {
+                label: 'Chặn vĩnh viễn',
+                value: stats.permanent || 0,
+                icon: XCircle,
+                color: 'text-destructive',
+                bgColor: 'bg-destructive/10',
+                borderColor: 'border-destructive/20',
+                info: 'Số lượng email bị chặn không thời hạn'
+              },
+              {
+                label: 'Đang hoạt động',
+                value: stats.active || 0,
+                icon: CheckCircle,
+                color: 'text-emerald-500',
+                bgColor: 'bg-emerald-500/10',
+                borderColor: 'border-emerald-500/20',
+                info: 'Email đang trong thời gian bị chặn'
+              },
+              {
+                label: 'Đã hết hạn',
+                value: stats.expired || 0,
+                icon: Calendar,
+                color: 'text-amber-500',
+                bgColor: 'bg-amber-500/10',
+                borderColor: 'border-amber-500/20',
+                info: 'Email đã quá hạn chặn nhưng vẫn ở trong danh sách'
+              }
+            ].map((stat, idx) => (
+              <div
+                key={idx}
+                className="bg-card rounded-xl sm:rounded-2xl border border-border p-3.5 sm:p-5 shadow-sm hover:shadow-md transition-all group relative animate-in fade-in slide-in-from-bottom-4 duration-500"
+                style={{ animationDelay: `${idx * 100}ms` }}
+              >
+                {/* Background Wave */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-[inherit]">
+                  <div className={`absolute top-0 right-0 w-16 h-16 sm:w-24 sm:h-24 ${stat.bgColor} opacity-20 rounded-bl-full -mr-8 -mt-8 sm:-mr-12 sm:-mt-12 transition-transform group-hover:scale-110`} />
+                </div>
+
+                <div className="flex items-start justify-between mb-3 sm:mb-4 relative z-10">
+                  <div className={`w-8 h-8 sm:w-10 sm:h-10 ${stat.bgColor} ${stat.borderColor} border rounded-lg sm:rounded-xl flex items-center justify-center shadow-sm`}>
+                    <stat.icon className="w-4 h-4 sm:w-5 sm:h-5 text-current" />
+                  </div>
+                  <div className="text-[9px] sm:text-[10px] text-muted-foreground/60 font-medium leading-tight text-right flex-1 ml-3 pt-0.5">
+                    {stat.info}
+                  </div>
+                </div>
+
+                <div className="relative z-10">
+                  <div className="text-lg sm:text-2xl font-bold tracking-tight text-foreground">{stat.value}</div>
+                  <div className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider mt-0.5 sm:mt-1">{stat.label}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Filters Section */}
+        <div className="bg-card rounded-2xl border border-border p-4 mb-8 shadow-sm transition-all duration-300">
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Search Bar */}
+            <div className="flex-1 flex gap-3">
+              <div className="flex-1 relative group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm email trong danh sách chặn..."
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value)
+                    setPage(1)
+                  }}
+                  className="w-full pl-11 pr-4 py-3 bg-muted/40 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted-foreground"
+                />
+              </div>
+
+              {/* Mobile Filter Toggle */}
+              <button
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className={`lg:hidden relative flex items-center justify-center w-12 h-12 rounded-xl border transition-all active:scale-95 ${showMobileFilters || filterReason !== '' || filterPermanent !== ''
+                  ? 'bg-primary/10 border-primary/30 text-primary shadow-sm'
+                  : 'bg-muted/40 border-border text-muted-foreground'
+                  }`}
+              >
+                <Filter className="w-5 h-5" />
+                {(filterReason !== '' || filterPermanent !== '') && (
+                  <span className="absolute -top-1 -right-1 flex items-center justify-center bg-primary text-primary-foreground text-[10px] font-bold w-5 h-5 rounded-full ring-2 ring-background shadow-sm">
+                    {[filterReason !== '', filterPermanent !== ''].filter(Boolean).length}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* Desktop Filters (Always visible on large screens) */}
+            <div className="hidden lg:flex items-center gap-3">
+              {/* Reason Filter */}
+              <select
+                value={filterReason}
+                onChange={(e) => {
+                  setFilterReason(e.target.value)
+                  setPage(1)
+                }}
+                className="px-4 py-2.5 bg-muted/40 border border-border rounded-xl text-sm text-foreground focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer min-w-[160px]"
+              >
+                <option value="">Tất cả lý do</option>
+                <option value="manual_block">Chặn thủ công</option>
+                <option value="too_many_orders">Quá nhiều đơn</option>
+                <option value="suspicious_activity">Hoạt động đáng ngờ</option>
+              </select>
+
+              {/* Status Filter */}
+              <select
+                value={filterPermanent}
+                onChange={(e) => {
+                  setFilterPermanent(e.target.value)
+                  setPage(1)
+                }}
+                className="px-4 py-2.5 bg-muted/40 border border-border rounded-xl text-sm text-foreground focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer min-w-[140px]"
+              >
+                <option value="">Tất cả</option>
+                <option value="true">Vĩnh viễn</option>
+                <option value="false">Tạm thời</option>
+              </select>
+
+              <div className="h-10 w-[1px] bg-border/60 mx-1" />
+              <button
+                onClick={() => {
+                  setSearch('');
+                  setFilterReason('');
+                  setFilterPermanent('');
+                  setPage(1);
+                }}
+                className="flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-xl transition-all cursor-pointer whitespace-nowrap"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Xóa lọc
+              </button>
+            </div>
           </div>
 
-          {/* Filter by reason */}
-          <select
-            value={filterReason}
-            onChange={(e) => {
-              setFilterReason(e.target.value)
-              setPage(1)
-            }}
-            className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-          >
-            <option value="">Tất cả lý do</option>
-            <option value="too_many_orders">Quá nhiều đơn</option>
-            <option value="suspicious_activity">Hoạt động đáng ngờ</option>
-            <option value="manual_block">Chặn thủ công</option>
-          </select>
-
-          {/* Filter by permanent */}
-          <select
-            value={filterPermanent}
-            onChange={(e) => {
-              setFilterPermanent(e.target.value)
-              setPage(1)
-            }}
-            className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-          >
-            <option value="">Tất cả</option>
-            <option value="true">Vĩnh viễn</option>
-            <option value="false">Tạm thời</option>
-          </select>
+          {/* Mobile Filters (Collapsible) */}
+          <div className={`lg:hidden grid transition-all duration-300 ${showMobileFilters ? 'grid-rows-[1fr] mt-4 opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+            <div className="overflow-hidden">
+              <div className="grid grid-cols-2 gap-3 pb-2">
+                <div className="col-span-1">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1 mb-1.5 block">Lý do</label>
+                  <select
+                    value={filterReason}
+                    onChange={(e) => {
+                      setFilterReason(e.target.value)
+                      setPage(1)
+                    }}
+                    className="w-full px-4 py-3 bg-muted/40 border border-border rounded-xl text-sm text-foreground focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer"
+                  >
+                    <option value="">Tất cả</option>
+                    <option value="manual_block">Thủ công</option>
+                    <option value="too_many_orders">Nhiều đơn</option>
+                    <option value="suspicious_activity">Đáng ngờ</option>
+                  </select>
+                </div>
+                <div className="col-span-1">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1 mb-1.5 block">Thời hạn</label>
+                  <select
+                    value={filterPermanent}
+                    onChange={(e) => {
+                      setFilterPermanent(e.target.value)
+                      setPage(1)
+                    }}
+                    className="w-full px-4 py-3 bg-muted/40 border border-border rounded-xl text-sm text-foreground focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer"
+                  >
+                    <option value="">Tất cả</option>
+                    <option value="true">Vĩnh viễn</option>
+                    <option value="false">Tạm thời</option>
+                  </select>
+                </div>
+                <div className="col-span-2 mt-2">
+                  <button
+                    onClick={() => {
+                      setSearch('');
+                      setFilterReason('');
+                      setFilterPermanent('');
+                      setPage(1);
+                      setShowMobileFilters(false);
+                    }}
+                    className="w-full flex items-center justify-center gap-2 py-3.5 bg-muted/40 text-muted-foreground font-bold text-sm rounded-xl hover:bg-destructive/5 hover:text-destructive transition-all active:scale-95"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    Thiết lập lại bộ lọc
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Table */}
-      <div className="bg-card border border-border rounded-lg overflow-hidden">
-        {loading ? (
-          <div className="p-8 text-center">
-            <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-2" />
-            <p className="text-muted-foreground">Đang tải...</p>
-          </div>
-        ) : blacklist.length === 0 ? (
-          <div className="p-8 text-center">
-            <Shield className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
-            <p className="text-muted-foreground">Không có email nào trong blacklist</p>
-          </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-muted">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Email</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Lý do</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Trạng thái</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Hết hạn</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Ngày tạo</th>
-                    <th className="px-4 py-3 text-right text-sm font-semibold text-foreground">Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {blacklist.map((entry) => (
-                    <tr key={entry._id} className="hover:bg-muted/50">
-                      <td className="px-4 py-3 text-sm text-foreground font-mono">{entry.email}</td>
-                      <td className="px-4 py-3 text-sm text-foreground">
-                        <span className="px-2 py-1 bg-muted rounded text-xs">
-                          {entry.reason === 'too_many_orders' && 'Quá nhiều đơn'}
-                          {entry.reason === 'suspicious_activity' && 'Hoạt động đáng ngờ'}
-                          {entry.reason === 'manual_block' && 'Chặn thủ công'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm">
+        {/* List Section */}
+        <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm mb-8">
+          {loading ? (
+            <div className="p-12 text-center">
+              <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
+              <p className="text-muted-foreground font-medium">Đang tải dữ liệu...</p>
+            </div>
+          ) : blacklist.length === 0 ? (
+            <div className="p-16 text-center animate-in fade-in zoom-in duration-300">
+              <div className="w-20 h-20 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Shield className="w-10 h-10 text-muted-foreground/40" />
+              </div>
+              <h3 className="text-lg font-bold text-foreground">Không tìm thấy kết quả</h3>
+              <p className="text-muted-foreground mt-1 max-w-xs mx-auto">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm của bạn</p>
+              {(search || filterReason || filterPermanent) && (
+                <button
+                  onClick={() => {
+                    setSearch('')
+                    setFilterReason('')
+                    setFilterPermanent('')
+                    setPage(1)
+                  }}
+                  className="mt-6 px-4 py-2 text-sm font-bold text-primary hover:bg-primary/10 rounded-xl transition-all"
+                >
+                  Xóa tất cả bộ lọc
+                </button>
+              )}
+            </div>
+          ) : (
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-muted/30 border-b border-border/50">
+                      <th className="px-6 py-4 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Email</th>
+                      <th className="px-6 py-4 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Lý do</th>
+                      <th className="px-6 py-4 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Trạng thái</th>
+                      <th className="px-6 py-4 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Hết hạn</th>
+                      <th className="px-6 py-4 text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wider text-right">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/50">
+                    {blacklist.map((entry, idx) => (
+                      <tr
+                        key={entry._id}
+                        className="group hover:bg-muted/30 transition-colors animate-in fade-in slide-in-from-left-4 duration-300"
+                        style={{ animationDelay: `${idx * 50}ms` }}
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-bold text-foreground font-mono">{entry.email}</span>
+                            <span className="text-[10px] text-muted-foreground mt-0.5">ID: {entry._id.slice(-8)}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${entry.reason === 'too_many_orders' ? 'bg-orange-500/10 text-orange-600 border-orange-500/20' :
+                            entry.reason === 'suspicious_activity' ? 'bg-purple-500/10 text-purple-600 border-purple-500/20' :
+                              'bg-blue-500/10 text-blue-600 border-blue-500/20'
+                            }`}>
+                            {entry.reason === 'too_many_orders' && 'Quá nhiều đơn'}
+                            {entry.reason === 'suspicious_activity' && 'Hoạt động đáng ngờ'}
+                            {entry.reason === 'manual_block' && 'Chặn thủ công'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          {isBlocked(entry) ? (
+                            <span className="flex items-center gap-1.5 text-destructive font-bold text-[13px]">
+                              <XCircle className="w-4 h-4" />
+                              Đang chặn
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-1.5 text-emerald-500 font-bold text-[13px]">
+                              <CheckCircle className="w-4 h-4" />
+                              Hết hạn
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-muted-foreground">
+                          {entry.is_permanent ? (
+                            <span className="text-destructive font-bold text-[13px]">Vĩnh viễn</span>
+                          ) : (
+                            <div className="flex flex-col">
+                              <span className="text-[13px]">{formatDate(entry.blocked_until)}</span>
+                              <span className="text-[10px] flex items-center gap-1 mt-0.5">
+                                <Calendar className="w-3 h-3" />
+                                Tạm thời
+                              </span>
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-2 transition-opacity">
+                            <button
+                              onClick={() => handleEdit(entry.email)}
+                              className="p-2 text-primary hover:bg-primary/10 rounded-xl transition-all active:scale-95"
+                              title="Chỉnh sửa"
+                            >
+                              <Edit className="w-4 h-5" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(entry.email)}
+                              className="p-2 text-destructive hover:bg-destructive/10 rounded-xl transition-all active:scale-95"
+                              title="Xóa"
+                            >
+                              <Trash2 className="w-4 h-5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="md:hidden divide-y divide-border/50">
+                {blacklist.map((entry, idx) => (
+                  <div
+                    key={entry._id}
+                    className="p-4 active:bg-muted/30 transition-colors animate-in fade-in slide-in-from-bottom-4 duration-300"
+                    style={{ animationDelay: `${idx * 50}ms` }}
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-foreground font-mono break-all">{entry.email}</span>
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${entry.reason === 'too_many_orders' ? 'bg-orange-500/10 text-orange-600 border-orange-500/20' :
+                            entry.reason === 'suspicious_activity' ? 'bg-purple-500/10 text-purple-600 border-purple-500/20' :
+                              'bg-blue-500/10 text-blue-600 border-blue-500/20'
+                            }`}>
+                            {entry.reason === 'too_many_orders' && 'Quá nhiều đơn'}
+                            {entry.reason === 'suspicious_activity' && 'Đáng ngờ'}
+                            {entry.reason === 'manual_block' && 'Thủ công'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => handleEdit(entry.email)}
+                          className="p-2.5 text-primary active:bg-primary/10 rounded-xl transition-all"
+                        >
+                          <Edit className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(entry.email)}
+                          className="p-2.5 text-destructive active:bg-destructive/10 rounded-xl transition-all"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mt-4 p-3 bg-muted/30 rounded-xl border border-border/50">
+                      <div>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Trạng thái</span>
                         {isBlocked(entry) ? (
-                          <span className="flex items-center gap-1 text-red-500">
-                            <XCircle className="w-4 h-4" />
+                          <span className="flex items-center gap-1.5 text-destructive font-bold text-xs uppercase tracking-tight">
+                            <XCircle className="w-3.5 h-3.5" />
                             Đang chặn
                           </span>
                         ) : (
-                          <span className="flex items-center gap-1 text-green-500">
-                            <CheckCircle className="w-4 h-4" />
-                            Đã hết hạn
+                          <span className="flex items-center gap-1.5 text-emerald-500 font-bold text-xs uppercase tracking-tight">
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            Hết hạn
                           </span>
                         )}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Thời điểm hết hạn</span>
                         {entry.is_permanent ? (
-                          <span className="text-red-500 font-semibold">Vĩnh viễn</span>
-                        ) : entry.blocked_until ? (
-                          formatDate(entry.blocked_until)
+                          <span className="text-destructive font-bold text-xs uppercase tracking-tight">Vĩnh viễn</span>
                         ) : (
-                          "Vĩnh viễn"
+                          <span className="text-foreground font-bold text-[11px] leading-tight block">
+                            {formatDate(entry.blocked_until)}
+                          </span>
                         )}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
-                        {formatDate(entry.created_at)}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => handleEdit(entry.email)}
-                            className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
-                            title="Sửa"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(entry.email)}
-                            disabled={deleting}
-                            className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                            title="Xóa"
-                          >
-                            {deleting ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="w-4 h-4" />
-                            )}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="px-4 py-3 border-t border-border flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">
-                  Hiển thị {((page - 1) * 20) + 1} - {Math.min(page * 20, total)} / {total}
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                    className="px-3 py-1 bg-input border border-border rounded-lg text-foreground hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Trước
-                  </button>
-                  <button
-                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages}
-                    className="px-3 py-1 bg-input border border-border rounded-lg text-foreground hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Sau
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* Add Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300">
-          <div
-            ref={addModalRef}
-            className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in duration-200"
-          >
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-                  <Plus className="w-5 h-5 text-primary" />
-                  Thêm Email vào Blacklist
-                </h2>
-                <button
-                  onClick={() => {
-                    if (adding) return;
-                    setShowAddModal(false)
-                    setFormData({
-                      email: "",
-                      reason: "manual_block",
-                      is_permanent: false,
-                      blocked_until: "",
-                      admin_notes: "",
-                    })
-                  }}
-                  disabled={adding}
-                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <form onSubmit={handleAdd} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Email <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                    required
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="example@email.com"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Lý do <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={formData.reason}
-                    onChange={(e) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
-                    required
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="manual_block">Chặn thủ công</option>
-                    <option value="too_many_orders">Quá nhiều đơn</option>
-                    <option value="suspicious_activity">Hoạt động đáng ngờ</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-                    <input
-                      type="checkbox"
-                      checked={formData.is_permanent}
-                      onChange={(e) => setFormData(prev => ({ ...prev, is_permanent: e.target.checked, blocked_until: "" }))}
-                      className="w-4 h-4 text-primary border-border rounded focus:ring-primary"
-                    />
-                    Chặn vĩnh viễn
-                  </label>
-                </div>
-
-                {!formData.is_permanent && (
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Hết hạn vào
-                    </label>
-                    <input
-                      type="datetime-local"
-                      value={formData.blocked_until}
-                      onChange={(e) => setFormData(prev => ({ ...prev, blocked_until: e.target.value }))}
-                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
+                      </div>
+                    </div>
                   </div>
-                )}
+                ))}
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Ghi chú (Tùy chọn)
-                  </label>
-                  <textarea
-                    value={formData.admin_notes}
-                    onChange={(e) => setFormData(prev => ({ ...prev, admin_notes: e.target.value }))}
-                    rows={3}
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                    placeholder="Ghi chú về lý do chặn..."
-                  />
+              {/* Pagination Section */}
+              {totalPages > 1 && (
+                <div className="p-4 sm:p-6 border-t border-border bg-muted/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <p className="text-xs sm:text-sm text-muted-foreground font-medium order-2 sm:order-1">
+                    Hiển thị <span className="text-foreground font-bold">{((page - 1) * 20) + 1}</span> - <span className="text-foreground font-bold">{Math.min(page * 20, total)}</span> của <span className="text-foreground font-bold">{total}</span> email
+                  </p>
+                  <div className="flex items-center gap-2 order-1 sm:order-2">
+                    <button
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 bg-card border border-border rounded-xl text-xs sm:text-sm font-bold text-foreground hover:bg-muted transition-all disabled:opacity-40 active:scale-95"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      Trước
+                    </button>
+                    <div className="hidden sm:flex items-center gap-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        // Simple pagination logic for 5 pages
+                        let pageNum = i + 1;
+                        if (totalPages > 5 && page > 3) {
+                          pageNum = page - 3 + i + 1;
+                          if (pageNum > totalPages) pageNum = totalPages - (4 - i);
+                        }
+                        if (pageNum <= 0) return null;
+
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => setPage(pageNum)}
+                            className={`w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl text-xs sm:text-sm font-bold transition-all ${page === pageNum
+                              ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary/90'
+                              : 'bg-card border border-border text-muted-foreground hover:bg-muted'
+                              }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <button
+                      onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                      disabled={page === totalPages}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 bg-card border border-border rounded-xl text-xs sm:text-sm font-bold text-foreground hover:bg-muted transition-all disabled:opacity-40 active:scale-95"
+                    >
+                      Sau
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
+              )}
+            </>
+          )}
+        </div>
 
-                <div className="flex gap-3">
+        {/* Add Modal */}
+        {showAddModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 transition-all duration-300">
+            <div
+              ref={addModalRef}
+              className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in duration-300 overflow-hidden"
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20">
+                      <Plus className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-foreground">Thêm Blacklist</h2>
+                      <p className="text-xs text-muted-foreground">Chặn email mới vào hệ thống</p>
+                    </div>
+                  </div>
                   <button
-                    type="button"
                     onClick={() => {
+                      if (adding) return;
                       setShowAddModal(false)
-                      setFormData({
-                        email: "",
-                        reason: "manual_block",
-                        is_permanent: false,
-                        blocked_until: "",
-                        admin_notes: "",
-                      })
+                      setFormData({ email: "", reason: "manual_block", is_permanent: false, blocked_until: "", admin_notes: "" })
                     }}
-                    disabled={adding}
-                    className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    className="w-10 h-10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-all cursor-pointer"
                   >
-                    Hủy
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={adding}
-                    className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    {adding ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Đang thêm...</span>
-                      </>
-                    ) : (
-                      'Thêm'
-                    )}
+                    <X className="w-5 h-5" />
                   </button>
                 </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Delete Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300">
-          <div
-            ref={deleteModalRef}
-            className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in duration-200"
-          >
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-                  <Trash2 className="w-5 h-5 text-destructive" />
-                  Xác nhận xóa
-                </h2>
-                <button
-                  onClick={() => {
-                    if (deleting) return;
-                    setShowDeleteModal(false)
-                    setEmailToDelete(null)
-                  }}
-                  disabled={deleting}
-                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg disabled:opacity-50 cursor-pointer z-20"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="mb-6">
-                <p className="text-foreground mb-2">
-                  Bạn có chắc chắn muốn xóa email này khỏi blacklist?
-                </p>
-                <div className="p-3 bg-muted rounded-lg">
-                  <p className="text-sm text-muted-foreground mb-1">Email:</p>
-                  <p className="font-mono text-foreground">{emailToDelete}</p>
-                </div>
-                <p className="text-sm text-muted-foreground mt-3">
-                  Email này sẽ có thể đặt hàng và đăng ký trở lại.
-                </p>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowDeleteModal(false)
-                    setEmailToDelete(null)
-                  }}
-                  disabled={deleting}
-                  className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="button"
-                  onClick={confirmDelete}
-                  disabled={deleting}
-                  className="flex-1 px-4 py-2 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  {deleting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Đang xóa...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 className="w-4 h-4" />
-                      <span>Xóa</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Modal */}
-      {showEditModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300">
-          <div
-            ref={editModalRef}
-            className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in duration-200"
-          >
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-                  <Edit className="w-5 h-5 text-primary" />
-                  Sửa Blacklist
-                </h2>
-                <button
-                  onClick={() => {
-                    if (updating) return;
-                    setShowEditModal(false)
-                    setEditingEmail(null)
-                    setFormData({
-                      email: "",
-                      reason: "manual_block",
-                      is_permanent: false,
-                      blocked_until: "",
-                      admin_notes: "",
-                    })
-                  }}
-                  disabled={updating}
-                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed z-20"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <form onSubmit={handleUpdate} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    disabled
-                    className="w-full px-4 py-2 bg-muted border border-border rounded-lg text-muted-foreground cursor-not-allowed"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Lý do <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={formData.reason}
-                    onChange={(e) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
-                    required
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="manual_block">Chặn thủ công</option>
-                    <option value="too_many_orders">Quá nhiều đơn</option>
-                    <option value="suspicious_activity">Hoạt động đáng ngờ</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <form onSubmit={handleAdd} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider ml-1">Email <span className="text-destructive">*</span></label>
                     <input
-                      type="checkbox"
-                      checked={formData.is_permanent}
-                      onChange={(e) => setFormData(prev => ({ ...prev, is_permanent: e.target.checked, blocked_until: "" }))}
-                      className="w-4 h-4 text-primary border-border rounded focus:ring-primary"
-                    />
-                    Chặn vĩnh viễn
-                  </label>
-                </div>
-
-                {!formData.is_permanent && (
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Hết hạn vào
-                    </label>
-                    <input
-                      type="datetime-local"
-                      value={formData.blocked_until}
-                      onChange={(e) => setFormData(prev => ({ ...prev, blocked_until: e.target.value }))}
-                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                      required
+                      className="w-full px-4 py-3 bg-muted/40 border border-border rounded-xl text-sm text-foreground focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                      placeholder="ví dụ: customer@email.com"
                     />
                   </div>
-                )}
 
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Ghi chú (Tùy chọn)
-                  </label>
-                  <textarea
-                    value={formData.admin_notes}
-                    onChange={(e) => setFormData(prev => ({ ...prev, admin_notes: e.target.value }))}
-                    rows={3}
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                    placeholder="Ghi chú về lý do chặn..."
-                  />
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider ml-1">Lý do chặn <span className="text-destructive">*</span></label>
+                    <select
+                      value={formData.reason}
+                      onChange={(e) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
+                      required
+                      className="w-full px-4 py-3 bg-muted/40 border border-border rounded-xl text-sm text-foreground focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer outline-none"
+                    >
+                      <option value="manual_block">Chặn thủ công</option>
+                      <option value="too_many_orders">Đặt quá nhiều đơn (Spam)</option>
+                      <option value="suspicious_activity">Hoạt động đáng ngờ</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-2 p-3 bg-muted/30 rounded-xl border border-border/50">
+                    <input
+                      type="checkbox"
+                      id="is_permanent_add"
+                      checked={formData.is_permanent}
+                      onChange={(e) => setFormData(prev => ({ ...prev, is_permanent: e.target.checked, blocked_until: "" }))}
+                      className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20 cursor-pointer"
+                    />
+                    <label htmlFor="is_permanent_add" className="text-sm font-medium text-foreground cursor-pointer select-none">
+                      Chặn vĩnh viễn
+                    </label>
+                  </div>
+
+                  {!formData.is_permanent && (
+                    <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider ml-1">Hết hạn vào</label>
+                      <div className="relative">
+                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <input
+                          type="datetime-local"
+                          value={formData.blocked_until}
+                          onChange={(e) => setFormData(prev => ({ ...prev, blocked_until: e.target.value }))}
+                          className="w-full pl-11 pr-4 py-3 bg-muted/40 border border-border rounded-xl text-sm text-foreground focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider ml-1">Ghi chú nội bộ</label>
+                    <textarea
+                      value={formData.admin_notes}
+                      onChange={(e) => setFormData(prev => ({ ...prev, admin_notes: e.target.value }))}
+                      rows={3}
+                      className="w-full px-4 py-3 bg-muted/40 border border-border rounded-xl text-sm text-foreground focus:ring-2 focus:ring-primary/20 transition-all outline-none resize-none"
+                      placeholder="Ghi chú thêm về lý do chặn..."
+                    />
+                  </div>
+
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowAddModal(false)}
+                      disabled={adding}
+                      className="flex-1 px-4 py-3 bg-muted border border-border text-foreground font-bold text-sm rounded-xl hover:bg-muted/80 transition-all active:scale-95 disabled:opacity-50"
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={adding}
+                      className="flex-1 px-4 py-3 bg-primary text-primary-foreground font-bold text-sm rounded-xl shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {adding ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Đang xử lý...</span>
+                        </>
+                      ) : (
+                        'Xác nhận thêm'
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Modal */}
+        {showEditModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 transition-all duration-300">
+            <div
+              ref={editModalRef}
+              className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in duration-300 overflow-hidden"
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20">
+                      <Edit className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-foreground">Cập nhật Chặn</h2>
+                      <p className="text-xs text-muted-foreground font-mono">{editingEmail}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowEditModal(false)}
+                    className="w-10 h-10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-all cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
+
+                <form onSubmit={handleUpdate} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider ml-1">Lý do chặn <span className="text-destructive">*</span></label>
+                    <select
+                      value={formData.reason}
+                      onChange={(e) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
+                      required
+                      className="w-full px-4 py-3 bg-muted/40 border border-border rounded-xl text-sm text-foreground focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer outline-none"
+                    >
+                      <option value="manual_block">Chặn thủ công</option>
+                      <option value="too_many_orders">Đặt quá nhiều đơn (Spam)</option>
+                      <option value="suspicious_activity">Hoạt động đáng ngờ</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-2 p-3 bg-muted/30 rounded-xl border border-border/50">
+                    <input
+                      type="checkbox"
+                      id="is_permanent_edit"
+                      checked={formData.is_permanent}
+                      onChange={(e) => setFormData(prev => ({ ...prev, is_permanent: e.target.checked, blocked_until: "" }))}
+                      className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20 cursor-pointer"
+                    />
+                    <label htmlFor="is_permanent_edit" className="text-sm font-medium text-foreground cursor-pointer select-none">
+                      Chặn vĩnh viễn
+                    </label>
+                  </div>
+
+                  {!formData.is_permanent && (
+                    <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider ml-1">Hết hạn vào</label>
+                      <div className="relative">
+                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <input
+                          type="datetime-local"
+                          value={formData.blocked_until}
+                          onChange={(e) => setFormData(prev => ({ ...prev, blocked_until: e.target.value }))}
+                          className="w-full pl-11 pr-4 py-3 bg-muted/40 border border-border rounded-xl text-sm text-foreground focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider ml-1">Ghi chú nội bộ</label>
+                    <textarea
+                      value={formData.admin_notes}
+                      onChange={(e) => setFormData(prev => ({ ...prev, admin_notes: e.target.value }))}
+                      rows={3}
+                      className="w-full px-4 py-3 bg-muted/40 border border-border rounded-xl text-sm text-foreground focus:ring-2 focus:ring-primary/20 transition-all outline-none resize-none"
+                      placeholder="Ghi chú thêm về lý do chặn..."
+                    />
+                  </div>
+
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowEditModal(false)}
+                      disabled={updating}
+                      className="flex-1 px-4 py-3 bg-muted border border-border text-foreground font-bold text-sm rounded-xl hover:bg-muted/80 transition-all active:scale-95 disabled:opacity-50"
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={updating}
+                      className="flex-1 px-4 py-3 bg-primary text-primary-foreground font-bold text-sm rounded-xl shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {updating ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Đang lưu...</span>
+                        </>
+                      ) : (
+                        'Cập nhật'
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 transition-all duration-300">
+            <div
+              ref={deleteModalRef}
+              className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-sm animate-in fade-in zoom-in duration-300 overflow-hidden"
+            >
+              <div className="p-8 text-center">
+                <div className="w-20 h-20 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Trash2 className="w-10 h-10 text-destructive" />
+                </div>
+                <h2 className="text-xl font-bold text-foreground mb-2">Xác nhận bỏ chặn?</h2>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Email <span className="text-foreground font-bold font-mono">{emailToDelete}</span> sẽ có thể tiếp tục sử dụng dịch vụ.
+                </p>
 
                 <div className="flex gap-3">
                   <button
                     type="button"
-                    onClick={() => {
-                      setShowEditModal(false)
-                      setEditingEmail(null)
-                      setFormData({
-                        email: "",
-                        reason: "manual_block",
-                        is_permanent: false,
-                        blocked_until: "",
-                        admin_notes: "",
-                      })
-                    }}
-                    disabled={updating}
-                    className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    onClick={() => setShowDeleteModal(false)}
+                    disabled={deleting}
+                    className="flex-1 px-4 py-3 bg-muted border border-border text-foreground font-bold text-sm rounded-xl hover:bg-muted/80 transition-all active:scale-95 disabled:opacity-50"
                   >
                     Hủy
                   </button>
                   <button
-                    type="submit"
-                    disabled={updating}
-                    className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+                    onClick={confirmDelete}
+                    disabled={deleting}
+                    className="flex-1 px-4 py-3 bg-destructive text-destructive-foreground font-bold text-sm rounded-xl shadow-lg shadow-destructive/20 hover:bg-destructive/90 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    {updating ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Đang cập nhật...</span>
-                      </>
+                    {deleting ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                      'Cập nhật'
+                      'Xác nhận xóa'
                     )}
                   </button>
                 </div>
-              </form>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Toast Notification */}
-      <Toast
-        message={toast.message}
-        isVisible={toast.isVisible}
-        type={toast.type}
-        onClose={() => setToast({ ...toast, isVisible: false })}
-      />
+        {/* Toast Notification */}
+        <Toast
+          message={toast.message}
+          isVisible={toast.isVisible}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, isVisible: false })}
+        />
+      </div>
     </div>
-  )
+  );
 }
 

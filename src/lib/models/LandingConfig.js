@@ -800,9 +800,6 @@ export function mergeWithDefaults(config) {
 
   if (config.testimonials) {
     merged.testimonials = { ...merged.testimonials, ...config.testimonials };
-    if (config.testimonials.trustStats) {
-      merged.testimonials.trustStats = { ...merged.testimonials.trustStats, ...config.testimonials.trustStats };
-    }
     if (config.testimonials.testimonials) {
       merged.testimonials.testimonials = config.testimonials.testimonials;
     }
