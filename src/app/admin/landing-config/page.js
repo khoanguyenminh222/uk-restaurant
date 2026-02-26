@@ -2051,6 +2051,16 @@ export default function AdminLandingConfig() {
                     )}
                   </div>
                 </div>
+
+                {/* Social Media Note */}
+                <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg flex items-start gap-3">
+                  <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                  <div className="text-sm text-foreground/80 leading-relaxed">
+                    <strong>Thông tin:</strong> Các liên kết mạng xã hội hiển thị ở Footer được lấy từ cấu hình trang
+                    <a href="/admin/contact-config" className="text-primary hover:underline font-medium mx-1">Liên Hệ</a>.
+                    Vui lòng sang trang cấu hình Liên Hệ để chỉnh sửa các liên kết này.
+                  </div>
+                </div>
               </div>
             )
           }
