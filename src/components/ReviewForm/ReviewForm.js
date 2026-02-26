@@ -5,7 +5,7 @@ import { Star, X, Loader2, MessageSquare } from "lucide-react"
 import { getUser } from "@/utils/user"
 import { getCustomerInfo } from "@/utils/customer"
 
-export default function ReviewForm({ isOpen, onClose = () => {} }) {
+export default function ReviewForm({ isOpen, onClose = () => { } }) {
   const modalRef = useRef(null)
   const [submittingReview, setSubmittingReview] = useState(false)
   const [reviewForm, setReviewForm] = useState({
@@ -24,7 +24,7 @@ export default function ReviewForm({ isOpen, onClose = () => {} }) {
     if (isOpen) {
       const user = getUser()
       const customerInfo = getCustomerInfo()
-      
+
       setReviewForm({
         customer_name: user?.name || customerInfo?.customer_name || '',
         customer_phone: user?.phone || customerInfo?.customer_phone || '',
@@ -107,7 +107,7 @@ export default function ReviewForm({ isOpen, onClose = () => {} }) {
         if (typeof onClose === 'function') {
           onClose()
         }
-        
+
         // Show success message
         if (typeof window !== 'undefined') {
           window.dispatchEvent(
@@ -136,7 +136,7 @@ export default function ReviewForm({ isOpen, onClose = () => {} }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div
         ref={modalRef}
-        className="relative w-full max-w-2xl bg-card rounded-xl shadow-2xl border border-border overflow-hidden animate-fade-in-up max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-2xl bg-card rounded-xl shadow-2xl border border-border overflow-hidden animate-fade-in-up max-h-[92vh] overflow-y-auto"
       >
         {/* Close Button */}
         <button
@@ -149,15 +149,15 @@ export default function ReviewForm({ isOpen, onClose = () => {} }) {
         </button>
 
         {/* Header */}
-        <div className="border-b border-border bg-primary/10 py-4 px-6">
-          <h2 className="text-xl font-semibold text-card-foreground flex items-center gap-2">
-            <MessageSquare className="w-6 h-6 text-primary" />
+        <div className="border-b border-border bg-primary/10 py-3 px-4 sm:py-4 sm:px-6">
+          <h2 className="text-base sm:text-xl font-semibold text-card-foreground flex items-center gap-2">
+            <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
             Để lại đánh giá
           </h2>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleReviewSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleReviewSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
           {reviewFormError && (
             <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
               <p className="text-sm text-red-400">{reviewFormError}</p>
@@ -186,10 +186,10 @@ export default function ReviewForm({ isOpen, onClose = () => {} }) {
             <label className="block text-sm font-semibold text-foreground mb-4">
               Đánh giá của bạn <span className="text-red-400">*</span>
             </label>
-            
+
             {/* Rating Stars - Modern Design */}
-            <div className="flex flex-col items-center gap-4 p-6 bg-muted/30 rounded-xl border border-border/50">
-              <div className="flex items-center gap-2">
+            <div className="flex flex-col items-center gap-3 sm:gap-4 p-4 sm:p-6 bg-muted/30 rounded-xl border border-border/50">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 {[1, 2, 3, 4, 5].map((rating) => (
                   <button
                     key={rating}
@@ -198,21 +198,19 @@ export default function ReviewForm({ isOpen, onClose = () => {} }) {
                     disabled={submittingReview}
                     onMouseEnter={() => !submittingReview && setHoverRating(rating)}
                     onMouseLeave={() => !submittingReview && setHoverRating(0)}
-                    className={`relative transition-all duration-200 ${
-                      submittingReview ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-110 active:scale-95'
-                    }`}
-                  >
-                    <Star 
-                      className={`w-10 h-10 transition-all duration-200 ${
-                        (hoverRating >= rating && hoverRating > 0) || (hoverRating === 0 && reviewForm.rating >= rating)
-                          ? 'fill-yellow-400 text-yellow-400 drop-shadow-lg'
-                          : 'text-muted-foreground/30 fill-muted-foreground/20'
+                    className={`relative transition-all duration-200 ${submittingReview ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-110 active:scale-95'
                       }`}
+                  >
+                    <Star
+                      className={`w-8 h-8 sm:w-10 sm:h-10 transition-all duration-200 ${(hoverRating >= rating && hoverRating > 0) || (hoverRating === 0 && reviewForm.rating >= rating)
+                        ? 'fill-yellow-400 text-yellow-400 drop-shadow-lg'
+                        : 'text-muted-foreground/30 fill-muted-foreground/20'
+                        }`}
                     />
                   </button>
                 ))}
               </div>
-              
+
               {/* Rating Text */}
               <div className="text-center">
                 <div className="flex items-center gap-2 mb-1">
@@ -301,29 +299,29 @@ export default function ReviewForm({ isOpen, onClose = () => {} }) {
           </div>
 
           {/* Submit Button */}
-          <div className="flex items-center gap-3 pt-4 border-t-2 border-border">
+          <div className="flex items-center gap-2 sm:gap-3 pt-3 sm:pt-4 border-t-2 border-border">
             <button
               type="button"
               onClick={() => typeof onClose === 'function' && onClose()}
-              className="flex-1 px-6 py-3 bg-muted text-muted-foreground rounded-lg font-semibold hover:bg-muted/80 transition-colors cursor-pointer"
+              className="flex-1 px-3 py-2 sm:px-6 sm:py-3 text-sm sm:text-base bg-muted text-muted-foreground rounded-lg font-semibold hover:bg-muted/80 transition-colors cursor-pointer"
               disabled={submittingReview}
             >
               Hủy
             </button>
             <button
               type="submit"
-              className="flex-1 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="flex-1 px-3 py-2 sm:px-6 sm:py-3 text-sm sm:text-base bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center gap-1.5 sm:gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               disabled={submittingReview}
             >
               {submittingReview ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                   Đang gửi...
                 </>
               ) : (
                 <>
-                  <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                  Gửi đánh giá
+                  <Star className="w-4 h-4 sm:w-5 sm:h-5 fill-yellow-400 text-yellow-400" />
+                  Đánh giá
                 </>
               )}
             </button>

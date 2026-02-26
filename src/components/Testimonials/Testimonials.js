@@ -347,37 +347,75 @@ export default function Testimonials({ onReviewFormClick }) {
 
           {/* Trust Stats Bar - Social proof mạnh mẽ */}
           {trustStats && (
-            <div
-              className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 md:gap-8"
-            >
-              {/* Average Rating */}
-              <div className="flex items-center gap-2 px-4 py-2 bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl">
-                <div className="flex items-center gap-1">
-                  <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                  <span className="text-xl sm:text-2xl font-black text-foreground">
-                    <AnimatedNumber value={trustStats.averageRating} isVisible={true} duration={2000} />
-                  </span>
+            <div className="w-full">
+              {/* Mobile: 2 stat đầu cùng 1 hàng, stat thứ 3 full width */}
+              {/* sm+: inline flex như cũ */}
+              <div className="flex sm:hidden flex-col items-center gap-3">
+                {/* Hàng 1: Đánh giá trung bình + Đánh giá */}
+                <div className="flex items-center justify-center gap-3 w-full">
+                  {/* Average Rating */}
+                  <div className="flex flex-1 items-center justify-center gap-2 px-3 py-2 bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl">
+                    <div className="flex items-center gap-1">
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      <span className="text-lg font-black text-foreground">
+                        <AnimatedNumber value={trustStats.averageRating} isVisible={true} duration={2000} />
+                      </span>
+                    </div>
+                    <div className="h-5 w-px bg-border/50"></div>
+                    <span className="text-[11px] text-muted-foreground font-medium leading-tight">Đánh giá<br />trung bình</span>
+                  </div>
+
+                  {/* Total Reviews */}
+                  <div className="flex flex-1 items-center justify-center gap-2 px-3 py-2 bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl">
+                    <TrendingUp className="w-4 h-4 text-primary shrink-0" />
+                    <span className="text-lg font-black text-foreground">
+                      <AnimatedNumber value={trustStats.totalReviews} isVisible={true} duration={2000} />
+                    </span>
+                    <span className="text-[11px] text-muted-foreground font-medium">Đánh giá</span>
+                  </div>
                 </div>
-                <div className="h-6 w-px bg-border/50"></div>
-                <span className="text-xs sm:text-sm text-muted-foreground font-medium">Đánh giá trung bình</span>
+
+                {/* Hàng 2: Đã xác minh */}
+                <div className="flex items-center justify-center gap-2 px-4 py-2 bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl">
+                  <CheckCircle2 className="w-4 h-4 text-primary" />
+                  <span className="text-lg font-black text-foreground">
+                    <AnimatedNumber value={trustStats.verifiedCustomers} isVisible={true} duration={2000} suffix="%" />
+                  </span>
+                  <span className="text-xs text-muted-foreground font-medium">Đã xác minh</span>
+                </div>
               </div>
 
-              {/* Total Reviews */}
-              <div className="flex items-center gap-2 px-4 py-2 bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl">
-                <TrendingUp className="w-5 h-5 text-primary" />
-                <span className="text-xl sm:text-2xl font-black text-foreground">
-                  <AnimatedNumber value={trustStats.totalReviews} isVisible={true} duration={2000} />
-                </span>
-                <span className="text-xs sm:text-sm text-muted-foreground font-medium">Đánh giá</span>
-              </div>
+              {/* sm+: layout flex wrap như cũ */}
+              <div className="hidden sm:flex flex-wrap items-center justify-center gap-4 sm:gap-6 md:gap-8">
+                {/* Average Rating */}
+                <div className="flex items-center gap-2 px-4 py-2 bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl">
+                  <div className="flex items-center gap-1">
+                    <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                    <span className="text-xl sm:text-2xl font-black text-foreground">
+                      <AnimatedNumber value={trustStats.averageRating} isVisible={true} duration={2000} />
+                    </span>
+                  </div>
+                  <div className="h-6 w-px bg-border/50"></div>
+                  <span className="text-xs sm:text-sm text-muted-foreground font-medium">Đánh giá trung bình</span>
+                </div>
 
-              {/* Verified Customers */}
-              <div className="flex items-center gap-2 px-4 py-2 bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl">
-                <CheckCircle2 className="w-5 h-5 text-primary" />
-                <span className="text-xl sm:text-2xl font-black text-foreground">
-                  <AnimatedNumber value={trustStats.verifiedCustomers} isVisible={true} duration={2000} suffix="%" />
-                </span>
-                <span className="text-xs sm:text-sm text-muted-foreground font-medium">Đã xác minh</span>
+                {/* Total Reviews */}
+                <div className="flex items-center gap-2 px-4 py-2 bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl">
+                  <TrendingUp className="w-5 h-5 text-primary" />
+                  <span className="text-xl sm:text-2xl font-black text-foreground">
+                    <AnimatedNumber value={trustStats.totalReviews} isVisible={true} duration={2000} />
+                  </span>
+                  <span className="text-xs sm:text-sm text-muted-foreground font-medium">Đánh giá</span>
+                </div>
+
+                {/* Verified Customers */}
+                <div className="flex items-center gap-2 px-4 py-2 bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl">
+                  <CheckCircle2 className="w-5 h-5 text-primary" />
+                  <span className="text-xl sm:text-2xl font-black text-foreground">
+                    <AnimatedNumber value={trustStats.verifiedCustomers} isVisible={true} duration={2000} suffix="%" />
+                  </span>
+                  <span className="text-xs sm:text-sm text-muted-foreground font-medium">Đã xác minh</span>
+                </div>
               </div>
             </div>
           )}

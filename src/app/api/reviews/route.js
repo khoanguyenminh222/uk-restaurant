@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
 import { validateReview, calculateReviewStats } from '@/lib/models/Review';
+import { sendNewReviewNotification } from '@/lib/telegram';
 
 /**
  * GET /api/reviews
@@ -217,6 +218,11 @@ export async function POST(request) {
     };
 
     const result = await db.collection('reviews').insertOne(newReview);
+
+    // Gửi thông báo Telegram (fire-and-forget, không block response)
+    sendNewReviewNotification(newReview).catch((err) =>
+      console.error('[Telegram] Failed to notify new review:', err)
+    );
 
     return NextResponse.json(
       {

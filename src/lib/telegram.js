@@ -390,3 +390,68 @@ export async function sendContactNotification(data) {
     return { success: false, error: error.message || 'Failed to send contact notification' };
   }
 }
+
+/**
+ * Format message cho đánh giá mới từ khách hàng
+ * @param {object} review - Review object vừa được tạo
+ * @returns {string} Formatted message
+ */
+export function formatNewReviewMessage(review) {
+  const customerName = review.customer_name || 'Khách hàng';
+  const rating = review.rating || 0;
+  const comment = review.comment?.trim() || 'Không có bình luận';
+  const customerPhone = review.customer_phone?.trim() || '';
+  const customerEmail = review.customer_email?.trim() || '';
+  const orderId = review.order_id?.trim() || '';
+
+  // Stars display
+  const stars = '⭐'.repeat(rating) + '☆'.repeat(5 - rating);
+
+  // Format date
+  const date = new Date().toLocaleString('vi-VN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  // Admin reviews URL
+  const adminUrl = process.env.NEXT_PUBLIC_SITE_URL
+    ? `${process.env.NEXT_PUBLIC_SITE_URL}/admin/reviews`
+    : '';
+
+  // Optional fields
+  const phoneText = customerPhone ? `\n<b>SĐT:</b> <a href="tel:${customerPhone}">${customerPhone}</a>` : '';
+  const emailText = customerEmail ? `\n<b>Email:</b> ${customerEmail}` : '';
+  const orderText = orderId ? `\n<b>Mã đơn:</b> <code>${orderId}</code>` : '';
+
+  const message = `⭐ [<b>ĐÁNH GIÁ MỚI</b>]
+
+<b>Khách hàng:</b> ${customerName}${phoneText}${emailText}${orderText}
+
+${stars} <b>${rating}/5</b>
+
+💬 <b>Bình luận:</b>
+${comment}
+
+⏰ <b>Thời gian:</b> ${date}
+⚠️ Đánh giá cần được duyệt trước khi hiển thị.${adminUrl ? `\n\n🔗 <a href="${adminUrl}">Xem & duyệt đánh giá</a>` : ''}`;
+
+  return message;
+}
+
+/**
+ * Gửi thông báo đánh giá mới đến Telegram
+ * @param {object} review - Review object vừa được tạo
+ * @returns {Promise<{success: boolean, messageId?: string, error?: string}>}
+ */
+export async function sendNewReviewNotification(review) {
+  try {
+    const message = formatNewReviewMessage(review);
+    return await sendTelegramNotification(message);
+  } catch (error) {
+    console.error('[Telegram] Error sending new review notification:', error);
+    return { success: false, error: error.message || 'Failed to send new review notification' };
+  }
+}

@@ -290,21 +290,21 @@ export default function AboutPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
             {features.map((feature, index) => {
               const Icon = feature.icon
               return (
                 <div
                   key={index}
-                  className={`group p-6 bg-card rounded-lg border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 scroll-scale-in ${isValuesVisible ? "visible" : ""
+                  className={`group p-4 sm:p-6 bg-card rounded-lg border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 scroll-scale-in ${isValuesVisible ? "visible" : ""
                     }`}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <div className="mb-4 inline-block p-3 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
-                    <Icon className="w-6 h-6 text-primary" />
+                  <div className="mb-3 sm:mb-4 inline-block p-2 sm:p-3 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+                    <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                   </div>
-                  <h3 className="text-lg font-semibold text-card-foreground mb-2">{feature.title}</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
+                  <h3 className="text-sm sm:text-lg font-semibold text-card-foreground mb-1 sm:mb-2 leading-snug">{feature.title}</h3>
+                  <p className="text-muted-foreground text-xs sm:text-sm leading-relaxed">{feature.description}</p>
                 </div>
               )
             })}
@@ -319,23 +319,23 @@ export default function AboutPage() {
           }`}
       >
         <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
             {stats.map((stat, index) => {
               const Icon = stat.icon
               return (
                 <div
                   key={index}
-                  className="text-center p-6 rounded-lg hover:bg-card/50 transition-colors"
+                  className="text-center p-4 sm:p-6 rounded-lg hover:bg-card/50 transition-colors"
                 >
                   {Icon && (
                     <div className="flex justify-center mb-2">
-                      <Icon className="w-8 h-8 text-primary" />
+                      <Icon className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
                     </div>
                   )}
-                  <div className="text-4xl md:text-5xl font-bold text-primary mb-2 font-display">
+                  <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-primary mb-1 sm:mb-2 font-display">
                     {stat.number}
                   </div>
-                  <p className="text-muted-foreground text-lg">{stat.label}</p>
+                  <p className="text-muted-foreground text-sm sm:text-lg">{stat.label}</p>
                 </div>
               )
             })}

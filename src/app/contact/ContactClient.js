@@ -390,33 +390,33 @@ export default function ContactPage() {
         className={`py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-card/50 backdrop-blur-sm scroll-fade-in ${isContactInfoVisible ? "visible" : ""}`}
       >
         <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
             {contactInfoList.map((info, index) => {
               const Icon = info.icon
               return (
                 <div
                   key={index}
-                  className={`group relative bg-card border-2 ${info.borderColor} rounded-xl p-6 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 scroll-scale-in ${isContactInfoVisible ? "visible" : ""}`}
+                  className={`group relative bg-card border-2 ${info.borderColor} rounded-xl p-3 sm:p-4 md:p-6 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 scroll-scale-in ${isContactInfoVisible ? "visible" : ""}`}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <div className={`absolute inset-0 bg-linear-to-br ${info.color} rounded-xl opacity-20 group-hover:opacity-30 transition-opacity`}></div>
 
                   <div className="relative z-10">
-                    <div className="mb-4 inline-block p-3 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
-                      <Icon className="w-6 h-6 text-primary" />
+                    <div className="mb-2 sm:mb-3 md:mb-4 inline-block p-2 sm:p-3 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+                      <Icon className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-primary" />
                     </div>
-                    <h3 className="text-lg font-semibold text-card-foreground mb-2">{info.title}</h3>
+                    <h3 className="text-xs sm:text-sm md:text-lg font-semibold text-card-foreground mb-1 sm:mb-2 leading-snug">{info.title}</h3>
                     {info.href ? (
                       <a
                         href={info.href}
-                        className="text-muted-foreground hover:text-primary transition-colors block mb-2 text-base font-medium wrap-break-word"
+                        className="text-muted-foreground hover:text-primary transition-colors block mb-1 sm:mb-2 text-xs sm:text-sm md:text-base font-medium wrap-break-word"
                       >
                         {info.value}
                       </a>
                     ) : (
-                      <p className="text-muted-foreground mb-2 text-base font-medium wrap-break-word">{info.value}</p>
+                      <p className="text-muted-foreground mb-1 sm:mb-2 text-xs sm:text-sm md:text-base font-medium wrap-break-word">{info.value}</p>
                     )}
-                    <p className="text-xs text-muted-foreground/70">{info.description}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground/70 hidden sm:block">{info.description}</p>
                   </div>
                 </div>
               )
@@ -500,18 +500,18 @@ export default function ContactPage() {
             {/* Contact Form Section */}
             <div
               ref={formRef}
-              className={`bg-card/30 backdrop-blur-md border border-border/50 rounded-2xl p-5 md:p-6 lg:p-8 shadow-xl scroll-slide-left ${isFormVisible ? "visible" : ""}`}
+              className={`bg-card/30 backdrop-blur-md border border-border/50 rounded-2xl p-4 sm:p-5 md:p-6 lg:p-8 shadow-xl scroll-slide-left ${isFormVisible ? "visible" : ""}`}
             >
-              <div className="inline-flex items-center gap-2 mb-3 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-full">
+              <div className="inline-flex items-center gap-2 mb-2 sm:mb-3 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-full">
                 <MessageCircle className="w-4 h-4 text-primary" />
                 <span className="text-xs font-semibold text-primary uppercase tracking-wider">
                   {contactForm.badge || 'Gửi Tin Nhắn'}
                 </span>
               </div>
-              <h2 className="text-2xl md:text-3xl font-bold font-display text-card-foreground mb-2">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold font-display text-card-foreground mb-1 sm:mb-2">
                 {contactForm.title || 'Gửi Tin Nhắn Cho Chúng Tôi'}
               </h2>
-              <p className="text-muted-foreground mb-8">
+              <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 md:mb-8">
                 {contactForm.description || 'Điền form bên dưới và chúng tôi sẽ phản hồi bạn trong thời gian sớm nhất'}
               </p>
 
@@ -532,10 +532,10 @@ export default function ContactPage() {
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-foreground flex items-center gap-1">
+                <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 md:space-y-5">
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-5">
+                    <div className="space-y-1 sm:space-y-2">
+                      <label className="text-xs sm:text-sm font-medium text-foreground flex items-center gap-1">
                         {contactForm.fields?.name_label || 'Họ và tên'}
                         <span className="text-red-500 font-semibold" title="Bắt buộc">*</span>
                       </label>
@@ -545,13 +545,13 @@ export default function ContactPage() {
                         value={formState.name}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all"
-                        placeholder="Vui lòng nhập..."
+                        className="w-full px-3 py-2 sm:px-4 sm:py-3 text-sm bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all"
+                        placeholder="Nhập..."
                         aria-required="true"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-foreground flex items-center gap-1">
+                    <div className="space-y-1 sm:space-y-2">
+                      <label className="text-xs sm:text-sm font-medium text-foreground flex items-center gap-1">
                         {contactForm.fields?.email_label || 'Email'}
                         <span className="text-red-500 font-semibold" title="Bắt buộc">*</span>
                       </label>
@@ -561,16 +561,16 @@ export default function ContactPage() {
                         value={formState.email}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-2.5 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all"
-                        placeholder="Vui lòng nhập..."
+                        className="w-full px-3 py-2 sm:px-4 sm:py-2.5 text-sm bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all"
+                        placeholder="Nhập..."
                         aria-required="true"
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-foreground flex items-center gap-1">
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-5">
+                    <div className="space-y-1 sm:space-y-2">
+                      <label className="text-xs sm:text-sm font-medium text-foreground flex items-center gap-1">
                         {contactForm.fields?.phone_label || 'Số điện thoại'}
                         <span className="text-red-500 font-semibold" title="Bắt buộc">*</span>
                       </label>
@@ -580,13 +580,13 @@ export default function ContactPage() {
                         value={formState.phone}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all"
-                        placeholder="Vui lòng nhập..."
+                        className="w-full px-3 py-2 sm:px-4 sm:py-3 text-sm bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all"
+                        placeholder="Nhập..."
                         aria-required="true"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-foreground">
+                    <div className="space-y-1 sm:space-y-2">
+                      <label className="text-xs sm:text-sm font-medium text-foreground">
                         {contactForm.fields?.subject_label || 'Chủ đề'}
                         <span className="text-muted-foreground text-xs font-normal ml-1">(Tùy chọn)</span>
                       </label>
@@ -595,8 +595,8 @@ export default function ContactPage() {
                         name="subject"
                         value={formState.subject}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all"
-                        placeholder="Vui lòng nhập..."
+                        className="w-full px-3 py-2 sm:px-4 sm:py-3 text-sm bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all"
+                        placeholder="Nhập..."
                       />
                     </div>
                   </div>
@@ -611,8 +611,8 @@ export default function ContactPage() {
                       value={formState.message}
                       onChange={handleChange}
                       required
-                      rows={4}
-                      className="w-full px-4 py-2.5 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all resize-none"
+                      rows={3}
+                      className="w-full px-3 py-2 sm:px-4 sm:py-2.5 text-sm bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all resize-none"
                       placeholder="Vui lòng nhập..."
                       aria-required="true"
                     ></textarea>
@@ -621,7 +621,7 @@ export default function ContactPage() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full px-6 py-4 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg font-bold text-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-primary/20 cursor-pointer"
+                    className="w-full px-4 py-2.5 sm:px-6 sm:py-3 md:py-4 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg font-bold text-sm sm:text-base md:text-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-primary/20 cursor-pointer"
                   >
                     {isSubmitting ? (
                       <>
@@ -669,50 +669,50 @@ export default function ContactPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
               {/* Stat Card 1 - Rating */}
-              <div className="relative bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl p-5 sm:p-6 md:p-8">
+              <div className="relative bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl p-4 sm:p-5 md:p-6 lg:p-8">
                 <div className="absolute inset-0 bg-linear-to-br from-yellow-500/20 to-yellow-600/10 rounded-xl opacity-30"></div>
                 <div className="relative z-10 flex flex-col items-center text-center">
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mb-3 sm:mb-4 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-400">
-                    <Star className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 fill-yellow-400" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 mb-2 sm:mb-3 md:mb-4 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-400">
+                    <Star className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 fill-yellow-400" />
                   </div>
-                  <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-foreground mb-2">
+                  <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black text-foreground mb-1 sm:mb-2">
                     <AnimatedNumber value={displayStats.averageRating} isVisible={isStatsVisible} duration={1500} />
                   </div>
-                  <div className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium leading-tight px-1">
+                  <div className="text-[10px] sm:text-xs md:text-sm lg:text-base text-muted-foreground font-medium leading-tight px-1">
                     {trustStats.averageRating_label || 'Đánh giá trung bình'}
                   </div>
                 </div>
               </div>
 
               {/* Stat Card 2 - Reviews */}
-              <div className="relative bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl p-5 sm:p-6 md:p-8">
+              <div className="relative bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl p-4 sm:p-5 md:p-6 lg:p-8">
                 <div className="absolute inset-0 bg-linear-to-br from-primary/20 to-primary-light/10 rounded-xl opacity-30"></div>
                 <div className="relative z-10 flex flex-col items-center text-center">
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mb-3 sm:mb-4 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-                    <TrendingUp className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 mb-2 sm:mb-3 md:mb-4 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                    <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8" />
                   </div>
-                  <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-foreground mb-2">
+                  <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black text-foreground mb-1 sm:mb-2">
                     <AnimatedNumber value={displayStats.totalReviews} isVisible={isStatsVisible} duration={2000} />
                   </div>
-                  <div className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium leading-tight px-1">
+                  <div className="text-[10px] sm:text-xs md:text-sm lg:text-base text-muted-foreground font-medium leading-tight px-1">
                     {trustStats.totalReviews_label || 'Tổng đánh giá'}
                   </div>
                 </div>
               </div>
 
               {/* Stat Card 3 - Verified */}
-              <div className="relative bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl p-5 sm:p-6 md:p-8">
+              <div className="relative col-span-2 md:col-span-1 bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl p-4 sm:p-5 md:p-6 lg:p-8">
                 <div className="absolute inset-0 bg-linear-to-br from-green-500/20 to-green-600/10 rounded-xl opacity-30"></div>
                 <div className="relative z-10 flex flex-col items-center text-center">
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mb-3 sm:mb-4 bg-green-500/10 rounded-xl flex items-center justify-center text-green-500">
-                    <CheckCircle2 className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 mb-2 sm:mb-3 md:mb-4 bg-green-500/10 rounded-xl flex items-center justify-center text-green-500">
+                    <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8" />
                   </div>
-                  <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-foreground mb-2">
+                  <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black text-foreground mb-1 sm:mb-2">
                     <AnimatedNumber value={displayStats.verifiedCustomers} isVisible={isStatsVisible} duration={1500} suffix="%" />
                   </div>
-                  <div className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium leading-tight px-1">
+                  <div className="text-[10px] sm:text-xs md:text-sm lg:text-base text-muted-foreground font-medium leading-tight px-1">
                     {trustStats.verifiedCustomers_label || 'Khách hàng đã xác minh'}
                   </div>
                 </div>

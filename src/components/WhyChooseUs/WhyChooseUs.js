@@ -540,7 +540,7 @@ export default function WhyChooseUs() {
         </div>
 
         {/* Feature Cards - Compact cho mobile, không hover */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
           {features.map((feature, index) => {
             const IconComponent = feature.icon
 
@@ -556,7 +556,7 @@ export default function WhyChooseUs() {
                   } ${feature.isVisible ? "visible" : ""}`}
               >
                 <div className={`
-                  relative bg-card/90 backdrop-blur-md border-2 ${feature.borderColor} rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-7
+                  relative bg-card/90 backdrop-blur-md border-2 ${feature.borderColor} rounded-xl sm:rounded-2xl p-3 sm:p-5 md:p-6 lg:p-7
                   h-full flex flex-col
                 `}>
                   {/* Gradient overlay - Static */}
@@ -565,13 +565,13 @@ export default function WhyChooseUs() {
                   {/* Content */}
                   <div className="relative z-10 flex-1 flex flex-col">
                     {/* Icon Section - Compact hơn */}
-                    <div className="relative mb-4 sm:mb-5">
+                    <div className="relative mb-2 sm:mb-4 md:mb-5">
                       {/* Glow effect - Static */}
                       <div className="absolute inset-0 rounded-xl sm:rounded-2xl"></div>
 
                       {/* Icon container */}
-                      <div className="relative w-14 h-14 sm:w-16 sm:h-16 md:w-18 md:h-18 bg-linear-to-br from-primary/20 via-primary/10 to-primary-light/10 rounded-lg sm:rounded-xl flex items-center justify-center text-primary shadow-lg shadow-primary/10 border-2 border-primary/20">
-                        <IconComponent className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9" />
+                      <div className="relative w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-linear-to-br from-primary/20 via-primary/10 to-primary-light/10 rounded-lg sm:rounded-xl flex items-center justify-center text-primary shadow-lg shadow-primary/10 border-2 border-primary/20">
+                        <IconComponent className="w-5 h-5 sm:w-7 sm:h-7 md:w-8 md:h-8" />
                       </div>
 
                       {/* Decorative dots - Static animation */}
@@ -580,24 +580,24 @@ export default function WhyChooseUs() {
                     </div>
 
                     {/* Number badge - Nhỏ hơn */}
-                    <div className="mb-2 sm:mb-3">
-                      <span className="text-3xl sm:text-4xl md:text-5xl font-black text-primary/25 leading-none">
+                    <div className="mb-1 sm:mb-2 md:mb-3">
+                      <span className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-primary/25 leading-none">
                         {String(index + 1).padStart(2, '0')}
                       </span>
                     </div>
 
                     {/* Title - Compact */}
-                    <h3 className="text-lg sm:text-xl md:text-2xl font-black text-foreground mb-2 sm:mb-3">
+                    <h3 className="text-sm sm:text-lg md:text-xl lg:text-2xl font-black text-foreground mb-1 sm:mb-2 md:mb-3 leading-snug">
                       {feature.title}
                     </h3>
 
                     {/* Description - Font size nhỏ hơn cho mobile */}
-                    <p className="text-xs sm:text-sm md:text-base text-muted-foreground leading-relaxed flex-1">
+                    <p className="text-[10px] sm:text-xs md:text-sm lg:text-base text-muted-foreground leading-relaxed flex-1">
                       {feature.description}
                     </p>
 
                     {/* Decorative line - Static */}
-                    <div className="mt-4 sm:mt-5 h-0.5 w-10 sm:w-12 bg-linear-to-r from-primary to-transparent"></div>
+                    <div className="mt-2 sm:mt-4 md:mt-5 h-0.5 w-8 sm:w-10 md:w-12 bg-linear-to-r from-primary to-transparent"></div>
                   </div>
 
                   {/* Corner accents - Static, nhỏ hơn */}
