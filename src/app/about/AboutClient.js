@@ -91,6 +91,28 @@ export default function AboutPage() {
     icon: getIconComponent(member.icon),
   }))
 
+  if (loading) {
+    return (
+      <section
+        className="relative min-h-[600px] md:min-h-[700px] flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-20 pb-12 overflow-hidden bg-linear-to-br from-primary/10 via-background to-primary/5"
+      >
+        <div className="absolute top-10 right-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl -z-10"></div>
+        <div className="relative z-10 max-w-6xl mx-auto w-full text-center space-y-8 animate-pulse">
+          <div className="max-w-4xl mx-auto">
+            <div className="h-8 w-32 bg-muted rounded-full mx-auto mb-6"></div>
+            <div className="h-12 md:h-16 lg:h-20 bg-muted rounded-2xl w-3/4 mx-auto mb-6"></div>
+            <div className="h-4 md:h-6 bg-muted rounded-lg w-2/3 mx-auto mb-4"></div>
+            <div className="h-4 md:h-6 bg-muted rounded-lg w-1/2 mx-auto mb-10"></div>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <div className="w-full sm:w-48 h-12 bg-muted rounded-xl"></div>
+              <div className="w-full sm:w-48 h-12 bg-muted rounded-xl"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
 

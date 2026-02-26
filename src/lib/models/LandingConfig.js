@@ -29,6 +29,8 @@ export const defaultLandingConfig = {
     subtitle: 'Ăn no khỏi "bàn"',
     description: 'Khám phá hương vị đặc biệt với thực đơn đa dạng, nguyên liệu tươi ngon và dịch vụ tận tâm',
     cta_button_text: 'Xem thực đơn',
+    cta_secondary_button_text: 'Liên hệ',
+    cta_secondary_button_link: '/contact',
   },
   menu: {
     section_title: 'Thực đơn',
@@ -197,12 +199,12 @@ export const defaultLandingConfig = {
     links: [
       {
         text: 'Chính sách bảo mật',
-        url: '#',
+        url: '/privacy-policy',
         order: 1,
       },
       {
         text: 'Điều khoản sử dụng',
-        url: '#',
+        url: '/terms-of-service',
         order: 2,
       },
     ],
@@ -336,6 +338,14 @@ export function validateLandingConfig(data) {
 
     if (data.hero.cta_button_text && data.hero.cta_button_text.length > 50) {
       errors.push('Hero: CTA button text không được vượt quá 50 ký tự');
+    }
+
+    if (data.hero.cta_secondary_button_text && data.hero.cta_secondary_button_text.length > 50) {
+      errors.push('Hero: Secondary CTA button text không được vượt quá 50 ký tự');
+    }
+
+    if (data.hero.cta_secondary_button_link && data.hero.cta_secondary_button_link.length > 200) {
+      errors.push('Hero: Secondary CTA button link không được vượt quá 200 ký tự');
     }
   }
 
@@ -618,8 +628,8 @@ export function validateLandingConfig(data) {
 
           if (!link.url || typeof link.url !== 'string' || link.url.trim().length === 0) {
             errors.push(`Footer: Link ${index + 1}: URL là bắt buộc`);
-          } else if (link.url !== '#' && !link.url.startsWith('http://') && !link.url.startsWith('https://')) {
-            errors.push(`Footer: Link ${index + 1}: URL phải là "#" hoặc bắt đầu với http:// hoặc https://`);
+          } else if (link.url !== '#' && !link.url.startsWith('/') && !link.url.startsWith('http://') && !link.url.startsWith('https://')) {
+            errors.push(`Footer: Link ${index + 1}: URL phải là "#", bắt đầu với "/" hoặc http:// hoặc https://`);
           }
         });
       }

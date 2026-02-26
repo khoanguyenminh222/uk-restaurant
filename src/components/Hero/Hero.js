@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useLandingConfig } from "@/hooks/useLandingConfig"
 import { ArrowBigDown } from "lucide-react"
+import Link from "next/link"
 
 export default function Hero() {
   const { config, loading: configLoading } = useLandingConfig()
@@ -11,6 +12,8 @@ export default function Hero() {
   const subtitle = heroConfig.subtitle || 'Ăn no khỏi "bàn"'
   const description = heroConfig.description || 'Khám phá hương vị đặc biệt với thực đơn đa dạng, nguyên liệu tươi ngon và dịch vụ tận tâm'
   const ctaButtonText = heroConfig.cta_button_text || 'Xem thực đơn'
+  const ctaSecondaryButtonText = heroConfig.cta_secondary_button_text || 'Liên hệ'
+  const ctaSecondaryButtonLink = heroConfig.cta_secondary_button_link || '/contact'
 
   const [heroImages, setHeroImages] = useState([])
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
@@ -228,26 +231,27 @@ export default function Hero() {
                 className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"
               ></span>
             </button>
-            <button
+            <Link
+              href={ctaSecondaryButtonLink}
               onClick={(e) => {
                 e.stopPropagation();
-                scrollToContact();
               }}
-              className={`group relative w-full sm:w-auto px-8 py-3 md:px-10 md:py-4 cursor-pointer font-bold text-base md:text-lg lg:text-xl rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-offset-transparent shadow-lg whitespace-nowrap overflow-hidden ${heroImages.length > 0
+              className={`group relative w-full sm:w-auto px-8 py-3 md:px-10 md:py-4 cursor-pointer font-bold text-center text-base md:text-lg lg:text-xl rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-offset-transparent shadow-lg whitespace-nowrap overflow-hidden ${heroImages.length > 0
                 ? 'bg-white/10 backdrop-blur-md hover:bg-white/20 text-white border-2 border-white/60 hover:border-white focus:ring-white/30'
                 : 'bg-background hover:bg-muted text-foreground border-2 border-border hover:border-primary/50 focus:ring-primary/20'
                 }`}
               style={{
-                backdropFilter: heroImages.length > 0 ? 'blur(10px) saturate(180%)' : 'none'
+                backdropFilter: heroImages.length > 0 ? 'blur(10px) saturate(180%)' : 'none',
+                display: 'inline-block'
               }}
             >
-              <span className="relative z-10">Liên hệ</span>
+              <span className="relative z-10">{ctaSecondaryButtonText}</span>
               {heroImages.length > 0 && (
                 <span
                   className="absolute inset-0 bg-linear-to-r from-transparent via-white/30 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"
                 ></span>
               )}
-            </button>
+            </Link>
           </div>
         </div>
       </div>
@@ -272,25 +276,27 @@ export default function Hero() {
       </button>
 
       {/* Image Indicators (dots) */}
-      {heroImages.length > 1 && (
-        <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-10 flex gap-2">
-          {heroImages.map((_, index) => (
-            <button
-              key={index}
-              onClick={(e) => {
-                e.stopPropagation();
-                setCurrentImageIndex(index);
-              }}
-              className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${index === currentImageIndex
-                ? "w-8 bg-white"
-                : "w-2 bg-white/50 hover:bg-white/75"
-                }`}
-              aria-label={`Chuyển đến ảnh ${index + 1}`}
-            />
-          ))}
-        </div>
-      )}
-    </section>
+      {
+        heroImages.length > 1 && (
+          <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-10 flex gap-2">
+            {heroImages.map((_, index) => (
+              <button
+                key={index}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentImageIndex(index);
+                }}
+                className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${index === currentImageIndex
+                  ? "w-8 bg-white"
+                  : "w-2 bg-white/50 hover:bg-white/75"
+                  }`}
+                aria-label={`Chuyển đến ảnh ${index + 1}`}
+              />
+            ))}
+          </div>
+        )
+      }
+    </section >
   )
 }
 

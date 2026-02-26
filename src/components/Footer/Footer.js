@@ -39,7 +39,13 @@ export default function Footer() {
             {links.length > 0 && (
               <div className="flex items-center gap-6 text-sm text-muted-foreground">
                 {links.map((link, index) => (
-                  <a key={index} href={link.url} className="hover:text-primary transition-colors">
+                  <a
+                    key={index}
+                    href={link.url}
+                    className="hover:text-primary transition-colors"
+                    target={link.url?.startsWith('http') ? '_blank' : '_self'}
+                    rel={link.url?.startsWith('http') ? 'noopener noreferrer' : ''}
+                  >
                     {link.text}
                   </a>
                 ))}

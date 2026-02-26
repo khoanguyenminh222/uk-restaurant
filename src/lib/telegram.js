@@ -340,3 +340,53 @@ export async function sendDeletedOrderNotification(order, deletedBy = 'admin', a
   }
 }
 
+/**
+ * Format message cho tin nhắn liên hệ mới
+ * @param {object} data - Dữ liệu từ form liên hệ
+ * @returns {string} Formatted message
+ */
+export function formatContactMessage(data) {
+  const name = data.name || 'N/A';
+  const email = data.email || 'N/A';
+  const phone = data.phone || 'N/A';
+  const subject = data.subject || 'Không có chủ đề';
+  const messageContent = data.message || 'Không có nội dung';
+
+  // Format thời gian
+  const date = new Date().toLocaleString('vi-VN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  const message = `📧 [<b>TIN NHẮN LIÊN HỆ</b>]
+
+<b>Khách hàng:</b> ${name}
+<b>Email:</b> ${email}
+<b>SĐT:</b> <a href="tel:${phone.replace(/[^0-9]/g, '')}">${phone}</a>
+<b>Chủ đề:</b> ${subject}
+
+📝 <b>Nội dung:</b>
+${messageContent}
+
+⏰ <b>Thời gian:</b> ${date}`;
+
+  return message;
+}
+
+/**
+ * Gửi thông báo tin nhắn liên hệ mới đến Telegram
+ * @param {object} data - Dữ liệu từ form liên hệ
+ * @returns {Promise<{success: boolean, messageId?: string, error?: string}>}
+ */
+export async function sendContactNotification(data) {
+  try {
+    const message = formatContactMessage(data);
+    return await sendTelegramNotification(message);
+  } catch (error) {
+    console.error('[Telegram] Error sending contact notification:', error);
+    return { success: false, error: error.message || 'Failed to send contact notification' };
+  }
+}

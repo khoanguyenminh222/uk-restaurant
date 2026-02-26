@@ -16,7 +16,9 @@ import {
   Loader2,
   Calendar,
   Filter,
-  Tag
+  Tag,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { adminFetch } from '@/lib/adminAuth';
@@ -30,9 +32,13 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
   const [selectedStatuses, setSelectedStatuses] = useState(['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'completed']);
+  const now = new Date();
+  const firstDayOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1).toLocaleDateString('sv-SE');
+  const lastDayOfCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toLocaleDateString('sv-SE');
+
   const [dateRange, setDateRange] = useState({
-    from: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0],
-    to: new Date().toISOString().split('T')[0]
+    from: firstDayOfCurrentMonth,
+    to: lastDayOfCurrentMonth
   });
   const [toast, setToast] = useState({ message: "", isVisible: false, type: "success" });
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -116,29 +122,29 @@ export default function AdminDashboard() {
   const ordersTrend = summary ? calculateTrend(summary.today.orders, summary.yesterday.orders) : 0;
 
   const StatCard = ({ title, value, subValue, icon: Icon, trend, color, href }) => (
-    <div className="bg-card rounded-xl p-6 border border-border hover:shadow-md transition-all">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <h3 className="text-2xl font-bold mt-1 text-card-foreground">{value}</h3>
+    <div className="bg-card rounded-xl p-3 sm:p-6 border border-border hover:shadow-md transition-all h-full flex flex-col justify-between">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] sm:text-sm font-medium text-muted-foreground truncate mb-0.5 sm:mb-1" title={title}>{title}</p>
+          <h3 className="text-sm sm:text-2xl font-bold text-card-foreground break-all line-clamp-1">{value}</h3>
           {(trend !== undefined && trend !== null) && (
-            <div className={`flex items-center mt-2 text-xs font-medium ${trend >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-              {trend >= 0 ? <ArrowUpRight className="w-3 h-3 mr-1" /> : <ArrowDownRight className="w-3 h-3 mr-1" />}
-              <span>{Math.abs(trend).toFixed(1)}% so với hôm qua</span>
+            <div className={`flex items-center mt-1 sm:mt-2 text-[10px] sm:text-xs font-medium ${trend >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              {trend >= 0 ? <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 h-3 mr-0.5" /> : <ArrowDownRight className="w-2.5 h-2.5 sm:w-3 h-3 mr-0.5" />}
+              <span className="truncate">{Math.abs(trend).toFixed(1)}% <span className="hidden min-[380px]:inline">so với qua</span></span>
             </div>
           )}
           {subValue && (
-            <p className="text-xs text-muted-foreground mt-2">{subValue}</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2 truncate" title={subValue}>{subValue}</p>
           )}
         </div>
-        <div className={`p-3 rounded-lg ${color}`}>
-          <Icon className="w-6 h-6" />
+        <div className={`p-1.5 sm:p-3 rounded-lg ${color} shrink-0`}>
+          <Icon className="w-4 h-4 sm:w-6 sm:h-6" />
         </div>
       </div>
       {href && (
-        <Link href={href} className="mt-4 flex items-center text-xs text-primary hover:underline group">
+        <Link href={href} className="mt-2 sm:mt-4 flex items-center text-[10px] sm:text-xs text-primary hover:underline group">
           Xem chi tiết
-          <ArrowUpRight className="w-3 h-3 ml-1 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 h-3 ml-1 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
         </Link>
       )}
     </div>
@@ -210,13 +216,67 @@ export default function AdminDashboard() {
               />
             </div>
           </div>
-          <button
-            onClick={handleFilter}
-            className="w-full md:w-auto px-8 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-all font-bold flex items-center justify-center gap-2 shadow-sm active:scale-95"
-          >
-            <Filter className="w-4 h-4" />
-            <span>Lọc dữ liệu</span>
-          </button>
+          <div className="flex flex-col gap-2 w-full md:w-auto">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center bg-muted/30 border border-border rounded-lg p-0.5">
+                <button
+                  onClick={() => {
+                    const current = new Date(dateRange.from);
+                    const prevMonth = new Date(current.getFullYear(), current.getMonth() - 1, 1);
+                    const first = new Date(prevMonth.getFullYear(), prevMonth.getMonth(), 1).toLocaleDateString('sv-SE');
+                    const last = new Date(prevMonth.getFullYear(), prevMonth.getMonth() + 1, 0).toLocaleDateString('sv-SE');
+                    const newRange = { from: first, to: last };
+                    setDateRange(newRange);
+                    fetchDashboardData(newRange);
+                  }}
+                  className="p-1 px-2 hover:bg-muted rounded-md text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                  title="Tháng trước"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <div className="px-3 py-1 text-xs font-semibold text-primary flex items-center gap-2 border-x border-border/50">
+                  <span>
+                    Tháng {new Date(dateRange.from).getMonth() + 1}/{new Date(dateRange.from).getFullYear()}
+                  </span>
+                </div>
+                <button
+                  onClick={() => {
+                    const current = new Date(dateRange.from);
+                    const nextMonth = new Date(current.getFullYear(), current.getMonth() + 1, 1);
+                    const first = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), 1).toLocaleDateString('sv-SE');
+                    const last = new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0).toLocaleDateString('sv-SE');
+                    const newRange = { from: first, to: last };
+                    setDateRange(newRange);
+                    fetchDashboardData(newRange);
+                  }}
+                  className="p-1 px-2 hover:bg-muted rounded-md text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                  title="Tháng sau"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+              <button
+                onClick={() => {
+                  const now = new Date();
+                  const first = new Date(now.getFullYear(), now.getMonth(), 1).toLocaleDateString('sv-SE');
+                  const last = new Date(now.getFullYear(), now.getMonth() + 1, 0).toLocaleDateString('sv-SE');
+                  const newRange = { from: first, to: last };
+                  setDateRange(newRange);
+                  fetchDashboardData(newRange);
+                }}
+                className="px-2 py-2 text-[10px] sm:text-xs font-medium bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-lg transition-colors cursor-pointer"
+              >
+                Hiện tại
+              </button>
+            </div>
+            <button
+              onClick={handleFilter}
+              className="w-full px-8 py-2 bg-primary hover:bg-primary-dark text-primary-foreground rounded-lg transition-all font-bold flex items-center justify-center gap-2 shadow-sm active:scale-95"
+            >
+              <Filter className="w-4 h-4" />
+              <span>Lọc dữ liệu</span>
+            </button>
+          </div>
         </div>
 
         {/* Status Multi-select */}
@@ -254,32 +314,42 @@ export default function AdminDashboard() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2 sm:gap-4">
+        {/* Today's Stats */}
+        <StatCard
+          title="Doanh thu hôm nay"
+          value={formatCurrency(summary?.today.revenue || 0)}
+          icon={DollarSign}
+          trend={revenueTrend}
+          color="bg-green-500/10 text-green-600"
+        />
+        <StatCard
+          title="Đơn hàng hôm nay"
+          value={summary?.today.orders || 0}
+          icon={ShoppingCart}
+          trend={ordersTrend}
+          color="bg-blue-500/10 text-blue-600"
+          href={`/admin/orders?date_from=${new Date().toLocaleDateString('sv-SE')}&date_to=${new Date().toLocaleDateString('sv-SE')}`}
+        />
+
+        {/* Period Stats */}
         <StatCard
           title="Doanh thu trong kỳ"
           value={formatCurrency(summary?.total.revenue || 0)}
-          icon={DollarSign}
-          trend={revenueTrend}
-          color="bg-green-500/10 text-green-500"
+          icon={TrendingUp}
+          subValue={`Từ ${dateRange.from.split('-').reverse().join('/')}`}
+          color="bg-green-500/10 text-green-600"
         />
         <StatCard
           title="Đơn hàng trong kỳ"
           value={summary?.total.orders || 0}
           icon={ShoppingCart}
-          trend={ordersTrend}
-          color="bg-blue-500/10 text-blue-500"
+          subValue="Tổng đơn theo bộ lọc"
+          color="bg-blue-500/10 text-blue-600"
           href={`/admin/orders?date_from=${dateRange.from}&date_to=${dateRange.to}`}
         />
         <StatCard
-          title="Khách hàng tổng"
-          value={summary?.total.customers || 0}
-          icon={Users}
-          subValue="Số khách hàng đã từng đặt"
-          color="bg-purple-500/10 text-purple-500"
-          href="/admin/users"
-        />
-        <StatCard
-          title="Đang chờ xử lý"
+          title="Chờ xử lý"
           value={summary?.total.pending || 0}
           icon={Clock}
           subValue="Số đơn hàng mới"
@@ -403,19 +473,24 @@ export default function AdminDashboard() {
 
                 <div className="grid grid-cols-1 gap-2 w-full mt-4">
                   {[
-                    { label: 'Thành công', value: summary.total.success, color: 'bg-emerald-500', total: summary.total.orders },
-                    { label: 'Đang xử lý', value: summary.total.processing, color: 'bg-blue-500', total: summary.total.orders },
-                    { label: 'Đã hủy', value: summary.total.cancelled, color: 'bg-red-500', total: summary.total.orders },
+                    { label: 'Thành công', value: summary.total.success, color: 'bg-emerald-500', total: summary.total.orders, statuses: 'delivered,completed' },
+                    { label: 'Đang xử lý', value: summary.total.processing, color: 'bg-blue-500', total: summary.total.orders, statuses: 'pending,confirmed,preparing,ready' },
+                    { label: 'Đã hủy', value: summary.total.cancelled, color: 'bg-red-500', total: summary.total.orders, statuses: 'cancelled,deleted' },
                   ].map((item) => (
-                    <div key={item.label} className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2 text-muted-foreground">
+                    <Link
+                      key={item.label}
+                      href={`/admin/orders?status=${item.statuses}&date_from=${dateRange.from}&date_to=${dateRange.to}`}
+                      className="flex items-center justify-between text-xs rounded-lg transition-colors group hover:underline hover:text-primary"
+                    >
+                      <div className="flex items-center gap-2 text-muted-foreground group-hover:text-primary transition-colors">
                         <div className={`w-3 h-3 rounded-full ${item.color}`} />
                         <span>{item.label}</span>
                       </div>
-                      <div className="font-bold">
-                        {item.value} đơn ({item.total > 0 ? ((item.value / item.total) * 100).toFixed(1) : 0}%)
+                      <div className="font-bold flex items-center gap-1">
+                        <span>{item.value} đơn ({item.total > 0 ? ((item.value / item.total) * 100).toFixed(1) : 0}%)</span>
+                        <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </>

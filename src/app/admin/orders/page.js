@@ -26,7 +26,11 @@ const STATUS_CONFIG = {
 };
 
 const STATUS_OPTIONS = [
-  { value: 'all', label: 'Tất cả' },
+  { value: 'all', label: 'Tất cả trạng thái' },
+  { value: 'delivered,completed', label: 'Nhóm: Thành công' },
+  { value: 'pending,confirmed,preparing,ready', label: 'Nhóm: Đang xử lý' },
+  { value: 'cancelled,deleted', label: 'Nhóm: Đã hủy & xóa' },
+  { value: 'divider1', label: '──────────', disabled: true },
   { value: 'pending', label: 'Chờ xử lý' },
   { value: 'confirmed', label: 'Đã xác nhận' },
   { value: 'preparing', label: 'Đang chuẩn bị' },
@@ -64,8 +68,12 @@ export default function AdminOrders() {
 function OrdersContent() {
   const searchParams = useSearchParams();
   const initialStatus = searchParams.get('status') || 'all';
-  const initialDateFrom = searchParams.get('date_from') || '';
-  const initialDateTo = searchParams.get('date_to') || '';
+  const now = new Date();
+  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toLocaleDateString('sv-SE');
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toLocaleDateString('sv-SE');
+
+  const initialDateFrom = searchParams.get('date_from') || firstDay;
+  const initialDateTo = searchParams.get('date_to') || lastDay;
   const initialDiscountFilter = searchParams.get('discount_filter') || 'all';
 
   const [orders, setOrders] = useState([]);
@@ -129,8 +137,8 @@ function OrdersContent() {
   // Sync filter with URL parameter if it changes
   useEffect(() => {
     const statusParam = searchParams.get('status') || 'all';
-    const fromParam = searchParams.get('date_from') || '';
-    const toParam = searchParams.get('date_to') || '';
+    const fromParam = searchParams.get('date_from') || firstDay;
+    const toParam = searchParams.get('date_to') || lastDay;
     const discParam = searchParams.get('discount_filter') || 'all';
 
     let changed = false;

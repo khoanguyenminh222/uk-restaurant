@@ -99,7 +99,7 @@ export async function GET(request) {
         const totalOrders = orderStats.reduce((acc, curr) => acc + curr.count, 0);
         const pendingOrders = orderStats.find(s => s._id === 'pending')?.count || 0;
         const confirmedOrders = orderStats.find(s => s._id === 'confirmed')?.count || 0;
-        const cancelledOrders = orderStats.find(s => s._id === 'cancelled')?.count || 0;
+        const cancelledOrders = orderStats.filter(s => ['cancelled', 'deleted'].includes(s._id)).reduce((acc, curr) => acc + curr.count, 0);
 
         // 2. Today's Stats
         const [todayRevenueResult, todayOrders] = await Promise.all([

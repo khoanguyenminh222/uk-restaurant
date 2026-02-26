@@ -7,10 +7,11 @@ import { defaultLandingConfig } from '@/lib/models/LandingConfig';
 import {
   Settings, Save, RotateCcw, Loader2, X, Plus, Edit2, Trash2,
   ArrowUp, ArrowDown, Home, Sparkles, BookOpen, Info, Phone,
-  Mail, MapPin, Share2, Link as LinkIcon, CheckCircle2, Zap, Heart, MessageCircle, Shield, Star, MessageSquare, Users, TrendingUp
+  Mail, MapPin, Share2, Link as LinkIcon, CheckCircle2, Zap, Heart, MessageCircle, Shield, Star, MessageSquare, Users, TrendingUp, Gavel
 } from 'lucide-react';
 import { adminFetch } from '@/lib/adminAuth';
 import * as lucideIcons from 'lucide-react';
+import RichTextEditor from '@/components/Admin/RichTextEditor';
 
 // Helper function để chuyển đổi kebab-case sang PascalCase
 // Ví dụ: "circle-user" -> "CircleUser", "check-circle-2" -> "CheckCircle2"
@@ -158,6 +159,7 @@ const TABS = [
   { id: 'whyChooseUs', label: 'Why Choose Us', icon: Star },
   { id: 'testimonials', label: 'Testimonials', icon: MessageSquare },
   { id: 'footer', label: 'Footer', icon: LinkIcon },
+  { id: 'legal', label: 'Pháp lý', icon: Gavel },
 ];
 
 // Default icons cho features (lucide-react)
@@ -207,6 +209,10 @@ export default function AdminLandingConfig() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [config, setConfig] = useState(null);
+  const [legalData, setLegalData] = useState({
+    privacy_policy: { title: '', content: '' },
+    terms_of_service: { title: '', content: '' }
+  });
   const [toast, setToast] = useState({ message: '', isVisible: false });
 
   // Form states cho từng section
@@ -217,7 +223,7 @@ export default function AdminLandingConfig() {
     menu_items: []
   });
   const [heroData, setHeroData] = useState({
-    title: '', subtitle: '', description: '', cta_button_text: ''
+    title: '', subtitle: '', description: '', cta_button_text: '', cta_secondary_button_text: '', cta_secondary_button_link: ''
   });
   const [menuData, setMenuData] = useState({
     section_title: '',
@@ -336,7 +342,20 @@ export default function AdminLandingConfig() {
 
   useEffect(() => {
     fetchConfig();
+    fetchLegalConfig();
   }, []);
+
+  const fetchLegalConfig = async () => {
+    try {
+      const res = await adminFetch('/api/config/legal');
+      const data = await res.json();
+      if (data.success && data.data) {
+        setLegalData(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching legal config:', error);
+    }
+  };
 
   // Handle click outside for all modals
   useEffect(() => {
@@ -453,7 +472,13 @@ export default function AdminLandingConfig() {
             menu_items: menuItems
           });
         }
-        if (data.data.hero) setHeroData(data.data.hero);
+        if (data.data.hero) {
+          setHeroData({
+            ...data.data.hero,
+            cta_secondary_button_text: data.data.hero.cta_secondary_button_text || '',
+            cta_secondary_button_link: data.data.hero.cta_secondary_button_link || '',
+          });
+        }
         if (data.data.menu) setMenuData(data.data.menu);
         if (data.data.whyChooseUs) {
           setWhyChooseUsData({
@@ -546,6 +571,19 @@ export default function AdminLandingConfig() {
 
       const data = await res.json();
       if (data.success) {
+        // Also save legal config when saving landing config
+        try {
+          await adminFetch('/api/config/legal', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(legalData),
+          });
+        } catch (legalError) {
+          console.error('Error saving legal config during global save:', legalError);
+          // We don't necessarily want to fail the whole save if legal fails,
+          // but we should at least log it. The main config saved successfully.
+        }
+
         if (typeof window !== 'undefined') {
           window.dispatchEvent(
             new CustomEvent('showToast', {
@@ -576,6 +614,7 @@ export default function AdminLandingConfig() {
       setSaving(false);
     }
   };
+
 
   const handleOpenResetModal = () => {
     setResetSections({
@@ -1479,20 +1518,54 @@ export default function AdminLandingConfig() {
                 />
                 <p className="text-xs text-muted-foreground mt-1">{heroData.description.length}/500 ký tự</p>
               </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    CTA Button Text
+                  </label>
+                  <input
+                    type="text"
+                    value={heroData.cta_button_text || ''}
+                    onChange={(e) => setHeroData({ ...heroData, cta_button_text: e.target.value })}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="Xem thực đơn"
+                    maxLength={50}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {(heroData.cta_button_text || '').length}/50 ký tự
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-card-foreground mb-2">
+                    Secondary CTA Button Text
+                  </label>
+                  <input
+                    type="text"
+                    value={heroData.cta_secondary_button_text || ''}
+                    onChange={(e) => setHeroData({ ...heroData, cta_secondary_button_text: e.target.value })}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="Liên hệ"
+                    maxLength={50}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {(heroData.cta_secondary_button_text || '').length}/50 ký tự
+                  </p>
+                </div>
+              </div>
               <div>
                 <label className="block text-sm font-medium text-card-foreground mb-2">
-                  CTA Button Text
+                  Secondary CTA Button Link
                 </label>
                 <input
                   type="text"
-                  value={heroData.cta_button_text || ''}
-                  onChange={(e) => setHeroData({ ...heroData, cta_button_text: e.target.value })}
+                  value={heroData.cta_secondary_button_link || ''}
+                  onChange={(e) => setHeroData({ ...heroData, cta_secondary_button_link: e.target.value })}
                   className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="Xem thực đơn"
-                  maxLength={50}
+                  placeholder="/contact"
+                  maxLength={200}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  {(heroData.cta_button_text || '').length}/50 ký tự
+                  {(heroData.cta_secondary_button_link || '').length}/200 ký tự
                 </p>
               </div>
             </div>
@@ -2058,6 +2131,87 @@ export default function AdminLandingConfig() {
                   )}
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Legal Tab */}
+          {activeTab === 'legal' && (
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold text-card-foreground mb-4">Cấu hình Trang Pháp lý</h2>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Privacy Policy */}
+                <div className="space-y-4 p-6 bg-muted border border-border rounded-xl">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Shield className="w-5 h-5 text-primary" />
+                    <h3 className="text-lg font-medium text-card-foreground">Chính sách bảo mật</h3>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      Tiêu đề trang
+                    </label>
+                    <input
+                      type="text"
+                      value={legalData.privacy_policy?.title || ''}
+                      onChange={(e) => setLegalData({
+                        ...legalData,
+                        privacy_policy: { ...legalData.privacy_policy, title: e.target.value }
+                      })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="Chính sách bảo mật"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      Nội dung
+                    </label>
+                    <RichTextEditor
+                      value={legalData.privacy_policy?.content || ''}
+                      onChange={(content) => setLegalData({
+                        ...legalData,
+                        privacy_policy: { ...legalData.privacy_policy, content }
+                      })}
+                      placeholder="Nhập nội dung chính sách bảo mật..."
+                    />
+                  </div>
+                </div>
+
+                {/* Terms of Service */}
+                <div className="space-y-4 p-6 bg-muted border border-border rounded-xl">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Gavel className="w-5 h-5 text-primary" />
+                    <h3 className="text-lg font-medium text-card-foreground">Điều khoản sử dụng</h3>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      Tiêu đề trang
+                    </label>
+                    <input
+                      type="text"
+                      value={legalData.terms_of_service?.title || ''}
+                      onChange={(e) => setLegalData({
+                        ...legalData,
+                        terms_of_service: { ...legalData.terms_of_service, title: e.target.value }
+                      })}
+                      className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="Điều khoản sử dụng"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">
+                      Nội dung
+                    </label>
+                    <RichTextEditor
+                      value={legalData.terms_of_service?.content || ''}
+                      onChange={(content) => setLegalData({
+                        ...legalData,
+                        terms_of_service: { ...legalData.terms_of_service, content }
+                      })}
+                      placeholder="Nhập nội dung điều khoản sử dụng..."
+                    />
+                  </div>
+                </div>
+              </div>
+
             </div>
           )}
 

@@ -94,53 +94,114 @@ export default function OrderFilter({
 
             {/* Collapsible Filters Section */}
             <div className={`${showMobileFilters ? 'flex' : 'hidden'} sm:flex flex-col gap-3 sm:gap-4 pt-2 sm:pt-0 border-t sm:border-none border-border animate-in slide-in-from-top-2 duration-200`}>
-                <div className="flex flex-col lg:flex-row gap-3 sm:gap-4">
+                <div className="flex flex-col lg:flex-row items-start lg:items-center gap-3 sm:gap-4">
                     {/* Date Filters Group */}
-                    <div className="flex-1 grid grid-cols-2 gap-2 sm:gap-4">
-                        <div className="relative">
-                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <input
-                                type="date"
-                                value={dateFrom}
-                                onChange={(e) => {
-                                    setDateFrom(e.target.value);
-                                    setPagination(prev => ({ ...prev, page: 1 }));
-                                }}
-                                className="w-full pl-9 sm:pl-10 pr-2 sm:pr-4 py-2 bg-muted/30 border border-border rounded-lg text-xs sm:text-sm text-card-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                            />
+                    <div className="w-full lg:w-auto flex flex-col gap-2 min-w-[300px] xl:min-w-[400px]">
+                        <div className="grid grid-cols-2 gap-2">
+                            <div className="relative">
+                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <input
+                                    type="date"
+                                    value={dateFrom}
+                                    onChange={(e) => {
+                                        setDateFrom(e.target.value);
+                                        setPagination(prev => ({ ...prev, page: 1 }));
+                                    }}
+                                    className="w-full pl-9 pr-2 py-2 bg-muted/30 border border-border rounded-lg text-xs sm:text-sm text-card-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                />
+                            </div>
+                            <div className="relative">
+                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <input
+                                    type="date"
+                                    value={dateTo}
+                                    onChange={(e) => {
+                                        setDateTo(e.target.value);
+                                        setPagination(prev => ({ ...prev, page: 1 }));
+                                    }}
+                                    className="w-full pl-9 pr-2 py-2 bg-muted/30 border border-border rounded-lg text-xs sm:text-sm text-card-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                />
+                            </div>
                         </div>
-                        <div className="relative">
-                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <input
-                                type="date"
-                                value={dateTo}
-                                onChange={(e) => {
-                                    setDateTo(e.target.value);
+
+                        {/* Month Navigator */}
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center bg-muted/30 border border-border rounded-lg p-0.5">
+                                <button
+                                    onClick={() => {
+                                        const current = dateFrom ? new Date(dateFrom) : new Date();
+                                        const prevMonth = new Date(current.getFullYear(), current.getMonth() - 1, 1);
+                                        const first = new Date(prevMonth.getFullYear(), prevMonth.getMonth(), 1).toLocaleDateString('sv-SE');
+                                        const last = new Date(prevMonth.getFullYear(), prevMonth.getMonth() + 1, 0).toLocaleDateString('sv-SE');
+                                        setDateFrom(first);
+                                        setDateTo(last);
+                                        setPagination(prev => ({ ...prev, page: 1 }));
+                                    }}
+                                    className="p-1 px-2 hover:bg-muted rounded-md text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                                    title="Tháng trước"
+                                >
+                                    <ChevronDown className="w-4 h-4 rotate-90" />
+                                </button>
+
+                                <div className="px-3 py-1 text-xs font-semibold text-primary flex items-center gap-2 border-x border-border/50">
+                                    <Calendar className="w-3 h-3" />
+                                    <span>
+                                        {dateFrom ? (
+                                            `Tháng ${new Date(dateFrom).getMonth() + 1}/${new Date(dateFrom).getFullYear()}`
+                                        ) : 'Chọn tháng'}
+                                    </span>
+                                </div>
+
+                                <button
+                                    onClick={() => {
+                                        const current = dateFrom ? new Date(dateFrom) : new Date();
+                                        const nextMonth = new Date(current.getFullYear(), current.getMonth() + 1, 1);
+                                        const first = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), 1).toLocaleDateString('sv-SE');
+                                        const last = new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0).toLocaleDateString('sv-SE');
+                                        setDateFrom(first);
+                                        setDateTo(last);
+                                        setPagination(prev => ({ ...prev, page: 1 }));
+                                    }}
+                                    className="p-1 px-2 hover:bg-muted rounded-md text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                                    title="Tháng sau"
+                                >
+                                    <ChevronDown className="w-4 h-4 -rotate-90" />
+                                </button>
+                            </div>
+
+                            <button
+                                onClick={() => {
+                                    const now = new Date();
+                                    const first = new Date(now.getFullYear(), now.getMonth(), 1).toLocaleDateString('sv-SE');
+                                    const last = new Date(now.getFullYear(), now.getMonth() + 1, 0).toLocaleDateString('sv-SE');
+                                    setDateFrom(first);
+                                    setDateTo(last);
                                     setPagination(prev => ({ ...prev, page: 1 }));
                                 }}
-                                className="w-full pl-9 sm:pl-10 pr-2 sm:pr-4 py-2 bg-muted/30 border border-border rounded-lg text-xs sm:text-sm text-card-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                            />
+                                className="px-2 py-1.5 text-[10px] sm:text-xs font-medium bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-lg transition-colors cursor-pointer"
+                            >
+                                Hiện tại
+                            </button>
+
+                            {(dateFrom || dateTo) && (
+                                <button
+                                    onClick={() => {
+                                        setDateFrom('');
+                                        setDateTo('');
+                                        setPagination(prev => ({ ...prev, page: 1 }));
+                                    }}
+                                    className="ml-auto hidden sm:flex items-center gap-1 px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive/5 rounded-md transition-colors cursor-pointer"
+                                >
+                                    <XCircle className="w-3 h-3" /> Xóa lọc
+                                </button>
+                            )}
                         </div>
                     </div>
 
-                    {/* Clear Button (Mobile only inside grid if needed, but better separate) */}
-                    {(dateFrom || dateTo) && (
-                        <button
-                            onClick={() => {
-                                setDateFrom('');
-                                setDateTo('');
-                                setPagination(prev => ({ ...prev, page: 1 }));
-                            }}
-                            className="sm:hidden w-full py-1.5 text-xs font-medium text-muted-foreground hover:text-destructive flex items-center justify-center gap-1"
-                        >
-                            <XCircle className="w-3 h-3" /> Xóa lọc ngày
-                        </button>
-                    )}
-
                     {/* Select Filters Group */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4">
+                    <div className="w-full lg:flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4">
                         {/* Status Filter */}
-                        <div className="relative">
+                        <div className="relative min-w-0">
                             <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <select
                                 value={statusFilter}
@@ -148,10 +209,14 @@ export default function OrderFilter({
                                     setStatusFilter(e.target.value);
                                     setPagination(prev => ({ ...prev, page: 1 }));
                                 }}
-                                className="w-full pl-9 sm:pl-10 pr-8 py-2 bg-muted/30 border border-border rounded-lg text-xs sm:text-sm text-card-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none"
+                                className="w-full pl-9 pr-8 py-2 bg-muted/30 border border-border rounded-lg text-xs sm:text-sm text-card-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none truncate"
                             >
                                 {STATUS_OPTIONS.map(option => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                        disabled={option.disabled}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
@@ -160,7 +225,7 @@ export default function OrderFilter({
                         </div>
 
                         {/* Customer Type Filter */}
-                        <div className="relative">
+                        <div className="relative min-w-0">
                             <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <select
                                 value={customerTypeFilter}
@@ -168,7 +233,7 @@ export default function OrderFilter({
                                     setCustomerTypeFilter(e.target.value);
                                     setPagination(prev => ({ ...prev, page: 1 }));
                                 }}
-                                className="w-full pl-9 sm:pl-10 pr-8 py-2 bg-muted/30 border border-border rounded-lg text-xs sm:text-sm text-card-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none"
+                                className="w-full pl-9 pr-8 py-2 bg-muted/30 border border-border rounded-lg text-xs sm:text-sm text-card-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none truncate"
                             >
                                 <option value="all">Tất cả khách</option>
                                 <option value="logged_in">Thành viên</option>
@@ -179,7 +244,7 @@ export default function OrderFilter({
                         </div>
 
                         {/* Discount Filter */}
-                        <div className="relative">
+                        <div className="relative min-w-0">
                             <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <select
                                 value={discountFilter}
@@ -187,7 +252,7 @@ export default function OrderFilter({
                                     setDiscountFilter(e.target.value);
                                     setPagination(prev => ({ ...prev, page: 1 }));
                                 }}
-                                className="w-full pl-9 sm:pl-10 pr-8 py-2 bg-muted/30 border border-border rounded-lg text-xs sm:text-sm text-card-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none"
+                                className="w-full pl-9 pr-8 py-2 bg-muted/30 border border-border rounded-lg text-xs sm:text-sm text-card-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none truncate"
                             >
                                 <option value="all">Tất cả đơn</option>
                                 <option value="discounted">Giảm giá</option>

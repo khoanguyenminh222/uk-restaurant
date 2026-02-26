@@ -89,7 +89,14 @@ export async function GET(request) {
         // Admin: Allow standard filters
         if (userId) query.user_id = userId;
         if (phone) query.customer_phone = phone; // Strict match for privacy in list view?
-        if (status && status !== 'all') query.status = status;
+
+        if (status && status !== 'all') {
+          if (status.includes(',')) {
+            query.status = { $in: status.split(',').map(s => s.trim()).filter(Boolean) };
+          } else {
+            query.status = status;
+          }
+        }
 
         // Advanced Admin Filters...
         if (customerType === 'logged_in') {

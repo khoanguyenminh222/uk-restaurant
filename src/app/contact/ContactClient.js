@@ -177,13 +177,30 @@ export default function ContactPage() {
     e.preventDefault()
     setIsSubmitting(true)
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formState),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSubmitSuccess(true)
+        setFormState({ name: '', email: '', phone: '', subject: '', message: '' })
+        setTimeout(() => setSubmitSuccess(false), 5000)
+      } else {
+        alert(data.error || 'Đã có lỗi xảy ra. Vui lòng thử lại sau.');
+      }
+    } catch (error) {
+      console.error('Lỗi khi gửi tin nhắn:', error);
+      alert('Đã có lỗi xảy ra. Vui lòng kiểm tra kết nối mạng.');
+    } finally {
       setIsSubmitting(false)
-      setSubmitSuccess(true)
-      setFormState({ name: '', email: '', phone: '', subject: '', message: '' })
-      setTimeout(() => setSubmitSuccess(false), 5000)
-    }, 1500)
+    }
   }
 
 
@@ -278,6 +295,28 @@ export default function ContactPage() {
   ]
 
   const SubmitIcon = getIconComponent(contactForm.fields?.submit_icon || 'Send');
+
+  if (loading) {
+    return (
+      <section
+        className="relative pt-32 pb-20 md:pt-40 md:pb-32 px-4 sm:px-6 lg:px-8 overflow-hidden bg-linear-to-br from-primary/10 via-background to-primary/5"
+      >
+        <div className="absolute top-0 right-0 w-3/4 h-3/4 bg-primary/5 rounded-full blur-[100px] translate-x-1/3 -translate-y-1/3"></div>
+        <div className="relative z-10 max-w-6xl mx-auto w-full text-center space-y-8 animate-pulse">
+          <div className="max-w-4xl mx-auto">
+            <div className="h-8 w-40 bg-muted rounded-full mx-auto mb-6"></div>
+            <div className="h-12 md:h-16 lg:h-20 bg-muted rounded-2xl w-3/4 mx-auto mb-6"></div>
+            <div className="h-4 md:h-6 bg-muted rounded-lg w-2/3 mx-auto mb-4"></div>
+            <div className="h-4 md:h-6 bg-muted rounded-lg w-1/2 mx-auto mb-10"></div>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <div className="w-full sm:w-48 h-12 bg-muted rounded-full"></div>
+              <div className="w-full sm:w-48 h-12 bg-muted rounded-full"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background overflow-hidden selection:bg-primary/20">
