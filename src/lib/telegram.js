@@ -276,3 +276,67 @@ Bạn sẽ nhận được thông báo khi có đơn hàng mới hoặc đơn h�
   }
 }
 
+/**
+ * Format message cho đơn hàng bị xóa
+ * @param {object} order - Order object từ database
+ * @param {string} deletedBy - Người xóa
+ * @param {object} adminInfo - Thông tin admin (optional)
+ * @returns {string} Formatted message
+ */
+export function formatDeletedOrderMessage(order, deletedBy = 'admin', adminInfo = null) {
+  const orderId = order.order_id || 'N/A';
+  const customerName = order.customer_name || 'N/A';
+  const customerPhone = order.customer_phone || 'N/A';
+  const totalPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.total_price || 0);
+
+  // Format thời gian
+  const deletedDate = new Date().toLocaleString('vi-VN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  // Xác định người xóa
+  let deletedByText = '';
+  if (adminInfo && adminInfo.name) {
+    let roleLabel = 'Admin';
+    if (adminInfo.role === 'super_admin') roleLabel = 'Super Admin';
+    else if (adminInfo.role === 'manager') roleLabel = 'Manager';
+
+    deletedByText = `${roleLabel}: ${adminInfo.name}`;
+    if (adminInfo.phone) deletedByText += ` (${adminInfo.phone})`;
+  } else {
+    deletedByText = deletedBy || 'Admin';
+  }
+
+  const message = `🗑️ [<b>XÓA</b>]
+
+<b>Mã đơn:</b> <code>${orderId}</code>
+<b>Khách hàng:</b> ${customerName}
+<b>SĐT:</b> <a href="tel:${customerPhone}">${customerPhone}</a>
+💰 <b>Tổng tiền:</b> ${totalPrice}
+⏰ <b>Thời gian xóa:</b> ${deletedDate}
+<b>Người thực hiện:</b> ${deletedByText}`;
+
+  return message;
+}
+
+/**
+ * Gửi thông báo đơn hàng bị xóa đến Telegram
+ * @param {object} order - Order object từ database
+ * @param {string} deletedBy - Người xóa
+ * @param {object} adminInfo - Thông tin admin (optional)
+ * @returns {Promise<{success: boolean, messageId?: string, error?: string}>}
+ */
+export async function sendDeletedOrderNotification(order, deletedBy = 'admin', adminInfo = null) {
+  try {
+    const message = formatDeletedOrderMessage(order, deletedBy, adminInfo);
+    return await sendTelegramNotification(message);
+  } catch (error) {
+    console.error('[Telegram] Error sending deleted order notification:', error);
+    return { success: false, error: error.message || 'Failed to send deleted order notification' };
+  }
+}
+

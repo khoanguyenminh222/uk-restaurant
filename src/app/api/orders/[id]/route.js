@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import clientPromise, { getDatabaseName } from '@/lib/mongodb';
-import { sendCancelledOrderNotification } from '@/lib/telegram';
+import { sendCancelledOrderNotification, sendDeletedOrderNotification } from '@/lib/telegram';
 import { getAdminFromToken, getUserFromToken } from '@/lib/auth';
 import { sendOrderStatusEmail } from '@/lib/email';
 
@@ -131,7 +131,7 @@ export async function PUT(request, { params }) {
     }
 
     // Validate status transition
-    const validStatuses = ['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'completed', 'cancelled'];
+    const validStatuses = ['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'completed', 'cancelled', 'deleted'];
     if (body.status && !validStatuses.includes(body.status)) {
       return NextResponse.json(
         { success: false, error: 'Status không hợp lệ' },
@@ -423,28 +423,32 @@ export async function PUT(request, { params }) {
     // Get updated order
     const updatedOrder = await db.collection('orders').findOne({ order_id: id });
 
-    // Send Telegram notification if order is cancelled (fire and forget)
-    if (body.status === 'cancelled') {
+    // Send Telegram notification if order is cancelled or deleted (fire and forget)
+    if (body.status === 'cancelled' || body.status === 'deleted') {
       try {
-        let cancelledBy = body.changed_by || (isAdmin ? 'admin' : (isOwner ? (requester ? 'user' : 'customer') : 'system'));
+        let changedBy = body.changed_by || (isAdmin ? 'admin' : (isOwner ? (requester ? 'user' : 'customer') : 'system'));
 
         // Nếu là admin/manager/super_admin và có thông tin admin, sử dụng tên admin
         if (isAdmin && requester) {
-          cancelledBy = requester.name || requester.phone || cancelledBy;
+          changedBy = requester.name || requester.phone || changedBy;
         } else if (isOwner) {
           if (requester) {
-            cancelledBy = requester.name || requester.phone || cancelledBy;
+            changedBy = requester.name || requester.phone || changedBy;
           } else {
             // Guest
-            cancelledBy = order.customer_name || order.customer_phone || 'Khách vãng lai';
-            if (order.customer_phone) cancelledBy += ` (${order.customer_phone})`;
+            changedBy = order.customer_name || order.customer_phone || 'Khách vãng lai';
+            if (order.customer_phone) changedBy += ` (${order.customer_phone})`;
           }
         }
 
-        const reason = body.cancel_reason || body.admin_notes || body.notes || updatedOrder.cancel_reason || '';
-        await sendCancelledOrderNotification(updatedOrder, cancelledBy, reason, isAdmin ? requester : null);
+        if (body.status === 'cancelled') {
+          const reason = body.cancel_reason || body.admin_notes || body.notes || updatedOrder.cancel_reason || '';
+          await sendCancelledOrderNotification(updatedOrder, changedBy, reason, isAdmin ? requester : null);
+        } else if (body.status === 'deleted') {
+          await sendDeletedOrderNotification(updatedOrder, changedBy, isAdmin ? requester : null);
+        }
       } catch (telegramError) {
-        console.error('Error sending Telegram notification for cancelled order:', telegramError);
+        console.error(`Error sending Telegram notification for ${body.status} order:`, telegramError);
         // Continue even if Telegram fails
       }
     }
@@ -550,6 +554,15 @@ export async function DELETE(request, { params }) {
         { success: false, error: 'Không tìm thấy đơn hàng' },
         { status: 404 }
       );
+    }
+
+    // Send Telegram notification for deleted order (fire and forget)
+    try {
+      const deletedBy = adminInfo.name || adminInfo.phone || 'Admin';
+      await sendDeletedOrderNotification(order, deletedBy, adminInfo);
+    } catch (telegramError) {
+      console.error('Error sending Telegram notification for deleted order:', telegramError);
+      // Continue even if Telegram fails
     }
 
     return NextResponse.json(
